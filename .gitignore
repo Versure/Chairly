@@ -1,1 +1,38 @@
-﻿.idea
+# IDE
+.idea
+.vs
+*.suo
+*.user
+*.sln.docstates
+
+# .NET
+**/bin/
+**/obj/
+*.nupkg
+*.snupkg
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+.nx/
+
+# Build artifacts
+*.tgz
+.cache/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Test results
+**/TestResults/
+coverage/
+playwright-report/
+test-results/

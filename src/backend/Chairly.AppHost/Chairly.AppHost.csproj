@@ -1,0 +1,15 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.1.1">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chairly.Api\Chairly.Api.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>5eb18f1e-519a-4392-8d3c-18b08781fdeb</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

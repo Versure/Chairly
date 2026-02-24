@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Chairly.Api/Chairly.Api.csproj" />
+  <Project Path="Chairly.AppHost/Chairly.AppHost.csproj" />
+  <Project Path="Chairly.Domain/Chairly.Domain.csproj" />
+  <Project Path="Chairly.Infrastructure/Chairly.Infrastructure.csproj" />
+  <Project Path="Chairly.ServiceDefaults/Chairly.ServiceDefaults.csproj" />
+  <Project Path="Chairly.Tests/Chairly.Tests.csproj" />
+</Solution>

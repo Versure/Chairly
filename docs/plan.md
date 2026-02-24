@@ -1,72 +1,80 @@
-# AI-First Development Plan: Salon Management SaaS
+# AI-First Development Plan: Chairly — Salon Management SaaS
 
-## Overzicht
+## Overview
 
-Dit plan beschrijft een gestructureerde aanpak om met Claude Code een volledig Salon Management SaaS product op te bouwen. De kern is: **jij bent de architect en product owner, Claude Code is je senior developer.**
+This plan describes a structured approach to building a Salon Management SaaS product using Claude Code as the primary development tool. The approach has two distinct modes:
+
+- **Phase 0–1 (Architecture & Setup):** You are the architect and product owner. Claude Code is your senior developer in **interactive mode** — it asks questions, you make decisions.
+- **Phase 2–5 (Implementation & Beyond):** [Ralph](https://github.com/snarktank/ralph) runs Claude Code **autonomously** in a loop, implementing features from PRDs without blocking your workflow. Ralph operates in WSL via a separate git clone, while you continue working in your Windows environment.
 
 ---
 
-## Fase 0: Projectfundament (voordat je code schrijft)
+## Phase 0: Project Foundation (Interactive — No Ralph)
+
+> **Goal:** Define the domain, architecture, and technical decisions. This is done interactively with Claude Code — Ralph is NOT used in this phase.
 
 ### 0.1 — Product Discovery & Domain Model
 
-Voordat je Claude Code ook maar één regel code laat schrijven, definieer je het domein. Dit is het belangrijkste document in je hele project.
+Before Claude Code writes a single line of code, define the domain. This is the most important document in the entire project.
 
-Maak een `docs/domain-model.md` met:
+Create `docs/domain-model.md` with:
 
-- **Bounded Contexts** (DDD-stijl): bijv. `Appointments`, `Clients`, `Staff`, `Services`, `Billing`, `Notifications`
-- **Core Entities** per context met hun relaties
-- **Ubiquitous Language**: een glossary zodat Claude Code consistent dezelfde termen gebruikt (bijv. "Appointment" vs "Booking" — kies er één)
-- **User Roles**: Owner, Staff Member, Client (als je een client portal bouwt)
+- **Bounded Contexts** (DDD-style): e.g. `Appointments`, `Clients`, `Staff`, `Services`, `Billing`, `Notifications`
+- **Core Entities** per context with their relationships
+- **Ubiquitous Language**: a glossary so Claude Code uses consistent terminology (e.g. "Appointment" vs "Booking" — pick one)
+- **User Roles**: Owner, Staff Member, Client (if building a client portal)
 
 ### 0.2 — Architecture Decision Records (ADRs)
 
-Maak een `docs/adr/` folder. Leg je technische keuzes vast zodat Claude Code ze kan raadplegen:
+Create a `docs/adr/` folder. Document technical decisions so Claude Code (and Ralph) can reference them:
 
-| ADR | Beslissing |
-|-----|-----------|
-| ADR-001 | Monorepo met Nx |
-| ADR-002 | .NET Aspire als orchestrator voor local dev |
-| ADR-003 | PostgreSQL met EF Core (code-first migrations) |
-| ADR-004 | RabbitMQ voor async events (bijv. appointment reminders) |
-| ADR-005 | CQRS-light: MediatR voor commands/queries, geen event sourcing |
-| ADR-006 | Angular met standalone components, signals, NgRx SignalStore |
-| ADR-007 | Multi-tenancy strategie (schema-per-tenant vs row-level) |
-| ADR-008 | Auth strategie (bijv. Keycloak, Auth0, of ASP.NET Identity) |
+| ADR | Decision |
+|-----|----------|
+| ADR-001 | Monorepo with Nx |
+| ADR-002 | .NET Aspire as orchestrator for local dev |
+| ADR-003 | PostgreSQL with EF Core (code-first migrations) |
+| ADR-004 | RabbitMQ for async events (e.g. appointment reminders) |
+| ADR-005 | CQRS-light: MediatR for commands/queries, no event sourcing |
+| ADR-006 | Angular with standalone components, signals, NgRx SignalStore |
+| ADR-007 | Multi-tenancy strategy (schema-per-tenant vs row-level) |
+| ADR-008 | Auth strategy (e.g. Keycloak, Auth0, or ASP.NET Identity) |
 
 ---
 
-## Fase 1: Repository & Tooling Setup
+## Phase 1: Repository & Tooling Setup (Interactive — No Ralph)
 
-### 1.1 — Monorepo Structuur
+> **Goal:** Set up the repository structure, CI/CD, and development tooling. Done interactively with Claude Code.
+
+### 1.1 — Monorepo Structure
 
 ```
-salon-saas/
-├── .claude/
-│   ├── instructions.md          # Globale Claude Code instructies
-│   └── commands/                 # Custom slash commands
-│       ├── implement-feature.md
-│       ├── write-tests.md
-│       └── create-migration.md
+chairly/
 ├── docs/
 │   ├── domain-model.md
 │   ├── adr/
-│   └── specs/                    # Feature specificaties
+│   └── specs/                          # Feature specifications
 │       ├── _template.md
 │       ├── appointment-booking.md
 │       └── client-management.md
+├── scripts/
+│   └── ralph/                          # Ralph autonomous agent
+│       ├── ralph.sh                    # The agent loop script
+│       ├── CLAUDE.md                   # Ralph's prompt template
+│       ├── prd.json                    # Current feature tasks (per run)
+│       ├── progress.txt                # Memory between iterations
+│       └── archive/                    # Previous Ralph runs
 ├── src/
 │   ├── backend/
-│   │   ├── SalonSaas.sln
-│   │   ├── SalonSaas.AppHost/          # .NET Aspire host
-│   │   ├── SalonSaas.ServiceDefaults/  # Shared Aspire config
-│   │   ├── SalonSaas.Api/              # WebAPI project
-│   │   ├── SalonSaas.Application/      # CQRS handlers, services
-│   │   ├── SalonSaas.Domain/           # Entities, value objects
-│   │   ├── SalonSaas.Infrastructure/   # EF Core, RabbitMQ, etc.
-│   │   └── SalonSaas.Tests/            # Unit + integration tests
+│   │   ├── Chairly.sln
+│   │   ├── Chairly.AppHost/           # .NET Aspire host
+│   │   ├── Chairly.ServiceDefaults/   # Shared Aspire config
+│   │   ├── Chairly.Api/               # WebAPI project
+│   │   ├── Chairly.Application/       # CQRS handlers, services
+│   │   ├── Chairly.Domain/            # Entities, value objects
+│   │   ├── Chairly.Infrastructure/    # EF Core, RabbitMQ, etc.
+│   │   └── Chairly.Tests/             # Unit + integration tests
 │   └── frontend/
-│       └── salon-app/                  # Nx Angular workspace
+│       └── chairly-app/               # Nx Angular workspace
 ├── docker/
 │   ├── docker-compose.yml
 │   └── Dockerfile.api
@@ -78,401 +86,454 @@ salon-saas/
 ├── .prettierrc
 ├── .eslintrc.json
 ├── nx.json
-└── CLAUDE.md                     # Root-level Claude instructies
+└── CLAUDE.md                           # Root-level Claude instructions
 ```
 
-### 1.2 — CLAUDE.md (Root Instructies)
+### 1.2 — CLAUDE.md (Root Instructions)
 
-Dit is het belangrijkste bestand voor je AI-first workflow. Claude Code leest dit automatisch.
+This is the most important file for the AI-first workflow. Claude Code reads it automatically in both interactive and autonomous (Ralph) mode. It must support both modes.
 
 ```markdown
 # CLAUDE.md
 
 ## Project
-Salon Management SaaS - Multi-tenant platform voor kapsalons en schoonheidssalons.
+Chairly - Multi-tenant SaaS platform for salons and barbershops.
 
-## Architectuur
-- Lees `docs/domain-model.md` voor het domeinmodel
-- Lees `docs/adr/` voor architectuurbeslissingen
-- Feature specs staan in `docs/specs/`
+## Architecture
+- Read `docs/domain-model.md` for the domain model
+- Read `docs/adr/` for architecture decisions
+- Feature specs are in `docs/specs/`
 
 ## Tech Stack
 - Backend: .NET 9, ASP.NET Core Web API, EF Core, MediatR
 - Frontend: Angular 19, Nx, NgRx SignalStore, Tailwind CSS
 - Infra: PostgreSQL, RabbitMQ, .NET Aspire, Docker
 
-## Code Conventies — Backend
-- Volg Clean Architecture: Domain → Application → Infrastructure → Api
-- Gebruik MediatR voor alle commands en queries
+## Code Conventions — Backend
+- Follow Clean Architecture: Domain → Application → Infrastructure → Api
+- Use MediatR for all commands and queries
 - Commands: `Create{Entity}Command`, `Update{Entity}Command`, `Delete{Entity}Command`
 - Queries: `Get{Entity}Query`, `Get{Entities}ListQuery`
-- Handlers altijd in `Application/Features/{Context}/{Commands|Queries}/`
-- Gebruik FluentValidation voor input validatie
-- Entity configuraties in aparte `IEntityTypeConfiguration<T>` classes
-- Alle endpoints via Minimal APIs, gegroepeerd per feature in extension methods
-- Gebruik Result pattern (geen exceptions voor business logic)
-- Test coverage: Unit tests voor handlers, integration tests voor API endpoints
+- Handlers always in `Application/Features/{Context}/{Commands|Queries}/`
+- Use FluentValidation for input validation
+- Entity configurations in separate `IEntityTypeConfiguration<T>` classes
+- All endpoints via Minimal APIs, grouped per feature in extension methods
+- Use Result pattern (no exceptions for business logic)
+- Test coverage: Unit tests for handlers, integration tests for API endpoints
 
-## Code Conventies — Frontend
-- Standalone components, geen NgModules
-- Gebruik Angular signals en NgRx SignalStore voor state
-- Smart/Dumb component pattern: containers laden data, presentational components tonen het
-- Services voor API calls, één service per backend context
-- Gebruik Tailwind CSS, geen custom SCSS tenzij absoluut nodig
-- Reactive forms met typed FormGroups
+## Code Conventions — Frontend
+- Standalone components, no NgModules
+- Use Angular signals and NgRx SignalStore for state
+- Smart/Dumb component pattern: containers load data, presentational components display it
+- Services for API calls, one service per backend context
+- Use Tailwind CSS, no custom SCSS unless absolutely necessary
+- Reactive forms with typed FormGroups
 - Lazy-loaded routes per feature module
 
-## Workflow
-1. Lees altijd eerst de relevante spec in `docs/specs/` voordat je begint
-2. Maak eerst de domain entities en value objects
-3. Dan de EF Core configuratie en migratie
-4. Dan de MediatR handlers met FluentValidation
-5. Dan de API endpoints
-6. Dan de Angular feature (service → store → components → routes)
-7. Schrijf tests bij elke stap
-8. Commit met conventional commits: feat(appointments): add booking endpoint
+## Working Method — Interactive Mode
+When working with a human developer interactively:
+- STOP and ask questions when something is not described in a spec, ADR, or previous instruction
+- Provide 2-3 concrete options with pros and cons
+- Wait for the human's choice before proceeding
 
-## Verboden
-- Geen `any` types in TypeScript
-- Geen business logic in controllers/endpoints
-- Geen direct gebruik van DbContext buiten Infrastructure laag
-- Geen hardcoded strings voor configuratie
-- Commit nooit zonder dat tests slagen
+## Working Method — Autonomous/Headless Mode (Ralph)
+When running autonomously via Ralph or in headless mode:
+- Do NOT stop to ask questions — there is no one to answer
+- Make decisions based on existing patterns in the codebase, ADRs, and specs
+- Follow conventions established in docs/ and existing code
+- Document any significant decisions in progress.txt
+- When in doubt, choose the simplest approach that follows existing patterns
+
+## Implementation Order
+1. Always read the relevant spec in `docs/specs/` before starting
+2. Create domain entities and value objects first
+3. Then EF Core configuration and migration
+4. Then MediatR handlers with FluentValidation
+5. Then API endpoints
+6. Then Angular feature (service → store → components → routes)
+7. Write tests at every step
+8. Commit with conventional commits: feat(appointments): add booking endpoint
+
+## Forbidden
+- No `any` types in TypeScript
+- No business logic in controllers/endpoints
+- No direct use of DbContext outside Infrastructure layer
+- No hardcoded strings for configuration
+- Never commit without tests passing
 ```
 
-### 1.3 — Claude Code Custom Commands
-
-**`.claude/commands/implement-feature.md`**
-```markdown
-Implementeer de feature beschreven in: docs/specs/$ARGUMENTS.md
-
-Stappen:
-1. Lees de spec volledig door
-2. Identificeer welke domain entities nodig zijn
-3. Implementeer in deze volgorde:
-   a. Domain entities/value objects
-   b. EF Core configuraties + migratie
-   c. MediatR commands/queries + validators
-   d. API endpoints
-   e. Angular service + store
-   f. Angular components + routing
-4. Schrijf unit tests voor alle handlers
-5. Schrijf integration tests voor API endpoints
-6. Voer alle tests uit en fix eventuele fouten
-7. Maak een commit met conventional commit message
-```
-
-**`.claude/commands/write-tests.md`**
-```markdown
-Schrijf tests voor: $ARGUMENTS
-
-1. Analyseer de bestaande code
-2. Schrijf unit tests (xUnit + FluentAssertions + NSubstitute)
-3. Schrijf integration tests met WebApplicationFactory
-4. Zorg voor edge cases en foutscenario's
-5. Voer alle tests uit
-```
-
-### 1.4 — Linting & Formatting
+### 1.3 — Linting & Formatting
 
 **Backend (.NET):**
-- `.editorconfig` met C# conventies
-- `dotnet format` als CI check
-- Optioneel: Roslynator of SonarAnalyzer NuGet packages
+- `.editorconfig` with C# conventions
+- `dotnet format` as CI check
+- Optional: Roslynator or SonarAnalyzer NuGet packages
 
 **Frontend (Angular/Nx):**
-- ESLint met `@angular-eslint` en `@nx/eslint`
-- Prettier voor formatting
-- `lint-staged` + `husky` voor pre-commit hooks (optioneel, Claude Code runt toch tests)
+- ESLint with `@angular-eslint` and `@nx/eslint`
+- Prettier for formatting
 
-### 1.5 — CI/CD Basis
+### 1.4 — CI/CD Basics
 
-Een minimale GitHub Actions workflow die bij elke PR:
+A minimal GitHub Actions workflow that runs on every PR:
 1. Backend: `dotnet build` → `dotnet test` → `dotnet format --verify-no-changes`
 2. Frontend: `nx lint` → `nx test` → `nx build`
 
 ---
 
-## Fase 2: Feature Specificaties
+## Phase 2: Ralph Setup (One-Time Configuration)
 
-### 2.1 — Spec Template
+> **Goal:** Set up Ralph in WSL so it can autonomously implement features on a separate clone, without blocking your Windows workflow.
 
-Maak `docs/specs/_template.md`:
+### 2.1 — WSL Environment
+
+Ralph runs in WSL Ubuntu with its own clone of the repository:
+
+```
+Windows (your interactive work):
+  c:\Projects\Prive\Chairly\Chairly\     ← you work here
+
+WSL (Ralph autonomous agent):
+  ~/projects/Chairly/                      ← Ralph's base clone
+```
+
+**Prerequisites in WSL:**
+- Git
+- Node.js (for Claude Code CLI)
+- Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
+- GitHub CLI (`gh`) — authenticated with SSH
+- `jq` (`sudo apt install jq`)
+- SSH key configured and added to GitHub
+
+### 2.2 — Install Ralph
+
+```bash
+cd ~/projects
+git clone https://github.com/snarktank/ralph.git
+
+# Copy Ralph files into the Chairly project
+cd ~/projects/Chairly
+mkdir -p scripts/ralph
+cp ~/projects/ralph/ralph.sh scripts/ralph/
+cp ~/projects/ralph/CLAUDE.md scripts/ralph/CLAUDE.md
+chmod +x scripts/ralph/ralph.sh
+```
+
+### 2.3 — Ralph Configuration
+
+Ralph expects all its files in the same directory as `ralph.sh`:
+
+```
+scripts/ralph/
+├── ralph.sh          # The loop script
+├── CLAUDE.md         # Prompt template (Ralph's instructions to Claude Code)
+├── prd.json          # Current feature tasks (created per feature)
+├── progress.txt      # Append-only memory between iterations
+├── .last-branch      # Branch tracking
+└── archive/          # Previous runs (auto-archived)
+```
+
+Key settings in `ralph.sh`:
+- Tool: `claude` (not amp)
+- Max iterations: configurable per run (default 10)
+
+### 2.4 — Verify Ralph Setup
+
+Create a hello world PRD and run Ralph to verify the entire chain works:
+
+```bash
+cd ~/projects/Chairly
+
+# Create a minimal prd.json for testing
+cat > scripts/ralph/prd.json << 'EOF'
+{
+  "project": "Chairly",
+  "branchName": "ralph/hello-world",
+  "description": "Hello World - Verify Ralph setup",
+  "userStories": [
+    {
+      "id": "HW-001",
+      "title": "Create README.md",
+      "description": "Create a README.md with the project name and description.",
+      "acceptanceCriteria": [
+        "README.md exists in project root",
+        "Contains project name 'Chairly'",
+        "Contains description 'AI-first salon management platform'"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
+EOF
+
+# Run Ralph with Claude Code
+./scripts/ralph/ralph.sh --tool claude 3
+```
+
+---
+
+## Phase 3: Feature Development with Ralph
+
+> **Goal:** Define features as specs, convert them to PRDs, and let Ralph implement them autonomously.
+
+### 3.1 — Feature Spec → PRD Workflow
+
+```
+You (Architect)                         Ralph (Autonomous Agent in WSL)
+───────────────                         ───────────────────────────────
+1. Write spec in docs/specs/
+2. Convert spec → prd.json
+   (small, focused user stories)
+3. Place prd.json in scripts/ralph/
+4. Start Ralph in WSL              →    5. Reads prd.json
+                                        6. Picks highest priority story
+                                        7. Implements it (fresh Claude instance)
+                                        8. Runs quality checks
+                                        9. Commits if passing
+                                       10. Updates prd.json (passes: true)
+                                       11. Logs progress to progress.txt
+                                       12. Repeats until all stories done
+5. Review branch on GitHub
+6. Merge or request changes
+```
+
+### 3.2 — Writing Effective PRDs for Ralph
+
+Each user story must be **small enough to complete in one Claude Code context window**. This is critical — stories that are too large produce poor code.
+
+**Right-sized stories:**
+- Add a database entity and migration
+- Add a UI component to an existing page
+- Create a MediatR command handler with validation
+- Add an API endpoint for an existing handler
+- Add a filter dropdown to a list
+
+**Too big (split these):**
+- "Build the entire dashboard"
+- "Add authentication"
+- "Refactor the API"
+- "Implement appointment booking" (split into entity, handler, endpoint, UI stories)
+
+### 3.3 — Spec Template
+
+Create `docs/specs/_template.md`:
 
 ```markdown
-# Feature: [Naam]
+# Feature: [Name]
 
 ## Context
-Beschrijving van waarom deze feature nodig is.
+Description of why this feature is needed.
 
 ## User Stories
-- Als [rol] wil ik [actie] zodat [waarde]
+- As a [role] I want [action] so that [value]
 
 ## Acceptance Criteria
-- [ ] Criterium 1
-- [ ] Criterium 2
+- [ ] Criterion 1
+- [ ] Criterion 2
 
 ## Domain Model
-Welke entities, value objects, en relaties zijn betrokken?
+Which entities, value objects, and relationships are involved?
 
 ## API Endpoints
-| Method | Route | Beschrijving |
+| Method | Route | Description |
 |--------|-------|-------------|
 | POST   | /api/v1/... | ... |
 
 ## Business Rules
-- Regel 1
-- Regel 2
+- Rule 1
+- Rule 2
 
 ## UI/UX
-Beschrijving van de schermen, eventueel wireframes als afbeelding.
+Description of screens, wireframes if applicable.
 
 ## Events (async)
-Welke events worden gepubliceerd naar RabbitMQ?
+Events published to RabbitMQ.
 
 ## Out of Scope
-Wat hoort NIET bij deze feature?
+What does NOT belong to this feature?
 ```
 
-### 2.2 — Feature Roadmap (volgorde van implementatie)
+### 3.4 — PRD JSON Format
 
-De volgorde is cruciaal. Begin met de kern en bouw uit:
+Convert each spec into a `prd.json` with granular stories:
 
-| # | Feature | Waarom deze volgorde |
-|---|---------|---------------------|
-| 1 | **Tenant & Auth Setup** | Fundament: multi-tenancy + authenticatie |
-| 2 | **Staff Management** | Wie werkt er? Nodig voor alles wat volgt |
-| 3 | **Service Catalog** | Wat biedt de salon aan? (knippen, kleuren, etc.) |
-| 4 | **Client Management** | Wie zijn de klanten? |
-| 5 | **Appointment Booking** | De kernfunctie — alles komt hier samen |
-| 6 | **Calendar View** | Visuele weergave van afspraken (dag/week/maand) |
-| 7 | **Notifications** | Afspraakbevestigingen, herinneringen (RabbitMQ + email/SMS) |
-| 8 | **Billing & Invoicing** | Facturering na afspraken |
-| 9 | **Dashboard & Reporting** | Omzet, bezettingsgraad, populaire diensten |
-| 10 | **Client Portal** | Klanten kunnen zelf boeken (public-facing) |
-
-### 2.3 — Voorbeeld Spec: Appointment Booking
-
-```markdown
-# Feature: Appointment Booking
-
-## Context
-Het boeken van afspraken is de kernfunctionaliteit van de salon software.
-Een afspraak koppelt een klant aan een medewerker voor een of meerdere
-diensten op een specifiek tijdstip.
-
-## User Stories
-- Als salon eigenaar wil ik een afspraak inplannen voor een klant
-  zodat het schema van mijn medewerkers up-to-date is.
-- Als medewerker wil ik mijn eigen agenda zien
-  zodat ik weet welke klanten ik vandaag heb.
-
-## Acceptance Criteria
-- [ ] Een afspraak heeft: klant, medewerker, 1+ diensten, starttijd
-- [ ] De duur wordt automatisch berekend op basis van de geselecteerde diensten
-- [ ] Het systeem voorkomt dubbele boekingen voor dezelfde medewerker
-- [ ] Een afspraak kan de status hebben: Scheduled, InProgress, Completed, Cancelled, NoShow
-- [ ] Bij het aanmaken wordt een AppointmentCreated event gepubliceerd
-
-## Domain Model
-- Appointment (aggregate root)
-  - Id, TenantId, ClientId, StaffMemberId, StartTime, EndTime, Status, Notes
-- AppointmentService (value object binnen Appointment)
-  - ServiceId, ServiceName, Duration, Price
-
-## API Endpoints
-| Method | Route | Beschrijving |
-|--------|-------|-------------|
-| POST   | /api/v1/appointments | Maak afspraak |
-| GET    | /api/v1/appointments?date=&staffId= | Lijst ophalen |
-| GET    | /api/v1/appointments/{id} | Detail ophalen |
-| PUT    | /api/v1/appointments/{id} | Afspraak wijzigen |
-| PATCH  | /api/v1/appointments/{id}/status | Status wijzigen |
-| DELETE | /api/v1/appointments/{id} | Afspraak annuleren |
-
-## Business Rules
-- Een afspraak kan niet in het verleden worden gepland
-- Een medewerker kan niet dubbel geboekt worden (overlap check)
-- Alleen diensten die de medewerker beheerst mogen worden gekoppeld
-- Annuleren is alleen mogelijk als status = Scheduled
-- Minimale afspraakduur: 15 minuten
-
-## Events
-- AppointmentCreated → trigger bevestigingsmail
-- AppointmentCancelled → trigger annuleringsmail
-- AppointmentStatusChanged → update dashboard stats
-
-## Out of Scope
-- Online boeken door klanten (dat is de Client Portal feature)
-- Betalingsafhandeling (dat is Billing)
+```json
+{
+  "project": "Chairly",
+  "branchName": "ralph/appointment-booking",
+  "description": "Appointment Booking - Core scheduling functionality",
+  "userStories": [
+    {
+      "id": "AB-001",
+      "title": "Create Appointment entity and migration",
+      "description": "Add Appointment aggregate root with EF Core configuration.",
+      "acceptanceCriteria": [
+        "Appointment entity with Id, TenantId, ClientId, StaffMemberId, StartTime, EndTime, Status, Notes",
+        "AppointmentService value object with ServiceId, ServiceName, Duration, Price",
+        "EF Core configuration in separate IEntityTypeConfiguration class",
+        "Migration generated and runs successfully",
+        "dotnet build passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "AB-002",
+      "title": "Create booking command handler",
+      "description": "MediatR handler for creating appointments with overlap validation.",
+      "acceptanceCriteria": [
+        "CreateAppointmentCommand with FluentValidation",
+        "Handler checks for staff member time overlap",
+        "Returns Result pattern (not exceptions)",
+        "Unit tests for handler including overlap scenario",
+        "dotnet test passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Depends on AB-001"
+    }
+  ]
+}
 ```
+
+### 3.5 — Running Ralph
+
+```bash
+# SSH into WSL
+wsl
+
+# Navigate to project
+cd ~/projects/Chairly
+
+# Pull latest changes (in case you pushed from Windows)
+git pull
+
+# Start Ralph (default 10 iterations, using Claude Code)
+./scripts/ralph/ralph.sh --tool claude
+
+# Or with custom iteration count
+./scripts/ralph/ralph.sh --tool claude 20
+
+# Monitor progress
+cat scripts/ralph/progress.txt
+cat scripts/ralph/prd.json | jq '.userStories[] | {id, title, passes}'
+```
+
+### 3.6 — Feature Roadmap (Implementation Order)
+
+| # | Feature | Why this order |
+|---|---------|----------------|
+| 1 | **Tenant & Auth Setup** | Foundation: multi-tenancy + authentication |
+| 2 | **Staff Management** | Who works there? Needed for everything that follows |
+| 3 | **Service Catalog** | What does the salon offer? (haircuts, coloring, etc.) |
+| 4 | **Client Management** | Who are the clients? |
+| 5 | **Appointment Booking** | The core feature — everything comes together here |
+| 6 | **Calendar View** | Visual representation of appointments (day/week/month) |
+| 7 | **Notifications** | Appointment confirmations, reminders (RabbitMQ + email/SMS) |
+| 8 | **Billing & Invoicing** | Invoicing after appointments |
+| 9 | **Dashboard & Reporting** | Revenue, occupancy rate, popular services |
+| 10 | **Client Portal** | Clients can book themselves (public-facing) |
+
+Each feature follows the flow: **write spec** → **convert to prd.json** → **run Ralph** → **review & merge**.
 
 ---
 
-## Fase 3: Ontwikkelworkflow met Claude Code
+## Phase 4: Deployment
 
-### 3.1 — Dagelijkse Workflow
+### 4.1 — Environments
 
-```
-Jij (Architect)                    Claude Code (Developer)
-─────────────                      ──────────────────────
-Schrijf/review spec          →
-                              ←    "Spec gelezen, ik ga beginnen
-                                    met de domain entities..."
-                              ←    Implementeert stap voor stap
-Review code, geef feedback   →
-                              ←    Past aan op basis van feedback
-Approve & merge              →
-Schrijf volgende spec        →     ... herhaal ...
-```
-
-### 3.2 — Hoe je Claude Code aanstuurt
-
-**Feature implementeren:**
-```bash
-claude "/implement-feature appointment-booking"
-```
-
-**Specifieke taak:**
-```bash
-claude "Voeg een overlap-check toe aan de CreateAppointmentCommandHandler.
-        Als een medewerker al een afspraak heeft die overlapt met de
-        gevraagde tijd, return een error. Schrijf ook een unit test."
-```
-
-**Code review laten doen:**
-```bash
-claude "Review de code in Application/Features/Appointments/ en check of
-        het voldoet aan de conventies in CLAUDE.md. Geef suggesties."
-```
-
-**Bug fixen:**
-```bash
-claude "De integration test voor POST /api/v1/appointments faalt met een
-        409 conflict. De overlap check lijkt te streng. Debug dit."
-```
-
-### 3.3 — Tips voor effectief werken met Claude Code
-
-1. **Eén feature per sessie.** Start een verse sessie per feature voor een schone context.
-
-2. **Laat Claude Code zijn eigen werk verifiëren.** Eindig instructies altijd met "voer de tests uit en fix fouten".
-
-3. **Gebruik git branches.** Laat Claude Code per feature op een branch werken:
-   ```bash
-   claude "Maak een branch feat/appointment-booking aan en werk daarop."
-   ```
-
-4. **Wees specifiek over wat je NIET wilt.** Claude Code is enthousiast — zonder grenzen bouwt hij teveel. Gebruik "Out of Scope" in je specs.
-
-5. **Itereer in kleine stappen.** Liever 5 kleine prompts dan 1 enorme. Je houdt meer controle en kunt bijsturen.
-
-6. **Review altijd de migraties.** EF Core migraties zijn moeilijk terug te draaien. Bekijk ze handmatig voordat je ze toepast.
-
----
-
-## Fase 4: Deployment
-
-### 4.1 — Omgevingen
-
-| Omgeving | Doel | Infra |
-|----------|------|-------|
+| Environment | Purpose | Infra |
+|-------------|---------|-------|
 | Local | Development | .NET Aspire + Docker Compose |
-| Dev/Test | Integration testing | Docker op een VPS of Azure Container Apps |
-| Staging | Pre-productie, demo's | Identiek aan productie |
+| Dev/Test | Integration testing | Docker on a VPS or Azure Container Apps |
+| Staging | Pre-production, demos | Identical to production |
 | Production | Live | Azure Container Apps / AWS ECS / DigitalOcean |
 
-### 4.2 — Deployment Strategie
+### 4.2 — Deployment Strategy
 
-**Stap 1: Containerize**
+**Step 1: Containerize**
 - Dockerfile per service (API)
-- Docker Compose voor lokale stack (PostgreSQL, RabbitMQ, API, Angular)
-- .NET Aspire genereert manifest voor container orchestratie
+- Docker Compose for local stack (PostgreSQL, RabbitMQ, API, Angular)
+- .NET Aspire generates manifest for container orchestration
 
-**Stap 2: CI/CD Pipeline (GitHub Actions)**
+**Step 2: CI/CD Pipeline (GitHub Actions)**
 ```
 Push to main → Build → Test → Docker build → Push to registry → Deploy
 ```
 
-**Stap 3: Infrastructure as Code**
-- Pulumi (C#) of Terraform voor cloud resources
-- Database migraties als onderdeel van deployment pipeline
-
-### 4.3 — Laat Claude Code helpen met deployment
-
-```bash
-claude "Maak een Dockerfile voor de API die multi-stage build gebruikt.
-        Maak ook een docker-compose.yml die de API, PostgreSQL, en
-        RabbitMQ opstart. Zorg dat .NET Aspire dashboard beschikbaar is."
-```
-
-```bash
-claude "Maak een GitHub Actions workflow die bij push naar main:
-        1. Backend build + test
-        2. Frontend build + test
-        3. Docker image bouwt en pusht naar GitHub Container Registry
-        4. Deploy naar de staging omgeving via SSH"
-```
+**Step 3: Infrastructure as Code**
+- Pulumi (C#) or Terraform for cloud resources
+- Database migrations as part of deployment pipeline
 
 ---
 
-## Fase 5: Kwaliteitsbewaking
+## Phase 5: Quality Assurance
 
-### 5.1 — Wat je zelf moet doen (niet delegeren aan AI)
+### 5.1 — Your Responsibilities (Do Not Delegate to AI)
 
-- **Architectuurbeslissingen** reviewen en vastleggen in ADRs
-- **Database migraties** handmatig controleren
-- **Security** configuratie (auth, CORS, rate limiting)
-- **Feature specs** schrijven en goedkeuren
-- **Code reviews** — Claude Code schrijft, jij reviewt
+- **Architecture decisions** — review and record in ADRs
+- **Database migrations** — manually verify before applying
+- **Security** configuration (auth, CORS, rate limiting)
+- **Feature specs** — write and approve
+- **Code reviews** — Ralph/Claude Code writes, you review
 
-### 5.2 — Wat Claude Code kan doen
+### 5.2 — Ralph's Automated Quality Checks
 
-- Code implementeren volgens specs
-- Tests schrijven en uitvoeren
-- Refactoring en code cleanup
-- Boilerplate genereren (CRUD, nieuwe features scaffolden)
-- Documentation schrijven
-- CI/CD pipelines opzetten
-- Docker configuratie
+Ralph runs quality checks after every story iteration:
+- `dotnet build` — compilation check
+- `dotnet test` — unit + integration tests
+- `dotnet format --verify-no-changes` — formatting
+- `nx lint` — frontend linting
+- `nx test` — frontend tests
 
-### 5.3 — Definition of Done (per feature)
+If checks fail, Ralph will attempt to fix the issues in the same iteration before committing.
 
-- [ ] Spec is volledig geïmplementeerd (alle acceptance criteria)
-- [ ] Unit tests geschreven en groen
-- [ ] Integration tests geschreven en groen
-- [ ] Geen linting errors
-- [ ] Code reviewed door jou
-- [ ] Conventional commit message
-- [ ] Feature branch gemerged naar main
+### 5.3 — Definition of Done (Per Feature)
+
+- [ ] All user stories in prd.json have `passes: true`
+- [ ] Ralph's quality checks all pass
+- [ ] Code reviewed by you
+- [ ] Conventional commit messages
+- [ ] Feature branch merged to main
+- [ ] progress.txt documents learnings
 
 ---
 
 ## Quick Start Checklist
 
-### Week 1: Fundament
-- [ ] Maak GitHub repo aan
-- [ ] Schrijf `docs/domain-model.md`
-- [ ] Schrijf eerste 3 ADRs
-- [ ] Maak `CLAUDE.md` en `.claude/` folder aan
+### Week 1: Foundation (Interactive with Claude Code, No Ralph)
+- [ ] Create GitHub repo
+- [ ] Write `docs/domain-model.md`
+- [ ] Write first 3 ADRs
+- [ ] Create `CLAUDE.md` (dual-mode: interactive + autonomous)
 - [ ] Setup Nx workspace + Angular app
-- [ ] Setup .NET solution met Clean Architecture projecten
+- [ ] Setup .NET solution with Clean Architecture projects
 - [ ] Setup .NET Aspire AppHost
-- [ ] Configureer ESLint, Prettier, EditorConfig
-- [ ] Maak basis CI workflow in GitHub Actions
-- [ ] Schrijf spec voor Feature 1 (Tenant & Auth)
+- [ ] Configure ESLint, Prettier, EditorConfig
+- [ ] Create basic CI workflow in GitHub Actions
+- [ ] Push initial codebase to GitHub
 
-### Week 2-3: Eerste features
-- [ ] Implementeer Tenant & Auth met Claude Code
-- [ ] Implementeer Staff Management
-- [ ] Implementeer Service Catalog
+### Week 2: Ralph Setup
+- [ ] Configure WSL environment (git, node, claude, gh, jq, ssh)
+- [ ] Clone repo in WSL (`~/projects/Chairly`)
+- [ ] Install Ralph into `scripts/ralph/`
+- [ ] Run hello world test with Ralph
+- [ ] Write spec for Feature 1 (Tenant & Auth)
 
-### Week 4-5: Kernfunctionaliteit
-- [ ] Implementeer Client Management
-- [ ] Implementeer Appointment Booking
-- [ ] Implementeer Calendar View
+### Week 3–4: First Features (Ralph)
+- [ ] Convert Tenant & Auth spec → prd.json → run Ralph → review & merge
+- [ ] Convert Staff Management spec → prd.json → run Ralph → review & merge
+- [ ] Convert Service Catalog spec → prd.json → run Ralph → review & merge
 
-### Week 6+: Uitbreiding
+### Week 5–6: Core Functionality (Ralph)
+- [ ] Client Management
+- [ ] Appointment Booking
+- [ ] Calendar View
+
+### Week 7+: Extensions (Ralph)
 - [ ] Notifications (RabbitMQ integration)
 - [ ] Billing
 - [ ] Dashboard
