@@ -1,91 +1,138 @@
-# Ralph Agent Instructions
+# Ralph Agent Instructions — Chairly
 
-You are an autonomous coding agent working on a software project.
+You are an autonomous coding agent working on Chairly, a multi-tenant SaaS platform for salons and barbershops.
+
+## Context
+
+Before starting any work, read these files to understand the project:
+
+1. **Root `CLAUDE.md`** — coding conventions, forbidden patterns, tech stack
+2. **`docs/domain-model.md`** — bounded contexts, entities, ubiquitous language
+3. **`docs/adr/`** — architecture decision records
+4. **The relevant spec in `docs/specs/`** — referenced by the current story
 
 ## Your Task
 
-1. Read the PRD at `prd.json` (in the same directory as this file)
-2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
-3. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
+1. Read the PRD at `scripts/ralph/prd.json`
+2. Read the progress log at `scripts/ralph/progress.txt` (check Codebase Patterns section first)
+3. Check you're on the correct branch from PRD `branchName`. If not, create it from `main`.
 4. Pick the **highest priority** user story where `passes: false`
-5. Implement that single user story
-6. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
-7. Update CLAUDE.md files if you discover reusable patterns (see below)
-8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
+5. Read the relevant spec in `docs/specs/` if referenced
+6. Implement that single user story
+7. Run quality checks (see below)
+8. If checks pass, commit ALL changes with message: `feat({context}): {Story ID} - {Story Title}`
 9. Update the PRD to set `passes: true` for the completed story
-10. Append your progress to `progress.txt`
+10. Append your progress to `scripts/ralph/progress.txt`
+
+## Quality Checks
+
+Run these checks after implementing a story. ALL must pass before committing.
+
+### Backend (if you changed files in `src/backend/`)
+
+```bash
+dotnet build src/backend/Chairly.slnx
+dotnet test src/backend/Chairly.slnx
+dotnet format src/backend/Chairly.slnx --verify-no-changes
+```
+
+If `dotnet format` fails, fix with `dotnet format src/backend/Chairly.slnx` then verify again.
+
+### Frontend (if you changed files in `src/frontend/`)
+
+```bash
+cd src/frontend/chairly
+npx nx affected -t lint --base=main
+npx nx affected -t test --base=main
+npx nx affected -t build --base=main
+```
+
+### Both
+
+If you changed files in both backend and frontend, run both sets of checks.
+
+## Implementation Order
+
+Follow this order when implementing a story that spans multiple layers:
+
+1. Domain entities and value objects (`src/backend/Chairly.Domain/`)
+2. EF Core configuration and migration (`src/backend/Chairly.Infrastructure/`)
+3. Command/Query + Handler + Validator (`src/backend/Chairly.Api/Features/{Context}/{UseCase}/`)
+4. API endpoint (`src/backend/Chairly.Api/Features/{Context}/{UseCase}/`)
+5. Angular service (`src/frontend/chairly/libs/chairly/src/lib/{domain}/data-access/`)
+6. NgRx SignalStore (`src/frontend/chairly/libs/chairly/src/lib/{domain}/data-access/`)
+7. UI components (`src/frontend/chairly/libs/chairly/src/lib/{domain}/ui/`)
+8. Feature container + routes (`src/frontend/chairly/libs/chairly/src/lib/{domain}/feature/`)
+9. Write tests at every step
+
+## Key Conventions
+
+### Backend
+
+- **Vertical Slice Architecture** — each use case is a self-contained slice in `Chairly.Api/Features/{Context}/{UseCase}/`
+- **Slice files:** `{UseCase}Command.cs` or `{UseCase}Query.cs`, `{UseCase}Handler.cs`, `{UseCase}Endpoint.cs`, `{UseCase}Validator.cs`
+- **Custom mediator** (no MediatR package) — located in `Chairly.Api/Shared/Mediator/`
+- **OneOf** for the result pattern — no exceptions for business logic
+- **Timestamps over status columns** (ADR-009) — use `{Action}AtUtc` + `{Action}By` pairs
+- **Database-per-tenant** — all entities carry `TenantId`
+- **File-scoped namespaces**, `var` usage, braces required, `_camelCase` for private fields
+- **TreatWarningsAsErrors is ON** — Roslynator + Meziantou analyzers are active, zero warnings allowed
+- Naming: `Create{Entity}Command`, `Get{Entity}Query`, `{CommandOrQuery}Handler`, `{CommandOrQuery}Validator`, `{CommandOrQuery}Endpoint`
+
+### Frontend
+
+- **Nx monorepo** at `src/frontend/chairly/` with `@org/chairly-lib` and `@org/shared-lib` path aliases
+- **Standalone components**, OnPush change detection, signal-based APIs (`input()`, `model()`, `viewChild()`, `OutputEmitterRef`)
+- **No** `@Input()`, `@Output()`, `@ViewChild()` decorators — use signal-based alternatives
+- **No** function calls in templates — use signals or pipes
+- **NgRx SignalStore** for state management
+- **Sheriff** enforces module boundaries — domains cannot import from other domains
+- **Component prefix:** `chairly-`
+- **Tailwind CSS v4** + **SCSS** for styling
+- Strict ESLint: no `any`, no `console`, explicit return types, self-closing tags
+
+### Ubiquitous Language
+
+Always use these terms consistently:
+- **Booking** (never "appointment")
+- **Client** (never "customer")
+- **Staff Member** (never "employee")
+- **Service** — a catalog offering
+- **Tenant** — a single salon location
+
+## Forbidden
+
+- No `any` types in TypeScript
+- No `console` statements in production code
+- No business logic in endpoints
+- No direct DbContext usage outside Infrastructure layer
+- No hardcoded configuration strings
+- No status enum columns — use timestamp pairs
+- No cross-domain imports in frontend (use `shared/`)
+- No MediatR NuGet package
+- No `@Input()`/`@Output()`/`@ViewChild()` decorators
+- No function calls in Angular templates
+- No inline styles in Angular templates
+- Never commit without quality checks passing
 
 ## Progress Report Format
 
-APPEND to progress.txt (never replace, always append):
+APPEND to `scripts/ralph/progress.txt` (never replace, always append):
+
 ```
 ## [Date/Time] - [Story ID]
 - What was implemented
 - Files changed
 - **Learnings for future iterations:**
-  - Patterns discovered (e.g., "this codebase uses X for Y")
-  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
-  - Useful context (e.g., "the evaluation panel is in component X")
+  - Patterns discovered
+  - Gotchas encountered
+  - Useful context
 ---
 ```
 
-The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
-
 ## Consolidate Patterns
 
-If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
-
-```
-## Codebase Patterns
-- Example: Use `sql<number>` template for aggregations
-- Example: Always use `IF NOT EXISTS` for migrations
-- Example: Export types from actions.ts for UI components
-```
-
-Only add patterns that are **general and reusable**, not story-specific details.
-
-## Update CLAUDE.md Files
-
-Before committing, check if any edited files have learnings worth preserving in nearby CLAUDE.md files:
-
-1. **Identify directories with edited files** - Look at which directories you modified
-2. **Check for existing CLAUDE.md** - Look for CLAUDE.md in those directories or parent directories
-3. **Add valuable learnings** - If you discovered something future developers/agents should know:
-   - API patterns or conventions specific to that module
-   - Gotchas or non-obvious requirements
-   - Dependencies between files
-   - Testing approaches for that area
-   - Configuration or environment requirements
-
-**Examples of good CLAUDE.md additions:**
-- "When modifying X, also update Y to keep them in sync"
-- "This module uses pattern Z for all API calls"
-- "Tests require the dev server running on PORT 3000"
-- "Field names must match the template exactly"
-
-**Do NOT add:**
-- Story-specific implementation details
-- Temporary debugging notes
-- Information already in progress.txt
-
-Only update CLAUDE.md if you have **genuinely reusable knowledge** that would help future work in that directory.
-
-## Quality Requirements
-
-- ALL commits must pass your project's quality checks (typecheck, lint, test)
-- Do NOT commit broken code
-- Keep changes focused and minimal
-- Follow existing code patterns
-
-## Browser Testing (If Available)
-
-For any story that changes UI, verify it works in the browser if you have browser testing tools configured (e.g., via MCP):
-
-1. Navigate to the relevant page
-2. Verify the UI changes work as expected
-3. Take a screenshot if helpful for the progress log
-
-If no browser tools are available, note in your progress report that manual browser verification is needed.
+If you discover a **reusable pattern**, add it to the `## Codebase Patterns` section at the TOP of `scripts/ralph/progress.txt` (create it if it doesn't exist).
 
 ## Stop Condition
 
@@ -100,5 +147,7 @@ If there are still stories with `passes: false`, end your response normally (ano
 
 - Work on ONE story per iteration
 - Commit frequently
-- Keep CI green
+- Keep quality checks green
 - Read the Codebase Patterns section in progress.txt before starting
+- Follow existing code patterns — check nearby files for conventions
+- When in doubt, choose the simplest approach
