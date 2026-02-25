@@ -1,0 +1,21 @@
+{
+  "project": "Chairly",
+  "branchName": "ralph/hello-world",
+  "description": "Hello World - Verify Ralph setup",
+  "userStories": [
+    {
+      "id": "HW-001",
+      "title": "Create README.md",
+      "description": "Create a README.md in the project root with the project name and a short description.",
+      "acceptanceCriteria": [
+        "README.md exists in project root",
+        "Contains project name 'Chairly'",
+        "Contains description 'Multi-tenant SaaS platform for salons and barbershops'",
+        "dotnet build src/backend/Chairly.slnx passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
