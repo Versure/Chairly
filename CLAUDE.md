@@ -170,6 +170,26 @@ When running autonomously via Ralph or in headless mode:
 7. Write tests at every step
 8. Commit with conventional commits: `feat(bookings): add create booking endpoint`
 
+## Quality Checks
+
+Run these checks before committing. ALL must pass.
+
+**Backend** (if you changed files in `src/backend/`):
+```bash
+dotnet build src/backend/Chairly.slnx
+dotnet test src/backend/Chairly.slnx
+dotnet format src/backend/Chairly.slnx --verify-no-changes
+```
+If `dotnet format` fails, auto-fix with `dotnet format src/backend/Chairly.slnx` then verify again.
+
+**Frontend** (if you changed files in `src/frontend/`):
+```bash
+cd src/frontend/chairly
+npx nx affected -t lint --base=main
+npx nx affected -t test --base=main
+npx nx affected -t build --base=main
+```
+
 ## Forbidden
 
 - No `any` types in TypeScript
