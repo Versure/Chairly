@@ -38,3 +38,6 @@ jobs:
 
       - name: Test
         run: dotnet test src/backend/Chairly.slnx --no-build
+
+      - name: Format check
+        run: dotnet format src/backend/Chairly.slnx --verify-no-changes

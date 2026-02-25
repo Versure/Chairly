@@ -1,4 +1,4 @@
-﻿namespace Chairly.Tests;
+namespace Chairly.Tests;
 
 public class UnitTest1
 {
