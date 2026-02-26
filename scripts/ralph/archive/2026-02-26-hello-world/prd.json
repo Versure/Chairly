@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": "This is the foundation for all feature slices. See ADR-005 for the mediator pattern. No MediatR NuGet package — custom implementation only."
     },
     {
@@ -37,7 +37,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": "See ADR-003 for EF Core conventions and ADR-007 for database-per-tenant strategy. For now we use a single hardcoded tenant."
     },
     {

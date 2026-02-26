@@ -28,3 +28,15 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - Exception classes need 3 standard constructors for CA1032 unless suppressed
   - `dotnet format --verify-no-changes` passed without issues after build passes
 ---
+
+## 2026-02-26 - SC-002
+- Added Npgsql.EntityFrameworkCore.PostgreSQL (10.0.0) and Microsoft.EntityFrameworkCore (10.0.3) to Chairly.Infrastructure
+- Added Microsoft.EntityFrameworkCore.Design (10.0.3) to Chairly.Api for migrations CLI
+- Created ChairlyDbContext in Chairly.Infrastructure/Persistence/ with ApplyConfigurationsFromAssembly
+- Created TenantConstants.cs in Chairly.Api/Shared/Tenancy/ with hardcoded DefaultTenantId
+- Updated appsettings.Development.json with ConnectionStrings:ChairlyDb
+- Registered DbContext in Program.cs using configuration connection string
+- **Learnings for future iterations:**
+  - MA0026 fires on `// TODO:` comments and is treated as an error — use `#pragma warning disable MA0026`
+  - Packages resolved to latest .NET 10 compatible versions (10.0.0 or 10.0.3)
+---
