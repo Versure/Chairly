@@ -1,11 +1,16 @@
 using Chairly.Api.Dispatching;
+using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMediator();
 builder.Services.AddProblemDetails();
+
+builder.Services.AddDbContext<ChairlyDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ChairlyDb")));
 
 var app = builder.Build();
 
