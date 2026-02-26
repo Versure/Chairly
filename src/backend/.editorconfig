@@ -241,9 +241,12 @@ dotnet_diagnostic.IDE0161.severity = none
 
 #### Analyzer Severity Overrides — Test Projects ####
 
-# xUnit requires public test classes, suppress CA1515 in test files
+# xUnit requires public test classes and uses underscore naming — suppress relevant rules
 [Chairly.Tests/**.cs]
 dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.CA2007.severity = none
 
 #### Analyzer Severity Overrides ####
 

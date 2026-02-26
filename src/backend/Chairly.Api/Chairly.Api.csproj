@@ -18,4 +18,8 @@
     <RootNamespace>Chairly.Api</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chairly.Tests" />
+  </ItemGroup>
+
 </Project>

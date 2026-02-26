@@ -131,7 +131,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "This continues the ServiceEndpoints from SC-006. UpdatedAtUtc should be set to DateTimeOffset.UtcNow in Update and ToggleActive handlers."
     },
     {
