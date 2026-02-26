@@ -40,3 +40,14 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - MA0026 fires on `// TODO:` comments and is treated as an error — use `#pragma warning disable MA0026`
   - Packages resolved to latest .NET 10 compatible versions (10.0.0 or 10.0.3)
 ---
+
+## 2026-02-26 - SC-009
+- Added unit tests for Service handlers in `Chairly.Tests/Features/Services/ServiceHandlerTests.cs`
+- Tests cover: CreateServiceHandler (happy path + empty name + negative price validation), UpdateServiceHandler (happy path + not found), DeleteServiceHandler (happy path + not found), ToggleServiceActiveHandler (active→inactive, inactive→active, not found)
+- Used existing in-memory EF Core provider (same pattern as SC-008 ServiceCategoryHandlerTests)
+- All 17 tests pass (9 new + 8 existing from SC-008)
+- **Learnings for future iterations:**
+  - Test file was already scaffolded (untracked) — just needed to verify it compiles and passes
+  - The `CreateTestService` helper sets all required Service fields (Id, TenantId, Name, Duration, Price, IsActive, SortOrder, CreatedAtUtc)
+  - ToggleServiceActiveHandler tests both toggle directions; NotNull check on UpdatedAtUtc confirms timestamp is set
+---
