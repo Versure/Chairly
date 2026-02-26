@@ -113,7 +113,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "This story covers Create + Read operations. Update and Delete are in the next story. Include category name in responses by joining/loading the ServiceCategory navigation property."
     },
     {
