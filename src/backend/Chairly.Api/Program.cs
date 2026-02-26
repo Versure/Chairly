@@ -41,5 +41,6 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 app.UseHttpsRedirection();
 
 app.MapServiceCategoryEndpoints();
+app.MapServiceEndpoints();
 
 app.Run();

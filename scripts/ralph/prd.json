@@ -94,7 +94,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "See ADR-005 for slice structure. Each slice has its own folder under Features/Services/. Use Minimal APIs with route groups. ServiceCategory is simpler than Service — no timestamps beyond what's implicit."
     },
     {
