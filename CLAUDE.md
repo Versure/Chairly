@@ -158,6 +158,12 @@ When running autonomously via Ralph or in headless mode:
 - Follow conventions established in docs/ and existing code
 - Document any significant decisions in progress.txt
 - When in doubt, choose the simplest approach that follows existing patterns
+- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push the branch and create a PR BEFORE outputting the `<promise>COMPLETE</promise>` signal:**
+  ```bash
+  git push -u origin HEAD
+  gh pr create --title "feat({context}): {feature description}" --body "Implemented by Ralph. See prd.json for stories."
+  ```
+  Replace `{context}` with the bounded context (e.g. bookings, staff) and `{feature description}` with a short summary from the PRD.
 
 ## Implementation Order
 
