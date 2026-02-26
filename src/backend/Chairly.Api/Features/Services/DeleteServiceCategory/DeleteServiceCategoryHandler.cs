@@ -1,4 +1,5 @@
 using Chairly.Api.Dispatching;
+using Chairly.Api.Shared.Tenancy;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -14,7 +15,7 @@ internal sealed class DeleteServiceCategoryHandler(ChairlyDbContext db) : IReque
         ArgumentNullException.ThrowIfNull(command);
 
         var category = await db.ServiceCategories
-            .FirstOrDefaultAsync(sc => sc.Id == command.Id, cancellationToken)
+            .FirstOrDefaultAsync(sc => sc.Id == command.Id && sc.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (category is null)

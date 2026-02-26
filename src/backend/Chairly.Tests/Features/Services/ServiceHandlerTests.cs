@@ -3,6 +3,7 @@ using Chairly.Api.Features.Services.CreateService;
 using Chairly.Api.Features.Services.DeleteService;
 using Chairly.Api.Features.Services.ToggleServiceActive;
 using Chairly.Api.Features.Services.UpdateService;
+using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,7 @@ public class ServiceHandlerTests
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
             Name = "Test Service",
             Duration = TimeSpan.FromMinutes(30),
             Price = 25.00m,

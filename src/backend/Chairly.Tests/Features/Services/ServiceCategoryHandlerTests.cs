@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Services.CreateServiceCategory;
 using Chairly.Api.Features.Services.DeleteServiceCategory;
 using Chairly.Api.Features.Services.UpdateServiceCategory;
+using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +52,7 @@ public class ServiceCategoryHandlerTests
     public async Task UpdateServiceCategoryHandler_HappyPath_UpdatesAndReturnsCategory()
     {
         await using var db = CreateDbContext();
-        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = Guid.NewGuid(), Name = "Old Name", SortOrder = 0 };
+        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TenantConstants.DefaultTenantId, Name = "Old Name", SortOrder = 0 };
         db.ServiceCategories.Add(existing);
         await db.SaveChangesAsync();
 
@@ -82,7 +83,7 @@ public class ServiceCategoryHandlerTests
     public async Task DeleteServiceCategoryHandler_HappyPath_DeletesAndReturnsSuccess()
     {
         await using var db = CreateDbContext();
-        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = Guid.NewGuid(), Name = "Test", SortOrder = 0 };
+        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TenantConstants.DefaultTenantId, Name = "Test", SortOrder = 0 };
         db.ServiceCategories.Add(existing);
         await db.SaveChangesAsync();
 

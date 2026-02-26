@@ -1,4 +1,5 @@
 using Chairly.Api.Dispatching;
+using Chairly.Api.Shared.Tenancy;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -15,7 +16,7 @@ internal sealed class ToggleServiceActiveHandler(ChairlyDbContext db) : IRequest
 
         var service = await db.Services
             .Include(s => s.Category)
-            .FirstOrDefaultAsync(s => s.Id == command.Id, cancellationToken)
+            .FirstOrDefaultAsync(s => s.Id == command.Id && s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (service is null)
