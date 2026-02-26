@@ -33,7 +33,12 @@
       "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npm view eslint-plugin-rxjs-angular-x peerDependencies 2>&1)",
       "Bash(npm view:*)",
       "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && node -e \"const a = require\\('angular-eslint'\\); console.log\\(Object.keys\\(a.configs || a\\)\\)\" 2>&1)",
-      "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npx nx run-many -t lint 2>&1)"
+      "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npx nx run-many -t lint 2>&1)",
+      "Bash(cd /c/Projects/Prive/Chairly/Chairly && dotnet format src/backend/Chairly.slnx --verify-no-changes 2>&1)",
+      "Bash(cd /c/Projects/Prive/Chairly/Chairly && dotnet format src/backend/Chairly.slnx 2>&1)",
+      "Bash(echo ALL CHECKS PASSED:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git:*)"
     ]
   }
 }
