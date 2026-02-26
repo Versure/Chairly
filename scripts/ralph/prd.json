@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "This is the foundation for all feature slices. See ADR-005 for the mediator pattern. No MediatR NuGet package — custom implementation only."
     },
     {

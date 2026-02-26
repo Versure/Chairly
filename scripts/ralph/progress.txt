@@ -1,0 +1,30 @@
+## Codebase Patterns
+- Namespace: `Chairly.Api.Dispatching` (NOT `Chairly.Api.Shared.Mediator` — `Shared` is a VB keyword CA1716, `Mediator` segment conflicts with class name via CA1724)
+- All types in Chairly.Api must be `internal` (CA1515 is an error, not a warning)
+- CA1812 fires for DI-registered internal classes — suppress with `#pragma warning disable CA1812`
+- Exception types need standard constructors (CA1032/RCS1194) — use pragma suppression if intentional
+- LINQ `GroupBy`/`ToDictionary` must pass `StringComparer.Ordinal` (MA0002 is an error)
+- All `await` calls need `.ConfigureAwait(false)` (MA0004/CA2007 are errors)
+- Delegate type name ending in "Delegate" needs `#pragma warning disable CA1711`
+- Each type must be in its own file matching the type name (MA0048)
+- IPipelineBehavior parameter `next` must be renamed (CA1716 — VB keyword) — use `continuation`
+
+# Ralph Progress Log
+Started: Thu Feb 26 09:03:31 CET 2026
+---
+
+## 2026-02-26 - SC-001
+- Implemented custom CQRS mediator infrastructure in `Chairly.Api/Shared/Mediator/`
+- Namespace: `Chairly.Api.Dispatching` (avoids CA1716 on `Shared` segment, CA1724 on `Mediator` type/namespace conflict)
+- Files: IRequest, IRequestHandler, IPipelineBehavior, RequestHandlerDelegate, IMediator, Mediator, RequestHandlerWrapperBase, RequestHandlerWrapper, ValidationBehavior, ValidationException, MediatorExtensions
+- ValidationBehavior uses Data Annotations, throws ValidationException (caught by Program.cs exception handler → 400 ValidationProblemDetails)
+- AddMediator() extension scans assembly for IRequestHandler<,> implementations and registers them
+- Updated Program.cs to call builder.Services.AddMediator() and handle ValidationException
+- **Learnings for future iterations:**
+  - This project treats many Roslyn analyzer rules as errors (CA1515, CA1812, CA1716, MA0048, etc.)
+  - Run `dotnet build` after each change and fix all errors before moving on
+  - Types registered via DI need `#pragma warning disable CA1812` since the analyzer can't see DI registrations
+  - All DI-registered classes must be internal (CA1515) — this is fine for same-assembly handlers/endpoints
+  - Exception classes need 3 standard constructors for CA1032 unless suppressed
+  - `dotnet format --verify-no-changes` passed without issues after build passes
+---
