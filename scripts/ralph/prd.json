@@ -14,7 +14,7 @@
         "dotnet build src/backend/Chairly.slnx passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

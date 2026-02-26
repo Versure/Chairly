@@ -1,0 +1,16 @@
+## Codebase Patterns
+- dotnet build command: `dotnet build src/backend/Chairly.slnx`
+- Frontend quality checks run from `src/frontend/chairly/` using Nx
+
+# Ralph Progress Log
+Started: Thu Feb 26 08:39:09 CET 2026
+---
+
+## 2026-02-26 - HW-001
+- What was implemented: Created README.md in project root with project name and description
+- Files changed: README.md (new file)
+- **Learnings for future iterations:**
+  - No README.md existed in project root before this story
+  - dotnet build passes cleanly (0 warnings, 0 errors) on the existing codebase
+  - Branch `ralph/hello-world` was created from `main`
+---
