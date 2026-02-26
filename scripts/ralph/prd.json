@@ -53,7 +53,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "See docs/domain-model.md section 4 (Services) for the full entity definitions. Domain project has no EF Core dependency."
     },
     {

@@ -230,6 +230,15 @@ dotnet_naming_symbols.locals.applicable_accessibilities = *
 
 dotnet_naming_style.camel_case_style.capitalization = camel_case
 
+#### Analyzer Severity Overrides — Auto-generated Files ####
+
+# EF Core Migrations — auto-generated code, suppress all code analysis
+[Chairly.Infrastructure/Migrations/**.cs]
+dotnet_analyzer_diagnostic.severity = none
+dotnet_diagnostic.CA1062.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+
 #### Analyzer Severity Overrides — Test Projects ####
 
 # xUnit requires public test classes, suppress CA1515 in test files
