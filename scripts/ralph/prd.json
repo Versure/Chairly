@@ -150,7 +150,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Test handlers directly by instantiating them with a test DbContext. Use in-memory SQLite or EF Core InMemory provider. Add Microsoft.EntityFrameworkCore.InMemory or Microsoft.EntityFrameworkCore.Sqlite to Chairly.Tests if needed."
     },
     {
@@ -170,7 +170,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Same test infrastructure as SC-008. Test the toggle handler both directions (active -> inactive and inactive -> active)."
     }
   ]
