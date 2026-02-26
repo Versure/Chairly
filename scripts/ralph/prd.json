@@ -74,7 +74,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "See ADR-003 for EF Core conventions. Use separate IEntityTypeConfiguration<T> classes. The migration startup project is Chairly.Api, the DbContext project is Chairly.Infrastructure."
     },
     {

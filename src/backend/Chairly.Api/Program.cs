@@ -1,4 +1,5 @@
 using Chairly.Api.Dispatching;
+using Chairly.Api.Features.Services;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -38,5 +39,7 @@ app.UseExceptionHandler(exceptionHandlerApp =>
 });
 
 app.UseHttpsRedirection();
+
+app.MapServiceCategoryEndpoints();
 
 app.Run();
