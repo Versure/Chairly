@@ -245,7 +245,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — Convention issue. TenantId is an internal implementation detail and should not be leaked to API consumers."
     },
     {

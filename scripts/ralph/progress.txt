@@ -84,6 +84,16 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - When adding fields to response DTOs, must update ALL handlers that construct the DTO (not just the create handler)
 ---
 
+## 2026-02-27 - SC-013
+- Removed `TenantId` from `ServiceResponse` and `ServiceCategoryResponse` DTOs
+- Updated all 5 handlers constructing `ServiceResponse` (CreateServiceHandler, GetServiceHandler, GetServicesListHandler, UpdateServiceHandler, ToggleServiceActiveHandler) to remove the `TenantId` argument
+- Updated all 3 handlers constructing `ServiceCategoryResponse` (CreateServiceCategoryHandler, GetServiceCategoriesListHandler, UpdateServiceCategoryHandler) to remove the `TenantId` argument
+- No test changes needed — no tests asserted on `TenantId` in response objects
+- All 17 tests pass; build and format checks pass
+- **Learnings for future iterations:**
+  - TenantId is an internal implementation detail filtered at the query level (via `TenantConstants.DefaultTenantId`), so it never needs to appear in API response DTOs
+---
+
 ## 2026-02-27 - SC-012
 - Changed mediator namespace from `Chairly.Api.Dispatching` to `Chairly.Api.Shared.Mediator` in all 11 mediator files
 - Updated all `using Chairly.Api.Dispatching;` statements to `using Chairly.Api.Shared.Mediator;` in 31 feature files and Program.cs
