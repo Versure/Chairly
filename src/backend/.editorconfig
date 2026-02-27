@@ -230,6 +230,15 @@ dotnet_naming_symbols.locals.applicable_accessibilities = *
 
 dotnet_naming_style.camel_case_style.capitalization = camel_case
 
+#### Analyzer Severity Overrides — Shared/Mediator folder ####
+
+# Chairly.Api.Shared.Mediator namespace: 'Shared' is a VB keyword (CA1716),
+# and the 'Mediator' class name matches the 'Mediator' namespace segment (CA1724).
+# Both are intentional — namespace matches folder structure by convention.
+[Chairly.Api/Shared/Mediator/**.cs]
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1724.severity = none
+
 #### Analyzer Severity Overrides — Auto-generated Files ####
 
 # EF Core Migrations — auto-generated code, suppress all code analysis

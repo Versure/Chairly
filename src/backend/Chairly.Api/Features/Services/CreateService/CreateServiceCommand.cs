@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Chairly.Api.Dispatching;
+using Chairly.Api.Shared.Mediator;
 
 #pragma warning disable CA1812 // Instantiated via ASP.NET Core model binding
 namespace Chairly.Api.Features.Services.CreateService;

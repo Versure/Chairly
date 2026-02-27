@@ -1,7 +1,7 @@
 #pragma warning disable CA1812 // Instantiated via Activator.CreateInstance in Mediator
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Chairly.Api.Dispatching;
+namespace Chairly.Api.Shared.Mediator;
 
 internal sealed class RequestHandlerWrapper<TRequest, TResponse> : RequestHandlerWrapperBase<TResponse>
     where TRequest : IRequest<TResponse>

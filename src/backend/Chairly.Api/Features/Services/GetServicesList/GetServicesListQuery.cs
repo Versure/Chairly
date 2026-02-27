@@ -1,4 +1,4 @@
-using Chairly.Api.Dispatching;
+using Chairly.Api.Shared.Mediator;
 
 namespace Chairly.Api.Features.Services.GetServicesList;
 

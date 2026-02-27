@@ -1,4 +1,4 @@
-namespace Chairly.Api.Dispatching;
+namespace Chairly.Api.Shared.Mediator;
 
 internal interface IMediator
 {

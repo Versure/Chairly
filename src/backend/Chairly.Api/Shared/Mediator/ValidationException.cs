@@ -1,4 +1,4 @@
-namespace Chairly.Api.Dispatching;
+namespace Chairly.Api.Shared.Mediator;
 
 #pragma warning disable CA1032 // Custom exception with required errors parameter — standard constructors not needed
 #pragma warning disable RCS1194 // Custom exception with required errors parameter — standard constructors not needed

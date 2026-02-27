@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Chairly.Api.Dispatching;
+namespace Chairly.Api.Shared.Mediator;
 
 internal static class MediatorExtensions
 {

@@ -1,5 +1,6 @@
 #pragma warning disable CA1812 // Instantiated via DI (AddMediator registers it)
-namespace Chairly.Api.Dispatching;
+#pragma warning disable MA0049 // Class 'Mediator' matches namespace segment 'Mediator' — intentional by convention
+namespace Chairly.Api.Shared.Mediator;
 
 internal sealed class Mediator(IServiceProvider serviceProvider) : IMediator
 {

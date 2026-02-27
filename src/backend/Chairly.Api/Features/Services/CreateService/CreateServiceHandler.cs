@@ -1,4 +1,4 @@
-using Chairly.Api.Dispatching;
+using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
