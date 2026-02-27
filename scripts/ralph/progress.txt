@@ -84,6 +84,18 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - When adding fields to response DTOs, must update ALL handlers that construct the DTO (not just the create handler)
 ---
 
+## 2026-02-27 - SC-014
+- No CRLF line ending issues found — `dotnet format` made no changes
+- Added unit tests for `GetServiceHandler` (happy path with category name), `GetServicesListHandler` (ordered by SortOrder), `GetServiceCategoriesListHandler` (ordered by SortOrder)
+- Added `CreateServiceHandler_HappyPath_AssignsTenantId` and `CreateServiceCategoryHandler_HappyPath_AssignsTenantId` tests asserting `TenantConstants.DefaultTenantId`
+- Fixed `ToggleServiceActiveHandler_TogglesFromInactiveToActive` to add `Assert.NotNull(response.UpdatedAtUtc)`
+- Added `GetService`/`GetServicesList`/`GetServiceCategoriesList` using statements to test files
+- Test count grew from 17 to 22; all pass
+- **Learnings for future iterations:**
+  - For query handler tests using Include(), create both the related entity (ServiceCategory) and the main entity (Service) in the same DbContext and call `SaveChangesAsync` before creating the handler
+  - `GetServicesListHandler` and `GetServiceCategoriesListHandler` sort by `SortOrder` — tests should create entities with different SortOrders to verify ordering
+---
+
 ## 2026-02-27 - SC-013
 - Removed `TenantId` from `ServiceResponse` and `ServiceCategoryResponse` DTOs
 - Updated all 5 handlers constructing `ServiceResponse` (CreateServiceHandler, GetServiceHandler, GetServicesListHandler, UpdateServiceHandler, ToggleServiceActiveHandler) to remove the `TenantId` argument

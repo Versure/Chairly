@@ -265,7 +265,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — Fix CRLF line endings (run dotnet format), add missing query handler tests, add TenantId assertions on create tests, and fix the missing UpdatedAtUtc assertion on the inactive-to-active toggle test."
     }
   ]
