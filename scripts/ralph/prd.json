@@ -267,6 +267,64 @@
       "priority": 14,
       "passes": true,
       "notes": "REVIEW FIX — Fix CRLF line endings (run dotnet format), add missing query handler tests, add TenantId assertions on create tests, and fix the missing UpdatedAtUtc assertion on the inactive-to-active toggle test."
+    },
+    {
+      "id": "SC-015",
+      "title": "Add unit tests for the custom mediator",
+      "description": "As a developer, I need unit tests for the custom mediator infrastructure to verify dispatching, pipeline behavior execution, and validation.",
+      "acceptanceCriteria": [
+        "Create Chairly.Tests/Shared/Mediator/MediatorTests.cs with tests for the Mediator class",
+        "Test that Mediator.Send dispatches to the correct IRequestHandler and returns the handler's result",
+        "Test that Mediator.Send throws InvalidOperationException when no handler is registered for a request type",
+        "Test that pipeline behaviors execute in registration order (before and after the handler)",
+        "Test that ValidationBehavior rejects a request with invalid Data Annotations (e.g. missing [Required] field) and throws ValidationException with correct error details",
+        "Test that ValidationBehavior passes through a valid request to the handler without errors",
+        "Test that multiple pipeline behaviors are chained correctly (e.g. validation runs before a second behavior)",
+        "Tests use real DI container (ServiceCollection) with AddMediator() to verify assembly scanning and registration",
+        "All tests pass: dotnet test src/backend/Chairly.slnx",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "REVIEW FIX — The custom mediator is core infrastructure with zero test coverage. Test the Mediator class, ValidationBehavior, and the AddMediator DI registration. Use test doubles (fake handlers/behaviors) to isolate mediator logic."
+    },
+    {
+      "id": "SC-016",
+      "title": "Add Scalar API documentation UI",
+      "description": "As a developer, I need an interactive API documentation UI so that I can test endpoints without external tools like Postman.",
+      "acceptanceCriteria": [
+        "Install Scalar.AspNetCore NuGet package in Chairly.Api",
+        "OpenAPI/Swagger document generation is configured in Program.cs (AddOpenApi or equivalent)",
+        "Scalar UI is mapped in Program.cs with app.MapScalarApiReference() at /scalar (or /api-docs)",
+        "Scalar UI is only enabled in Development environment (inside if (app.Environment.IsDevelopment()) block)",
+        "All existing endpoints are visible and testable in the Scalar UI",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "REVIEW FIX — Developers need a way to test API endpoints without Postman. Scalar is a modern, beautiful OpenAPI UI. In .NET 10, use builder.Services.AddOpenApi() and app.MapOpenApi() for the OpenAPI spec, then app.MapScalarApiReference() for the UI."
+    },
+    {
+      "id": "SC-017",
+      "title": "Configure code coverage enforcement with minimum threshold",
+      "description": "As a developer, I need code coverage collection and a minimum coverage threshold enforced on test runs so that test quality is maintained.",
+      "acceptanceCriteria": [
+        "Install coverlet.collector NuGet package in Chairly.Tests (if not already present)",
+        "Install coverlet.msbuild NuGet package in Chairly.Tests for threshold enforcement",
+        "Configure Chairly.Tests.csproj with coverlet MSBuild properties: CollectCoverage=true, CoverletOutputFormat=cobertura, Threshold=80, ThresholdType=line, ThresholdStat=total",
+        "Exclude test projects, migrations, and auto-generated code from coverage via ExcludeByFile or ExcludeByAttribute (e.g. [ExcludeFromCodeCoverage], Migrations folder)",
+        "Exclude Program.cs (composition root) and EF Core migration files from coverage calculation",
+        "dotnet test src/backend/Chairly.slnx fails if line coverage drops below 80%",
+        "dotnet test src/backend/Chairly.slnx passes with current test suite (current coverage must be >= 80%)",
+        "Update the backend CI workflow (.github/workflows/backend-ci.yml) to include --collect:\"XPlat Code Coverage\" in the dotnet test command",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "REVIEW FIX — No guardrails exist for code coverage. Use coverlet.msbuild for threshold enforcement (fails the build if coverage drops below 80% line coverage). Exclude infrastructure code (migrations, Program.cs) from the calculation. The threshold should be achievable with the current test suite — if not, adjust to the current level and leave a TODO to increase it."
     }
   ]
 }
