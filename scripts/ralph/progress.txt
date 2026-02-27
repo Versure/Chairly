@@ -10,6 +10,7 @@
 - IPipelineBehavior parameter `next` must be renamed (CA1716 — VB keyword) — use `continuation`
 - Test files in `Chairly.Tests/Shared/Mediator/` need `#pragma warning disable CA1716` + `using MediatorImpl = Chairly.Api.Shared.Mediator.Mediator;` alias (namespace ending in 'Mediator' causes CS0118 ambiguity)
 - For test-only DI-registered classes: use `services.AddSingleton<IInterface>(new ConcreteClass())` instead of type-based registration to avoid CA1812
+- OpenAPI in .NET 10: requires both `Microsoft.AspNetCore.OpenApi` (for AddOpenApi/MapOpenApi) AND `Scalar.AspNetCore` (for MapScalarApiReference) — `AddOpenApi()` is NOT built into the SDK, it's a separate package
 
 # Ralph Progress Log
 Started: Thu Feb 26 09:03:31 CET 2026
@@ -120,6 +121,18 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - MA0049 (Meziantou) fires alongside CA1724 for the same issue — both need suppression when class name equals namespace segment
   - When changing a `using` statement across 31+ files, use `sed -i` via bash for efficiency rather than editing each file individually
   - After bulk `using` statement changes, `dotnet format --verify-no-changes` may fail on import ordering — run `dotnet format` to auto-fix
+---
+
+## 2026-02-27 - SC-016
+- Installed `Scalar.AspNetCore` (2.12.48) and `Microsoft.AspNetCore.OpenApi` (10.0.3) NuGet packages in Chairly.Api
+- Added `builder.Services.AddOpenApi()` to service registration in Program.cs
+- Added `app.MapOpenApi()` and `app.MapScalarApiReference()` inside `if (app.Environment.IsDevelopment())` block
+- Added `using Scalar.AspNetCore;` to Program.cs
+- All 29 tests pass; build and format checks pass
+- **Learnings for future iterations:**
+  - In .NET 10, `AddOpenApi()`/`MapOpenApi()` require the `Microsoft.AspNetCore.OpenApi` NuGet package — they are NOT built into the SDK
+  - Scalar UI is wired via `app.MapScalarApiReference()` from the `Scalar.AspNetCore` package
+  - Always install both packages together for OpenAPI + Scalar setup
 ---
 
 ## 2026-02-27 - SC-015
