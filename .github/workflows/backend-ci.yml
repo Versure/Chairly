@@ -37,7 +37,7 @@ jobs:
         run: dotnet build src/backend/Chairly.slnx --no-restore
 
       - name: Test
-        run: dotnet test src/backend/Chairly.slnx --no-build
+        run: dotnet test src/backend/Chairly.slnx --no-build --collect:"XPlat Code Coverage"
 
       - name: Format check
         run: dotnet format src/backend/Chairly.slnx --verify-no-changes
