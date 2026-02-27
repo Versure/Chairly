@@ -19,3 +19,15 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - simple-import-sort enforces alphabetical order within Angular import group
   - Working directory for Nx commands is /home/jreuvers/projects/Chairly/src/frontend/chairly (already set as default)
 ---
+
+## 2026-02-27 - SCF-002
+- Created apps/chairly/proxy.conf.json with /api → http://localhost:5205 proxy config (changeOrigin: true)
+- Updated apps/chairly/project.json serve target with proxyConfig option pointing to proxy.conf.json
+- Created libs/shared/src/lib/util/api-base-url.token.ts with InjectionToken<string> defaulting to '/api'
+- Exported API_BASE_URL from libs/shared/src/index.ts (barrel)
+- Files changed: apps/chairly/proxy.conf.json, apps/chairly/project.json, libs/shared/src/lib/util/api-base-url.token.ts, libs/shared/src/index.ts
+- **Learnings for future iterations:**
+  - InjectionToken with providedIn: 'root' factory is the clean pattern — no need to provide in any module
+  - The shared barrel index.ts was empty (single blank line) — write directly with the exports
+  - proxyConfig in project.json goes in serve.options (not in configurations)
+---
