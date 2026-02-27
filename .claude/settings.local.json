@@ -33,7 +33,8 @@
       "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npm view eslint-plugin-rxjs-angular-x peerDependencies 2>&1)",
       "Bash(npm view:*)",
       "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && node -e \"const a = require\\('angular-eslint'\\); console.log\\(Object.keys\\(a.configs || a\\)\\)\" 2>&1)",
-      "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npx nx run-many -t lint 2>&1)"
+      "Bash(cd \"C:/Projects/Prive/Chairly/Chairly/src/frontend/chairly\" && npx nx run-many -t lint 2>&1)",
+      "Bash(dotnet format:*)"
     ]
   }
 }
