@@ -19,7 +19,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "The lib ESLint configs currently use 'lib' as the prefix but CLAUDE.md requires 'chairly'. Fix both libs. HttpClient is needed for all API services in later stories."
     },
     {
