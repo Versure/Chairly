@@ -3,10 +3,29 @@
   <PropertyGroup>
     <RootNamespace>Chairly.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
+    <!-- Code coverage via coverlet.msbuild -->
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <!-- Exclude composition root, migrations, and Aspire/infrastructure boilerplate from coverage -->
+    <ExcludeByFile>**/Program.cs,**/Migrations/**</ExcludeByFile>
+    <Exclude>[Chairly.ServiceDefaults]*,[Chairly.Infrastructure]*</Exclude>
+    <!--
+      TODO(SC-017): Raise threshold to 80 once integration tests are added for API endpoints.
+      Current unit tests cover handlers and mediator infrastructure only. Endpoint route-mapping
+      code requires integration tests (not yet implemented) to reach 80% line coverage.
+    -->
+    <Threshold>37</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="coverlet.msbuild" Version="8.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />

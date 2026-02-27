@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": "This is the foundation for all feature slices. See ADR-005 for the mediator pattern. No MediatR NuGet package — custom implementation only."
     },
     {
@@ -37,7 +37,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": "See ADR-003 for EF Core conventions and ADR-007 for database-per-tenant strategy. For now we use a single hardcoded tenant."
     },
     {
@@ -53,7 +53,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": "See docs/domain-model.md section 4 (Services) for the full entity definitions. Domain project has no EF Core dependency."
     },
     {
@@ -74,7 +74,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": "See ADR-003 for EF Core conventions. Use separate IEntityTypeConfiguration<T> classes. The migration startup project is Chairly.Api, the DbContext project is Chairly.Infrastructure."
     },
     {
@@ -94,7 +94,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": "See ADR-005 for slice structure. Each slice has its own folder under Features/Services/. Use Minimal APIs with route groups. ServiceCategory is simpler than Service — no timestamps beyond what's implicit."
     },
     {
@@ -113,7 +113,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": "This story covers Create + Read operations. Update and Delete are in the next story. Include category name in responses by joining/loading the ServiceCategory navigation property."
     },
     {
@@ -131,7 +131,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": "This continues the ServiceEndpoints from SC-006. UpdatedAtUtc should be set to DateTimeOffset.UtcNow in Update and ToggleActive handlers."
     },
     {
@@ -150,7 +150,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": "Test handlers directly by instantiating them with a test DbContext. Use in-memory SQLite or EF Core InMemory provider. Add Microsoft.EntityFrameworkCore.InMemory or Microsoft.EntityFrameworkCore.Sqlite to Chairly.Tests if needed."
     },
     {
@@ -170,161 +170,8 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": "Same test infrastructure as SC-008. Test the toggle handler both directions (active -> inactive and inactive -> active)."
-    },
-    {
-      "id": "SC-010",
-      "title": "Fix TenantId filtering on all single-entity lookups",
-      "description": "As a developer, I need all single-entity lookups to filter by TenantId to prevent cross-tenant data access.",
-      "acceptanceCriteria": [
-        "UpdateServiceCategoryHandler filters by TenantId: FirstOrDefaultAsync predicate includes sc.TenantId == TenantConstants.DefaultTenantId",
-        "DeleteServiceCategoryHandler filters by TenantId: FirstOrDefaultAsync predicate includes sc.TenantId == TenantConstants.DefaultTenantId",
-        "GetServiceHandler filters by TenantId: FirstOrDefaultAsync predicate includes s.TenantId == TenantConstants.DefaultTenantId",
-        "UpdateServiceHandler filters by TenantId: FirstOrDefaultAsync predicate includes s.TenantId == TenantConstants.DefaultTenantId",
-        "DeleteServiceHandler filters by TenantId: FirstOrDefaultAsync predicate includes s.TenantId == TenantConstants.DefaultTenantId",
-        "ToggleServiceActiveHandler filters by TenantId: FirstOrDefaultAsync predicate includes s.TenantId == TenantConstants.DefaultTenantId",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": "REVIEW FIX — Security bug. All single-entity lookups query by Id only without TenantId, allowing cross-tenant access. Add && entity.TenantId == TenantConstants.DefaultTenantId to every FirstOrDefaultAsync predicate in these 6 handlers."
-    },
-    {
-      "id": "SC-011",
-      "title": "Add missing audit fields to entities and update migration",
-      "description": "As a developer, I need CreatedBy/UpdatedBy fields on Service and CreatedAtUtc/CreatedBy on ServiceCategory per CLAUDE.md conventions (ADR-009).",
-      "acceptanceCriteria": [
-        "Service entity gains CreatedBy (Guid) and UpdatedBy (Guid?, nullable) properties",
-        "ServiceCategory entity gains CreatedAtUtc (DateTimeOffset) and CreatedBy (Guid) properties",
-        "ServiceConfiguration updated to configure CreatedBy and UpdatedBy columns",
-        "ServiceCategoryConfiguration updated to configure CreatedAtUtc and CreatedBy columns",
-        "A new EF Core migration is created for the added columns",
-        "CreateServiceHandler sets CreatedBy to Guid.Empty (no auth yet) with a TODO comment",
-        "UpdateServiceHandler and ToggleServiceActiveHandler set UpdatedBy to Guid.Empty with a TODO comment",
-        "CreateServiceCategoryHandler sets CreatedAtUtc and CreatedBy on the new entity",
-        "ServiceResponse DTO updated to include CreatedBy and UpdatedBy",
-        "ServiceCategoryResponse DTO updated to include CreatedAtUtc and CreatedBy",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": "REVIEW FIX — CLAUDE.md requires CreatedAtUtc/CreatedBy on all entities and {Action}AtUtc/{Action}By pairs per ADR-009. Since there is no auth yet, set By fields to Guid.Empty with a TODO comment referencing Keycloak integration."
-    },
-    {
-      "id": "SC-012",
-      "title": "Fix mediator namespace and add TODO to ValidationBehavior",
-      "description": "As a developer, I need the mediator namespace to match the folder structure and a TODO on ValidationBehavior documenting the exception trade-off.",
-      "acceptanceCriteria": [
-        "All files in Chairly.Api/Shared/Mediator/ use namespace Chairly.Api.Shared.Mediator (not Chairly.Api.Dispatching)",
-        "All using statements referencing Chairly.Api.Dispatching across the codebase are updated to Chairly.Api.Shared.Mediator",
-        "ValidationBehavior has a TODO comment: Consider returning validation errors via OneOf instead of exceptions (see CLAUDE.md no-exceptions rule)",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 12,
-      "passes": true,
-      "notes": "REVIEW FIX — Convention issue. Namespace should match folder path. Also document the ValidationBehavior exception trade-off with a TODO."
-    },
-    {
-      "id": "SC-013",
-      "title": "Remove TenantId from response DTOs",
-      "description": "As a developer, I need to stop exposing TenantId in API responses since the tenant is implicit from the request context.",
-      "acceptanceCriteria": [
-        "ServiceCategoryResponse no longer includes TenantId",
-        "ServiceResponse no longer includes TenantId",
-        "All handler code that constructs these DTOs is updated to remove the TenantId argument",
-        "All tests that reference TenantId in response assertions are updated",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 13,
-      "passes": true,
-      "notes": "REVIEW FIX — Convention issue. TenantId is an internal implementation detail and should not be leaked to API consumers."
-    },
-    {
-      "id": "SC-014",
-      "title": "Fix line endings and add tests for query handlers and tenant filtering",
-      "description": "As a developer, I need all files to use LF line endings, and I need test coverage for query handlers and tenant-related assertions.",
-      "acceptanceCriteria": [
-        "Run dotnet format src/backend/Chairly.slnx to fix all line ending issues across the codebase",
-        "Add happy-path unit test for GetServiceHandler — returns service with category name",
-        "Add happy-path unit test for GetServicesListHandler — returns list ordered by SortOrder",
-        "Add happy-path unit test for GetServiceCategoriesListHandler — returns list ordered by SortOrder",
-        "Add test asserting CreateServiceHandler assigns TenantConstants.DefaultTenantId to the created entity",
-        "Add test asserting CreateServiceCategoryHandler assigns TenantConstants.DefaultTenantId to the created entity",
-        "ToggleServiceActiveHandler_TogglesFromInactiveToActive test asserts UpdatedAtUtc is not null",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 14,
-      "passes": true,
-      "notes": "REVIEW FIX — Fix CRLF line endings (run dotnet format), add missing query handler tests, add TenantId assertions on create tests, and fix the missing UpdatedAtUtc assertion on the inactive-to-active toggle test."
-    },
-    {
-      "id": "SC-015",
-      "title": "Add unit tests for the custom mediator",
-      "description": "As a developer, I need unit tests for the custom mediator infrastructure to verify dispatching, pipeline behavior execution, and validation.",
-      "acceptanceCriteria": [
-        "Create Chairly.Tests/Shared/Mediator/MediatorTests.cs with tests for the Mediator class",
-        "Test that Mediator.Send dispatches to the correct IRequestHandler and returns the handler's result",
-        "Test that Mediator.Send throws InvalidOperationException when no handler is registered for a request type",
-        "Test that pipeline behaviors execute in registration order (before and after the handler)",
-        "Test that ValidationBehavior rejects a request with invalid Data Annotations (e.g. missing [Required] field) and throws ValidationException with correct error details",
-        "Test that ValidationBehavior passes through a valid request to the handler without errors",
-        "Test that multiple pipeline behaviors are chained correctly (e.g. validation runs before a second behavior)",
-        "Tests use real DI container (ServiceCollection) with AddMediator() to verify assembly scanning and registration",
-        "All tests pass: dotnet test src/backend/Chairly.slnx",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 15,
-      "passes": true,
-      "notes": "REVIEW FIX — The custom mediator is core infrastructure with zero test coverage. Test the Mediator class, ValidationBehavior, and the AddMediator DI registration. Use test doubles (fake handlers/behaviors) to isolate mediator logic."
-    },
-    {
-      "id": "SC-016",
-      "title": "Add Scalar API documentation UI",
-      "description": "As a developer, I need an interactive API documentation UI so that I can test endpoints without external tools like Postman.",
-      "acceptanceCriteria": [
-        "Install Scalar.AspNetCore NuGet package in Chairly.Api",
-        "OpenAPI/Swagger document generation is configured in Program.cs (AddOpenApi or equivalent)",
-        "Scalar UI is mapped in Program.cs with app.MapScalarApiReference() at /scalar (or /api-docs)",
-        "Scalar UI is only enabled in Development environment (inside if (app.Environment.IsDevelopment()) block)",
-        "All existing endpoints are visible and testable in the Scalar UI",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 16,
-      "passes": true,
-      "notes": "REVIEW FIX — Developers need a way to test API endpoints without Postman. Scalar is a modern, beautiful OpenAPI UI. In .NET 10, use builder.Services.AddOpenApi() and app.MapOpenApi() for the OpenAPI spec, then app.MapScalarApiReference() for the UI."
-    },
-    {
-      "id": "SC-017",
-      "title": "Configure code coverage enforcement with minimum threshold",
-      "description": "As a developer, I need code coverage collection and a minimum coverage threshold enforced on test runs so that test quality is maintained.",
-      "acceptanceCriteria": [
-        "Install coverlet.collector NuGet package in Chairly.Tests (if not already present)",
-        "Install coverlet.msbuild NuGet package in Chairly.Tests for threshold enforcement",
-        "Configure Chairly.Tests.csproj with coverlet MSBuild properties: CollectCoverage=true, CoverletOutputFormat=cobertura, Threshold=80, ThresholdType=line, ThresholdStat=total",
-        "Exclude test projects, migrations, and auto-generated code from coverage via ExcludeByFile or ExcludeByAttribute (e.g. [ExcludeFromCodeCoverage], Migrations folder)",
-        "Exclude Program.cs (composition root) and EF Core migration files from coverage calculation",
-        "dotnet test src/backend/Chairly.slnx fails if line coverage drops below 80%",
-        "dotnet test src/backend/Chairly.slnx passes with current test suite (current coverage must be >= 80%)",
-        "Update the backend CI workflow (.github/workflows/backend-ci.yml) to include --collect:\"XPlat Code Coverage\" in the dotnet test command",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 17,
-      "passes": true,
-      "notes": "REVIEW FIX — No guardrails exist for code coverage. Use coverlet.msbuild for threshold enforcement (fails the build if coverage drops below 80% line coverage). Exclude infrastructure code (migrations, Program.cs) from the calculation. The threshold should be achievable with the current test suite — if not, adjust to the current level and leave a TODO to increase it."
     }
   ]
 }
