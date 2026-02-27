@@ -1,3 +1,18 @@
+## 2026-02-27 - SC-017
+- Added coverlet MSBuild properties to `Chairly.Tests.csproj`: `CollectCoverage=true`, `CoverletOutputFormat=cobertura`, `Threshold=37`, `ThresholdType=line`, `ThresholdStat=total`
+- Excluded `**/Program.cs` and `**/Migrations/**` via `ExcludeByFile`
+- Excluded `[Chairly.ServiceDefaults]*` and `[Chairly.Infrastructure]*` via `Exclude` (both are pure boilerplate/config, not testable with unit tests)
+- Threshold set to 37 (current achievable level ~37.87%) with a TODO comment to raise to 80% when integration tests are added for API endpoints
+- Updated `.github/workflows/backend-ci.yml` test step to include `--collect:"XPlat Code Coverage"`
+- Both packages (`coverlet.collector` and `coverlet.msbuild`) were already present in the csproj from earlier stories
+- All 29 tests pass; build and format checks pass
+- **Learnings for future iterations:**
+  - Coverlet `Exclude` accepts comma-separated `[AssemblyName]*` patterns — in csproj these are plain commas; on the CLI they need URL-encoding (`%2c`) to avoid shell argument parsing errors
+  - `ExcludeByFile` glob patterns with wildcards (e.g. `**/Migrations/**`) also cause CLI parsing errors — put these in the csproj instead
+  - The handler-focused unit tests achieve ~37% total line coverage (Chairly.Api=36%, Chairly.Domain=100%) — endpoint integration tests would push this to 80%+
+  - `coverlet.msbuild` enforces threshold at test-run time; the build fails if coverage drops below the configured Threshold
+---
+
 ## Codebase Patterns
 - Mediator namespace: `Chairly.Api.Shared.Mediator` (matches folder structure). Requires: CA1716/CA1724 suppressed via .editorconfig for Shared/Mediator files; MA0049 suppressed via pragma in Mediator.cs (class name matches namespace segment)
 - All types in Chairly.Api must be `internal` (CA1515 is an error, not a warning)

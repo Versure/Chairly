@@ -323,7 +323,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — No guardrails exist for code coverage. Use coverlet.msbuild for threshold enforcement (fails the build if coverage drops below 80% line coverage). Exclude infrastructure code (migrations, Program.cs) from the calculation. The threshold should be achievable with the current test suite — if not, adjust to the current level and leave a TODO to increase it."
     }
   ]
