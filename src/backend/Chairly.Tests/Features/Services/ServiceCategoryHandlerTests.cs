@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Services.CreateServiceCategory;
 using Chairly.Api.Features.Services.DeleteServiceCategory;
+using Chairly.Api.Features.Services.GetServiceCategoriesList;
 using Chairly.Api.Features.Services.UpdateServiceCategory;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
@@ -108,5 +109,49 @@ public class ServiceCategoryHandlerTests
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task CreateServiceCategoryHandler_HappyPath_AssignsTenantId()
+    {
+        await using var db = CreateDbContext();
+        var handler = new CreateServiceCategoryHandler(db);
+        var command = new CreateServiceCategoryCommand { Name = "Nails", SortOrder = 0 };
+
+        await handler.Handle(command);
+
+        var entity = await db.ServiceCategories.SingleAsync();
+        Assert.Equal(TenantConstants.DefaultTenantId, entity.TenantId);
+    }
+
+    [Fact]
+    public async Task GetServiceCategoriesListHandler_HappyPath_ReturnsListOrderedBySortOrder()
+    {
+        await using var db = CreateDbContext();
+        db.ServiceCategories.Add(new ServiceCategory
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "B",
+            SortOrder = 2,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+        db.ServiceCategories.Add(new ServiceCategory
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "A",
+            SortOrder = 1,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+        var handler = new GetServiceCategoriesListHandler(db);
+
+        var result = await handler.Handle(new GetServiceCategoriesListQuery());
+
+        var list = result.ToList();
+        Assert.Equal(2, list.Count);
+        Assert.Equal("A", list[0].Name);
+        Assert.Equal("B", list[1].Name);
     }
 }

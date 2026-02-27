@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Services.CreateService;
 using Chairly.Api.Features.Services.DeleteService;
+using Chairly.Api.Features.Services.GetService;
+using Chairly.Api.Features.Services.GetServicesList;
 using Chairly.Api.Features.Services.ToggleServiceActive;
 using Chairly.Api.Features.Services.UpdateService;
 using Chairly.Api.Shared.Tenancy;
@@ -188,6 +190,7 @@ public class ServiceHandlerTests
 
         var response = result.AsT0;
         Assert.True(response.IsActive);
+        Assert.NotNull(response.UpdatedAtUtc);
     }
 
     [Fact]
@@ -200,5 +203,96 @@ public class ServiceHandlerTests
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task CreateServiceHandler_HappyPath_AssignsTenantId()
+    {
+        await using var db = CreateDbContext();
+        var handler = new CreateServiceHandler(db);
+        var command = new CreateServiceCommand
+        {
+            Name = "Haircut",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 20.00m,
+        };
+
+        await handler.Handle(command);
+
+        var entity = await db.Services.SingleAsync();
+        Assert.Equal(TenantConstants.DefaultTenantId, entity.TenantId);
+    }
+
+    [Fact]
+    public async Task GetServiceHandler_HappyPath_ReturnsServiceWithCategoryName()
+    {
+        await using var db = CreateDbContext();
+        var category = new ServiceCategory
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Hair",
+            SortOrder = 0,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.ServiceCategories.Add(category);
+        var service = new Service
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Trim",
+            Duration = TimeSpan.FromMinutes(15),
+            Price = 10.00m,
+            IsActive = true,
+            SortOrder = 0,
+            CategoryId = category.Id,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Services.Add(service);
+        await db.SaveChangesAsync();
+        var handler = new GetServiceHandler(db);
+
+        var result = await handler.Handle(new GetServiceQuery(service.Id));
+
+        var response = result.AsT0;
+        Assert.Equal("Trim", response.Name);
+        Assert.Equal("Hair", response.CategoryName);
+    }
+
+    [Fact]
+    public async Task GetServicesListHandler_HappyPath_ReturnsListOrderedBySortOrder()
+    {
+        await using var db = CreateDbContext();
+        db.Services.Add(new Service
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "B",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 10.00m,
+            IsActive = true,
+            SortOrder = 2,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+        db.Services.Add(new Service
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "A",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 10.00m,
+            IsActive = true,
+            SortOrder = 1,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
+        var handler = new GetServicesListHandler(db);
+
+        var result = await handler.Handle(new GetServicesListQuery());
+
+        var list = result.ToList();
+        Assert.Equal(2, list.Count);
+        Assert.Equal("A", list[0].Name);
+        Assert.Equal("B", list[1].Name);
     }
 }
