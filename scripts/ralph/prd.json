@@ -285,7 +285,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — The custom mediator is core infrastructure with zero test coverage. Test the Mediator class, ValidationBehavior, and the AddMediator DI registration. Use test doubles (fake handlers/behaviors) to isolate mediator logic."
     },
     {

@@ -8,6 +8,8 @@
 - Delegate type name ending in "Delegate" needs `#pragma warning disable CA1711`
 - Each type must be in its own file matching the type name (MA0048)
 - IPipelineBehavior parameter `next` must be renamed (CA1716 — VB keyword) — use `continuation`
+- Test files in `Chairly.Tests/Shared/Mediator/` need `#pragma warning disable CA1716` + `using MediatorImpl = Chairly.Api.Shared.Mediator.Mediator;` alias (namespace ending in 'Mediator' causes CS0118 ambiguity)
+- For test-only DI-registered classes: use `services.AddSingleton<IInterface>(new ConcreteClass())` instead of type-based registration to avoid CA1812
 
 # Ralph Progress Log
 Started: Thu Feb 26 09:03:31 CET 2026
@@ -118,4 +120,19 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - MA0049 (Meziantou) fires alongside CA1724 for the same issue — both need suppression when class name equals namespace segment
   - When changing a `using` statement across 31+ files, use `sed -i` via bash for efficiency rather than editing each file individually
   - After bulk `using` statement changes, `dotnet format --verify-no-changes` may fail on import ordering — run `dotnet format` to auto-fix
+---
+
+## 2026-02-27 - SC-015
+- Created `Chairly.Tests/Shared/Mediator/MediatorTests.cs` with 7 unit tests for the custom mediator infrastructure
+- Tests cover: Send dispatches to correct handler, Send throws InvalidOperationException when no handler registered, pipeline behaviors execute in registration order, ValidationBehavior rejects invalid Data Annotations, ValidationBehavior passes valid request through, multiple behaviors chained (validation prevents subsequent behavior on failure), AddMediator() DI assembly scanning works
+- Used instance-based DI registration (`services.AddSingleton<IInterface>(new ConcreteClass())`) for test doubles to avoid CA1812
+- Added `#pragma warning disable CA1716` before the file-scoped namespace declaration (CA1716 fires on 'Shared' VB keyword in namespace; same pattern as Chairly.Api.Shared.Mediator editorconfig suppression but not suppressed for test folder)
+- Added `using MediatorImpl = Chairly.Api.Shared.Mediator.Mediator;` alias to avoid CS0118 — inside namespace `Chairly.Tests.Shared.Mediator`, the identifier `Mediator` resolves to the current namespace, not the class
+- Extracted `string[] BehaviorExecutionOrder` as `private static readonly` field to satisfy CA1861
+- All 29 tests pass (22 existing + 7 new)
+- **Learnings for future iterations:**
+  - Test files in `Chairly.Tests/Shared/Mediator/` need `#pragma warning disable CA1716` (for 'Shared' keyword) AND a `using` alias for the `Mediator` class (CS0118: 'Mediator' is a namespace but used as type)
+  - Use instance-based DI: `services.AddSingleton<IInterface>(new ConcreteClass())` for test doubles to avoid CA1812 (analyzer can't see DI-based instantiation)
+  - Static readonly array fields required for constant array arguments in tests (CA1861)
+  - Private nested classes inside test classes can implement `internal` interfaces from Chairly.Api via InternalsVisibleTo
 ---
