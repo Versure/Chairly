@@ -51,3 +51,35 @@ Started: Thu Feb 26 09:03:31 CET 2026
   - The `CreateTestService` helper sets all required Service fields (Id, TenantId, Name, Duration, Price, IsActive, SortOrder, CreatedAtUtc)
   - ToggleServiceActiveHandler tests both toggle directions; NotNull check on UpdatedAtUtc confirms timestamp is set
 ---
+
+## 2026-02-26 - SC-010
+- Fixed TenantId filtering on all 6 single-entity lookup handlers
+- Added `&& entity.TenantId == TenantConstants.DefaultTenantId` to FirstOrDefaultAsync predicates in: UpdateServiceCategoryHandler, DeleteServiceCategoryHandler, GetServiceHandler, UpdateServiceHandler, DeleteServiceHandler, ToggleServiceActiveHandler
+- Added `using Chairly.Api.Shared.Tenancy;` to each handler
+- Updated test entities in ServiceCategoryHandlerTests and ServiceHandlerTests to use `TenantConstants.DefaultTenantId` instead of `Guid.NewGuid()` for TenantId
+- All 17 tests pass
+- **Learnings for future iterations:**
+  - When handlers filter by TenantId, test helpers creating entities must also use TenantConstants.DefaultTenantId, not a random Guid
+  - Tests can access internal Chairly.Api types via InternalsVisibleTo in Chairly.Api.csproj
+---
+
+## 2026-02-27 - SC-011
+- Added `CreatedBy (Guid)` and `UpdatedBy (Guid?, nullable)` to Service entity (already present in modified file)
+- Added `CreatedAtUtc (DateTimeOffset)` and `CreatedBy (Guid)` to ServiceCategory entity (already present in modified file)
+- Updated ServiceConfiguration to configure CreatedBy (required) and UpdatedBy (not required) columns
+- Updated ServiceCategoryConfiguration to configure CreatedAtUtc (required) and CreatedBy (required) columns
+- Created new EF Core migration `AddAuditFields` via `dotnet ef migrations add AddAuditFields`
+- Updated CreateServiceHandler to set `CreatedBy = Guid.Empty` with MA0026 pragma and TODO comment for Keycloak
+- Updated UpdateServiceHandler to set `UpdatedBy = Guid.Empty` with MA0026 pragma and TODO comment
+- Updated ToggleServiceActiveHandler to set `UpdatedBy = Guid.Empty` with MA0026 pragma and TODO comment
+- Updated CreateServiceCategoryHandler to set `CreatedAtUtc = DateTimeOffset.UtcNow` and `CreatedBy = Guid.Empty`
+- Updated ServiceResponse DTO to include `CreatedBy (Guid)` and `UpdatedBy (Guid?)` after `CreatedAtUtc` and `UpdatedAtUtc`
+- Updated ServiceCategoryResponse DTO to include `CreatedAtUtc (DateTimeOffset)` and `CreatedBy (Guid)` after `SortOrder`
+- Updated all 4 remaining handlers (GetServiceCategoriesListHandler, UpdateServiceCategoryHandler, GetServiceHandler, GetServicesListHandler) to pass new fields to DTOs
+- `dotnet format` auto-fixed charset encoding on the generated migration file
+- All 17 tests pass
+- **Learnings for future iterations:**
+  - Generated EF Core migration files sometimes have charset/BOM issues — run `dotnet format` to auto-fix before `--verify-no-changes`
+  - Wrap `Guid.Empty` TODO assignment in `#pragma warning disable MA0026` / `#pragma warning restore MA0026` (MA0026 fires on TODO comments)
+  - When adding fields to response DTOs, must update ALL handlers that construct the DTO (not just the create handler)
+---

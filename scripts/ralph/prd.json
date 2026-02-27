@@ -189,7 +189,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — Security bug. All single-entity lookups query by Id only without TenantId, allowing cross-tenant access. Add && entity.TenantId == TenantConstants.DefaultTenantId to every FirstOrDefaultAsync predicate in these 6 handlers."
     },
     {
@@ -212,7 +212,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — CLAUDE.md requires CreatedAtUtc/CreatedBy on all entities and {Action}AtUtc/{Action}By pairs per ADR-009. Since there is no auth yet, set By fields to Guid.Empty with a TODO comment referencing Keycloak integration."
     },
     {
