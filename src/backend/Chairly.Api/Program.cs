@@ -4,11 +4,13 @@ using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMediator();
 builder.Services.AddProblemDetails();
+builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ChairlyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ChairlyDb")));
@@ -37,6 +39,12 @@ app.UseExceptionHandler(exceptionHandlerApp =>
         }
     });
 });
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseHttpsRedirection();
 
