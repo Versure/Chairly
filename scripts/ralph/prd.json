@@ -228,7 +228,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "REVIEW FIX — Convention issue. Namespace should match folder path. Also document the ValidationBehavior exception trade-off with a TODO."
     },
     {
