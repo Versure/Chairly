@@ -26,7 +26,6 @@ internal sealed class GetServiceHandler(ChairlyDbContext db) : IRequestHandler<G
 
         return new ServiceResponse(
             service.Id,
-            service.TenantId,
             service.Name,
             service.Description,
             service.Duration,

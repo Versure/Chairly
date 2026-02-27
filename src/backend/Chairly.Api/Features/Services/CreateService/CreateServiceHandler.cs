@@ -49,7 +49,6 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
     private static ServiceResponse ToResponse(Service service, string? categoryName) =>
         new(
             service.Id,
-            service.TenantId,
             service.Name,
             service.Description,
             service.Duration,

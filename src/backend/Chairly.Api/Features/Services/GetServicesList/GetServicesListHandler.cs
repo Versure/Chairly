@@ -16,7 +16,6 @@ internal sealed class GetServicesListHandler(ChairlyDbContext db) : IRequestHand
             .OrderBy(s => s.SortOrder)
             .Select(s => new ServiceResponse(
                 s.Id,
-                s.TenantId,
                 s.Name,
                 s.Description,
                 s.Duration,

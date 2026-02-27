@@ -34,7 +34,6 @@ internal sealed class ToggleServiceActiveHandler(ChairlyDbContext db) : IRequest
 
         return new ServiceResponse(
             service.Id,
-            service.TenantId,
             service.Name,
             service.Description,
             service.Duration,

@@ -27,7 +27,7 @@ internal sealed class CreateServiceCategoryHandler(ChairlyDbContext db) : IReque
         db.ServiceCategories.Add(category);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return new ServiceCategoryResponse(category.Id, category.TenantId, category.Name, category.SortOrder, category.CreatedAtUtc, category.CreatedBy);
+        return new ServiceCategoryResponse(category.Id, category.Name, category.SortOrder, category.CreatedAtUtc, category.CreatedBy);
     }
 }
 #pragma warning restore CA1812

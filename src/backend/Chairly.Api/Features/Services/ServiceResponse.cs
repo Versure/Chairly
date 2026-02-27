@@ -2,7 +2,6 @@ namespace Chairly.Api.Features.Services;
 
 internal sealed record ServiceResponse(
     Guid Id,
-    Guid TenantId,
     string Name,
     string? Description,
     TimeSpan Duration,

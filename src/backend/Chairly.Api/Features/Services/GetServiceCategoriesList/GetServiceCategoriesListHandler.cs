@@ -13,7 +13,7 @@ internal sealed class GetServiceCategoriesListHandler(ChairlyDbContext db) : IRe
         return await db.ServiceCategories
             .Where(sc => sc.TenantId == TenantConstants.DefaultTenantId)
             .OrderBy(sc => sc.SortOrder)
-            .Select(sc => new ServiceCategoryResponse(sc.Id, sc.TenantId, sc.Name, sc.SortOrder, sc.CreatedAtUtc, sc.CreatedBy))
+            .Select(sc => new ServiceCategoryResponse(sc.Id, sc.Name, sc.SortOrder, sc.CreatedAtUtc, sc.CreatedBy))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

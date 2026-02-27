@@ -49,7 +49,6 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
 
         return new ServiceResponse(
             service.Id,
-            service.TenantId,
             service.Name,
             service.Description,
             service.Duration,
