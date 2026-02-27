@@ -18,12 +18,16 @@ internal sealed class CreateServiceCategoryHandler(ChairlyDbContext db) : IReque
             TenantId = TenantConstants.DefaultTenantId,
             Name = command.Name,
             SortOrder = command.SortOrder,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
+            CreatedBy = Guid.Empty,
+#pragma warning restore MA0026
         };
 
         db.ServiceCategories.Add(category);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return new ServiceCategoryResponse(category.Id, category.TenantId, category.Name, category.SortOrder);
+        return new ServiceCategoryResponse(category.Id, category.TenantId, category.Name, category.SortOrder, category.CreatedAtUtc, category.CreatedBy);
     }
 }
 #pragma warning restore CA1812

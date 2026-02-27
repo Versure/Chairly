@@ -19,6 +19,12 @@ internal sealed class ServiceCategoryConfiguration : IEntityTypeConfiguration<Se
 
         builder.Property(sc => sc.TenantId)
             .IsRequired();
+
+        builder.Property(sc => sc.CreatedAtUtc)
+            .IsRequired();
+
+        builder.Property(sc => sc.CreatedBy)
+            .IsRequired();
     }
 }
 #pragma warning restore CA1812

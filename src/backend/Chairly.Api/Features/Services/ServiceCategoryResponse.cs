@@ -4,4 +4,6 @@ internal sealed record ServiceCategoryResponse(
     Guid Id,
     Guid TenantId,
     string Name,
-    int SortOrder);
+    int SortOrder,
+    DateTimeOffset CreatedAtUtc,
+    Guid CreatedBy);

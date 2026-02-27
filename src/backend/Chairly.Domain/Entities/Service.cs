@@ -12,7 +12,9 @@ public class Service
     public bool IsActive { get; set; }
     public int SortOrder { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
+    public Guid CreatedBy { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }
+    public Guid? UpdatedBy { get; set; }
 
     public ServiceCategory? Category { get; set; }
 }

@@ -12,4 +12,6 @@ internal sealed record ServiceResponse(
     bool IsActive,
     int SortOrder,
     DateTimeOffset CreatedAtUtc,
-    DateTimeOffset? UpdatedAtUtc);
+    Guid CreatedBy,
+    DateTimeOffset? UpdatedAtUtc,
+    Guid? UpdatedBy);

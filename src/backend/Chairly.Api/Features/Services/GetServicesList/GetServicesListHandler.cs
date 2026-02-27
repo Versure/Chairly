@@ -26,7 +26,9 @@ internal sealed class GetServicesListHandler(ChairlyDbContext db) : IRequestHand
                 s.IsActive,
                 s.SortOrder,
                 s.CreatedAtUtc,
-                s.UpdatedAtUtc))
+                s.CreatedBy,
+                s.UpdatedAtUtc,
+                s.UpdatedBy))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

@@ -23,6 +23,12 @@ internal sealed class ServiceConfiguration : IEntityTypeConfiguration<Service>
         builder.Property(s => s.Price)
             .HasPrecision(10, 2);
 
+        builder.Property(s => s.CreatedBy)
+            .IsRequired();
+
+        builder.Property(s => s.UpdatedBy)
+            .IsRequired(false);
+
         builder.HasIndex(s => new { s.Name, s.TenantId })
             .IsUnique();
 

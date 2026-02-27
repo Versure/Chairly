@@ -31,6 +31,9 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
         service.CategoryId = command.CategoryId;
         service.SortOrder = command.SortOrder;
         service.UpdatedAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
+        service.UpdatedBy = Guid.Empty;
+#pragma warning restore MA0026
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -56,7 +59,9 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
             service.IsActive,
             service.SortOrder,
             service.CreatedAtUtc,
-            service.UpdatedAtUtc);
+            service.CreatedBy,
+            service.UpdatedAtUtc,
+            service.UpdatedBy);
     }
 }
 #pragma warning restore CA1812

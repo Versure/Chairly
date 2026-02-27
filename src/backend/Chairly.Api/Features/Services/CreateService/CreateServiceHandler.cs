@@ -25,6 +25,9 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
             IsActive = true,
             SortOrder = command.SortOrder,
             CreatedAtUtc = DateTimeOffset.UtcNow,
+#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
+            CreatedBy = Guid.Empty,
+#pragma warning restore MA0026
         };
 
         db.Services.Add(service);
@@ -56,6 +59,8 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
             service.IsActive,
             service.SortOrder,
             service.CreatedAtUtc,
-            service.UpdatedAtUtc);
+            service.CreatedBy,
+            service.UpdatedAtUtc,
+            service.UpdatedBy);
 }
 #pragma warning restore CA1812

@@ -36,7 +36,9 @@ internal sealed class GetServiceHandler(ChairlyDbContext db) : IRequestHandler<G
             service.IsActive,
             service.SortOrder,
             service.CreatedAtUtc,
-            service.UpdatedAtUtc);
+            service.CreatedBy,
+            service.UpdatedAtUtc,
+            service.UpdatedBy);
     }
 }
 #pragma warning restore CA1812
