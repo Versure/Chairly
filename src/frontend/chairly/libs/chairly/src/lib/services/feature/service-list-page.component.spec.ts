@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
 import { ServiceCategoryStore, ServiceStore } from '../data-access';
-import { ServiceCategoryResponse, ServiceResponse } from '../util';
+import { ServiceCategoryResponse, ServiceResponse } from '../models';
 import { ServiceListPageComponent } from './service-list-page.component';
 
 function makeService(overrides: Partial<ServiceResponse> = {}): ServiceResponse {

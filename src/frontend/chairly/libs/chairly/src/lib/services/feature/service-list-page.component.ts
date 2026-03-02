@@ -11,7 +11,6 @@ import {
 import { ConfirmationDialogComponent } from '@org/shared-lib';
 
 import { ServiceCategoryStore, ServiceStore } from '../data-access';
-import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableComponent } from '../ui';
 import {
   CreateServiceCategoryRequest,
   CreateServiceRequest,
@@ -19,7 +18,8 @@ import {
   ServiceResponse,
   UpdateServiceCategoryRequest,
   UpdateServiceRequest,
-} from '../util';
+} from '../models';
+import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableComponent } from '../ui';
 
 @Component({
   selector: 'chairly-service-list-page',

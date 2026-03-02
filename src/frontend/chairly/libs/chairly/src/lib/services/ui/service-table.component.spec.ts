@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ServiceResponse } from '../util';
+import { ServiceResponse } from '../models';
 import { ServiceTableComponent } from './service-table.component';
 
 const mockActiveService: ServiceResponse = {

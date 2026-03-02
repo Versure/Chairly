@@ -8,7 +8,7 @@ import {
   CreateServiceRequest,
   ServiceResponse,
   UpdateServiceRequest,
-} from '../util';
+} from '../models';
 import { ServiceApiService } from './service-api.service';
 
 describe('ServiceApiService', () => {

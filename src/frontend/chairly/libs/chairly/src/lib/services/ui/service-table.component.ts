@@ -1,7 +1,8 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, OutputEmitterRef } from '@angular/core';
 
-import { DurationPipe, ServiceResponse } from '../util';
+import { ServiceResponse } from '../models';
+import { DurationPipe } from '../util';
 
 @Component({
   selector: 'chairly-service-table',

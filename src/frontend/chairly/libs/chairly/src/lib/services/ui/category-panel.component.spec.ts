@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CreateServiceCategoryRequest, ServiceCategoryResponse, UpdateServiceCategoryRequest } from '../util';
+import { CreateServiceCategoryRequest, ServiceCategoryResponse, UpdateServiceCategoryRequest } from '../models';
 import { CategoryPanelComponent } from './category-panel.component';
 
 const mockCategories: ServiceCategoryResponse[] = [

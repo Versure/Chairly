@@ -11,12 +11,11 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import {
   CreateServiceRequest,
-  formatDurationToTimeSpan,
-  parseDuration,
   ServiceCategoryResponse,
   ServiceResponse,
   UpdateServiceRequest,
-} from '../util';
+} from '../models';
+import { formatDurationToTimeSpan, parseDuration } from '../util';
 
 @Component({
   selector: 'chairly-service-form-dialog',

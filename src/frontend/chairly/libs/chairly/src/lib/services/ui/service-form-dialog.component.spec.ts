@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CreateServiceRequest, ServiceCategoryResponse, ServiceResponse } from '../util';
+import { CreateServiceRequest, ServiceCategoryResponse, ServiceResponse } from '../models';
 import { ServiceFormDialogComponent } from './service-form-dialog.component';
 
 const mockCategories: ServiceCategoryResponse[] = [

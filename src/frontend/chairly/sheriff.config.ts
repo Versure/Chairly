@@ -32,13 +32,15 @@ export const sheriffConfig: SheriffConfig = {
     'domain:*': [sameTag, 'shared'],
 
     // Layer rules within a domain:
-    // feature -> ui, data-access, util, shared
-    // ui -> util, shared
-    // data-access -> util, shared
+    // feature -> ui, data-access, models, util, shared
+    // ui -> models, util, shared
+    // data-access -> models, util, shared
+    // models -> nothing (within domain)
     // util -> nothing (within domain)
-    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:util', 'shared'],
-    'layer:ui': ['layer:util', 'shared'],
-    'layer:data-access': ['layer:util', 'shared'],
+    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:models', 'layer:util', 'shared'],
+    'layer:ui': ['layer:models', 'layer:util', 'shared'],
+    'layer:data-access': ['layer:models', 'layer:util', 'shared'],
+    'layer:models': noDependencies,
     'layer:util': noDependencies,
 
     // Shared can only depend on other shared

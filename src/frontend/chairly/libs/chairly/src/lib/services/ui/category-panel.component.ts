@@ -13,7 +13,7 @@ import {
   CreateServiceCategoryRequest,
   ServiceCategoryResponse,
   UpdateServiceCategoryRequest,
-} from '../util';
+} from '../models';
 
 @Component({
   selector: 'chairly-category-panel',

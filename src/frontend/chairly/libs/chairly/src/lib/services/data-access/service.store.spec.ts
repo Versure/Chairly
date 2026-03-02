@@ -6,7 +6,7 @@ import {
   CreateServiceRequest,
   ServiceResponse,
   UpdateServiceRequest,
-} from '../util';
+} from '../models';
 import { ServiceStore } from './service.store';
 import { ServiceApiService } from './service-api.service';
 

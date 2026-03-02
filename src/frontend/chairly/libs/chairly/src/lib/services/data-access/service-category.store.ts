@@ -7,7 +7,7 @@ import {
   CreateServiceCategoryRequest,
   ServiceCategoryResponse,
   UpdateServiceCategoryRequest,
-} from '../util';
+} from '../models';
 import { ServiceCategoryApiService } from './service-category-api.service';
 
 export interface ServiceCategoryState {

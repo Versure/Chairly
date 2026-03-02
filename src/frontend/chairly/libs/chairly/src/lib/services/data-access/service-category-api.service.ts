@@ -9,7 +9,7 @@ import {
   CreateServiceCategoryRequest,
   ServiceCategoryResponse,
   UpdateServiceCategoryRequest,
-} from '../util';
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ServiceCategoryApiService {
