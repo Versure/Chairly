@@ -76,7 +76,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Use Angular's HttpClient. Base URL from the API_BASE_URL injection token. Test with HttpTestingController to verify requests. Service should be providedIn: 'root' or provided at the route level — choose based on existing patterns."
     },
     {

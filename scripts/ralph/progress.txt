@@ -3,6 +3,10 @@ Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
 ## Codebase Patterns
+- Sheriff requires an `index.ts` barrel in each tagged directory for proper module tagging (e.g., `data-access/index.ts`).
+- Sheriff's tagging for `libs/shared/src` must be added as a direct entry (not under `libs/shared/src/lib`) so that barrel imports (`@org/shared-lib`) resolve to a tagged module.
+- Sheriff uses AND logic for multi-tag dep rules — if a file has tags `[domain:X, layer:data-access]`, BOTH rules must allow the dependency. So `layer:data-access` must include `'shared'` in its allowed deps for data-access services to import from shared-lib.
+- For `Observable<void>` delete methods in tests, flush with `req.flush(null)` and verify completion with a boolean flag (not `toBeUndefined()` — HttpClient returns null not undefined for empty bodies).
 - The git working directory is /home/jreuvers/projects/Chairly but `pwd` inside frontend tools resolves to /home/jreuvers/projects/Chairly/src/frontend/chairly. Use `git -C /home/jreuvers/projects/Chairly` for git commands.
 - Frontend Nx quality checks are run from /home/jreuvers/projects/Chairly/src/frontend/chairly: `npx nx affected -t lint --base=main`, etc.
 - npm install must be run once in src/frontend/chairly before Nx commands work (node_modules not committed).
@@ -30,6 +34,20 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Interfaces were pre-scaffolded by prior work — always check if files already exist before creating new ones
   - GUIDs → string, TimeSpan → string ('HH:MM:SS'), DateTimeOffset → string (ISO 8601)
   - The services/util/index.ts barrel exports all interfaces for consumption by data-access and feature layers
+---
+
+## 2026-03-02 - SCF-004
+- Created ServiceCategoryApiService in libs/chairly/src/lib/services/data-access/ with inject(HttpClient) and inject(API_BASE_URL)
+- Methods: getAll() → GET, create() → POST, update() → PUT, delete() → DELETE on /api/service-categories
+- Created data-access/index.ts barrel (required for Sheriff module tagging)
+- Created unit tests with provideHttpClientTesting() and HttpTestingController; 5 tests verify each method's URL, HTTP verb, and body
+- Updated sheriff.config.ts: added 'libs/shared/src': ['shared'] tag for barrel imports, added 'shared' to layer:feature/ui/data-access dep rules
+- Files changed: service-category-api.service.ts, service-category-api.service.spec.ts, data-access/index.ts, sheriff.config.ts
+- **Learnings for future iterations:**
+  - Sheriff requires index.ts barrel in each tagged directory for module detection
+  - Sheriff's `libs/shared/src` must be tagged directly (for barrel @org/shared-lib imports)
+  - Sheriff uses AND logic: all tags must allow a dependency — so layer:data-access MUST include 'shared'
+  - Observable<void> tests: use completion flag instead of toBeUndefined() (HttpClient returns null not undefined)
 ---
 
 ## 2026-02-27 - SCF-002
