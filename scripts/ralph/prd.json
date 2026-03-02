@@ -326,6 +326,168 @@
       "priority": 15,
       "passes": true,
       "notes": "This is a cleanup/verification story. Fix any remaining lint errors, failing tests, or convention violations. Ensure everything matches CLAUDE.md requirements. If everything already passes, just verify and mark as done."
+    },
+    {
+      "id": "SCF-016",
+      "title": "Fix CI: nx affected PR step fails due to missing main branch ref",
+      "description": "As a developer, I need the GitHub Actions frontend CI workflow to correctly resolve the main branch so that nx affected works on pull requests.",
+      "acceptanceCriteria": [
+        "In .github/workflows/frontend-ci.yml, the 'Run affected tasks (PR)' step is changed to: npx nx affected -t lint test build e2e --base=origin/main --head=HEAD",
+        "In .github/workflows/frontend-ci.yml, the 'Run affected tasks (push)' step is changed to: npx nx affected -t lint test build e2e --base=origin/main~1 --head=HEAD (already uses origin/ prefix, verify it is consistent)",
+        "A 'Fetch base branch' step is added BEFORE the affected tasks steps: run: git fetch origin main",
+        "The workflow no longer fails with 'fatal: ambiguous argument main'",
+        "npx nx affected -t lint test build --base=origin/main passes locally"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "The root cause: actions/checkout with fetch-depth: 0 fetches all history but does NOT create a local tracking ref for 'main'. nx affected --base=main then fails. The fix: add 'git fetch origin main' step to create the remote-tracking ref, or use origin/main instead of main as the base. Both changes together are safest. The push step already says --base=origin/main~1 and is fine; only the PR step uses the bare 'main' ref."
+    },
+    {
+      "id": "SCF-017",
+      "title": "Move service/category models from util/ to models/ folder",
+      "description": "As a developer, I want model interfaces in a dedicated models/ folder so that the codebase follows the convention that util/ contains utility functions only, not type definitions.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/models/",
+        "service.models.ts moved to libs/chairly/src/lib/services/models/service.models.ts",
+        "service-category.models.ts moved to libs/chairly/src/lib/services/models/service-category.models.ts",
+        "libs/chairly/src/lib/services/models/index.ts created, exporting all model types with 'export type { ... }'",
+        "libs/chairly/src/lib/services/util/index.ts updated: model type exports removed, only duration utilities remain",
+        "libs/chairly/src/lib/services/data-access/*.ts files updated: imports from '../util' for model types changed to '../models'",
+        "libs/chairly/src/lib/services/ui/*.ts files updated: imports from '../util' for model types changed to '../models' (DurationPipe import from '../util' is unchanged for now)",
+        "libs/chairly/src/lib/services/feature/*.ts files updated: imports from '../util' for model types changed to '../models'",
+        "Old model files no longer exist in util/",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "This is a structural refactor — no logic changes, only file moves and import updates. The model files are: service.models.ts (ServiceResponse, CreateServiceRequest, UpdateServiceRequest) and service-category.models.ts (ServiceCategoryResponse, CreateServiceCategoryRequest, UpdateServiceCategoryRequest). The util/ folder should only contain pure utility functions (parseDuration, formatDurationToTimeSpan) after this change. Update all barrel files accordingly."
+    },
+    {
+      "id": "SCF-018",
+      "title": "Move DurationPipe from util/ to pipes/ folder",
+      "description": "As a developer, I want Angular pipes in a dedicated pipes/ folder so that the codebase follows the convention that util/ contains pure functions only, not Angular-specific constructs.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/pipes/",
+        "duration.pipe.ts moved to libs/chairly/src/lib/services/pipes/duration.pipe.ts",
+        "duration.pipe.spec.ts moved to libs/chairly/src/lib/services/pipes/duration.pipe.spec.ts",
+        "libs/chairly/src/lib/services/pipes/index.ts created, exporting DurationPipe",
+        "libs/chairly/src/lib/services/util/index.ts updated: DurationPipe export removed",
+        "libs/chairly/src/lib/services/ui/service-table.component.ts updated: DurationPipe import changed from '../util' to '../pipes'",
+        "duration.utils.ts and duration.utils.spec.ts remain in util/ (they are pure utility functions)",
+        "Old duration.pipe.ts no longer exists in util/",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "This is a structural refactor — no logic changes, only file moves and import updates. After this change, util/ should only contain: duration.utils.ts, duration.utils.spec.ts, and index.ts. The DurationPipe import in service-table.component.ts is the only consumer (besides the index barrel)."
+    },
+    {
+      "id": "SCF-019",
+      "title": "Move services.routes.ts from feature/ to services domain root",
+      "description": "As a developer, I want the route configuration file at the root of the services domain (not inside feature/) so that it is accessible without being buried inside a UI layer folder.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/services/services.routes.ts created (file moved from feature/services.routes.ts)",
+        "libs/chairly/src/lib/services/feature/services.routes.ts deleted",
+        "libs/chairly/src/lib/services/feature/index.ts updated: no longer exports servicesRoutes",
+        "libs/chairly/src/index.ts updated: exports servicesRoutes from './lib/services/services.routes' instead of './lib/services/feature'",
+        "Imports inside services.routes.ts updated: relative imports to data-access and feature adjusted for new location (e.g., './data-access' and './feature/service-list-page/service-list-page.component' or './feature' barrel)",
+        "app.routes.ts still works: import('@org/chairly-lib').then(m => m.servicesRoutes) resolves correctly",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "The services.routes.ts file logically belongs at the domain root because it is the entry point for the services feature, not a feature component itself. After moving, the relative imports inside services.routes.ts will need updating. The file currently imports from '../data-access' and './service-list-page.component' — from the domain root these become './data-access' and './feature/service-list-page.component'. Note: story SCF-020 will move service-list-page.component into a subfolder, so coordinate import path — use the feature/index.ts barrel (import from './feature') to avoid coupling to internal structure."
+    },
+    {
+      "id": "SCF-020",
+      "title": "Move ServiceListPageComponent into its own subfolder within feature/",
+      "description": "As a developer, I want each feature component to have its own subfolder inside feature/ so that related files (component, spec, template) are grouped together and the feature/ folder is not a flat list of files.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/feature/service-list-page/",
+        "service-list-page.component.ts moved to feature/service-list-page/service-list-page.component.ts",
+        "service-list-page.component.spec.ts moved to feature/service-list-page/service-list-page.component.spec.ts",
+        "libs/chairly/src/lib/services/feature/index.ts updated: exports ServiceListPageComponent from './service-list-page/service-list-page.component'",
+        "Old service-list-page.component.ts and service-list-page.component.spec.ts no longer exist directly in feature/",
+        "services.routes.ts (now at domain root per SCF-019) imports ServiceListPageComponent from './feature' barrel — no change needed if barrel is used, otherwise update path",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "This story must be implemented AFTER SCF-019 (routes moved to domain root). Each feature page/smart component should live in its own subfolder. Currently only ServiceListPageComponent exists in feature/. Move it to feature/service-list-page/. If additional feature components are added in future, they each get their own subfolder (e.g., feature/service-detail/). The feature/index.ts barrel hides the internal subfolder structure from consumers."
+    },
+    {
+      "id": "SCF-021",
+      "title": "Extract all inline component templates to separate .html files and enforce via ESLint",
+      "description": "As a developer, I want all Angular component templates in dedicated .html files (not inline) so that templates are separately navigable, diffable, and clearly separated from component logic.",
+      "acceptanceCriteria": [
+        "ESLint rule added to root eslint.config.mjs in the Angular TS rules section: '@angular-eslint/component-max-inline-declarations': ['error', { 'template': 0 }]",
+        "ServiceListPageComponent: template extracted to feature/service-list-page/service-list-page.component.html, component uses templateUrl: './service-list-page.component.html'",
+        "CategoryPanelComponent: template extracted to ui/category-panel.component.html, component uses templateUrl: './category-panel.component.html'",
+        "ServiceFormDialogComponent: template extracted to ui/service-form-dialog.component.html, component uses templateUrl: './service-form-dialog.component.html'",
+        "ServiceTableComponent: template extracted to ui/service-table.component.html, component uses templateUrl: './service-table.component.html'",
+        "ConfirmationDialogComponent (in shared/ui/): template extracted to ui/confirmation-dialog.component.html, component uses templateUrl: './confirmation-dialog.component.html'",
+        "No component in the codebase uses inline 'template:' property — only 'templateUrl:' is used",
+        "All extracted .html files contain valid Angular template syntax (same as the inline template, exactly)",
+        "Unit tests for all components still pass (test setup uses TestBed which resolves templateUrl correctly with Vite)",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": "This story must be implemented AFTER SCF-020 (feature subfolders) so that ServiceListPageComponent is already in its subfolder before its .html file is created there. The ESLint rule '@angular-eslint/component-max-inline-declarations' with { 'template': 0 } makes inline templates a lint error. When extracting templates: (1) remove the 'template:' property from the @Component decorator, (2) add 'templateUrl:' pointing to the .html file, (3) create the .html file with the exact same content as the inline template. The Angular/Vite test setup in this project resolves templateUrl correctly — no special test configuration needed."
+    },
+    {
+      "id": "SCF-022",
+      "title": "Remove .gitkeep files from non-empty folders",
+      "description": "As a developer, I want .gitkeep files removed from folders that now contain real files so that the codebase is clean.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/services/data-access/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/feature/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/ui/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/util/.gitkeep deleted (folder has real files)",
+        "libs/shared/src/lib/ui/.gitkeep deleted (folder has confirmation-dialog files)",
+        "libs/shared/src/lib/util/.gitkeep deleted (folder has api-base-url.token.ts)",
+        "libs/shared/src/lib/data-access/.gitkeep kept if folder is still empty — delete only if it contains real files",
+        "No .gitkeep files remain in non-empty folders",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "Simple cleanup. .gitkeep files are placeholder files to force git to track empty directories. Once a directory has real files, the .gitkeep should be deleted. Check each folder listed above before deleting — if for some reason a folder is empty (after structural refactors in earlier stories), keep the .gitkeep."
+    },
+    {
+      "id": "SCF-023",
+      "title": "Add Playwright e2e tests for service catalog",
+      "description": "As a developer, I want Playwright e2e tests for the service catalog page so that basic UI functionality is verified end-to-end.",
+      "acceptanceCriteria": [
+        "apps/chairly-e2e/src/example.spec.ts updated: the 'has title' test now navigates to '/' and expects the h1 to contain 'Services' (not 'Welcome', since the app now redirects to /services)",
+        "apps/chairly-e2e/src/service-catalog.spec.ts created with at least the following tests:",
+        "  - 'navigates to /services and shows the page header': navigates to '/services', expects page.locator('h1').innerText() to contain 'Services'",
+        "  - 'shows the Add Service button': expects page.getByRole('button', { name: 'Add Service' }) to be visible",
+        "  - 'opens the add service dialog when Add Service is clicked': clicks Add Service button, expects a dialog to be visible",
+        "  - 'closes the add service dialog when Cancel is clicked': opens dialog, clicks Cancel, expects dialog to be hidden",
+        "  - 'shows the Categories panel': expects the text 'Categories' to be visible on the page",
+        "All e2e tests pass when run with npx nx e2e chairly-e2e (app served without backend — tests do not depend on API responses, only on UI structure)",
+        "npx nx affected -t lint test build e2e --base=origin/main passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "The e2e tests run against the Angular app served without a backend. Since the stores make HTTP calls on init (loadServices, loadCategories), these will fail silently — the page will show empty states, not errors, as the stores set isLoading=false on error. The e2e tests should test UI structure and interactions, NOT API-dependent content (don't assert on table rows or category items since there's no backend). Use @playwright/test. The playwright.config.ts already exists at apps/chairly-e2e/playwright.config.ts — check the webServer config to understand how the app is served. The test for the dialog should use page.locator('dialog') or similar — the components use native <dialog> element."
+    },
+    {
+      "id": "SCF-024",
+      "title": "Update CLAUDE.md with new folder conventions and update Ralph stop condition to check CI",
+      "description": "As a developer, I want CLAUDE.md updated with the new folder structure conventions and Ralph's stop condition updated to verify CI passes before signaling completion.",
+      "acceptanceCriteria": [
+        "Root CLAUDE.md Frontend Architecture section updated to document the services domain folder structure: models/ (interfaces and types), pipes/ (Angular pipes), util/ (pure utility functions), feature/{feature-name}/ (each feature gets its own subfolder), and routes file at domain root",
+        "Root CLAUDE.md Code Conventions — Frontend section updated with: 'Each domain layer has dedicated subfolders: models/ for interfaces, pipes/ for Angular pipes, util/ for pure functions. Routes file lives at domain root, not inside feature/. Each smart component inside feature/ has its own subfolder.'",
+        "Root CLAUDE.md Code Conventions — Frontend section updated with: 'Component templates must always be in separate .html files (templateUrl:). Inline templates (template:) are forbidden and enforced by ESLint.'",
+        "Root CLAUDE.md Working Method — Autonomous/Headless Mode section updated: after pushing and creating the PR, add a step to verify CI passes: 'After creating the PR, verify CI passes: run gh run watch --exit-status to wait for the pipeline. If it fails, investigate and fix before signaling COMPLETE.'",
+        "scripts/ralph/CLAUDE.md Stop Condition section updated to include: after creating the PR with git push + gh pr create, run 'gh run watch --exit-status' to wait for CI. Only signal COMPLETE if CI passes. If CI fails, investigate the failure, fix it, push a new commit, and wait again.",
+        "npx nx affected -t lint test build --base=origin/main passes (CLAUDE.md changes don't affect lint/test/build, but verify no regressions)"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "This story updates documentation only (CLAUDE.md files) plus the Ralph agent instruction. The key change to Ralph's behavior: instead of creating PR and immediately signaling COMPLETE, Ralph should wait for CI to pass. Use 'gh run watch --exit-status' which exits 0 if CI passes, non-zero if it fails. If CI fails, Ralph should read the failure logs with 'gh run view --log-failed' and fix the issue. The folder convention changes (models/, pipes/, feature subfolder, templateUrl) should be documented so future Ralph iterations follow them without needing to be told."
     }
   ]
 }

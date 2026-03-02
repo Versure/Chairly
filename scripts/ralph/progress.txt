@@ -2,6 +2,19 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## Codebase Patterns
+- Domain folder structure: `models/` (interfaces), `pipes/` (Angular pipes), `util/` (pure functions only), `feature/{name}/` (one subfolder per smart component), `{domain}.routes.ts` at domain root
+- Templates: always use `templateUrl:` with a separate `.html` file — inline `template:` is forbidden by ESLint
+- CI: `nx affected` for PRs must use `--base=origin/main` (not bare `main`) — add `git fetch origin main` step first
+- After creating PR: run `gh run watch --exit-status` to wait for CI before signaling COMPLETE
+- Interface re-exports need `export type { }` when `isolatedModules: true`
+- Sheriff needs explicit dep rules for: 'root' (app files) → ['chairly-lib', 'shared']; library barrel tags for each lib
+- Form label elements MUST have `for="id"` matching `id="..."` on inputs — enforced by angular-eslint template rules
+- For `<input type="number">` tests in jsdom: use `new Event('input')` not `new Event('change')` to update form control values
+- `.gitkeep` files: remove as soon as a folder has real content
+
+---
+
 ## 2026-03-02 - SCF-015
 - Final verification: all lint, test, and build checks pass with zero warnings
 - Verified all components: OnPush change detection, standalone: true, chairly- prefix

@@ -84,12 +84,14 @@ src/frontend/chairly/
 │   └── chairly-e2e/          # Playwright e2e tests
 ├── libs/
 │   ├── chairly/src/lib/      # Domain library
-│   │   ├── bookings/         # Each domain has feature/, ui/, data-access/, util/
-│   │   ├── clients/
-│   │   ├── staff/
-│   │   ├── services/
-│   │   ├── billing/
-│   │   └── notifications/
+│   │   ├── bookings/         # Each domain has the layers below
+│   │   ├── clients/          #   feature/{feature-name}/  ← one subfolder per smart component
+│   │   ├── staff/            #   ui/                      ← presentational components
+│   │   ├── services/         #   data-access/             ← stores, API services
+│   │   ├── billing/          #   models/                  ← TypeScript interfaces/types
+│   │   └── notifications/    #   pipes/                   ← Angular pipes
+│   │                         #   util/                    ← pure utility functions
+│   │                         #   {domain}.routes.ts       ← route config at domain root
 │   └── shared/src/lib/       # Shared library
 │       ├── ui/               # Shared components (buttons, modals)
 │       ├── data-access/      # Auth, HTTP interceptors
@@ -105,7 +107,15 @@ src/frontend/chairly/
 - A domain cannot import from another domain
 - A domain can import from `shared/`
 - `shared/` cannot import from any domain
-- Within a domain: `feature/` → `ui/`, `data-access/`, `util/`. `ui/` → `util/` only. `data-access/` → `util/` only.
+- Within a domain: `feature/` → `ui/`, `data-access/`, `models/`, `pipes/`, `util/`. `ui/` → `models/`, `pipes/`, `util/` only. `data-access/` → `models/`, `util/` only.
+
+**Domain folder conventions:**
+- `models/` — TypeScript interfaces and types that match backend DTOs. Never mix utility functions into this folder.
+- `pipes/` — Angular `@Pipe` classes only. One file per pipe.
+- `util/` — Pure TypeScript utility functions (no Angular constructs). No interfaces, no pipes.
+- `feature/{feature-name}/` — Each smart (container) component gets its own subfolder. Never place component files directly in `feature/`.
+- `{domain}.routes.ts` — Route configuration lives at the **domain root**, not inside `feature/`.
+- `.gitkeep` files must be removed as soon as a folder contains real files.
 
 ## Code Conventions — Frontend
 
@@ -125,6 +135,9 @@ src/frontend/chairly/
 - Self-closing tags for empty elements (e.g. `<chairly-icon />`)
 - No function calls in templates — use signals/pipes instead
 - Imports auto-sorted: Angular → third-party → project aliases → relative
+- **Templates must always be in a separate `.html` file** using `templateUrl:`. Inline `template:` is forbidden and enforced by ESLint (`@angular-eslint/component-max-inline-declarations: { template: 0 }`)
+- **E2E tests with Playwright** must be written for all pages/features whenever possible
+- Add E2E tests to `apps/chairly-e2e/src/` for each feature page
 
 ## Ubiquitous Language
 
@@ -158,12 +171,19 @@ When running autonomously via Ralph or in headless mode:
 - Follow conventions established in docs/ and existing code
 - Document any significant decisions in progress.txt
 - When in doubt, choose the simplest approach that follows existing patterns
-- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push the branch and create a PR BEFORE outputting the `<promise>COMPLETE</promise>` signal:**
+- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push, create a PR, wait for CI, and only then output the `<promise>COMPLETE</promise>` signal:**
   ```bash
   git push -u origin HEAD
   gh pr create --title "feat({context}): {feature description}" --body "Implemented by Ralph. See prd.json for stories."
+  # Wait for CI and exit non-zero if it fails:
+  gh run watch --exit-status
   ```
   Replace `{context}` with the bounded context (e.g. bookings, staff) and `{feature description}` with a short summary from the PRD.
+  If `gh run watch` exits with a failure:
+  1. Run `gh run view --log-failed` to read the failure details
+  2. Fix the issue, commit the fix, push again
+  3. Run `gh run watch --exit-status` again
+  4. Only signal `<promise>COMPLETE</promise>` when CI is green
 
 ## Implementation Order
 
@@ -209,4 +229,6 @@ npx nx affected -t build --base=main
 - No `@Input()`/`@Output()`/`@ViewChild()` decorators — use signal-based APIs (`input()`, `model()`, `viewChild()`, `OutputEmitterRef`)
 - No function calls in Angular templates — use signals or pipes
 - No inline styles in Angular templates
+- No inline `template:` in Angular components — always use `templateUrl:` with a separate `.html` file
+- No model interfaces or Angular pipes inside `util/` — use `models/` and `pipes/` folders respectively
 - Never commit without tests passing
