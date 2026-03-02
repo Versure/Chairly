@@ -99,7 +99,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Same patterns as SCF-004. The toggleActive endpoint uses PATCH with no request body."
     },
     {

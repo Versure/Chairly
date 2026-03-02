@@ -50,6 +50,19 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Observable<void> tests: use completion flag instead of toBeUndefined() (HttpClient returns null not undefined)
 ---
 
+## 2026-03-02 - SCF-005
+- Created ServiceApiService in libs/chairly/src/lib/services/data-access/
+- Methods: getAll() → GET, getById() → GET, create() → POST, update() → PUT, delete() → DELETE, toggleActive() → PATCH on /api/services
+- toggleActive uses PATCH /api/services/{id}/toggle-active with null body
+- Created unit tests (service-api.service.spec.ts) with 7 tests covering all methods
+- Updated data-access/index.ts barrel to export ServiceApiService
+- Files changed: service-api.service.ts, service-api.service.spec.ts, data-access/index.ts
+- **Learnings for future iterations:**
+  - PATCH with no request body: pass `null` as the body in `http.patch<T>(url, null)`
+  - Same patterns as SCF-004 (ServiceCategoryApiService) work cleanly for services
+  - For Observable<void> delete tests, use completion flag pattern (req.flush(null))
+---
+
 ## 2026-02-27 - SCF-002
 - Created apps/chairly/proxy.conf.json with /api → http://localhost:5205 proxy config (changeOrigin: true)
 - Updated apps/chairly/project.json serve target with proxyConfig option pointing to proxy.conf.json
