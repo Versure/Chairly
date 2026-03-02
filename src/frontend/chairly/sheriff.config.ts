@@ -12,6 +12,7 @@ export const sheriffConfig: SheriffConfig = {
       'billing/<layer>': ['domain:billing', 'layer:<layer>'],
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
     },
+    'libs/shared/src': ['shared'],
     'libs/shared/src/lib': {
       'ui': ['shared', 'layer:ui'],
       'data-access': ['shared', 'layer:data-access'],
@@ -24,13 +25,13 @@ export const sheriffConfig: SheriffConfig = {
     'domain:*': [sameTag, 'shared'],
 
     // Layer rules within a domain:
-    // feature -> ui, data-access, util
-    // ui -> util only
-    // data-access -> util only
+    // feature -> ui, data-access, util, shared
+    // ui -> util, shared
+    // data-access -> util, shared
     // util -> nothing (within domain)
-    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:util'],
-    'layer:ui': ['layer:util'],
-    'layer:data-access': ['layer:util'],
+    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:util', 'shared'],
+    'layer:ui': ['layer:util', 'shared'],
+    'layer:data-access': ['layer:util', 'shared'],
     'layer:util': noDependencies,
 
     // Shared can only depend on other shared
