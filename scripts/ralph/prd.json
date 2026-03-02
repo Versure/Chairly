@@ -395,7 +395,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 19,
-      "passes": false,
+      "passes": true,
       "notes": "The services.routes.ts file logically belongs at the domain root because it is the entry point for the services feature, not a feature component itself. After moving, the relative imports inside services.routes.ts will need updating. The file currently imports from '../data-access' and './service-list-page.component' — from the domain root these become './data-access' and './feature/service-list-page.component'. Note: story SCF-020 will move service-list-page.component into a subfolder, so coordinate import path — use the feature/index.ts barrel (import from './feature') to avoid coupling to internal structure."
     },
     {

@@ -17,6 +17,20 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ---
 
+## 2026-03-02 - SCF-019
+- Moved services.routes.ts from feature/ to domain root (libs/chairly/src/lib/services/services.routes.ts)
+- Updated relative imports inside services.routes.ts: data-access stays './data-access', feature import changed from './service-list-page.component' to './feature' barrel
+- feature/index.ts: removed `export { servicesRoutes }` line — only exports ServiceListPageComponent now
+- libs/chairly/src/index.ts: updated export path from './lib/services/feature' to './lib/services/services.routes'
+- Git detected file move as a rename (77% similarity) — correct behavior
+- Sheriff config did NOT need updating — routes file at domain root gets tagged by parent 'libs/chairly/src' rule as 'chairly-lib', which is allowed to depend on domain:services
+- All lint + test + build checks pass (119 tests green)
+- Files changed: services/services.routes.ts (new location), feature/index.ts, libs/chairly/src/index.ts
+- **Learnings for future iterations:**
+  - Files in the domain root (e.g., services/services.routes.ts, not in a sublayer folder) get tagged by the parent 'libs/chairly/src': ['chairly-lib'] rule — no Sheriff config change needed
+  - Use the feature/index.ts barrel when importing from services.routes.ts to avoid coupling to internal subfolder structure (import from './feature', not './feature/service-list-page.component')
+---
+
 ## 2026-03-02 - SCF-018
 - Created libs/chairly/src/lib/services/pipes/ folder with duration.pipe.ts, duration.pipe.spec.ts, index.ts
 - duration.pipe.ts: import of parseDuration updated from './duration.utils' to '../util' (relative path to sibling util/ barrel)
