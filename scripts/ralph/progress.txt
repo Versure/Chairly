@@ -133,6 +133,29 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - parseDuration only needs hours and minutes parts (index 0 and 1) from the HH:MM:SS split — seconds are ignored
 ---
 
+## 2026-03-02 - SCF-010
+- Created CategoryPanelComponent in libs/chairly/src/lib/services/ui/category-panel.component.ts
+- Signal inputs: categories (input.required<ServiceCategoryResponse[]>), isLoading (input.required<boolean>)
+- OutputEmitterRef events: categoryCreated, categoryUpdated ({id, request}), categoryDeleted (string)
+- Protected computed signal: sortedCategories — sorts categories by sortOrder
+- Protected signals: showAddForm, editingCategoryId — for inline UI state
+- Two FormGroups (addForm, editForm) using ReactiveFormsModule with Validators.required and Validators.maxLength(150)
+- Inline add form shown via @if (showAddForm()) in header area
+- Inline edit form shown via @if (editingCategoryId() === category.id) per row
+- @for with @empty for category list; @if (!isLoading()) for list visibility
+- Created 14 unit tests covering: create, sorted display, loading state, add/cancel flow, categoryCreated emit, edit/cancel flow, categoryUpdated emit, categoryDeleted emit, empty state
+- Created ui/index.ts barrel exporting CategoryPanelComponent
+- Auto-fixed import sort with eslint --fix on spec file
+- Files changed: category-panel.component.ts, category-panel.component.spec.ts, ui/index.ts
+- **Learnings for future iterations:**
+  - Use signal<boolean>(false) and signal<string | null>(null) for local UI state in presentational components (showAddForm, editingCategoryId)
+  - Two separate FormGroups (addForm, editForm) work cleanly for inline add + edit patterns
+  - Template comparison `editingCategoryId() === category.id` inside @if works correctly with OnPush — just a signal read + property access
+  - title="Edit category" / title="Delete category" attributes on buttons make test querying clean with querySelector('[title="..."]')
+  - sortedCategories computed signal: `[...this.categories()].sort(...)` — spread to avoid mutating the input array
+  - Always run `eslint --fix` on spec files after creation to auto-sort imports
+---
+
 ## 2026-03-02 - SCF-008
 - Created ConfirmationDialogComponent in libs/shared/src/lib/ui/confirmation-dialog.component.ts
 - Uses native <dialog> element with showModal()/close() via viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl')

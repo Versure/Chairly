@@ -211,7 +211,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational (dumb) component. It receives data via inputs and emits events. The parent smart component handles API calls. Inline editing means the list item transforms into an editable form in-place."
     },
     {
