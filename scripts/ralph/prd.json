@@ -378,7 +378,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 18,
-      "passes": false,
+      "passes": true,
       "notes": "This is a structural refactor — no logic changes, only file moves and import updates. After this change, util/ should only contain: duration.utils.ts, duration.utils.spec.ts, and index.ts. The DurationPipe import in service-table.component.ts is the only consumer (besides the index barrel)."
     },
     {

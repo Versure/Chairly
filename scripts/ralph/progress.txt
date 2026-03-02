@@ -4,6 +4,7 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ## Codebase Patterns
 - Domain folder structure: `models/` (interfaces), `pipes/` (Angular pipes), `util/` (pure functions only), `feature/{name}/` (one subfolder per smart component), `{domain}.routes.ts` at domain root
+- Sheriff `layer:pipes` dep rule: `'layer:pipes': ['layer:util']` — pipes can import from util. Also update `layer:feature` and `layer:ui` to include `layer:pipes`.
 - Sheriff's `<layer>` tagging pattern auto-creates `layer:<foldername>` tags for each subfolder — any new folder (e.g. `models/`) needs a `layer:models` dep rule added to sheriff.config.ts
 - Templates: always use `templateUrl:` with a separate `.html` file — inline `template:` is forbidden by ESLint
 - CI: `nx affected` for PRs must use `--base=origin/main` (not bare `main`) — add `git fetch origin main` step first
@@ -14,6 +15,23 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - For `<input type="number">` tests in jsdom: use `new Event('input')` not `new Event('change')` to update form control values
 - `.gitkeep` files: remove as soon as a folder has real content
 
+---
+
+## 2026-03-02 - SCF-018
+- Created libs/chairly/src/lib/services/pipes/ folder with duration.pipe.ts, duration.pipe.spec.ts, index.ts
+- duration.pipe.ts: import of parseDuration updated from './duration.utils' to '../util' (relative path to sibling util/ barrel)
+- duration.pipe.spec.ts: same content, import updated from './duration.pipe' (local — no change needed)
+- pipes/index.ts: exports DurationPipe
+- util/index.ts: DurationPipe export removed; only formatDurationToTimeSpan and parseDuration remain
+- service-table.component.ts: import changed from '../util' to '../pipes' for DurationPipe
+- sheriff.config.ts: added 'layer:pipes': ['layer:util']; updated layer:feature and layer:ui to include layer:pipes
+- Old util/duration.pipe.ts and util/duration.pipe.spec.ts deleted (git tracked as renames)
+- All lint + test + build checks pass (119 tests green)
+- Files changed: pipes/* (new), util/index.ts, ui/service-table.component.ts, sheriff.config.ts
+- **Learnings for future iterations:**
+  - When moving an Angular pipe to pipes/, update the relative import of utility functions from './duration.utils' to '../util' (util barrel import from the sibling folder)
+  - Sheriff requires adding 'layer:pipes' dep rule AND updating layer:feature/layer:ui allowed deps to include layer:pipes
+  - Git correctly detects file moves as renames when using `git rm` + `git add` (or when files are identical enough)
 ---
 
 ## 2026-03-02 - SCF-017
