@@ -235,7 +235,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational component. The parent opens/closes it and handles the saved event. Duration conversion uses the helpers from SCF-009. The form should reset when opened for create mode."
     },
     {
@@ -258,7 +258,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational component. It displays data and emits events. The DurationPipe from SCF-009 is used in the template. Price can be formatted with Angular's CurrencyPipe."
     },
     {

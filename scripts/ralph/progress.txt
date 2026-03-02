@@ -2,11 +2,47 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-02 - SCF-011
+- ServiceFormDialogComponent created in libs/chairly/src/lib/services/ui/
+- Uses native <dialog> element with viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl')
+- Signal inputs: categories (required), service (optional, null for create mode)
+- OutputEmitterRef: saved (CreateServiceRequest | UpdateServiceRequest), cancelled (void)
+- Reactive form with typed FormGroup: name, description, duration (minutes), price, categoryId, sortOrder
+- open() resets the form (pre-populates in edit mode using parseDuration) and calls showModal()
+- Duration converted from minutes to TimeSpan format (formatDurationToTimeSpan) on save
+- Fixed 6 lint errors: all labels need `for="..."` attributes matching `id="..."` on form elements
+- Fixed 1 test failure: <input type="number"> change events don't update Angular form controls in jsdom — use `input` events instead for number inputs in tests
+- 10 unit tests covering: create, open, close, create mode reset, edit mode pre-populate, save emit with TimeSpan conversion, validation blocking submit, cancel, validation message display, category options
+- Exported from ui/index.ts barrel
+- Files changed: service-form-dialog.component.ts, service-form-dialog.component.spec.ts, ui/index.ts
+- **Learnings for future iterations:**
+  - All form `<label>` elements MUST have `for="id"` attributes matching `id="..."` on the associated input — `@angular-eslint/template/label-has-associated-control` enforces this
+  - For `<input type="number">` in Angular tests (jsdom): dispatch `input` events, NOT `change` events — `change` events don't reliably update the form control value in jsdom even though Angular's NumberValueAccessor registers on `change`. Use `new Event('input')` instead.
+---
+
+## 2026-03-02 - SCF-012
+- ServiceTableComponent created in libs/chairly/src/lib/services/ui/
+- Signal inputs: services (input.required<ServiceResponse[]>), isLoading (input.required<boolean>)
+- OutputEmitterRef events: editClicked, deleteClicked, toggleActiveClicked — all typed as ServiceResponse
+- Table with columns: Name, Category, Duration (DurationPipe), Price (CurrencyPipe), Status badge, Actions
+- Active badge: bg-green-100 / text-green-800; Inactive badge: bg-gray-100 / text-gray-600
+- Toggle Active button shows 'Deactivate' for active services and 'Activate' for inactive ones (inline ternary — allowed since it's property access on signal result, not a function call)
+- Loading state hides the table; empty state shows colspan="6" message row
+- 14 unit tests covering: create, rows displayed, name/category/duration display, null category dash, active/inactive badges, loading state, empty state, editClicked/deleteClicked/toggleActiveClicked emits, activate/deactivate button text
+- Exported from ui/index.ts barrel
+- Files changed: service-table.component.ts, service-table.component.spec.ts, ui/index.ts
+- **Learnings for future iterations:**
+  - CurrencyPipe from @angular/common can be imported directly in standalone components — no CommonModule needed
+  - Ternary in template for button text (e.g., `{{ service.isActive ? 'Deactivate' : 'Activate' }}`) is NOT a function call — it's a ternary expression on signal property access, so it passes no-call-expression rule
+  - For colspan in HTML table cells: use `colspan="6"` (not Angular binding) for static values
+
 ## Codebase Patterns
 - Sheriff requires an `index.ts` barrel in each tagged directory for proper module tagging (e.g., `data-access/index.ts`).
 - Sheriff's tagging for `libs/shared/src` must be added as a direct entry (not under `libs/shared/src/lib`) so that barrel imports (`@org/shared-lib`) resolve to a tagged module.
 - Sheriff uses AND logic for multi-tag dep rules — if a file has tags `[domain:X, layer:data-access]`, BOTH rules must allow the dependency. So `layer:data-access` must include `'shared'` in its allowed deps for data-access services to import from shared-lib.
 - For `Observable<void>` delete methods in tests, flush with `req.flush(null)` and verify completion with a boolean flag (not `toBeUndefined()` — HttpClient returns null not undefined for empty bodies).
+- All form `<label>` elements MUST have `for="id"` attributes matching `id="..."` on the associated control — `@angular-eslint/template/label-has-associated-control` enforces this.
+- For `<input type="number">` in Angular tests (jsdom): dispatch `input` events, NOT `change` events — `change` events don't reliably update the form control value in jsdom. Use `new Event('input')` instead.
 - The git working directory is /home/jreuvers/projects/Chairly but `pwd` inside frontend tools resolves to /home/jreuvers/projects/Chairly/src/frontend/chairly. Use `git -C /home/jreuvers/projects/Chairly` for git commands.
 - Frontend Nx quality checks are run from /home/jreuvers/projects/Chairly/src/frontend/chairly: `npx nx affected -t lint --base=main`, etc.
 - npm install must be run once in src/frontend/chairly before Nx commands work (node_modules not committed).
