@@ -10,7 +10,7 @@ import {
 
 import { ConfirmationDialogComponent } from '@org/shared-lib';
 
-import { ServiceCategoryStore, ServiceStore } from '../data-access';
+import { ServiceCategoryStore, ServiceStore } from '../../data-access';
 import {
   CreateServiceCategoryRequest,
   CreateServiceRequest,
@@ -18,8 +18,8 @@ import {
   ServiceResponse,
   UpdateServiceCategoryRequest,
   UpdateServiceRequest,
-} from '../models';
-import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableComponent } from '../ui';
+} from '../../models';
+import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableComponent } from '../../ui';
 
 @Component({
   selector: 'chairly-service-list-page',
