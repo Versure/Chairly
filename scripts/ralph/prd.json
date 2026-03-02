@@ -412,7 +412,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "This story must be implemented AFTER SCF-019 (routes moved to domain root). Each feature page/smart component should live in its own subfolder. Currently only ServiceListPageComponent exists in feature/. Move it to feature/service-list-page/. If additional feature components are added in future, they each get their own subfolder (e.g., feature/service-detail/). The feature/index.ts barrel hides the internal subfolder structure from consumers."
     },
     {

@@ -17,6 +17,21 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ---
 
+## 2026-03-02 - SCF-020
+- Created libs/chairly/src/lib/services/feature/service-list-page/ subfolder
+- Moved service-list-page.component.ts to feature/service-list-page/service-list-page.component.ts
+- Moved service-list-page.component.spec.ts to feature/service-list-page/service-list-page.component.spec.ts
+- Updated relative imports in both files: '../../data-access', '../../models', '../../ui' (two levels up — from feature/service-list-page/ to services/)
+- Updated feature/index.ts barrel: export from './service-list-page/service-list-page.component'
+- services.routes.ts already imports from './feature' barrel — no change needed
+- Git correctly detected file moves as renames (98% and 97% similarity)
+- All lint + test + build checks pass (119 tests green)
+- Files changed: feature/service-list-page/* (new location), feature/index.ts
+- **Learnings for future iterations:**
+  - When moving a component from feature/ into feature/service-list-page/, all relative imports go one level deeper: '../data-access' becomes '../../data-access', '../models' becomes '../../models', etc.
+  - The feature/index.ts barrel is the key abstraction — consumers (services.routes.ts) import from './feature' and need no change; only the barrel's internal path changes
+---
+
 ## 2026-03-02 - SCF-019
 - Moved services.routes.ts from feature/ to domain root (libs/chairly/src/lib/services/services.routes.ts)
 - Updated relative imports inside services.routes.ts: data-access stays './data-access', feature import changed from './service-list-page.component' to './feature' barrel
