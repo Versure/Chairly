@@ -84,6 +84,23 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - ServiceCategoryStore is NOT providedIn root — it will be provided at route level in SCF-014
 ---
 
+## 2026-03-02 - SCF-007
+- Created ServiceStore in libs/chairly/src/lib/services/data-access/service.store.ts
+- State shape: services (ServiceResponse[]), isLoading (boolean), error (string | null)
+- Computed signals: activeServices (filters by isActive) and servicesByCategory (groups by categoryId, 'uncategorized' for null)
+- Methods: loadServices, createService, updateService, deleteService, toggleActive — all using direct subscribe with take(1)
+- groupByCategory extracted as module-level function to avoid SonarJS no-nested-functions violations
+- Unit tests in service.store.spec.ts — 16 tests covering initial state, computed signals, and all 5 methods (success + error paths)
+- Updated data-access/index.ts barrel to export ServiceStore and ServiceState
+- Auto-fixed import/export sort with eslint --fix (index.ts reordered by linter)
+- Files changed: service.store.ts, service.store.spec.ts, data-access/index.ts
+- **Learnings for future iterations:**
+  - withComputed receives the store and returns an object of Angular computed() signals — import computed from @angular/core
+  - groupByCategory uses a for..of loop (not Array.reduce) to stay at ≤4 nesting levels for SonarJS
+  - Computed signals are exposed as signal accessors: store.activeServices(), store.servicesByCategory()
+  - Same signalStore patterns as ServiceCategoryStore apply cleanly for services
+---
+
 ## 2026-02-27 - SCF-002
 - Created apps/chairly/proxy.conf.json with /api → http://localhost:5205 proxy config (changeOrigin: true)
 - Updated apps/chairly/project.json serve target with proxyConfig option pointing to proxy.conf.json

@@ -143,7 +143,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Same patterns as SCF-006. The computed signals derive from the services array. servicesByCategory groups by categoryId, using 'uncategorized' as the key when categoryId is null."
     },
     {
