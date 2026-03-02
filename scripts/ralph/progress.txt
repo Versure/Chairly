@@ -2,6 +2,24 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-02 - SCF-014
+- services.routes.ts created in libs/chairly/src/lib/services/feature/
+- Route provides ServiceStore, ServiceCategoryStore at route level (scoped to /services)
+- ServiceApiService, ServiceCategoryApiService are providedIn:'root' so don't strictly need route providers, but added for explicitness
+- libs/chairly/src/index.ts updated to export servicesRoutes from the feature barrel
+- feature/index.ts updated to also export servicesRoutes
+- app.routes.ts updated: default '' redirects to /services, lazy route via import('@org/chairly-lib').then(m => m.servicesRoutes)
+- sheriff.config.ts updated: added 'libs/chairly/src': ['chairly-lib'] tag and dep rules for 'root' and 'chairly-lib'
+- Fixed pre-existing build error in util/index.ts: changed `export { Interface }` to `export type { Interface }` for interface re-exports
+- All lint + test + build checks pass
+- Files changed: services.routes.ts, feature/index.ts, libs/chairly/src/index.ts, app.routes.ts, sheriff.config.ts, util/index.ts
+- **Learnings for future iterations:**
+  - Interface re-exports need `export type { }` when `isolatedModules: true` — test runner doesn't catch this but Angular build does
+  - Sheriff needs 'root' dep rules for app files; add `'root': ['chairly-lib', 'shared']` to depRules
+  - Library barrel at `libs/chairly/src` needs its own Sheriff tag — same pattern as 'shared' for shared-lib
+  - `export type` changes don't break existing tests but fix Angular build's isolatedModules requirement
+---
+
 ## 2026-03-02 - SCF-011
 - ServiceFormDialogComponent created in libs/chairly/src/lib/services/ui/
 - Uses native <dialog> element with viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl')
@@ -41,6 +59,9 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - Sheriff's tagging for `libs/shared/src` must be added as a direct entry (not under `libs/shared/src/lib`) so that barrel imports (`@org/shared-lib`) resolve to a tagged module.
 - Sheriff uses AND logic for multi-tag dep rules — if a file has tags `[domain:X, layer:data-access]`, BOTH rules must allow the dependency. So `layer:data-access` must include `'shared'` in its allowed deps for data-access services to import from shared-lib.
 - For `Observable<void>` delete methods in tests, flush with `req.flush(null)` and verify completion with a boolean flag (not `toBeUndefined()` — HttpClient returns null not undefined for empty bodies).
+- Interface re-exports in barrel files need `export type { }` syntax when Angular build uses `isolatedModules: true`. Use `export type { MyInterface }` instead of `export { MyInterface }` for all TypeScript interfaces.
+- Sheriff needs 'root' dep rules for app (apps/ directory) files, plus a 'chairly-lib' tag for `libs/chairly/src` barrel. Without these, Sheriff raises SH-002 errors.
+- Smart container test pattern: mock stores as `{ signal(), vi.fn() }` plain objects, provide via TestBed, use `triggerEventHandler('eventName', payload)` to test event wiring.
 - All form `<label>` elements MUST have `for="id"` attributes matching `id="..."` on the associated control — `@angular-eslint/template/label-has-associated-control` enforces this.
 - For `<input type="number">` in Angular tests (jsdom): dispatch `input` events, NOT `change` events — `change` events don't reliably update the form control value in jsdom. Use `new Event('input')` instead.
 - The git working directory is /home/jreuvers/projects/Chairly but `pwd` inside frontend tools resolves to /home/jreuvers/projects/Chairly/src/frontend/chairly. Use `git -C /home/jreuvers/projects/Chairly` for git commands.
@@ -57,6 +78,28 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - For testing Angular components with native `<dialog>` element: jsdom doesn't implement `showModal()` or `close()`. Assign mock functions directly: `dialogEl.showModal = vi.fn(); dialogEl.close = vi.fn();` after `fixture.detectChanges()`.
 - Signal outputs (`output<T>()` returns `OutputEmitterRef<T>`) have a `.subscribe()` method usable in tests: `component.output.subscribe(() => { done = true; })`.
 - `viewChild.required<ElementRef<HTMLDialogElement>>('name')` requires the template reference variable name to match the string parameter. Use a non-conflicting name like `#dialogEl` (not `#dialog` which may cause issues).
+
+## 2026-03-02 - SCF-013
+- ServiceListPageComponent created in libs/chairly/src/lib/services/feature/
+- Smart container: injects ServiceStore and ServiceCategoryStore (both private, accessed via computed properties exposed as protected)
+- On init, calls loadServices() and loadCategories() on both stores
+- Template: header with "Add Service" button, main area with ServiceTableComponent, sidebar with CategoryPanelComponent
+- Three dialogs in template: ServiceFormDialogComponent (shared for create/edit), two ConfirmationDialogComponents (#deleteServiceDialog, #deleteCategoryDialog)
+- viewChild.required(ServiceFormDialogComponent) for single form dialog (type-based query)
+- viewChild.required<ConfirmationDialogComponent>('deleteServiceDialog') and 'deleteCategoryDialog' for string-ref queries
+- signal<ServiceResponse | null>(null) for selectedService; signal<string | null>(null) for selectedCategoryIdForDelete
+- Protected computed signals (services, servicesLoading, categories, categoriesLoading) wrap store signals
+- 14 unit tests: create, loadServices/loadCategories on init, Add Service button opens dialog, edit mode, create/update service via saved event, delete service confirmation flow, toggleActive, category create/update/delete
+- Created feature/index.ts barrel exporting ServiceListPageComponent
+- All lint + test + build checks pass
+- Files changed: service-list-page.component.ts, service-list-page.component.spec.ts, feature/index.ts
+- **Learnings for future iterations:**
+  - `npx eslint` run directly on a component file may report `Parsing error: '>' expected` at the template start — this is a false positive only seen when running ESLint directly (not via `npx nx`). The `npx nx affected -t lint --base=main` command correctly reports no errors.
+  - viewChild.required(ComponentType) (type-based) works for single component; use viewChild.required<T>('templateRefVarName') for multiple same-type components
+  - For smart container tests: mock stores as plain objects with signal() state and vi.fn() methods; provide them via { provide: StoreClass, useValue: mockObj } in TestBed
+  - triggerEventHandler() on debugElement for event bindings is the clean way to test event wiring in smart containers
+  - SonarJS `no-undefined-argument` flags `triggerEventHandler('event', undefined)` — use `null` instead
+---
 
 ## 2026-02-27 - SCF-001
 - Fixed ESLint prefix from 'lib' to 'chairly' in libs/chairly/eslint.config.mjs and libs/shared/eslint.config.mjs (both directive and component selector rules)

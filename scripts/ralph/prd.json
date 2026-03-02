@@ -282,7 +282,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "This is the smart container that orchestrates everything. It connects stores to presentational components. Use viewChild() (signal-based) to get references to dialog components for open/close. Layout should be responsive — sidebar collapses on small screens or stacks below."
     },
     {
@@ -301,7 +301,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Stores are provided at the route level so they are scoped to the /services route. Use Angular's route providers array. The lazy import path should use the @org/chairly-lib alias or a relative path depending on what works with the Nx setup."
     },
     {
