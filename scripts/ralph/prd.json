@@ -339,7 +339,7 @@
         "npx nx affected -t lint test build --base=origin/main passes locally"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": "The root cause: actions/checkout with fetch-depth: 0 fetches all history but does NOT create a local tracking ref for 'main'. nx affected --base=main then fails. The fix: add 'git fetch origin main' step to create the remote-tracking ref, or use origin/main instead of main as the base. Both changes together are safest. The push step already says --base=origin/main~1 and is fine; only the PR step uses the bare 'main' ref."
     },
     {

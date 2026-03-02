@@ -15,6 +15,17 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ---
 
+## 2026-03-02 - SCF-016
+- Fixed GitHub Actions frontend-ci.yml PR step to use --base=origin/main --head=HEAD
+- Added 'Fetch base branch' step (git fetch origin main) before affected tasks steps
+- Verified push step already uses origin/main~1 prefix (consistent)
+- Local verification: git fetch origin main + npx nx affected -t lint test build --base=origin/main all passed
+- Files changed: .github/workflows/frontend-ci.yml, scripts/ralph/prd.json
+- **Learnings for future iterations:**
+  - actions/checkout with fetch-depth: 0 fetches all history but does NOT create a local tracking ref for 'main' — always add `git fetch origin main` before nx affected
+  - Use `--base=origin/main` (remote-tracking ref) not bare `main` in CI to avoid 'fatal: ambiguous argument' errors
+---
+
 ## 2026-03-02 - SCF-015
 - Final verification: all lint, test, and build checks pass with zero warnings
 - Verified all components: OnPush change detection, standalone: true, chairly- prefix
