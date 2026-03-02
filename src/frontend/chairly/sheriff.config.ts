@@ -4,6 +4,7 @@ export const sheriffConfig: SheriffConfig = {
   version: 1,
 
   tagging: {
+    'libs/chairly/src': ['chairly-lib'],
     'libs/chairly/src/lib': {
       'bookings/<layer>': ['domain:bookings', 'layer:<layer>'],
       'clients/<layer>': ['domain:clients', 'layer:<layer>'],
@@ -21,6 +22,12 @@ export const sheriffConfig: SheriffConfig = {
   },
 
   depRules: {
+    // App (root) can depend on any library barrel or shared
+    'root': ['chairly-lib', 'shared'],
+
+    // chairly-lib barrel re-exports from domain layers
+    'chairly-lib': ['domain:services', 'shared'],
+
     // Domain isolation: domains cannot depend on each other
     'domain:*': [sameTag, 'shared'],
 
