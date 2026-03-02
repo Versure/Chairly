@@ -1,3 +1,5 @@
+export type { ServiceState } from './service.store';
+export { ServiceStore } from './service.store';
 export { ServiceApiService } from './service-api.service';
 export type { ServiceCategoryState } from './service-category.store';
 export { ServiceCategoryStore } from './service-category.store';
