@@ -167,7 +167,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Use the native <dialog> element with showModal()/close() methods. Style the backdrop with ::backdrop pseudo-element via Tailwind. This is in shared/ui/ because it will be reused across domains."
     },
     {

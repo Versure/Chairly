@@ -14,6 +14,13 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - SonarJS `no-nested-functions` enforces max 4 levels of function nesting — extract map/filter callbacks used inside patchState (which is inside subscribe which is inside withMethods) to module-level helper functions.
 - signalStore() creates an injectable class — provide in TestBed; mocked dependencies via { provide: X, useValue: mockObj }; of() is synchronous so no fakeAsync needed.
 - eslint --fix auto-sorts imports/exports — run it after creating files to avoid manual sort guessing.
+- `@angular-eslint/template/no-call-expression` does NOT support Angular signal reads — it blocks all function calls including `signal()` reads. It has been disabled in eslint.config.mjs (rule source confirmed no TypeScript type checking). Signal reads in templates remain the approved Angular 17+ pattern.
+- Angular's HTML parser (used by @angular-eslint) treats `<dialog>` as having implied end tags in some versions — the `Parsing error: '>' expected` at line 18:6 was a misleading error from a `</dialog>` closing tag mismatch (opening tag was accidentally changed to `<div>` but closing tag left as `</dialog>`). Always use matching `<dialog>...</dialog>` tags.
+- Two separate `import ... from '@angular/core'` statements cause `simple-import-sort/imports` errors and `Parsing error: '>' expected` in the inline template processor. Always merge all Angular core imports into one statement.
+- Angular signal inputs (`input()`, `input.required()`) and outputs (`output()`) must be marked `readonly` — `@angular-eslint/prefer-signals` enforces this. Run `eslint --fix` to auto-fix.
+- For testing Angular components with native `<dialog>` element: jsdom doesn't implement `showModal()` or `close()`. Assign mock functions directly: `dialogEl.showModal = vi.fn(); dialogEl.close = vi.fn();` after `fixture.detectChanges()`.
+- Signal outputs (`output<T>()` returns `OutputEmitterRef<T>`) have a `.subscribe()` method usable in tests: `component.output.subscribe(() => { done = true; })`.
+- `viewChild.required<ElementRef<HTMLDialogElement>>('name')` requires the template reference variable name to match the string parameter. Use a non-conflicting name like `#dialogEl` (not `#dialog` which may cause issues).
 
 ## 2026-02-27 - SCF-001
 - Fixed ESLint prefix from 'lib' to 'chairly' in libs/chairly/eslint.config.mjs and libs/shared/eslint.config.mjs (both directive and component selector rules)
@@ -111,4 +118,23 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - InjectionToken with providedIn: 'root' factory is the clean pattern — no need to provide in any module
   - The shared barrel index.ts was empty (single blank line) — write directly with the exports
   - proxyConfig in project.json goes in serve.options (not in configurations)
+---
+
+## 2026-03-02 - SCF-008
+- Created ConfirmationDialogComponent in libs/shared/src/lib/ui/confirmation-dialog.component.ts
+- Uses native <dialog> element with showModal()/close() via viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl')
+- Signal inputs: title (required), message (required), confirmLabel (default 'Confirm'), cancelLabel (default 'Cancel'), isDestructive (default false)
+- OutputEmitterRef events: confirmed, cancelled — both marked readonly
+- Protected computed signal: confirmButtonClass — returns red styling when isDestructive, indigo otherwise
+- Protected onConfirm()/onCancel() methods close dialog and emit events
+- Created 9 unit tests in confirmation-dialog.component.spec.ts: create, open, close, confirm emit, cancel emit, default labels, custom labels, destructive styling, default styling
+- Created libs/shared/src/lib/ui/index.ts barrel and updated libs/shared/src/index.ts to export ConfirmationDialogComponent
+- Updated eslint.config.mjs to disable `@angular-eslint/template/no-call-expression` (rule does not support Angular 17+ signal reads)
+- Files changed: confirmation-dialog.component.ts, confirmation-dialog.component.spec.ts, libs/shared/src/lib/ui/index.ts, libs/shared/src/index.ts, eslint.config.mjs
+- **Learnings for future iterations:**
+  - The `no-call-expression` ESLint rule (v21) does NOT detect Angular signals — it blocks ALL function calls including signal reads. It must be disabled for Angular 17+ signal-based projects. The rule source shows it uses allowList/allowPrefix/allowSuffix options, no TypeScript type detection.
+  - Two imports from the same module cause parse errors with the inline template processor — merge all @angular/core imports into one statement.
+  - jsdom doesn't implement HTMLDialogElement.showModal()/close() — assign vi.fn() directly to the element after detectChanges().
+  - Template reference variables (#dialogEl, not #dialog) — avoid names that conflict with HTML element names to prevent potential parsing issues.
+  - Mark all signal inputs/outputs/computed as `readonly` — the `@angular-eslint/prefer-signals` rule enforces this.
 ---
