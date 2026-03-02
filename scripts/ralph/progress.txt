@@ -4,6 +4,7 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ## Codebase Patterns
 - Domain folder structure: `models/` (interfaces), `pipes/` (Angular pipes), `util/` (pure functions only), `feature/{name}/` (one subfolder per smart component), `{domain}.routes.ts` at domain root
+- Sheriff's `<layer>` tagging pattern auto-creates `layer:<foldername>` tags for each subfolder — any new folder (e.g. `models/`) needs a `layer:models` dep rule added to sheriff.config.ts
 - Templates: always use `templateUrl:` with a separate `.html` file — inline `template:` is forbidden by ESLint
 - CI: `nx affected` for PRs must use `--base=origin/main` (not bare `main`) — add `git fetch origin main` step first
 - After creating PR: run `gh run watch --exit-status` to wait for CI before signaling COMPLETE
@@ -13,6 +14,25 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - For `<input type="number">` tests in jsdom: use `new Event('input')` not `new Event('change')` to update form control values
 - `.gitkeep` files: remove as soon as a folder has real content
 
+---
+
+## 2026-03-02 - SCF-017
+- Created libs/chairly/src/lib/services/models/ folder with service.models.ts, service-category.models.ts, index.ts
+- Moved ServiceResponse, CreateServiceRequest, UpdateServiceRequest to models/service.models.ts
+- Moved ServiceCategoryResponse, CreateServiceCategoryRequest, UpdateServiceCategoryRequest to models/service-category.models.ts
+- Created models/index.ts barrel with export type { } exports
+- Updated util/index.ts: removed model type exports, kept only DurationPipe, parseDuration, formatDurationToTimeSpan
+- Updated all data-access files (services + specs) to import from '../models' instead of '../util'
+- Updated all ui files: category-panel, service-table, service-form-dialog (+ specs) — split imports for service-form-dialog (models + util)
+- Updated feature/service-list-page.component.ts and spec to import from '../models'
+- Updated sheriff.config.ts: added layer:models dep rule, added layer:models to allowed deps for feature/ui/data-access layers
+- Auto-fixed import sort in service-list-page.component.ts and models/index.ts via eslint --fix
+- All lint + test + build checks pass (119 tests green)
+- Files changed: models/* (new), util/index.ts, data-access/*.ts (7 files), ui/*.ts (6 files), feature/*.ts (2 files), sheriff.config.ts
+- **Learnings for future iterations:**
+  - Sheriff's `<layer>` pattern in tagging auto-creates layer tags for new folders — add dep rules for any new layer name
+  - When splitting an import (e.g., models + util from the same original import), check the import sort order after splitting — simple-import-sort may reorder them
+  - eslint --fix on inline-template components reports false-positive parse errors but still auto-sorts imports correctly
 ---
 
 ## 2026-03-02 - SCF-016

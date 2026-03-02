@@ -359,7 +359,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 17,
-      "passes": false,
+      "passes": true,
       "notes": "This is a structural refactor — no logic changes, only file moves and import updates. The model files are: service.models.ts (ServiceResponse, CreateServiceRequest, UpdateServiceRequest) and service-category.models.ts (ServiceCategoryResponse, CreateServiceCategoryRequest, UpdateServiceCategoryRequest). The util/ folder should only contain pure utility functions (parseDuration, formatDurationToTimeSpan) after this change. Update all barrel files accordingly."
     },
     {
