@@ -120,7 +120,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Use @ngrx/signals signalStore with withState, withMethods, and withComputed as needed. Use rxMethod or patchState for async operations. The store will be provided at the route level in SCF-014."
     },
     {

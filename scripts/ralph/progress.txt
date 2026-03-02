@@ -11,6 +11,9 @@ Started: Fri Feb 27 14:15:21 CET 2026
 - Frontend Nx quality checks are run from /home/jreuvers/projects/Chairly/src/frontend/chairly: `npx nx affected -t lint --base=main`, etc.
 - npm install must be run once in src/frontend/chairly before Nx commands work (node_modules not committed).
 - import-sort rule uses `simple-import-sort/imports` — Angular imports are sorted alphabetically by package name (@angular/common/http before @angular/core).
+- SonarJS `no-nested-functions` enforces max 4 levels of function nesting — extract map/filter callbacks used inside patchState (which is inside subscribe which is inside withMethods) to module-level helper functions.
+- signalStore() creates an injectable class — provide in TestBed; mocked dependencies via { provide: X, useValue: mockObj }; of() is synchronous so no fakeAsync needed.
+- eslint --fix auto-sorts imports/exports — run it after creating files to avoid manual sort guessing.
 
 ## 2026-02-27 - SCF-001
 - Fixed ESLint prefix from 'lib' to 'chairly' in libs/chairly/eslint.config.mjs and libs/shared/eslint.config.mjs (both directive and component selector rules)
@@ -61,6 +64,24 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - PATCH with no request body: pass `null` as the body in `http.patch<T>(url, null)`
   - Same patterns as SCF-004 (ServiceCategoryApiService) work cleanly for services
   - For Observable<void> delete tests, use completion flag pattern (req.flush(null))
+---
+
+## 2026-03-02 - SCF-006
+- Created ServiceCategoryStore in libs/chairly/src/lib/services/data-access/service-category.store.ts
+- State shape: categories (ServiceCategoryResponse[]), isLoading (boolean), error (string | null)
+- Methods: loadCategories, createCategory, updateCategory, deleteCategory — all using direct subscribe with take(1)
+- Extracted module-level helper functions (toErrorMessage, replaceCategory, removeCategory) to avoid SonarJS no-nested-functions violations (max 4 levels deep)
+- Unit tests in service-category.store.spec.ts — 9 tests covering initial state, success and error paths for all 4 methods
+- Updated data-access/index.ts to export ServiceCategoryStore and ServiceCategoryState
+- Auto-fixed import/export sort with eslint --fix
+- Files changed: service-category.store.ts, service-category.store.spec.ts, data-access/index.ts
+- **Learnings for future iterations:**
+  - SonarJS no-nested-functions limits nesting to 4 levels deep — withMethods + method + subscribe.next + patchState = 4 levels, so any callback inside patchState (map, filter) must be extracted to module-level helpers
+  - signalStore() from @ngrx/signals creates an injectable class — provide it in TestBed.configureTestingModule with { provide: ServiceCategoryApiService, useValue: mockService }
+  - With vitest globals: true, vi.fn() is available without imports in spec files
+  - Use of(value) for synchronous mock observables — state updates happen synchronously so no fakeAsync needed
+  - simple-import-sort sorts exports: run eslint --fix to auto-sort rather than guessing the order
+  - ServiceCategoryStore is NOT providedIn root — it will be provided at route level in SCF-014
 ---
 
 ## 2026-02-27 - SCF-002
