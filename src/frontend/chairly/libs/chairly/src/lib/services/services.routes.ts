@@ -5,8 +5,8 @@ import {
   ServiceCategoryApiService,
   ServiceCategoryStore,
   ServiceStore,
-} from '../data-access';
-import { ServiceListPageComponent } from './service-list-page.component';
+} from './data-access';
+import { ServiceListPageComponent } from './feature';
 
 export const servicesRoutes: Route[] = [
   {

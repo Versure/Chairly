@@ -1,1 +1,1 @@
-export { servicesRoutes } from './lib/services/feature';
+export { servicesRoutes } from './lib/services/services.routes';
