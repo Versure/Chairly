@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { parseDuration } from './duration.utils';
+import { parseDuration } from '../util';
 
 /**
  * Transforms a .NET TimeSpan string ('HH:MM:SS') to a human-readable display.
