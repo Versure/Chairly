@@ -41,10 +41,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
+      - name: Fetch base branch
+        run: git fetch origin main
+
       - name: Run affected tasks (push)
         if: github.event_name == 'push'
         run: npx nx affected -t lint test build e2e --base=origin/main~1 --head=HEAD
 
       - name: Run affected tasks (PR)
         if: github.event_name == 'pull_request'
-        run: npx nx affected -t lint test build e2e
+        run: npx nx affected -t lint test build e2e --base=origin/main --head=HEAD
