@@ -20,6 +20,18 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Working directory for Nx commands is /home/jreuvers/projects/Chairly/src/frontend/chairly (already set as default)
 ---
 
+## 2026-03-02 - SCF-003
+- Created TypeScript interfaces matching backend DTOs in libs/chairly/src/lib/services/util/
+- service.models.ts: ServiceResponse, CreateServiceRequest, UpdateServiceRequest
+- service-category.models.ts: ServiceCategoryResponse, CreateServiceCategoryRequest, UpdateServiceCategoryRequest
+- index.ts: barrel file exporting all interfaces
+- Files changed: libs/chairly/src/lib/services/util/service.models.ts, libs/chairly/src/lib/services/util/service-category.models.ts, libs/chairly/src/lib/services/util/index.ts
+- **Learnings for future iterations:**
+  - Interfaces were pre-scaffolded by prior work — always check if files already exist before creating new ones
+  - GUIDs → string, TimeSpan → string ('HH:MM:SS'), DateTimeOffset → string (ISO 8601)
+  - The services/util/index.ts barrel exports all interfaces for consumption by data-access and feature layers
+---
+
 ## 2026-02-27 - SCF-002
 - Created apps/chairly/proxy.conf.json with /api → http://localhost:5205 proxy config (changeOrigin: true)
 - Updated apps/chairly/project.json serve target with proxyConfig option pointing to proxy.conf.json
