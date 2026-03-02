@@ -120,6 +120,19 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - proxyConfig in project.json goes in serve.options (not in configurations)
 ---
 
+## 2026-03-02 - SCF-009
+- Created parseDuration(timeSpan: string): number in services/util/duration.utils.ts — converts 'HH:MM:SS' to total minutes
+- Created formatDurationToTimeSpan(minutes: number): string — converts minutes back to 'HH:MM:SS' format
+- Created DurationPipe (name: 'duration') in services/util/duration.pipe.ts — formats TimeSpan strings as '30 min', '1h', '1h 30min'
+- Created unit tests: duration.utils.spec.ts (11 tests) and duration.pipe.spec.ts (7 tests)
+- Updated services/util/index.ts barrel to export DurationPipe, parseDuration, formatDurationToTimeSpan
+- Files changed: duration.utils.ts, duration.pipe.ts, duration.utils.spec.ts, duration.pipe.spec.ts, util/index.ts
+- **Learnings for future iterations:**
+  - Angular Pipes can be tested directly without TestBed — just instantiate the class and call transform()
+  - DurationPipe display logic: hours=0 → '{min} min', minutes=0 → '{h}h', both → '{h}h {min}min'
+  - parseDuration only needs hours and minutes parts (index 0 and 1) from the HH:MM:SS split — seconds are ignored
+---
+
 ## 2026-03-02 - SCF-008
 - Created ConfirmationDialogComponent in libs/shared/src/lib/ui/confirmation-dialog.component.ts
 - Uses native <dialog> element with showModal()/close() via viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl')

@@ -187,7 +187,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "The backend uses .NET TimeSpan serialized as 'HH:MM:SS'. The frontend needs to convert this to minutes for display and form inputs, and back to TimeSpan format for API requests. The pipe is for template display only."
     },
     {
