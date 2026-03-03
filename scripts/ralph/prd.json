@@ -516,7 +516,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 26,
-      "passes": false,
+      "passes": true,
       "notes": "Documentation-only story. The pattern to document: Tailwind v4 uses PostCSS for @import 'tailwindcss' processing. When this import is placed in a .scss file, Dart Sass intercepts it first and emits a deprecation warning because Sass @import is deprecated in Dart Sass 3.x. The structural fix (done in SCF-025) is to keep the Tailwind import in a plain .css file. This story documents that decision in CLAUDE.md so future Ralph iterations and developers never merge these concerns again. Add to the Forbidden section so it is unambiguous."
     }
   ]

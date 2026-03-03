@@ -47,6 +47,17 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Use `await expect(page.locator('dialog[open]')).toHaveCount(0)` after cancel to verify dialog closed (more explicit than `not.toBeVisible()` when element may not exist)
 ---
 
+## 2026-03-03 - SCF-026
+- Updated root CLAUDE.md Frontend Architecture section: added "Global styles setup" block documenting tailwind.css (PostCSS only) and styles.scss (SCSS-specific styles), with note that they must never be merged
+- Updated root CLAUDE.md Code Conventions — Frontend: extended "Tailwind CSS v4 for styling, SCSS for component styles" line with explicit note about file locations and the two-file separation
+- Updated root CLAUDE.md Forbidden section: added entry 'No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead'
+- All lint + test + build checks pass (served from cache — doc-only changes)
+- Files changed: CLAUDE.md
+- **Learnings for future iterations:**
+  - Documentation-only stories: all nx tasks come from cache, but run checks anyway to verify no regressions
+  - When an existing CLAUDE.md bullet can be extended (e.g., "Tailwind CSS v4 for styling"), extend it rather than adding a separate bullet — keeps the file concise
+---
+
 ## 2026-03-03 - SCF-025
 - Created apps/chairly/src/tailwind.css with a single line: `@import 'tailwindcss';`
 - Updated apps/chairly/src/styles.scss: removed `@import 'tailwindcss';`, replaced with a comment explaining its purpose
