@@ -502,7 +502,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "notes": "Root cause: styles.scss uses @import 'tailwindcss' which Dart Sass intercepts before PostCSS gets a chance to process it, triggering the 'Sass @import rules are deprecated' warning. The fix: move the Tailwind import to a plain .css file. Angular's build pipeline processes .css global style files with PostCSS directly, bypassing Sass. The styles.scss is kept as the SCSS entry point for any future SCSS-specific global styles (custom variables, mixins, font imports) but must NEVER contain @import for CSS libraries. Order in the styles array matters: tailwind.css first so Tailwind base styles load before any custom overrides in styles.scss."
     },
     {

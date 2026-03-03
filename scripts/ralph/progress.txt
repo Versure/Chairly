@@ -47,8 +47,22 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Use `await expect(page.locator('dialog[open]')).toHaveCount(0)` after cancel to verify dialog closed (more explicit than `not.toBeVisible()` when element may not exist)
 ---
 
+## 2026-03-03 - SCF-025
+- Created apps/chairly/src/tailwind.css with a single line: `@import 'tailwindcss';`
+- Updated apps/chairly/src/styles.scss: removed `@import 'tailwindcss';`, replaced with a comment explaining its purpose
+- Updated apps/chairly/project.json build.options.styles: `["apps/chairly/src/tailwind.css", "apps/chairly/src/styles.scss"]` (tailwind.css first)
+- Build output shows no Sass deprecation warning
+- All lint + test + build checks pass
+- Files changed: tailwind.css (new), styles.scss (modified), project.json (styles array updated)
+- **Learnings for future iterations:**
+  - Tailwind v4 `@import 'tailwindcss'` in a `.scss` file causes Sass @import deprecation warnings because Dart Sass intercepts it before PostCSS processes it
+  - Fix: move the Tailwind import to a plain `.css` file; Angular's build pipeline sends `.css` global styles directly to PostCSS, bypassing Sass
+  - styles.scss should only contain SCSS-specific constructs (variables, mixins, font imports); never `@import` CSS libraries inside .scss
+---
+
 ## Codebase Patterns
 - Domain folder structure: `models/` (interfaces), `pipes/` (Angular pipes), `util/` (pure functions only), `feature/{name}/` (one subfolder per smart component), `{domain}.routes.ts` at domain root
+- Global styles: `tailwind.css` (plain CSS, `@import 'tailwindcss'`, PostCSS only) + `styles.scss` (SCSS-specific styles). Never merge these two files.
 - Sheriff `layer:pipes` dep rule: `'layer:pipes': ['layer:util']` — pipes can import from util. Also update `layer:feature` and `layer:ui` to include `layer:pipes`.
 - Sheriff's `<layer>` tagging pattern auto-creates `layer:<foldername>` tags for each subfolder — any new folder (e.g. `models/`) needs a `layer:models` dep rule added to sheriff.config.ts
 - Templates: always use `templateUrl:` with a separate `.html` file — inline `template:` is forbidden by ESLint
