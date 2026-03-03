@@ -98,13 +98,20 @@ src/frontend/chairly/
 │       └── util/             # Shared helpers
 ├── eslint.config.mjs         # Root ESLint config (12 plugins)
 ├── sheriff.config.ts         # Module boundary rules
-└── postcss.config.mjs        # Tailwind v4
+├── postcss.config.json       # Tailwind v4 — PostCSS config for @angular/build (JSON only)
+└── postcss.config.mjs        # Tailwind v4 — PostCSS config for Vite/Vitest (ESM)
 ```
 
 **Global styles setup (two separate files — never merge):**
-- `apps/chairly/src/tailwind.css` — contains only `@import 'tailwindcss';`. Processed by PostCSS only. Never goes through Sass.
+- `apps/chairly/src/tailwind.css` — `@import 'tailwindcss'` + `@source` directives. Processed by PostCSS only. Never goes through Sass.
 - `apps/chairly/src/styles.scss` — SCSS-specific global styles: custom variables, mixins, font declarations. Must never contain `@import` for CSS libraries.
 - Both are listed in `project.json` build.options.styles: `tailwind.css` first, then `styles.scss`.
+
+**PostCSS config — important constraint:**
+- `@angular/build:application` only reads `postcss.config.json` or `.postcssrc.json` (JSON format). It ignores `.js`/`.mjs` configs entirely.
+- `postcss.config.json` is the config used by the Angular builder.
+- `postcss.config.mjs` is kept for Vite-based tooling (Vitest, Storybook).
+- The `tailwind.css` file must include explicit `@source` directives pointing at templates, because Tailwind's auto-detection does not reliably traverse Nx monorepo lib folders. Paths are relative to `tailwind.css`.
 
 **Path aliases:** `@org/chairly-lib`, `@org/shared-lib`
 
@@ -238,4 +245,5 @@ npx nx affected -t build --base=main
 - No inline `template:` in Angular components — always use `templateUrl:` with a separate `.html` file
 - No model interfaces or Angular pipes inside `util/` — use `models/` and `pipes/` folders respectively
 - No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
+- No PostCSS config in `.js`/`.mjs` format only — always maintain `postcss.config.json` for the Angular builder (it does not read `.mjs`)
 - Never commit without tests passing

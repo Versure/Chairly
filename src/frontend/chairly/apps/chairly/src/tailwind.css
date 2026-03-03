@@ -1,1 +1,6 @@
 @import 'tailwindcss';
+
+/* Explicit source paths for Tailwind v4 content scanning in Nx monorepo.
+   Paths are relative to this file (apps/chairly/src/tailwind.css). */
+@source '../../../libs/**/*.{html,ts}';
+@source '../**/*.{html,ts}';
