@@ -2,6 +2,22 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-03 - SCF-028
+- Translated all user-facing UI text to Dutch across 6 template files:
+  - service-form-dialog.component.html: title ('Dienst toevoegen'/'Dienst bewerken'), all labels (Naam, Omschrijving, Duur (minuten), Prijs, Categorie), option 'Geen', validation messages, buttons (Annuleren, Opslaan)
+  - service-table.component.html: column headers (Naam, Categorie, Duur, Prijs, Status, Acties), badges (Actief/Inactief), loading ('Diensten laden...'), empty state, button titles (Dienst bewerken, Status wijzigen, Dienst verwijderen), button text (Deactiveren/Activeren, Verwijderen)
+  - category-panel.component.html: header ('Categorieën'), add button ('+ Toevoegen'), placeholder ('Naam categorie'), form buttons (Opslaan/Annuleren), loading ('Laden...'), edit/delete button titles, button text, empty state ('Nog geen categorieën.')
+  - service-list-page.component.html: h1 ('Diensten'), add button ('Dienst toevoegen'), dialog titles/messages/labels (all Dutch)
+- confirmation-dialog.component.ts: changed defaults confirmLabel → 'Bevestigen', cancelLabel → 'Annuleren'
+- Updated all unit tests asserting on English strings in 5 spec files
+- Updated e2e tests: example.spec.ts, service-catalog.spec.ts (h1, button name, heading name all Dutch)
+- All lint, test (116 tests), build checks pass
+- **Learnings for future iterations:**
+  - Dutch translations for common UI patterns: Save→Opslaan, Cancel→Annuleren, Add→Toevoegen, Edit→Bewerken, Delete→Verwijderen, Active→Actief, Inactive→Inactief, Loading→Laden, Confirm→Bevestigen
+  - E2e tests using `getByRole('button', { name: '...' })` and `getByRole('heading', { name: '...' })` must be updated when button/heading text changes
+  - title attributes (used as test selectors like `[title="Edit service"]`) must also be translated — update the spec selectors in the same commit
+---
+
 ## 2026-03-03 - SCF-027
 - ServiceFormDialogComponent: removed sortOrder from FormGroup; open() resets without sortOrder; onSave() emits with sortOrder: 0 (placeholder); HTML category select now spans full row
 - ServiceListPageComponent.onServiceSaved: for create, injects sortOrder = services().length; for update, injects sortOrder = svc.sortOrder (overrides placeholder 0)

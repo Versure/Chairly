@@ -559,7 +559,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 28,
-      "passes": false,
+      "passes": true,
       "notes": "This story MUST be implemented AFTER SCF-027 (drag & drop / sortOrder removal) because SCF-027 changes the form layout and SCF-028 should translate the final state of each file. Template-only changes — no TypeScript logic changes except the default input values in ConfirmationDialogComponent. The delete confirmation messages in service-list-page.component.html: service message → 'Weet je zeker dat je deze dienst wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' Category message → 'Weet je zeker dat je deze categorie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' All Playwright e2e tests that assert on English text (e.g., 'Add Service' button, 'Services' h1, 'Categories' panel) must be updated to match the Dutch text."
     }
   ]
