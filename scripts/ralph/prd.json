@@ -488,6 +488,36 @@
       "priority": 24,
       "passes": true,
       "notes": "This story updates documentation only (CLAUDE.md files) plus the Ralph agent instruction. The key change to Ralph's behavior: instead of creating PR and immediately signaling COMPLETE, Ralph should wait for CI to pass. Use 'gh run watch --exit-status' which exits 0 if CI passes, non-zero if it fails. If CI fails, Ralph should read the failure logs with 'gh run view --log-failed' and fix the issue. The folder convention changes (models/, pipes/, feature subfolder, templateUrl) should be documented so future Ralph iterations follow them without needing to be told."
+    },
+    {
+      "id": "SCF-025",
+      "title": "Fix Sass @import deprecation: separate Tailwind CSS entry file from styles.scss",
+      "description": "As a developer, I want the Sass @import deprecation warning eliminated so that the build output is clean and only warns about real issues.",
+      "acceptanceCriteria": [
+        "apps/chairly/src/tailwind.css created with a single line: @import 'tailwindcss';",
+        "apps/chairly/src/styles.scss updated to remove the @import 'tailwindcss'; line — the file should be empty (a comment explaining its purpose is fine)",
+        "apps/chairly/project.json build.options.styles array updated to: [\"apps/chairly/src/tailwind.css\", \"apps/chairly/src/styles.scss\"] — tailwind.css listed first",
+        "npx nx build chairly produces no Sass deprecation warning about @import rules",
+        "Tailwind utility classes still apply correctly in the built output",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "Root cause: styles.scss uses @import 'tailwindcss' which Dart Sass intercepts before PostCSS gets a chance to process it, triggering the 'Sass @import rules are deprecated' warning. The fix: move the Tailwind import to a plain .css file. Angular's build pipeline processes .css global style files with PostCSS directly, bypassing Sass. The styles.scss is kept as the SCSS entry point for any future SCSS-specific global styles (custom variables, mixins, font imports) but must NEVER contain @import for CSS libraries. Order in the styles array matters: tailwind.css first so Tailwind base styles load before any custom overrides in styles.scss."
+    },
+    {
+      "id": "SCF-026",
+      "title": "Update CLAUDE.md to document Tailwind/SCSS separation convention",
+      "description": "As a developer, I want CLAUDE.md updated with the Tailwind + SCSS separation convention so that future implementations never put CSS library imports inside .scss files.",
+      "acceptanceCriteria": [
+        "Root CLAUDE.md Frontend Architecture section updated: document that the global styles setup consists of two files — tailwind.css (Tailwind v4 @import, processed by PostCSS only, never through Sass) and styles.scss (SCSS-specific global styles: variables, mixins, font declarations)",
+        "Root CLAUDE.md Forbidden section updated: add entry 'No @import of CSS libraries (e.g. Tailwind) inside .scss files — use a separate plain .css entry file instead'",
+        "Root CLAUDE.md Code Conventions — Frontend section notes: 'Tailwind v4 is imported in apps/chairly/src/tailwind.css (plain CSS). SCSS global styles go in apps/chairly/src/styles.scss. These two files must never be merged.'",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "Documentation-only story. The pattern to document: Tailwind v4 uses PostCSS for @import 'tailwindcss' processing. When this import is placed in a .scss file, Dart Sass intercepts it first and emits a deprecation warning because Sass @import is deprecated in Dart Sass 3.x. The structural fix (done in SCF-025) is to keep the Tailwind import in a plain .css file. This story documents that decision in CLAUDE.md so future Ralph iterations and developers never merge these concerns again. Add to the Forbidden section so it is unambiguous."
     }
   ]
 }
