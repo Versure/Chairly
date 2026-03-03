@@ -519,5 +519,48 @@
       "passes": true,
       "notes": "Documentation-only story. The pattern to document: Tailwind v4 uses PostCSS for @import 'tailwindcss' processing. When this import is placed in a .scss file, Dart Sass intercepts it first and emits a deprecation warning because Sass @import is deprecated in Dart Sass 3.x. The structural fix (done in SCF-025) is to keep the Tailwind import in a plain .css file. This story documents that decision in CLAUDE.md so future Ralph iterations and developers never merge these concerns again. Add to the Forbidden section so it is unambiguous."
     }
+    {
+      "id": "SCF-027",
+      "title": "Remove manual sortOrder from forms; implement drag & drop reordering",
+      "description": "As a user, I do not want to manually enter a sort order number. Instead I want to reorder services and categories by dragging and dropping rows/items in the list.",
+      "acceptanceCriteria": [
+        "ServiceFormDialogComponent: sortOrder field removed from FormGroup and from the template. The category select now spans the full row (no sort-order sibling column).",
+        "ServiceListPageComponent.onServiceSaved: for create, inject sortOrder as this.services().length before calling store.createService(); for update, inject sortOrder as this.selectedService()!.sortOrder to preserve the existing value.",
+        "CategoryPanelComponent: sortOrder field removed from addForm and editForm. Both FormGroups no longer contain sortOrder. Both sortOrder inputs removed from the template. The 'Order: {{ category.sortOrder }}' line removed from the category list display.",
+        "CategoryPanelComponent.saveNewCategory: sets sortOrder = this.categories().length on the emitted CreateServiceCategoryRequest.",
+        "CategoryPanelComponent.saveEdit: preserves the existing category.sortOrder on the emitted UpdateServiceCategoryRequest.",
+        "CategoryPanelComponent: list items are draggable (HTML5 drag & drop, no third-party library). Each <li> has draggable='true', handles (dragstart), (dragover), (drop). On drop, the categories array is reordered in memory and a new categoriesReordered OutputEmitterRef<ServiceCategoryResponse[]> event is emitted with the reordered array.",
+        "ServiceTableComponent: table rows are draggable (HTML5 drag & drop). Each <tr> has draggable='true', handles (dragstart), (dragover), (drop). On drop, a new servicesReordered OutputEmitterRef<ServiceResponse[]> event is emitted with the reordered array.",
+        "ServiceCategoryStore: new reorderCategories(ordered: ServiceCategoryResponse[]) method. Updates local state immediately (optimistic update: replaces categories with the ordered array with sortOrder set to index). Then calls apiService.update(id, { name, sortOrder: index }) for each category in order.",
+        "ServiceStore: new reorderServices(ordered: ServiceResponse[]) method. Updates local state immediately. Then calls apiService.update(id, { name, description, duration, price, categoryId, sortOrder: index }) for each service in order.",
+        "ServiceListPageComponent: wires (categoriesReordered) from CategoryPanelComponent to categoryStore.reorderCategories($event). Wires (servicesReordered) from ServiceTableComponent to serviceStore.reorderServices($event).",
+        "Unit tests updated: sortOrder-related tests removed or updated in ServiceFormDialogComponent spec, CategoryPanelComponent spec, and store specs. New store method tests added for reorderCategories and reorderServices.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "Use only HTML5 native drag & drop (dragstart/dragover/drop events with event.dataTransfer). No third-party drag & drop libraries. Track the dragged item index in a component signal (draggedIndex = signal<number | null>(null)). On dragstart set draggedIndex. On dragover call event.preventDefault(). On drop: compute new array order, set draggedIndex to null, emit the reordered event. The store reorder methods should first patchState with the new local order (for instant UI feedback), then fire the API calls in sequence. API call failures can be silently ignored for now (no rollback). The sortOrder for each item after reorder is simply its 0-based index in the new array."
+    },
+    {
+      "id": "SCF-028",
+      "title": "Translate all user-facing UI text to Dutch",
+      "description": "As a user, I want the application interface to be in Dutch (Nederlands) because that is the primary language of the target market.",
+      "acceptanceCriteria": [
+        "service-list-page.component.html: h1 'Services' → 'Diensten'. Button 'Add Service' → 'Dienst toevoegen'. Delete service dialog: title 'Delete Service' → 'Dienst verwijderen', message translated, confirmLabel 'Delete' → 'Verwijderen'. Delete category dialog: title 'Delete Category' → 'Categorie verwijderen', message translated, confirmLabel 'Delete' → 'Verwijderen'.",
+        "service-form-dialog.component.html: dialog title 'Edit Service' → 'Dienst bewerken', 'Add Service' → 'Dienst toevoegen'. Label 'Name' → 'Naam'. Label 'Description' → 'Omschrijving'. Label 'Duration (minutes)' → 'Duur (minuten)'. Label 'Price' → 'Prijs'. Label 'Category' → 'Categorie'. Option 'None' → 'Geen'. Button 'Cancel' → 'Annuleren'. Button 'Save' → 'Opslaan'. Validation message for name → 'Naam is verplicht (max. 150 tekens).'. Validation for description → 'Omschrijving mag maximaal 2000 tekens bevatten.'. Validation for duration → 'Duur is verplicht.'. Validation for price → 'Prijs is verplicht en moet 0 of meer zijn.'.",
+        "service-table.component.html: loading text 'Loading services...' → 'Diensten laden...'. Column header 'Name' → 'Naam'. 'Category' → 'Categorie'. 'Duration' → 'Duur'. 'Price' → 'Prijs'. 'Status' → 'Status' (unchanged). 'Actions' → 'Acties'. Badge 'Active' → 'Actief'. Badge 'Inactive' → 'Inactief'. Button title 'Edit service' → 'Dienst bewerken'. Button text 'Edit' → 'Bewerken'. Button title 'Toggle active' → 'Actief/inactief zetten'. Button text 'Deactivate' → 'Deactiveren', 'Activate' → 'Activeren'. Button title 'Delete service' → 'Dienst verwijderen'. Button text 'Delete' → 'Verwijderen'. Empty state text translated to Dutch.",
+        "category-panel.component.html: header 'Categories' → 'Categorieën'. Add button '+ Add' → '+ Toevoegen'. Input placeholder 'Category name' → 'Categorienaam'. Button 'Save' → 'Opslaan'. Button 'Cancel' → 'Annuleren'. Loading text 'Loading...' → 'Laden...'. Empty state 'No categories yet.' → 'Nog geen categorieën.'. Button title 'Edit category' → 'Categorie bewerken'. Button text 'Edit' → 'Bewerken'. Button title 'Delete category' → 'Categorie verwijderen'. Button text 'Delete' → 'Verwijderen'.",
+        "confirmation-dialog.component.ts (shared/ui): default confirmLabel changed from 'Confirm' to 'Bevestigen'. Default cancelLabel changed from 'Cancel' to 'Annuleren'.",
+        "All unit test strings updated where tests assert on rendered text (e.g., button labels, dialog titles).",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "This story MUST be implemented AFTER SCF-027 (drag & drop / sortOrder removal) because SCF-027 changes the form layout and SCF-028 should translate the final state of each file. Template-only changes — no TypeScript logic changes except the default input values in ConfirmationDialogComponent. The delete confirmation messages in service-list-page.component.html: service message → 'Weet je zeker dat je deze dienst wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' Category message → 'Weet je zeker dat je deze categorie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' All Playwright e2e tests that assert on English text (e.g., 'Add Service' button, 'Services' h1, 'Categories' panel) must be updated to match the Dutch text."
+    }
   ]
 }

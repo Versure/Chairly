@@ -142,6 +142,7 @@ src/frontend/chairly/
 - Lazy-loaded routes per domain
 - Each domain layer has dedicated subfolders: `models/` for interfaces, `pipes/` for Angular pipes, `util/` for pure functions. Routes file (`{domain}.routes.ts`) lives at the **domain root**, not inside `feature/`. Each smart component inside `feature/` has its own subfolder.
 - Component prefix: `chairly-` (e.g. `<chairly-booking-list>`)
+- **UI language is Dutch (Nederlands).** All user-facing text must be in Dutch: labels, button text, placeholders, validation/error messages, empty states, dialog titles, loading indicators, table headers, and all other UI copy. English is only acceptable in code identifiers, comments, and technical documentation.
 - No `any` types in TypeScript
 - No `console` statements (use proper logging)
 - Explicit return types on all functions
@@ -246,4 +247,5 @@ npx nx affected -t build --base=main
 - No model interfaces or Angular pipes inside `util/` — use `models/` and `pipes/` folders respectively
 - No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
 - No PostCSS config in `.js`/`.mjs` format only — always maintain `postcss.config.json` for the Angular builder (it does not read `.mjs`)
+- No English user-facing text in the UI — all labels, buttons, messages, and UI copy must be in Dutch (Nederlands)
 - Never commit without tests passing
