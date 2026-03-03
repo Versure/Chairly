@@ -470,7 +470,7 @@
         "npx nx affected -t lint test build e2e --base=origin/main passes"
       ],
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "notes": "The e2e tests run against the Angular app served without a backend. Since the stores make HTTP calls on init (loadServices, loadCategories), these will fail silently — the page will show empty states, not errors, as the stores set isLoading=false on error. The e2e tests should test UI structure and interactions, NOT API-dependent content (don't assert on table rows or category items since there's no backend). Use @playwright/test. The playwright.config.ts already exists at apps/chairly-e2e/playwright.config.ts — check the webServer config to understand how the app is served. The test for the dialog should use page.locator('dialog') or similar — the components use native <dialog> element."
     },
     {

@@ -2,6 +2,25 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-03 - SCF-023
+- Updated apps/chairly-e2e/src/example.spec.ts: changed 'Welcome' assertion to 'Services' (app now redirects to /services)
+- Created apps/chairly-e2e/src/service-catalog.spec.ts with 5 tests:
+  - 'navigates to /services and shows the page header'
+  - 'shows the Add Service button'
+  - 'opens the add service dialog when Add Service is clicked'
+  - 'closes the add service dialog when Cancel is clicked'
+  - 'shows the Categories panel'
+- Tests use page.locator('dialog[open]') to detect open native dialog element
+- Tests use page.locator('dialog[open]').getByRole('button', { name: 'Cancel' }) to click Cancel within the open dialog
+- lint + test + build all pass; e2e tests can't run locally (missing libnspr4/libnss3 system libs) but CI uses `npx playwright install --with-deps` which installs them
+- Files changed: example.spec.ts (updated), service-catalog.spec.ts (new)
+- **Learnings for future iterations:**
+  - Playwright e2e tests for Angular apps with native `<dialog>` element: use `page.locator('dialog[open]')` to detect open dialogs (native showModal() sets the `open` attribute)
+  - Local Playwright execution in WSL2 requires system libraries (libnspr4, libnss3, libasound2). CI installs them via `npx playwright install --with-deps`. Locally, need sudo to install them.
+  - The e2e tests don't depend on API responses — even with stores failing to load (no backend), Angular renders the UI structure immediately
+  - Use `await expect(page.locator('dialog[open]')).toHaveCount(0)` after cancel to verify dialog closed (more explicit than `not.toBeVisible()` when element may not exist)
+---
+
 ## Codebase Patterns
 - Domain folder structure: `models/` (interfaces), `pipes/` (Angular pipes), `util/` (pure functions only), `feature/{name}/` (one subfolder per smart component), `{domain}.routes.ts` at domain root
 - Sheriff `layer:pipes` dep rule: `'layer:pipes': ['layer:util']` — pipes can import from util. Also update `layer:feature` and `layer:ui` to include `layer:pipes`.
