@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { ServiceResponse } from '../models';
 import { ServiceTableComponent } from './service-table.component';
@@ -156,5 +157,23 @@ describe('ServiceTableComponent', () => {
     const toggleButtons = fixture.nativeElement.querySelectorAll('[title="Toggle active"]') as NodeListOf<HTMLButtonElement>;
     expect(toggleButtons[0].textContent?.trim()).toBe('Deactivate');
     expect(toggleButtons[1].textContent?.trim()).toBe('Activate');
+  });
+
+  it('should emit servicesReordered when a row is dropped on another row', () => {
+    let reordered: ServiceResponse[] | undefined;
+    component.servicesReordered.subscribe((s) => {
+      reordered = s;
+    });
+
+    const rows = fixture.debugElement.queryAll(By.css('tbody tr'));
+    rows[0].triggerEventHandler('dragstart', null);
+    rows[1].triggerEventHandler('dragover', { preventDefault: vi.fn() });
+    rows[1].triggerEventHandler('drop', null);
+    fixture.detectChanges();
+
+    expect(reordered).toBeDefined();
+    const result = reordered as ServiceResponse[];
+    expect(result[0].id).toBe('2');
+    expect(result[1].id).toBe('1');
   });
 });

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 
 import { CreateServiceCategoryRequest, ServiceCategoryResponse, UpdateServiceCategoryRequest } from '../models';
 import { CategoryPanelComponent } from './category-panel.component';
@@ -88,15 +89,13 @@ describe('CategoryPanelComponent', () => {
     ) as NodeListOf<HTMLInputElement>;
     inputs[0].value = 'New Category';
     inputs[0].dispatchEvent(new Event('input'));
-    inputs[1].value = '5';
-    inputs[1].dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
     const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
     form.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
-    expect(emitted).toEqual({ name: 'New Category', sortOrder: 5 });
+    expect(emitted).toEqual({ name: 'New Category', sortOrder: 2 });
   });
 
   it('should not emit categoryCreated when add form is submitted with empty name', () => {
@@ -198,5 +197,23 @@ describe('CategoryPanelComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('No categories yet.');
+  });
+
+  it('should emit categoriesReordered when a row is dropped on another row', () => {
+    let reordered: ServiceCategoryResponse[] | undefined;
+    component.categoriesReordered.subscribe((cats) => {
+      reordered = cats;
+    });
+
+    const listItems = fixture.debugElement.queryAll(By.css('li'));
+    listItems[0].triggerEventHandler('dragstart', null);
+    listItems[1].triggerEventHandler('dragover', { preventDefault: vi.fn() });
+    listItems[1].triggerEventHandler('drop', null);
+    fixture.detectChanges();
+
+    expect(reordered).toBeDefined();
+    const result = reordered as ServiceCategoryResponse[];
+    expect(result[0].name).toBe('Nails');
+    expect(result[1].name).toBe('Hair');
   });
 });

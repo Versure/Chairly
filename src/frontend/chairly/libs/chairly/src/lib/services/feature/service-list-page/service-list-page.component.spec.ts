@@ -47,6 +47,7 @@ describe('ServiceListPageComponent', () => {
     updateService: vi.fn(),
     deleteService: vi.fn(),
     toggleActive: vi.fn(),
+    reorderServices: vi.fn(),
   };
 
   const mockCategoryStore = {
@@ -57,6 +58,7 @@ describe('ServiceListPageComponent', () => {
     createCategory: vi.fn(),
     updateCategory: vi.fn(),
     deleteCategory: vi.fn(),
+    reorderCategories: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -245,5 +247,23 @@ describe('ServiceListPageComponent', () => {
     confirmDialogs[1].triggerEventHandler('confirmed', null);
 
     expect(mockCategoryStore.deleteCategory).toHaveBeenCalledWith('cat-1');
+  });
+
+  it('should call reorderCategories when categoriesReordered emits', () => {
+    const ordered: ServiceCategoryResponse[] = [
+      { id: 'cat-1', name: 'Hair', sortOrder: 0, createdAtUtc: '2026-01-01T00:00:00Z', createdBy: 'user' },
+    ];
+    const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
+    panelEl.triggerEventHandler('categoriesReordered', ordered);
+
+    expect(mockCategoryStore.reorderCategories).toHaveBeenCalledWith(ordered);
+  });
+
+  it('should call reorderServices when servicesReordered emits', () => {
+    const ordered = [makeService()];
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
+    tableEl.triggerEventHandler('servicesReordered', ordered);
+
+    expect(mockServiceStore.reorderServices).toHaveBeenCalledWith(ordered);
   });
 });

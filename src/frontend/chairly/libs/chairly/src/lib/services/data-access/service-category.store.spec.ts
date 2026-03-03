@@ -151,4 +151,33 @@ describe('ServiceCategoryStore', () => {
       expect(store.error()).toBe('Delete failed');
     });
   });
+
+  describe('reorderCategories()', () => {
+    it('should optimistically reorder categories with new sortOrder values', () => {
+      const cat1: ServiceCategoryResponse = { ...mockCategory, id: 'a', name: 'Alpha', sortOrder: 0 };
+      const cat2: ServiceCategoryResponse = { ...mockCategory, id: 'b', name: 'Beta', sortOrder: 1 };
+      mockCategoryService.getAll.mockReturnValue(of([cat1, cat2]));
+      store.loadCategories();
+
+      mockCategoryService.update.mockReturnValue(of({ ...cat1, sortOrder: 1 }));
+
+      store.reorderCategories([cat2, cat1]);
+
+      expect(store.categories()[0].id).toBe('b');
+      expect(store.categories()[0].sortOrder).toBe(0);
+      expect(store.categories()[1].id).toBe('a');
+      expect(store.categories()[1].sortOrder).toBe(1);
+    });
+
+    it('should call update API for each category with new sortOrder', () => {
+      const cat1: ServiceCategoryResponse = { ...mockCategory, id: 'a', name: 'Alpha', sortOrder: 0 };
+      const cat2: ServiceCategoryResponse = { ...mockCategory, id: 'b', name: 'Beta', sortOrder: 1 };
+      mockCategoryService.update.mockReturnValue(of(cat1));
+
+      store.reorderCategories([cat2, cat1]);
+
+      expect(mockCategoryService.update).toHaveBeenCalledWith('b', { name: 'Beta', sortOrder: 0 });
+      expect(mockCategoryService.update).toHaveBeenCalledWith('a', { name: 'Alpha', sortOrder: 1 });
+    });
+  });
 });

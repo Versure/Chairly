@@ -26,12 +26,6 @@
           placeholder="Category name"
           class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
-        <input
-          formControlName="sortOrder"
-          type="number"
-          placeholder="Sort order"
-          class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
         <div class="flex gap-2">
           <button
             type="submit"
@@ -60,8 +54,14 @@
   <!-- Category list -->
   @if (!isLoading()) {
     <ul class="divide-y divide-gray-100">
-      @for (category of sortedCategories(); track category.id) {
-        <li class="px-3 py-2">
+      @for (category of sortedCategories(); track category.id; let i = $index) {
+        <li
+          class="px-3 py-2 cursor-grab"
+          draggable="true"
+          (dragstart)="onDragStart(i)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop(i)"
+        >
           @if (editingCategoryId() === category.id) {
             <form
               class="flex flex-col gap-2"
@@ -71,11 +71,6 @@
               <input
                 formControlName="name"
                 type="text"
-                class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
-              <input
-                formControlName="sortOrder"
-                type="number"
                 class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <div class="flex gap-2">
@@ -97,10 +92,7 @@
             </form>
           } @else {
             <div class="flex items-center justify-between">
-              <div class="flex flex-col min-w-0">
-                <span class="text-sm font-medium text-gray-900 truncate">{{ category.name }}</span>
-                <span class="text-xs text-gray-400">Order: {{ category.sortOrder }}</span>
-              </div>
+              <span class="text-sm font-medium text-gray-900 truncate">{{ category.name }}</span>
               <div class="flex items-center gap-1 flex-shrink-0">
                 <button
                   type="button"

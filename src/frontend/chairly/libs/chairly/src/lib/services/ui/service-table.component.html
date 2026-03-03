@@ -16,8 +16,14 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100 bg-white">
-        @for (service of services(); track service.id) {
-          <tr class="hover:bg-gray-50 transition-colors">
+        @for (service of services(); track service.id; let i = $index) {
+          <tr
+            class="hover:bg-gray-50 transition-colors cursor-grab"
+            draggable="true"
+            (dragstart)="onDragStart(i)"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop(i)"
+          >
             <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ service.name }}</td>
             <td class="px-4 py-3 text-sm text-gray-600">
               {{ service.categoryName ?? '—' }}

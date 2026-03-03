@@ -52,7 +52,6 @@ export class ServiceFormDialogComponent {
       validators: [Validators.required, Validators.min(0)],
     }),
     categoryId: new FormControl<string | null>(null),
-    sortOrder: new FormControl<number>(0, { nonNullable: true }),
   });
 
   open(): void {
@@ -64,7 +63,6 @@ export class ServiceFormDialogComponent {
         duration: parseDuration(svc.duration),
         price: svc.price,
         categoryId: svc.categoryId,
-        sortOrder: svc.sortOrder,
       });
     } else {
       this.form.reset({
@@ -73,7 +71,6 @@ export class ServiceFormDialogComponent {
         duration: 30,
         price: 0,
         categoryId: null,
-        sortOrder: 0,
       });
     }
     this.dialogRef().nativeElement.showModal();
@@ -87,7 +84,7 @@ export class ServiceFormDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    const { name, description, duration, price, categoryId, sortOrder } =
+    const { name, description, duration, price, categoryId } =
       this.form.getRawValue();
     this.close();
     this.saved.emit({
@@ -96,7 +93,7 @@ export class ServiceFormDialogComponent {
       duration: formatDurationToTimeSpan(duration),
       price,
       categoryId,
-      sortOrder,
+      sortOrder: 0,
     });
   }
 

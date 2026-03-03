@@ -104,6 +104,20 @@ export const ServiceCategoryStore = signalStore(
               patchState(store, { error: toErrorMessage(err) }),
           });
       },
+
+      reorderCategories(ordered: ServiceCategoryResponse[]): void {
+        const reorderedWithSortOrder = ordered.map((c, i) => ({ ...c, sortOrder: i }));
+        patchState(store, { categories: reorderedWithSortOrder });
+        for (let i = 0; i < ordered.length; i++) {
+          categoryService
+            .update(ordered[i].id, { name: ordered[i].name, sortOrder: i })
+            .pipe(take(1))
+            .subscribe({
+              error: (err: unknown) =>
+                patchState(store, { error: toErrorMessage(err) }),
+            });
+        }
+      },
     };
   })
 );

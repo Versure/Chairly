@@ -136,6 +136,28 @@ export const ServiceStore = signalStore(
               patchState(store, { error: toErrorMessage(err) }),
           });
       },
+
+      reorderServices(ordered: ServiceResponse[]): void {
+        const reorderedWithSortOrder = ordered.map((s, i) => ({ ...s, sortOrder: i }));
+        patchState(store, { services: reorderedWithSortOrder });
+        for (let i = 0; i < ordered.length; i++) {
+          const svc = ordered[i];
+          serviceApi
+            .update(svc.id, {
+              name: svc.name,
+              description: svc.description,
+              duration: svc.duration,
+              price: svc.price,
+              categoryId: svc.categoryId,
+              sortOrder: i,
+            })
+            .pipe(take(1))
+            .subscribe({
+              error: (err: unknown) =>
+                patchState(store, { error: toErrorMessage(err) }),
+            });
+        }
+      },
     };
   })
 );

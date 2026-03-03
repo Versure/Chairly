@@ -260,4 +260,33 @@ describe('ServiceStore', () => {
       expect(store.error()).toBe('Toggle failed');
     });
   });
+
+  describe('reorderServices()', () => {
+    it('should optimistically reorder services with new sortOrder values', () => {
+      const svc1: ServiceResponse = { ...mockService, id: 'a', name: 'Alpha', sortOrder: 0 };
+      const svc2: ServiceResponse = { ...mockService, id: 'b', name: 'Beta', sortOrder: 1 };
+      mockApiService.getAll.mockReturnValue(of([svc1, svc2]));
+      store.loadServices();
+
+      mockApiService.update.mockReturnValue(of(svc1));
+
+      store.reorderServices([svc2, svc1]);
+
+      expect(store.services()[0].id).toBe('b');
+      expect(store.services()[0].sortOrder).toBe(0);
+      expect(store.services()[1].id).toBe('a');
+      expect(store.services()[1].sortOrder).toBe(1);
+    });
+
+    it('should call update API for each service with new sortOrder', () => {
+      const svc1: ServiceResponse = { ...mockService, id: 'a', name: 'Alpha', sortOrder: 0 };
+      const svc2: ServiceResponse = { ...mockService, id: 'b', name: 'Beta', sortOrder: 1 };
+      mockApiService.update.mockReturnValue(of(svc1));
+
+      store.reorderServices([svc2, svc1]);
+
+      expect(mockApiService.update).toHaveBeenCalledWith('b', expect.objectContaining({ name: 'Beta', sortOrder: 0 }));
+      expect(mockApiService.update).toHaveBeenCalledWith('a', expect.objectContaining({ name: 'Alpha', sortOrder: 1 }));
+    });
+  });
 });

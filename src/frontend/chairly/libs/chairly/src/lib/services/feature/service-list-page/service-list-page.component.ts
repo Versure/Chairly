@@ -77,9 +77,9 @@ export class ServiceListPageComponent implements OnInit {
   protected onServiceSaved(request: CreateServiceRequest | UpdateServiceRequest): void {
     const svc = this.selectedService();
     if (svc) {
-      this.serviceStore.updateService(svc.id, request as UpdateServiceRequest);
+      this.serviceStore.updateService(svc.id, { ...request, sortOrder: svc.sortOrder } as UpdateServiceRequest);
     } else {
-      this.serviceStore.createService(request as CreateServiceRequest);
+      this.serviceStore.createService({ ...request, sortOrder: this.services().length } as CreateServiceRequest);
     }
     this.selectedService.set(null);
   }
@@ -127,5 +127,13 @@ export class ServiceListPageComponent implements OnInit {
       this.categoryStore.deleteCategory(id);
     }
     this.selectedCategoryIdForDelete.set(null);
+  }
+
+  protected onCategoriesReordered(ordered: ServiceCategoryResponse[]): void {
+    this.categoryStore.reorderCategories(ordered);
+  }
+
+  protected onServicesReordered(ordered: ServiceResponse[]): void {
+    this.serviceStore.reorderServices(ordered);
   }
 }
