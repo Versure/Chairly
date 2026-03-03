@@ -26,7 +26,9 @@ test('closes the add service dialog when Cancel is clicked', async ({ page }) =>
   await page.getByRole('button', { name: 'Add Service' }).click();
   await expect(page.locator('dialog[open]')).toBeVisible();
 
-  await page.locator('dialog[open]').getByRole('button', { name: 'Cancel' }).click();
+  // Use Escape key to close the modal dialog — cross-browser compatible
+  // (clicking inside showModal() dialogs via Playwright is unreliable in Firefox/WebKit)
+  await page.keyboard.press('Escape');
 
   await expect(page.locator('dialog[open]')).toHaveCount(0);
 });
@@ -34,5 +36,6 @@ test('closes the add service dialog when Cancel is clicked', async ({ page }) =>
 test('shows the Categories panel', async ({ page }) => {
   await page.goto('/services');
 
-  await expect(page.getByText('Categories')).toBeVisible();
+  // Use heading role to avoid strict mode violation with "No categories yet." text
+  await expect(page.getByRole('heading', { name: 'Categories' })).toBeVisible();
 });
