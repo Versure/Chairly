@@ -75,8 +75,8 @@ describe('ConfirmationDialogComponent', () => {
 
   it('should use default labels when not provided', () => {
     const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
-    expect(buttons[0].textContent?.trim()).toBe('Cancel');
-    expect(buttons[1].textContent?.trim()).toBe('Confirm');
+    expect(buttons[0].textContent?.trim()).toBe('Annuleren');
+    expect(buttons[1].textContent?.trim()).toBe('Bevestigen');
   });
 
   it('should use custom labels when provided', () => {

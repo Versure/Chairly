@@ -39,7 +39,7 @@ describe('CategoryPanelComponent', () => {
     fixture.componentRef.setInput('isLoading', true);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Loading...');
+    expect(fixture.nativeElement.textContent).toContain('Laden...');
   });
 
   it('should hide category list when isLoading is true', () => {
@@ -117,7 +117,7 @@ describe('CategoryPanelComponent', () => {
 
   it('should show inline edit form when Edit button is clicked', () => {
     const editButton = fixture.nativeElement.querySelector(
-      '[title="Edit category"]',
+      '[title="Categorie bewerken"]',
     ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
@@ -128,7 +128,7 @@ describe('CategoryPanelComponent', () => {
 
   it('should pre-populate edit form with category values', () => {
     const editButton = fixture.nativeElement.querySelector(
-      '[title="Edit category"]',
+      '[title="Categorie bewerken"]',
     ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
@@ -146,7 +146,7 @@ describe('CategoryPanelComponent', () => {
     });
 
     const editButton = fixture.nativeElement.querySelector(
-      '[title="Edit category"]',
+      '[title="Categorie bewerken"]',
     ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
@@ -162,7 +162,7 @@ describe('CategoryPanelComponent', () => {
 
   it('should hide edit form when Cancel is clicked', () => {
     const editButton = fixture.nativeElement.querySelector(
-      '[title="Edit category"]',
+      '[title="Categorie bewerken"]',
     ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
@@ -184,7 +184,7 @@ describe('CategoryPanelComponent', () => {
     });
 
     const deleteButton = fixture.nativeElement.querySelector(
-      '[title="Delete category"]',
+      '[title="Categorie verwijderen"]',
     ) as HTMLButtonElement;
     deleteButton.click();
     fixture.detectChanges();
@@ -196,7 +196,7 @@ describe('CategoryPanelComponent', () => {
     fixture.componentRef.setInput('categories', []);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('No categories yet.');
+    expect(fixture.nativeElement.textContent).toContain('Nog geen categorieën.');
   });
 
   it('should emit categoriesReordered when a row is dropped on another row', () => {

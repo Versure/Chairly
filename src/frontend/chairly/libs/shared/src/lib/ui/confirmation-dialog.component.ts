@@ -18,8 +18,8 @@ import {
 export class ConfirmationDialogComponent {
   readonly title = input.required<string>();
   readonly message = input.required<string>();
-  readonly confirmLabel = input<string>('Confirm');
-  readonly cancelLabel = input<string>('Cancel');
+  readonly confirmLabel = input<string>('Bevestigen');
+  readonly cancelLabel = input<string>('Annuleren');
   readonly isDestructive = input<boolean>(false);
 
   readonly confirmed: OutputEmitterRef<void> = output<void>();

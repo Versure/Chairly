@@ -93,7 +93,7 @@ describe('ServiceListPageComponent', () => {
 
   it('should render the Add Service button', () => {
     const btn = fixture.debugElement.query(By.css('button'));
-    expect(btn.nativeElement.textContent.trim()).toBe('Add Service');
+    expect(btn.nativeElement.textContent.trim()).toBe('Dienst toevoegen');
   });
 
   it('should open service form dialog in create mode when Add Service is clicked', () => {

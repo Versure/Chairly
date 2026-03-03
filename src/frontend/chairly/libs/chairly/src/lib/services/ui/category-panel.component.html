@@ -1,14 +1,14 @@
 <div class="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
   <!-- Header -->
   <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
-    <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Categories</h3>
+    <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Categorieën</h3>
     <button
       type="button"
       class="text-xs text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       [disabled]="showAddForm()"
       (click)="startAdding()"
     >
-      + Add
+      + Toevoegen
     </button>
   </div>
 
@@ -23,7 +23,7 @@
         <input
           formControlName="name"
           type="text"
-          placeholder="Category name"
+          placeholder="Naam categorie"
           class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
         <div class="flex gap-2">
@@ -32,14 +32,14 @@
             [disabled]="addForm.invalid"
             class="flex-1 text-xs bg-indigo-600 text-white rounded py-1 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save
+            Opslaan
           </button>
           <button
             type="button"
             class="flex-1 text-xs bg-white border border-gray-300 text-gray-700 rounded py-1 hover:bg-gray-50"
             (click)="cancelAdding()"
           >
-            Cancel
+            Annuleren
           </button>
         </div>
       </div>
@@ -48,7 +48,7 @@
 
   <!-- Loading state -->
   @if (isLoading()) {
-    <div class="p-4 text-sm text-gray-500 text-center">Loading...</div>
+    <div class="p-4 text-sm text-gray-500 text-center">Laden...</div>
   }
 
   <!-- Category list -->
@@ -79,14 +79,14 @@
                   [disabled]="editForm.invalid"
                   class="flex-1 text-xs bg-indigo-600 text-white rounded py-1 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save
+                  Opslaan
                 </button>
                 <button
                   type="button"
                   class="flex-1 text-xs bg-white border border-gray-300 text-gray-700 rounded py-1 hover:bg-gray-50"
                   (click)="cancelEdit()"
                 >
-                  Cancel
+                  Annuleren
                 </button>
               </div>
             </form>
@@ -97,25 +97,25 @@
                 <button
                   type="button"
                   class="px-2 py-1 text-xs text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
-                  title="Edit category"
+                  title="Categorie bewerken"
                   (click)="startEdit(category)"
                 >
-                  Edit
+                  Bewerken
                 </button>
                 <button
                   type="button"
                   class="px-2 py-1 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
-                  title="Delete category"
+                  title="Categorie verwijderen"
                   (click)="onDeleteClicked(category.id)"
                 >
-                  Delete
+                  Verwijderen
                 </button>
               </div>
             </div>
           }
         </li>
       } @empty {
-        <li class="p-4 text-sm text-gray-400 text-center">No categories yet.</li>
+        <li class="p-4 text-sm text-gray-400 text-center">Nog geen categorieën.</li>
       }
     </ul>
   }

@@ -83,7 +83,7 @@ describe('ServiceTableComponent', () => {
 
   it('should show active badge for active services', () => {
     const firstRow = fixture.nativeElement.querySelector('tbody tr') as HTMLTableRowElement;
-    expect(firstRow.textContent).toContain('Active');
+    expect(firstRow.textContent).toContain('Actief');
     const badge = firstRow.querySelector('.bg-green-100') as HTMLElement | null;
     expect(badge).toBeTruthy();
   });
@@ -91,7 +91,7 @@ describe('ServiceTableComponent', () => {
   it('should show inactive badge for inactive services', () => {
     const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
     const secondRow = rows[1];
-    expect(secondRow.textContent).toContain('Inactive');
+    expect(secondRow.textContent).toContain('Inactief');
     const badge = secondRow.querySelector('.bg-gray-100') as HTMLElement | null;
     expect(badge).toBeTruthy();
   });
@@ -100,7 +100,7 @@ describe('ServiceTableComponent', () => {
     fixture.componentRef.setInput('isLoading', true);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Loading services...');
+    expect(fixture.nativeElement.textContent).toContain('Diensten laden...');
     const table = fixture.nativeElement.querySelector('table') as HTMLTableElement | null;
     expect(table).toBeNull();
   });
@@ -111,7 +111,7 @@ describe('ServiceTableComponent', () => {
 
     const emptyCell = fixture.nativeElement.querySelector('td[colspan="6"]') as HTMLTableCellElement | null;
     expect(emptyCell).toBeTruthy();
-    expect(emptyCell?.textContent).toContain('No services yet.');
+    expect(emptyCell?.textContent).toContain('Nog geen diensten.');
   });
 
   it('should emit editClicked when Edit button is clicked', () => {
@@ -120,7 +120,7 @@ describe('ServiceTableComponent', () => {
       emitted = s;
     });
 
-    const editButton = fixture.nativeElement.querySelector('[title="Edit service"]') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector('[title="Dienst bewerken"]') as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
 
@@ -133,7 +133,7 @@ describe('ServiceTableComponent', () => {
       emitted = s;
     });
 
-    const deleteButton = fixture.nativeElement.querySelector('[title="Delete service"]') as HTMLButtonElement;
+    const deleteButton = fixture.nativeElement.querySelector('[title="Dienst verwijderen"]') as HTMLButtonElement;
     deleteButton.click();
     fixture.detectChanges();
 
@@ -146,7 +146,7 @@ describe('ServiceTableComponent', () => {
       emitted = s;
     });
 
-    const toggleButton = fixture.nativeElement.querySelector('[title="Toggle active"]') as HTMLButtonElement;
+    const toggleButton = fixture.nativeElement.querySelector('[title="Status wijzigen"]') as HTMLButtonElement;
     toggleButton.click();
     fixture.detectChanges();
 
@@ -154,9 +154,9 @@ describe('ServiceTableComponent', () => {
   });
 
   it('should show Deactivate for active services and Activate for inactive services', () => {
-    const toggleButtons = fixture.nativeElement.querySelectorAll('[title="Toggle active"]') as NodeListOf<HTMLButtonElement>;
-    expect(toggleButtons[0].textContent?.trim()).toBe('Deactivate');
-    expect(toggleButtons[1].textContent?.trim()).toBe('Activate');
+    const toggleButtons = fixture.nativeElement.querySelectorAll('[title="Status wijzigen"]') as NodeListOf<HTMLButtonElement>;
+    expect(toggleButtons[0].textContent?.trim()).toBe('Deactiveren');
+    expect(toggleButtons[1].textContent?.trim()).toBe('Activeren');
   });
 
   it('should emit servicesReordered when a row is dropped on another row', () => {
