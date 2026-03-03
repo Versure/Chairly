@@ -17,6 +17,25 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ---
 
+## 2026-03-03 - SCF-021
+- Added ESLint rule `@angular-eslint/component-max-inline-declarations: ['error', { template: 0 }]` to root eslint.config.mjs Angular TS rules section
+- Extracted templates for 5 components to separate .html files:
+  - ServiceListPageComponent → feature/service-list-page/service-list-page.component.html
+  - CategoryPanelComponent → ui/category-panel.component.html
+  - ServiceFormDialogComponent → ui/service-form-dialog.component.html
+  - ServiceTableComponent → ui/service-table.component.html
+  - ConfirmationDialogComponent (shared) → ui/confirmation-dialog.component.html
+- Each component's `template:` property replaced with `templateUrl:` pointing to the new .html file
+- The `angular.processInlineTemplates` processor in eslint.config.mjs remains (harmless when no inline templates exist)
+- All lint + test + build checks pass (119 tests green)
+- Files changed: eslint.config.mjs, *.component.ts (5 files), *.component.html (5 new files)
+- **Learnings for future iterations:**
+  - `@angular-eslint/component-max-inline-declarations: ['error', { template: 0 }]` goes in the Angular TS rules section (not HTML rules), as it checks the @Component decorator in TypeScript
+  - After extracting templates: remove the entire template backtick string (including surrounding backticks and comma), then add `templateUrl: './component-name.html',`
+  - The processInlineTemplates processor does not interfere with external templateUrl components — it's safe to leave in place
+  - Unit tests work correctly with templateUrl — Angular/Vite test setup resolves .html files without special configuration
+---
+
 ## 2026-03-02 - SCF-020
 - Created libs/chairly/src/lib/services/feature/service-list-page/ subfolder
 - Moved service-list-page.component.ts to feature/service-list-page/service-list-page.component.ts

@@ -432,7 +432,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 21,
-      "passes": false,
+      "passes": true,
       "notes": "This story must be implemented AFTER SCF-020 (feature subfolders) so that ServiceListPageComponent is already in its subfolder before its .html file is created there. The ESLint rule '@angular-eslint/component-max-inline-declarations' with { 'template': 0 } makes inline templates a lint error. When extracting templates: (1) remove the 'template:' property from the @Component decorator, (2) add 'templateUrl:' pointing to the .html file, (3) create the .html file with the exact same content as the inline template. The Angular/Vite test setup in this project resolves templateUrl correctly — no special test configuration needed."
     },
     {
