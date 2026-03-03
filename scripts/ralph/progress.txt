@@ -2,6 +2,20 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-03 - SCF-024
+- Updated root CLAUDE.md Code Conventions — Frontend section: added bullet 'Each domain layer has dedicated subfolders: models/ for interfaces, pipes/ for Angular pipes, util/ for pure functions. Routes file lives at domain root, not inside feature/. Each smart component inside feature/ has its own subfolder.'
+- The other acceptance criteria were already satisfied by prior story work:
+  - Frontend Architecture section already documented the folder structure (from prior iterations)
+  - templateUrl/no-inline-template convention already in Code Conventions — Frontend (added during SCF-021)
+  - Working Method — Autonomous/Headless Mode already had gh run watch --exit-status CI step
+  - scripts/ralph/CLAUDE.md Stop Condition already had gh run watch --exit-status step
+- lint + test + build all pass (nx read from cache — no source code changed)
+- Files changed: CLAUDE.md (1 line added), scripts/ralph/prd.json (passes: true)
+- **Learnings for future iterations:**
+  - When documentation story acceptance criteria say to "update" a section, check if prior stories already added the content — prior Ralph iterations updated CLAUDE.md as they went, so most doc changes may already be done
+  - CLAUDE.md changes don't affect nx affected lint/test/build — all tasks come from cache, but run the check anyway to verify no regressions
+---
+
 ## 2026-03-03 - SCF-023
 - Updated apps/chairly-e2e/src/example.spec.ts: changed 'Welcome' assertion to 'Services' (app now redirects to /services)
 - Created apps/chairly-e2e/src/service-catalog.spec.ts with 5 tests:
