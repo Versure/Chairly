@@ -128,6 +128,7 @@ src/frontend/chairly/
 - Tailwind CSS v4 for styling, SCSS for component styles
 - Reactive forms with typed FormGroups
 - Lazy-loaded routes per domain
+- Each domain layer has dedicated subfolders: `models/` for interfaces, `pipes/` for Angular pipes, `util/` for pure functions. Routes file (`{domain}.routes.ts`) lives at the **domain root**, not inside `feature/`. Each smart component inside `feature/` has its own subfolder.
 - Component prefix: `chairly-` (e.g. `<chairly-booking-list>`)
 - No `any` types in TypeScript
 - No `console` statements (use proper logging)

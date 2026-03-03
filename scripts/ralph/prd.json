@@ -486,7 +486,7 @@
         "npx nx affected -t lint test build --base=origin/main passes (CLAUDE.md changes don't affect lint/test/build, but verify no regressions)"
       ],
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "notes": "This story updates documentation only (CLAUDE.md files) plus the Ralph agent instruction. The key change to Ralph's behavior: instead of creating PR and immediately signaling COMPLETE, Ralph should wait for CI to pass. Use 'gh run watch --exit-status' which exits 0 if CI passes, non-zero if it fails. If CI fails, Ralph should read the failure logs with 'gh run view --log-failed' and fix the issue. The folder convention changes (models/, pipes/, feature subfolder, templateUrl) should be documented so future Ralph iterations follow them without needing to be told."
     }
   ]
