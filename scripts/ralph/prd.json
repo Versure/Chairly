@@ -540,7 +540,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 27,
-      "passes": false,
+      "passes": true,
       "notes": "Use only HTML5 native drag & drop (dragstart/dragover/drop events with event.dataTransfer). No third-party drag & drop libraries. Track the dragged item index in a component signal (draggedIndex = signal<number | null>(null)). On dragstart set draggedIndex. On dragover call event.preventDefault(). On drop: compute new array order, set draggedIndex to null, emit the reordered event. The store reorder methods should first patchState with the new local order (for instant UI feedback), then fire the API calls in sequence. API call failures can be silently ignored for now (no rollback). The sortOrder for each item after reorder is simply its 0-based index in the new array."
     },
     {

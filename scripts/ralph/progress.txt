@@ -2,6 +2,23 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-03 - SCF-027
+- ServiceFormDialogComponent: removed sortOrder from FormGroup; open() resets without sortOrder; onSave() emits with sortOrder: 0 (placeholder); HTML category select now spans full row
+- ServiceListPageComponent.onServiceSaved: for create, injects sortOrder = services().length; for update, injects sortOrder = svc.sortOrder (overrides placeholder 0)
+- CategoryPanelComponent: removed sortOrder from addForm and editForm; saveNewCategory emits with sortOrder = categories().length; saveEdit finds category by id and preserves its sortOrder; added HTML5 drag & drop (dragstart/dragover/drop) with categoriesReordered OutputEmitterRef<ServiceCategoryResponse[]>
+- ServiceTableComponent: added HTML5 drag & drop on <tr> elements; added servicesReordered OutputEmitterRef<ServiceResponse[]>; imported signal from @angular/core
+- ServiceCategoryStore: added reorderCategories(ordered) - optimistic patchState + for loop calling update API per item
+- ServiceStore: added reorderServices(ordered) - same pattern
+- ServiceListPageComponent: wired (categoriesReordered) and (servicesReordered) events to store methods; updated HTML
+- Used `const result = reordered as T[]` instead of `reordered![]` to avoid no-non-null-assertion warnings
+- All lint, test, build checks pass
+- **Learnings for future iterations:**
+  - HTML5 drag & drop in Angular: use `$index` from `@for` block (`let i = $index`), bind (dragstart)="onDragStart(i)" (dragover)="onDragOver($event)" (drop)="onDrop(i)"
+  - Testing drag & drop: use triggerEventHandler('dragstart', null) / triggerEventHandler('dragover', { preventDefault: vi.fn() }) / triggerEventHandler('drop', null)
+  - sortOrder removal pattern: emit with sortOrder: 0 from form (placeholder), parent overrides before calling store - avoids creating new types
+  - reorder store methods: patchState first (optimistic), then for loop with per-item subscribe. map callback is level 3 nesting - within SonarJS 4-level limit
+---
+
 ## 2026-03-03 - SCF-024
 - Updated root CLAUDE.md Code Conventions — Frontend section: added bullet 'Each domain layer has dedicated subfolders: models/ for interfaces, pipes/ for Angular pipes, util/ for pure functions. Routes file lives at domain root, not inside feature/. Each smart component inside feature/ has its own subfolder.'
 - The other acceptance criteria were already satisfied by prior story work:
