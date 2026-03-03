@@ -54,6 +54,9 @@ export default [
       '@angular-eslint/component-class-suffix': 'error',
       '@angular-eslint/directive-class-suffix': 'error',
 
+      // Templates must be in separate .html files (templateUrl:)
+      '@angular-eslint/component-max-inline-declarations': ['error', { template: 0 }],
+
       // Modern Angular (signals)
       '@angular-eslint/prefer-signals': 'error',
       '@angular-eslint/prefer-signal-model': 'error',

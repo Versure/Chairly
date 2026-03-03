@@ -13,35 +13,7 @@ import {
   selector: 'chairly-confirmation-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <dialog
-      class="p-0 rounded-lg shadow-xl max-w-md w-full"
-      #dialogEl
-    >
-      <div class="p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-2">
-          {{ title() }}
-        </h2>
-        <p class="text-sm text-gray-600 mb-6">{{ message() }}</p>
-        <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            (click)="onCancel()"
-          >
-            {{ cancelLabel() }}
-          </button>
-          <button
-            type="button"
-            [class]="confirmButtonClass()"
-            (click)="onConfirm()"
-          >
-            {{ confirmLabel() }}
-          </button>
-        </div>
-      </div>
-    </dialog>
-  `,
+  templateUrl: './confirmation-dialog.component.html',
 })
 export class ConfirmationDialogComponent {
   readonly title = input.required<string>();

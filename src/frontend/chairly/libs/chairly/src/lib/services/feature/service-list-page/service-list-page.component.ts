@@ -31,74 +31,7 @@ import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableCompone
     ServiceFormDialogComponent,
     ServiceTableComponent,
   ],
-  template: `
-    <div class="flex min-h-screen flex-col bg-gray-50">
-      <!-- Page header -->
-      <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-        <h1 class="text-xl font-semibold text-gray-900">Services</h1>
-        <button
-          type="button"
-          class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          (click)="openAddService()"
-        >
-          Add Service
-        </button>
-      </div>
-
-      <!-- Main layout: table + sidebar -->
-      <div class="flex flex-1 overflow-hidden">
-        <!-- Services table -->
-        <div class="flex-1 overflow-auto p-6">
-          <chairly-service-table
-            [services]="services()"
-            [isLoading]="servicesLoading()"
-            (editClicked)="onEditService($event)"
-            (deleteClicked)="onDeleteService($event)"
-            (toggleActiveClicked)="onToggleActive($event)"
-          />
-        </div>
-
-        <!-- Category sidebar -->
-        <div class="w-72 flex-shrink-0 overflow-auto border-l border-gray-200 p-4">
-          <chairly-category-panel
-            [categories]="categories()"
-            [isLoading]="categoriesLoading()"
-            (categoryCreated)="onCategoryCreated($event)"
-            (categoryUpdated)="onCategoryUpdated($event)"
-            (categoryDeleted)="onCategoryDeleted($event)"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Service form dialog (used for both create and edit) -->
-    <chairly-service-form-dialog
-      [categories]="categories()"
-      [service]="selectedService()"
-      (saved)="onServiceSaved($event)"
-      (cancelled)="onServiceFormCancelled()"
-    />
-
-    <!-- Delete service confirmation dialog -->
-    <chairly-confirmation-dialog
-      #deleteServiceDialog
-      title="Delete Service"
-      message="Are you sure you want to delete this service? This action cannot be undone."
-      confirmLabel="Delete"
-      [isDestructive]="true"
-      (confirmed)="onConfirmDeleteService()"
-    />
-
-    <!-- Delete category confirmation dialog -->
-    <chairly-confirmation-dialog
-      #deleteCategoryDialog
-      title="Delete Category"
-      message="Are you sure you want to delete this category? This action cannot be undone."
-      confirmLabel="Delete"
-      [isDestructive]="true"
-      (confirmed)="onConfirmDeleteCategory()"
-    />
-  `,
+  templateUrl: './service-list-page.component.html',
 })
 export class ServiceListPageComponent implements OnInit {
   private readonly serviceStore = inject(ServiceStore);
