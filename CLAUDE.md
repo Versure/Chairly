@@ -101,6 +101,11 @@ src/frontend/chairly/
 └── postcss.config.mjs        # Tailwind v4
 ```
 
+**Global styles setup (two separate files — never merge):**
+- `apps/chairly/src/tailwind.css` — contains only `@import 'tailwindcss';`. Processed by PostCSS only. Never goes through Sass.
+- `apps/chairly/src/styles.scss` — SCSS-specific global styles: custom variables, mixins, font declarations. Must never contain `@import` for CSS libraries.
+- Both are listed in `project.json` build.options.styles: `tailwind.css` first, then `styles.scss`.
+
 **Path aliases:** `@org/chairly-lib`, `@org/shared-lib`
 
 **Module boundary rules (enforced by Sheriff):**
@@ -125,7 +130,7 @@ src/frontend/chairly/
 - NgRx SignalStore for shared/feature state
 - Smart/Dumb component pattern: containers load data, presentational components display it
 - Services for API calls, one service per backend context
-- Tailwind CSS v4 for styling, SCSS for component styles
+- Tailwind CSS v4 for styling, SCSS for component styles. Tailwind v4 is imported in `apps/chairly/src/tailwind.css` (plain CSS). SCSS global styles go in `apps/chairly/src/styles.scss`. These two files must never be merged.
 - Reactive forms with typed FormGroups
 - Lazy-loaded routes per domain
 - Each domain layer has dedicated subfolders: `models/` for interfaces, `pipes/` for Angular pipes, `util/` for pure functions. Routes file (`{domain}.routes.ts`) lives at the **domain root**, not inside `feature/`. Each smart component inside `feature/` has its own subfolder.
@@ -232,4 +237,5 @@ npx nx affected -t build --base=main
 - No inline styles in Angular templates
 - No inline `template:` in Angular components — always use `templateUrl:` with a separate `.html` file
 - No model interfaces or Angular pipes inside `util/` — use `models/` and `pipes/` folders respectively
+- No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
 - Never commit without tests passing
