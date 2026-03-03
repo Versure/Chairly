@@ -17,6 +17,23 @@ Started: Fri Feb 27 14:15:21 CET 2026
 
 ---
 
+## 2026-03-03 - SCF-022
+- Deleted .gitkeep files from 6 non-empty folders:
+  - libs/chairly/src/lib/services/data-access/.gitkeep
+  - libs/chairly/src/lib/services/feature/.gitkeep
+  - libs/chairly/src/lib/services/ui/.gitkeep
+  - libs/chairly/src/lib/services/util/.gitkeep
+  - libs/shared/src/lib/ui/.gitkeep
+  - libs/shared/src/lib/util/.gitkeep
+- Kept libs/shared/src/lib/data-access/.gitkeep (folder is empty — no real files)
+- models/ and pipes/ folders (created in SCF-017/018) had no .gitkeep files to remove
+- All lint + test + build checks pass
+- Files changed: 6 .gitkeep files deleted
+- **Learnings for future iterations:**
+  - When creating a new folder, add a .gitkeep to track it in git; remove the .gitkeep as soon as real files are added
+  - The shared/data-access/ folder remains empty (no auth/interceptor services yet) — keep its .gitkeep
+---
+
 ## 2026-03-03 - SCF-021
 - Added ESLint rule `@angular-eslint/component-max-inline-declarations: ['error', { template: 0 }]` to root eslint.config.mjs Angular TS rules section
 - Extracted templates for 5 components to separate .html files:

@@ -451,7 +451,7 @@
         "npx nx affected -t lint test build --base=origin/main passes"
       ],
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "notes": "Simple cleanup. .gitkeep files are placeholder files to force git to track empty directories. Once a directory has real files, the .gitkeep should be deleted. Check each folder listed above before deleting — if for some reason a folder is empty (after structural refactors in earlier stories), keep the .gitkeep."
     },
     {
