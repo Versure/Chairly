@@ -851,6 +851,52 @@
       "priority": 45,
       "passes": true,
       "notes": "Use app.Lifetime.ApplicationStopping or linked token so long migrations can be cancelled during shutdown."
+    },
+    {
+      "id": "SCF-046",
+      "title": "Fix first-run migration bootstrap failure on fresh PostgreSQL database",
+      "description": "As a developer, I want API startup migrations to succeed reliably on a brand new database so AppHost can boot without '__EFMigrationsHistory does not exist' failures.",
+      "acceptanceCriteria": [
+        "Align EF Core provider package versions in backend projects (including Npgsql.EntityFrameworkCore.PostgreSQL) to the same EF patch version used elsewhere to remove Relational assembly conflict warnings",
+        "Starting the backend against a fresh PostgreSQL database applies migrations successfully and does not crash on '__EFMigrationsHistory' lookup",
+        "Migrations still run under the configured startup migration flow (Migrations:RunOnStartup=true)",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 46,
+      "passes": false,
+      "notes": "Observed in Aspire logs: relation '__EFMigrationsHistory' does not exist during startup migration on clean DB. Also observed MSB3277 warning due to Microsoft.EntityFrameworkCore.Relational version mismatch (10.0.0 vs 10.0.3), likely caused by Npgsql.EntityFrameworkCore.PostgreSQL pinned at 10.0.0 in Chairly.Infrastructure.csproj."
+    },
+    {
+      "id": "SCF-047",
+      "title": "Persist local PostgreSQL data across AppHost restarts",
+      "description": "As a developer, I want my local database data to survive restarts so previously entered records are not lost each time the stack is restarted.",
+      "acceptanceCriteria": [
+        "Configure src/backend/Chairly.AppHost/Program.cs so the postgres container uses persistent storage (named volume or stable bind mount) instead of ephemeral storage",
+        "Document where local PostgreSQL data is stored and how to reset it intentionally when needed",
+        "After restart of the local Aspire stack, previously inserted service/category records remain available",
+        "dotnet build src/backend/Chairly.AppHost/Chairly.AppHost.csproj passes",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes"
+      ],
+      "priority": 47,
+      "passes": false,
+      "notes": "Current AddPostgres(\"postgres\").AddDatabase(\"ChairlyDb\") setup appears to use ephemeral storage in local runs, causing data loss after restart. Use Aspire Postgres persistent volume support (e.g., WithDataVolume or equivalent stable mount strategy)."
+    },
+    {
+      "id": "SCF-048",
+      "title": "Fix dark-mode action button and table-row hover contrast regressions",
+      "description": "As a user, I want clear dark-mode contrast so actions and hovered rows remain readable and visually consistent.",
+      "acceptanceCriteria": [
+        "In dark mode, service/category action buttons (edit/deactivate/delete) use inverted dark-theme styling: colored background with white text (not light background with colored text)",
+        "Hover/active/focus-visible states for these buttons remain clear and accessible in dark mode",
+        "In dark mode, table row hover state no longer produces white background with white text; hovered rows remain fully readable",
+        "Apply fixes in relevant templates/styles (including service table and category panel) without regressing light mode",
+        "npx nx test chairly-lib --skip-nx-cache passes",
+        "npx nx test shared-lib --skip-nx-cache passes"
+      ],
+      "priority": 48,
+      "passes": false,
+      "notes": "Current dark-mode overrides create low-contrast combinations: action buttons appear too bright with colored text, and table row hover can become white background with light text. Ensure dark-mode-specific classes/overrides handle these states explicitly."
     }
   ]
 }
