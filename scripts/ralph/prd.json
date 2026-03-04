@@ -595,7 +595,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 30,
-      "passes": false,
+      "passes": true,
       "notes": "This story should be implemented AFTER SCF-029 because fixing the structural violations (inline templates, wrong folder placement) will resolve many lint errors. Run lint first to capture a full list, then fix systematically. If @angular-eslint/component-max-inline-declarations is not yet in the ESLint config for the libs, check eslint.config.mjs in libs/chairly/ and libs/shared/ \u2014 it should be configured with { template: 0 }."
     },
     {
