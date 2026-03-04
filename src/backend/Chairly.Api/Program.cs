@@ -69,18 +69,20 @@ if (runMigrations)
     {
         var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
 
-        await db.Database.OpenConnectionAsync(CancellationToken.None).ConfigureAwait(false);
+        var stoppingToken = app.Lifetime.ApplicationStopping;
+
+        await db.Database.OpenConnectionAsync(stoppingToken).ConfigureAwait(false);
         var conn = db.Database.GetDbConnection();
 
         using (var lockCmd = conn.CreateCommand())
         {
             lockCmd.CommandText = "SELECT pg_advisory_lock(1000000001)";
-            await lockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+            await lockCmd.ExecuteNonQueryAsync(stoppingToken).ConfigureAwait(false);
         }
 
         try
         {
-            await db.Database.MigrateAsync(CancellationToken.None).ConfigureAwait(false);
+            await db.Database.MigrateAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
         {
