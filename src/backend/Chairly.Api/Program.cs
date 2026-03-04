@@ -53,12 +53,45 @@ app.UseHttpsRedirection();
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
 
+// Rollout model: startup migrations are safe for single-leader and rolling deployments.
+// A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts
+// so only one instance applies outstanding migrations at a time; all others wait and then
+// skip already-applied migrations once they acquire the lock.
+//
+// For zero-downtime production rollouts with strict control, set Migrations:RunOnStartup=false
+// and run "dotnet ef database update" as a dedicated pre-deployment step.
+var runMigrations = app.Configuration.GetValue<bool>("Migrations:RunOnStartup", defaultValue: true);
+
+if (runMigrations)
 {
     var scope = app.Services.CreateAsyncScope();
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
-        await db.Database.MigrateAsync(CancellationToken.None).ConfigureAwait(false);
+
+        await db.Database.OpenConnectionAsync(CancellationToken.None).ConfigureAwait(false);
+        var conn = db.Database.GetDbConnection();
+
+        using (var lockCmd = conn.CreateCommand())
+        {
+            lockCmd.CommandText = "SELECT pg_advisory_lock(1000000001)";
+            await lockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+
+        try
+        {
+            await db.Database.MigrateAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        finally
+        {
+            using (var unlockCmd = conn.CreateCommand())
+            {
+                unlockCmd.CommandText = "SELECT pg_advisory_unlock(1000000001)";
+                await unlockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            await db.Database.CloseConnectionAsync().ConfigureAwait(false);
+        }
     }
     finally
     {
