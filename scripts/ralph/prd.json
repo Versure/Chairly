@@ -820,7 +820,7 @@
         "npx nx test chairly-lib --skip-nx-cache passes"
       ],
       "priority": 43,
-      "passes": false,
+      "passes": true,
       "notes": "Current bg-primary-50 remains light in dark mode and breaks visual consistency."
     },
     {
