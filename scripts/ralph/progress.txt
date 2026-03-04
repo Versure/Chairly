@@ -497,3 +497,20 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Template reference variables (#dialogEl, not #dialog) — avoid names that conflict with HTML element names to prevent potential parsing issues.
   - Mark all signal inputs/outputs/computed as `readonly` — the `@angular-eslint/prefer-signals` rule enforces this.
 ---
+
+## 2026-03-04 - SCF-029
+- Scanned entire services domain (libs/chairly/src/lib/services/) and shared lib (libs/shared/src/lib/) for structure violations
+- Found: NO violations — structure was already fully compliant with CLAUDE.md conventions
+  - util/duration.utils.ts: contains only pure functions (no interfaces/types) ✅
+  - No @Pipe classes in util/ (duration.pipe.ts is correctly in pipes/) ✅
+  - feature/ has no component files directly inside it (only barrel index.ts + service-list-page/ subfolder) ✅
+  - No inline template: strings in any component .ts files (all use templateUrl:) ✅
+  - services.routes.ts is at domain root, NOT in feature/ ✅
+  - All .gitkeep files are in truly empty placeholder folders (billing, bookings, clients, etc.) ✅
+- All quality checks pass: lint (116 tests), test (116 passing), build (success)
+- Fixed JSON syntax error in prd.json: missing comma between SCF-026 and SCF-027 story objects at line 521
+- **Learnings for future iterations:**
+  - Previous iterations (SCF-016 through SCF-028) already fixed most structural violations as they implemented the feature. SCF-029 was likely added as a PR review checkpoint but by the time it runs, violations may already be resolved.
+  - When a story's acceptance criteria all check out without any code changes, it's valid to mark it as passes: true — the structure verification itself is the work.
+  - prd.json can have JSON syntax errors (missing commas) if multiple iterations write to it concurrently or improperly. Always validate with python3 json.load() before relying on it.
+---
