@@ -29,13 +29,13 @@ async function setupApiMocks(page: import('@playwright/test').Page): Promise<voi
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: [mockCategory] });
     }
-    return route.continue();
+    return route.fulfill({ status: 404, body: '' });
   });
   await page.route('**/api/services', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: [mockService] });
     }
-    return route.continue();
+    return route.fulfill({ status: 404, body: '' });
   });
 }
 
@@ -75,23 +75,25 @@ test('filling in the form and clicking Opslaan calls the API and shows the new s
     categoryName: 'Knippen',
   };
 
-  await setupApiMocks(page);
-  await page.route('**/api/services', async (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({ json: newService });
+  let postCalled = false;
+
+  await page.route('**/api/service-categories', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockCategory] });
     }
-    return route.continue();
+    return route.fulfill({ status: 404, body: '' });
   });
 
-  // After creation, GET returns both services
-  let serviceCallCount = 0;
-  await page.route('**/api/services', async (route) => {
-    if (route.request().method() === 'GET') {
-      serviceCallCount++;
-      const services = serviceCallCount > 1 ? [mockService, newService] : [mockService];
-      return route.fulfill({ json: services });
+  await page.route('**/api/services', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      postCalled = true;
+      return route.fulfill({ json: newService });
     }
-    return route.continue();
+    if (method === 'GET') {
+      return route.fulfill({ json: postCalled ? [mockService, newService] : [mockService] });
+    }
+    return route.fulfill({ status: 404, body: '' });
   });
 
   await page.goto('/diensten');
@@ -126,22 +128,29 @@ test('clicking Bewerken on a service row opens the form dialog pre-filled', asyn
 });
 
 test('clicking Verwijderen shows the confirmation dialog and removes the service on confirm', async ({ page }) => {
-  await setupApiMocks(page);
-  await page.route('**/api/services/svc-1', async (route) => {
+  let deleteCount = 0;
+
+  await page.route('**/api/service-categories', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockCategory] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.route('**/api/services/svc-1', (route) => {
     if (route.request().method() === 'DELETE') {
       return route.fulfill({ status: 204, body: '' });
     }
-    return route.continue();
+    return route.fulfill({ status: 404, body: '' });
   });
 
-  // After deletion, GET returns empty list
-  let deleteCount = 0;
-  await page.route('**/api/services', async (route) => {
-    if (route.request().method() === 'GET') {
+  await page.route('**/api/services', (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
       deleteCount++;
       return route.fulfill({ json: deleteCount > 1 ? [] : [mockService] });
     }
-    return route.continue();
+    return route.fulfill({ status: 404, body: '' });
   });
 
   await page.goto('/diensten');
@@ -163,8 +172,11 @@ test('category panel shows the Categorieën header and list of categories', asyn
   await setupApiMocks(page);
   await page.goto('/diensten');
 
+  // Wait for services to load to ensure the page is fully rendered
+  await expect(page.getByText('Herenknippen')).toBeVisible();
+
   await expect(page.getByRole('heading', { name: 'Categorieën' })).toBeVisible();
-  await expect(page.getByText('Knippen')).toBeVisible();
+  await expect(page.locator('chairly-category-panel').getByText('Knippen')).toBeVisible();
 });
 
 test('clicking + Toevoegen in the category panel shows an input field', async ({ page }) => {

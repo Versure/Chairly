@@ -57,8 +57,8 @@ export class ServiceFormDialogComponent {
     categoryId: new FormControl<string | null>(null),
   });
 
-  open(): void {
-    const svc = this.service();
+  open(serviceToEdit?: ServiceResponse | null): void {
+    const svc = serviceToEdit !== undefined ? serviceToEdit : this.service();
     if (svc) {
       this.form.reset({
         name: svc.name,

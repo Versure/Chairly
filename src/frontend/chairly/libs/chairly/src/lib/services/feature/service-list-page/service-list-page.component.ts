@@ -66,12 +66,12 @@ export class ServiceListPageComponent implements OnInit {
 
   protected openAddService(): void {
     this.selectedService.set(null);
-    this.serviceFormDialogRef().open();
+    this.serviceFormDialogRef().open(null);
   }
 
   protected onEditService(service: ServiceResponse): void {
     this.selectedService.set(service);
-    this.serviceFormDialogRef().open();
+    this.serviceFormDialogRef().open(service);
   }
 
   protected onServiceSaved(request: CreateServiceRequest | UpdateServiceRequest): void {
