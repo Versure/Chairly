@@ -673,7 +673,7 @@
         "npx nx affected -t lint --base=origin/main passes"
       ],
       "priority": 34,
-      "passes": false,
+      "passes": true,
       "notes": "Use Playwright's page.route() to intercept API calls and return mock data. This way the tests are fast and deterministic without needing a real backend. The base URL for the dev server is configured in playwright.config.ts \u2014 check that it points to the correct port (typically 4200). Use data-testid attributes sparingly \u2014 prefer role-based or text-based selectors (getByRole, getByText) following Playwright best practices. The tests must run in CI with the app served statically or with a dev server started by Playwright's webServer config."
     },
     {
