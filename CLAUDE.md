@@ -72,6 +72,10 @@ Interfaces: `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>`, `IMed
 - Database-per-tenant: all entities carry `TenantId`, tenant resolution via middleware
 - Test coverage: unit tests for handlers, integration tests for API endpoints
 
+**Async patterns in Program.cs (analyzer rules):**
+- Avoid `await using` for `IAsyncDisposable` scopes — use try/finally with `await scope.DisposeAsync().ConfigureAwait(false)` instead (required by CA2007/MA0004)
+- As soon as any `await` is introduced in Program.cs, change `app.Run()` to `await app.RunAsync().ConfigureAwait(false)` (required by CA1849)
+
 ## Frontend Architecture — Nx Monorepo with DDD & Sheriff (ADR-006)
 
 **Workspace:** `src/frontend/chairly/` — Nx monorepo with apps/libs layout.
@@ -84,20 +88,34 @@ src/frontend/chairly/
 │   └── chairly-e2e/          # Playwright e2e tests
 ├── libs/
 │   ├── chairly/src/lib/      # Domain library
-│   │   ├── bookings/         # Each domain has feature/, ui/, data-access/, util/
-│   │   ├── clients/
-│   │   ├── staff/
-│   │   ├── services/
-│   │   ├── billing/
-│   │   └── notifications/
+│   │   ├── bookings/         # Each domain has the layers below
+│   │   ├── clients/          #   feature/{feature-name}/  ← one subfolder per smart component
+│   │   ├── staff/            #   ui/                      ← presentational components
+│   │   ├── services/         #   data-access/             ← stores, API services
+│   │   ├── billing/          #   models/                  ← TypeScript interfaces/types
+│   │   └── notifications/    #   pipes/                   ← Angular pipes
+│   │                         #   util/                    ← pure utility functions
+│   │                         #   {domain}.routes.ts       ← route config at domain root
 │   └── shared/src/lib/       # Shared library
 │       ├── ui/               # Shared components (buttons, modals)
 │       ├── data-access/      # Auth, HTTP interceptors
 │       └── util/             # Shared helpers
 ├── eslint.config.mjs         # Root ESLint config (12 plugins)
 ├── sheriff.config.ts         # Module boundary rules
-└── postcss.config.mjs        # Tailwind v4
+├── postcss.config.json       # Tailwind v4 — PostCSS config for @angular/build (JSON only)
+└── postcss.config.mjs        # Tailwind v4 — PostCSS config for Vite/Vitest (ESM)
 ```
+
+**Global styles setup (two separate files — never merge):**
+- `apps/chairly/src/tailwind.css` — `@import 'tailwindcss'` + `@source` directives. Processed by PostCSS only. Never goes through Sass.
+- `apps/chairly/src/styles.scss` — SCSS-specific global styles: custom variables, mixins, font declarations. Must never contain `@import` for CSS libraries.
+- Both are listed in `project.json` build.options.styles: `tailwind.css` first, then `styles.scss`.
+
+**PostCSS config — important constraint:**
+- `@angular/build:application` only reads `postcss.config.json` or `.postcssrc.json` (JSON format). It ignores `.js`/`.mjs` configs entirely.
+- `postcss.config.json` is the config used by the Angular builder.
+- `postcss.config.mjs` is kept for Vite-based tooling (Vitest, Storybook).
+- The `tailwind.css` file must include explicit `@source` directives pointing at templates, because Tailwind's auto-detection does not reliably traverse Nx monorepo lib folders. Paths are relative to `tailwind.css`.
 
 **Path aliases:** `@org/chairly-lib`, `@org/shared-lib`
 
@@ -105,7 +123,18 @@ src/frontend/chairly/
 - A domain cannot import from another domain
 - A domain can import from `shared/`
 - `shared/` cannot import from any domain
-- Within a domain: `feature/` → `ui/`, `data-access/`, `util/`. `ui/` → `util/` only. `data-access/` → `util/` only.
+- Within a domain: `feature/` → `ui/`, `data-access/`, `models/`, `pipes/`, `util/`. `ui/` → `models/`, `pipes/`, `util/` only. `data-access/` → `models/`, `util/` only.
+
+**Domain folder conventions — checklist (verify before creating any file):**
+
+| File type | Correct folder | Common mistake |
+|---|---|---|
+| TypeScript interfaces/DTOs | `models/` | Putting them in `util/` |
+| Angular `@Pipe` classes | `pipes/` | Putting them in `util/` |
+| Pure TS utility functions | `util/` | No interfaces or pipes here |
+| Smart (container) components | `feature/{feature-name}/` subfolder | Placing files directly in `feature/` |
+| Route configuration | `{domain}.routes.ts` at **domain root** | Placing it inside `feature/` |
+| `.gitkeep` | Delete immediately when real files are added | Leaving it after the folder is populated |
 
 ## Code Conventions — Frontend
 
@@ -115,16 +144,48 @@ src/frontend/chairly/
 - NgRx SignalStore for shared/feature state
 - Smart/Dumb component pattern: containers load data, presentational components display it
 - Services for API calls, one service per backend context
-- Tailwind CSS v4 for styling, SCSS for component styles
+- Tailwind CSS v4 for styling, SCSS for component styles. Tailwind v4 is imported in `apps/chairly/src/tailwind.css` (plain CSS). SCSS global styles go in `apps/chairly/src/styles.scss`. These two files must never be merged.
 - Reactive forms with typed FormGroups
 - Lazy-loaded routes per domain
+- Each domain layer has dedicated subfolders: `models/` for interfaces, `pipes/` for Angular pipes, `util/` for pure functions. Routes file (`{domain}.routes.ts`) lives at the **domain root**, not inside `feature/`. Each smart component inside `feature/` has its own subfolder.
 - Component prefix: `chairly-` (e.g. `<chairly-booking-list>`)
+- **UI language is Dutch (Nederlands) — write Dutch from the first keystroke.** Do not write English UI first and translate later. Every label, button, placeholder, header, validation message, empty state, loading indicator, and dialog title must be Dutch when first written. Common translations: Save→Opslaan, Cancel→Annuleren, Add→Toevoegen, Edit→Bewerken, Delete→Verwijderen, Active→Actief, Inactive→Inactief, Loading→Laden, Confirm→Bevestigen.
+- Register Dutch locale in `app.config.ts`: call `registerLocaleData(localeNl)`, and provide both `{ provide: LOCALE_ID, useValue: 'nl-NL' }` and `{ provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' }` — `LOCALE_ID` alone does not change the currency default of `CurrencyPipe`.
 - No `any` types in TypeScript
 - No `console` statements (use proper logging)
 - Explicit return types on all functions
 - Self-closing tags for empty elements (e.g. `<chairly-icon />`)
 - No function calls in templates — use signals/pipes instead
 - Imports auto-sorted: Angular → third-party → project aliases → relative
+- **Templates must always be in a separate `.html` file** using `templateUrl:`. Inline `template:` is forbidden and enforced by ESLint (`@angular-eslint/component-max-inline-declarations: { template: 0 }`)
+- **E2E tests with Playwright** must be written for all pages/features whenever possible
+- Add E2E tests to `apps/chairly-e2e/src/` for each feature page
+
+## Dark Mode Convention
+
+The dark theme is activated by `data-theme="dark"` on the `<html>` element (managed by `ThemeService`).
+
+- Global CSS overrides in `tailwind.css` cover standard Tailwind classes: `bg-white`, `bg-gray-50`, `text-gray-*`, `border-gray-*`, form inputs.
+- **Custom/brand color classes (`bg-primary-*`, `bg-accent-*`) have NO global dark override.** Always add an explicit `dark:` Tailwind variant in the template when using these classes (e.g. `bg-primary-50 dark:bg-slate-800`).
+- When adding any light-mode background color to a component, always pair it with a `dark:` variant. Missing a `dark:` on a custom color will cause a light block in dark mode.
+
+## Native `<dialog>` Pattern
+
+Always implement `<dialog>` as a full-screen overlay using `showModal()`:
+
+```html
+<dialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none flex items-center justify-center border-0 bg-black/50 p-4"
+>
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto">
+    <!-- content -->
+  </div>
+</dialog>
+```
+
+- Inject `DOCUMENT` and set `document.body.style.overflow = 'hidden'` when opening, `''` when closing.
+- Use `[open]` CSS attribute selector (or `pointer-events: none` when closed) to prevent closed dialogs from intercepting pointer events.
+- To close cross-browser reliably in Playwright e2e tests, use `page.keyboard.press('Escape')` rather than clicking the Cancel button inside a `showModal()` dialog (unreliable in Firefox/WebKit with zoneless Angular).
 
 ## Ubiquitous Language
 
@@ -158,12 +219,19 @@ When running autonomously via Ralph or in headless mode:
 - Follow conventions established in docs/ and existing code
 - Document any significant decisions in progress.txt
 - When in doubt, choose the simplest approach that follows existing patterns
-- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push the branch and create a PR BEFORE outputting the `<promise>COMPLETE</promise>` signal:**
+- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push, create a PR, wait for CI, and only then output the `<promise>COMPLETE</promise>` signal:**
   ```bash
   git push -u origin HEAD
   gh pr create --title "feat({context}): {feature description}" --body "Implemented by Ralph. See prd.json for stories."
+  # Wait for CI and exit non-zero if it fails:
+  gh run watch --exit-status
   ```
   Replace `{context}` with the bounded context (e.g. bookings, staff) and `{feature description}` with a short summary from the PRD.
+  If `gh run watch` exits with a failure:
+  1. Run `gh run view --log-failed` to read the failure details
+  2. Fix the issue, commit the fix, push again
+  3. Run `gh run watch --exit-status` again
+  4. Only signal `<promise>COMPLETE</promise>` when CI is green
 
 ## Implementation Order
 
@@ -209,4 +277,9 @@ npx nx affected -t build --base=main
 - No `@Input()`/`@Output()`/`@ViewChild()` decorators — use signal-based APIs (`input()`, `model()`, `viewChild()`, `OutputEmitterRef`)
 - No function calls in Angular templates — use signals or pipes
 - No inline styles in Angular templates
+- No inline `template:` in Angular components — always use `templateUrl:` with a separate `.html` file
+- No model interfaces or Angular pipes inside `util/` — use `models/` and `pipes/` folders respectively
+- No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
+- No PostCSS config in `.js`/`.mjs` format only — always maintain `postcss.config.json` for the Angular builder (it does not read `.mjs`)
+- No English user-facing text in the UI — all labels, buttons, messages, and UI copy must be in Dutch (Nederlands)
 - Never commit without tests passing

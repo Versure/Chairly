@@ -54,6 +54,9 @@ export default [
       '@angular-eslint/component-class-suffix': 'error',
       '@angular-eslint/directive-class-suffix': 'error',
 
+      // Templates must be in separate .html files (templateUrl:)
+      '@angular-eslint/component-max-inline-declarations': ['error', { template: 0 }],
+
       // Modern Angular (signals)
       '@angular-eslint/prefer-signals': 'error',
       '@angular-eslint/prefer-signal-model': 'error',
@@ -82,7 +85,11 @@ export default [
   {
     files: ['**/*.html'],
     rules: {
-      '@angular-eslint/template/no-call-expression': 'error',
+      // Angular 17+ signals must be called in templates (title(), mySignal()).
+    // The no-call-expression rule does not support signal detection, so it is
+    // disabled. The CLAUDE.md "no function calls in templates" convention still
+    // applies in code review — signals and pipes are the approved alternatives.
+    '@angular-eslint/template/no-call-expression': 'off',
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/no-any': 'error',

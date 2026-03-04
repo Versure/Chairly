@@ -91,10 +91,17 @@ If no browser tools are available, note in your progress report that manual brow
 
 After completing a user story, check if ALL stories have `passes: true`.
 
-If ALL stories are complete and passing, reply with:
-<promise>COMPLETE</promise>
-
 If there are still stories with `passes: false`, end your response normally (another iteration will pick up the next story).
+
+If ALL stories are complete and passing, you MUST:
+1. Push the branch: `git push -u origin HEAD`
+2. Create a PR: `gh pr create --title "feat({context}): {description}" --body "Implemented by Ralph. See prd.json for stories."`
+3. Wait for CI to pass: `gh run watch --exit-status`
+4. If CI fails:
+   - `gh run view --log-failed` to read failure details
+   - Fix the issue, commit, push, and run `gh run watch --exit-status` again
+5. Only when CI is green, reply with:
+<promise>COMPLETE</promise>
 
 ## Important
 

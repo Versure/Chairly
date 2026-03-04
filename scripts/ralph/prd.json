@@ -19,7 +19,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "The lib ESLint configs currently use 'lib' as the prefix but CLAUDE.md requires 'chairly'. Fix both libs. HttpClient is needed for all API services in later stories."
     },
     {
@@ -36,7 +36,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "The backend runs on localhost:5205. The proxy rewrites /api/* to the backend. The injection token allows services to use inject(API_BASE_URL) for the base URL. Export through the shared lib barrel."
     },
     {
@@ -44,7 +44,7 @@
       "title": "TypeScript interfaces for service catalog DTOs",
       "description": "As a developer, I need TypeScript interfaces matching the backend DTOs so that API responses are type-safe.",
       "acceptanceCriteria": [
-        "ServiceResponse interface in libs/chairly/src/lib/services/util/ with fields: id (string), name (string), description (string | null), duration (string — TimeSpan format HH:MM:SS), price (number), categoryId (string | null), categoryName (string | null), isActive (boolean), sortOrder (number), createdAtUtc (string), createdBy (string), updatedAtUtc (string | null), updatedBy (string | null)",
+        "ServiceResponse interface in libs/chairly/src/lib/services/util/ with fields: id (string), name (string), description (string | null), duration (string \u2014 TimeSpan format HH:MM:SS), price (number), categoryId (string | null), categoryName (string | null), isActive (boolean), sortOrder (number), createdAtUtc (string), createdBy (string), updatedAtUtc (string | null), updatedBy (string | null)",
         "CreateServiceRequest interface with fields: name (string), description (string | null), duration (string), price (number), categoryId (string | null), sortOrder (number)",
         "UpdateServiceRequest interface with same fields as CreateServiceRequest",
         "ServiceCategoryResponse interface with fields: id (string), name (string), sortOrder (number), createdAtUtc (string), createdBy (string)",
@@ -55,7 +55,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "GUIDs from the backend map to string in TypeScript. TimeSpan maps to string in format 'HH:MM:SS'. DateTimeOffset maps to string (ISO 8601). These interfaces must exactly match the backend response DTOs from ServiceResponse.cs and ServiceCategoryResponse.cs."
     },
     {
@@ -76,8 +76,8 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "Use Angular's HttpClient. Base URL from the API_BASE_URL injection token. Test with HttpTestingController to verify requests. Service should be providedIn: 'root' or provided at the route level — choose based on existing patterns."
+      "passes": true,
+      "notes": "Use Angular's HttpClient. Base URL from the API_BASE_URL injection token. Test with HttpTestingController to verify requests. Service should be providedIn: 'root' or provided at the route level \u2014 choose based on existing patterns."
     },
     {
       "id": "SCF-005",
@@ -99,7 +99,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Same patterns as SCF-004. The toggleActive endpoint uses PATCH with no request body."
     },
     {
@@ -120,7 +120,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Use @ngrx/signals signalStore with withState, withMethods, and withComputed as needed. Use rxMethod or patchState for async operations. The store will be provided at the route level in SCF-014."
     },
     {
@@ -130,8 +130,8 @@
       "acceptanceCriteria": [
         "ServiceStore created in libs/chairly/src/lib/services/data-access/ using signalStore()",
         "State shape: services (ServiceResponse[]), isLoading (boolean), error (string | null)",
-        "Computed signal: activeServices — filters services where isActive === true",
-        "Computed signal: servicesByCategory — groups services by categoryId (Record<string, ServiceResponse[]>) with a 'uncategorized' key for null categoryId",
+        "Computed signal: activeServices \u2014 filters services where isActive === true",
+        "Computed signal: servicesByCategory \u2014 groups services by categoryId (Record<string, ServiceResponse[]>) with a 'uncategorized' key for null categoryId",
         "loadServices method: sets isLoading, calls API getAll(), updates services on success, sets error on failure",
         "createService method: calls API create(), adds result to services array",
         "updateService method: calls API update(), replaces the service in the array",
@@ -143,7 +143,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Same patterns as SCF-006. The computed signals derive from the services array. servicesByCategory groups by categoryId, using 'uncategorized' as the key when categoryId is null."
     },
     {
@@ -156,7 +156,7 @@
         "Signal inputs: title (string), message (string), confirmLabel (string, default 'Confirm'), cancelLabel (string, default 'Cancel'), isDestructive (boolean, default false)",
         "OutputEmitterRef events: confirmed (void), cancelled (void)",
         "Public open() and close() methods to control the dialog",
-        "Styled with Tailwind CSS classes — centered modal with overlay backdrop",
+        "Styled with Tailwind CSS classes \u2014 centered modal with overlay backdrop",
         "When isDestructive is true, confirm button uses red/danger styling",
         "OnPush change detection, standalone component",
         "Component selector: chairly-confirmation-dialog",
@@ -167,7 +167,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Use the native <dialog> element with showModal()/close() methods. Style the backdrop with ::backdrop pseudo-element via Tailwind. This is in shared/ui/ because it will be reused across domains."
     },
     {
@@ -175,19 +175,19 @@
       "title": "DurationPipe and helper functions with unit tests",
       "description": "As a developer, I need duration conversion helpers so that .NET TimeSpan values can be displayed as human-readable minutes.",
       "acceptanceCriteria": [
-        "parseDuration(timeSpan: string): number function in libs/chairly/src/lib/services/util/ — converts 'HH:MM:SS' to total minutes (e.g. '01:30:00' → 90)",
-        "formatDurationToTimeSpan(minutes: number): string function — converts minutes to 'HH:MM:SS' (e.g. 90 → '01:30:00')",
-        "DurationPipe (name: 'duration') in libs/chairly/src/lib/services/util/ — uses parseDuration to transform TimeSpan string to 'X min' or 'Xh Ymin' display format",
-        "DurationPipe examples: '00:30:00' → '30 min', '01:00:00' → '1h', '01:30:00' → '1h 30min'",
-        "Unit tests for parseDuration with edge cases: '00:00:00' → 0, '00:45:00' → 45, '02:00:00' → 120",
-        "Unit tests for formatDurationToTimeSpan with edge cases: 0 → '00:00:00', 60 → '01:00:00'",
+        "parseDuration(timeSpan: string): number function in libs/chairly/src/lib/services/util/ \u2014 converts 'HH:MM:SS' to total minutes (e.g. '01:30:00' \u2192 90)",
+        "formatDurationToTimeSpan(minutes: number): string function \u2014 converts minutes to 'HH:MM:SS' (e.g. 90 \u2192 '01:30:00')",
+        "DurationPipe (name: 'duration') in libs/chairly/src/lib/services/util/ \u2014 uses parseDuration to transform TimeSpan string to 'X min' or 'Xh Ymin' display format",
+        "DurationPipe examples: '00:30:00' \u2192 '30 min', '01:00:00' \u2192 '1h', '01:30:00' \u2192 '1h 30min'",
+        "Unit tests for parseDuration with edge cases: '00:00:00' \u2192 0, '00:45:00' \u2192 45, '02:00:00' \u2192 120",
+        "Unit tests for formatDurationToTimeSpan with edge cases: 0 \u2192 '00:00:00', 60 \u2192 '01:00:00'",
         "Unit tests for DurationPipe transform output",
         "npx nx affected -t lint --base=main passes",
         "npx nx affected -t test --base=main passes",
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "The backend uses .NET TimeSpan serialized as 'HH:MM:SS'. The frontend needs to convert this to minutes for display and form inputs, and back to TimeSpan format for API requests. The pipe is for template display only."
     },
     {
@@ -197,21 +197,21 @@
       "acceptanceCriteria": [
         "CategoryPanelComponent created in libs/chairly/src/lib/services/ui/",
         "Signal inputs: categories (ServiceCategoryResponse[]), isLoading (boolean)",
-        "OutputEmitterRef events: categoryCreated (CreateServiceCategoryRequest), categoryUpdated ({id: string, request: UpdateServiceCategoryRequest}), categoryDeleted (string — the category id)",
+        "OutputEmitterRef events: categoryCreated (CreateServiceCategoryRequest), categoryUpdated ({id: string, request: UpdateServiceCategoryRequest}), categoryDeleted (string \u2014 the category id)",
         "Displays a list of categories sorted by sortOrder",
         "Each category row shows name and sort order with edit/delete icon buttons",
-        "Add button at the top opens an inline form (input field + save/cancel buttons) — no modal",
+        "Add button at the top opens an inline form (input field + save/cancel buttons) \u2014 no modal",
         "Edit button on a row switches that row to inline edit mode (input field + save/cancel)",
         "Delete button emits categoryDeleted event (parent handles confirmation)",
-        "Styled with Tailwind CSS — vertical panel layout suitable for a sidebar",
+        "Styled with Tailwind CSS \u2014 vertical panel layout suitable for a sidebar",
         "OnPush change detection, standalone component, selector: chairly-category-panel",
-        "No function calls in templates — use signals or helper methods returning signals where needed",
+        "No function calls in templates \u2014 use signals or helper methods returning signals where needed",
         "npx nx affected -t lint --base=main passes",
         "npx nx affected -t test --base=main passes",
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational (dumb) component. It receives data via inputs and emits events. The parent smart component handles API calls. Inline editing means the list item transforms into an editable form in-place."
     },
     {
@@ -221,21 +221,21 @@
       "acceptanceCriteria": [
         "ServiceFormDialogComponent created in libs/chairly/src/lib/services/ui/",
         "Uses native <dialog> element",
-        "Signal inputs: categories (ServiceCategoryResponse[]) for the category dropdown, service (ServiceResponse | null) — null for create mode, populated for edit mode",
+        "Signal inputs: categories (ServiceCategoryResponse[]) for the category dropdown, service (ServiceResponse | null) \u2014 null for create mode, populated for edit mode",
         "OutputEmitterRef events: saved (CreateServiceRequest | UpdateServiceRequest), cancelled (void)",
         "Reactive form with typed FormGroup: name (required, maxLength 150), description (optional, maxLength 2000), duration (required, number input in minutes), price (required, number, min 0), categoryId (optional, select dropdown), sortOrder (number)",
-        "Duration input is in minutes — on save, converted to TimeSpan format using formatDurationToTimeSpan helper",
+        "Duration input is in minutes \u2014 on save, converted to TimeSpan format using formatDurationToTimeSpan helper",
         "When service input is set (edit mode), form is pre-populated with existing values (duration converted from TimeSpan to minutes using parseDuration)",
         "Public open() and close() methods",
         "Form validation messages displayed inline",
-        "Styled with Tailwind CSS — modal with form layout",
+        "Styled with Tailwind CSS \u2014 modal with form layout",
         "OnPush change detection, standalone component, selector: chairly-service-form-dialog",
         "npx nx affected -t lint --base=main passes",
         "npx nx affected -t test --base=main passes",
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational component. The parent opens/closes it and handles the saved event. Duration conversion uses the helpers from SCF-009. The form should reset when opened for create mode."
     },
     {
@@ -246,11 +246,11 @@
         "ServiceTableComponent created in libs/chairly/src/lib/services/ui/",
         "Signal inputs: services (ServiceResponse[]), isLoading (boolean)",
         "OutputEmitterRef events: editClicked (ServiceResponse), deleteClicked (ServiceResponse), toggleActiveClicked (ServiceResponse)",
-        "Table columns: Name, Category (categoryName or '—' if null), Duration (using DurationPipe), Price (formatted as currency), Status (active/inactive badge), Actions (edit, toggle active, delete buttons)",
+        "Table columns: Name, Category (categoryName or '\u2014' if null), Duration (using DurationPipe), Price (formatted as currency), Status (active/inactive badge), Actions (edit, toggle active, delete buttons)",
         "Active status shown as green badge, inactive as gray badge",
         "Loading state shows a simple loading indicator or skeleton",
         "Empty state message when no services exist",
-        "Styled with Tailwind CSS — clean table with hover rows",
+        "Styled with Tailwind CSS \u2014 clean table with hover rows",
         "OnPush change detection, standalone component, selector: chairly-service-table",
         "Uses DurationPipe in the template for duration column",
         "npx nx affected -t lint --base=main passes",
@@ -258,7 +258,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "This is a presentational component. It displays data and emits events. The DurationPipe from SCF-009 is used in the template. Price can be formatted with Angular's CurrencyPipe."
     },
     {
@@ -282,8 +282,8 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": "This is the smart container that orchestrates everything. It connects stores to presentational components. Use viewChild() (signal-based) to get references to dialog components for open/close. Layout should be responsive — sidebar collapses on small screens or stacks below."
+      "passes": true,
+      "notes": "This is the smart container that orchestrates everything. It connects stores to presentational components. Use viewChild() (signal-based) to get references to dialog components for open/close. Layout should be responsive \u2014 sidebar collapses on small screens or stacks below."
     },
     {
       "id": "SCF-014",
@@ -301,7 +301,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Stores are provided at the route level so they are scoped to the /services route. Use Angular's route providers array. The lazy import path should use the @org/chairly-lib alias or a relative path depending on what works with the Nx setup."
     },
     {
@@ -317,15 +317,586 @@
         "No 'any' types in any TypeScript file",
         "No console.log statements in any file",
         "All functions have explicit return types",
-        "All signal-based APIs used (input(), model(), viewChild(), OutputEmitterRef) — no decorators",
+        "All signal-based APIs used (input(), model(), viewChild(), OutputEmitterRef) \u2014 no decorators",
         "Component prefix is 'chairly-' on all components",
-        "No function calls in Angular templates — only signals, pipes, and property access",
+        "No function calls in Angular templates \u2014 only signals, pipes, and property access",
         "Sheriff module boundary rules are not violated (no cross-domain imports)",
         "All barrel exports are properly set up"
       ],
       "priority": 15,
-      "passes": false,
+      "passes": true,
       "notes": "This is a cleanup/verification story. Fix any remaining lint errors, failing tests, or convention violations. Ensure everything matches CLAUDE.md requirements. If everything already passes, just verify and mark as done."
+    },
+    {
+      "id": "SCF-016",
+      "title": "Fix CI: nx affected PR step fails due to missing main branch ref",
+      "description": "As a developer, I need the GitHub Actions frontend CI workflow to correctly resolve the main branch so that nx affected works on pull requests.",
+      "acceptanceCriteria": [
+        "In .github/workflows/frontend-ci.yml, the 'Run affected tasks (PR)' step is changed to: npx nx affected -t lint test build e2e --base=origin/main --head=HEAD",
+        "In .github/workflows/frontend-ci.yml, the 'Run affected tasks (push)' step is changed to: npx nx affected -t lint test build e2e --base=origin/main~1 --head=HEAD (already uses origin/ prefix, verify it is consistent)",
+        "A 'Fetch base branch' step is added BEFORE the affected tasks steps: run: git fetch origin main",
+        "The workflow no longer fails with 'fatal: ambiguous argument main'",
+        "npx nx affected -t lint test build --base=origin/main passes locally"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "The root cause: actions/checkout with fetch-depth: 0 fetches all history but does NOT create a local tracking ref for 'main'. nx affected --base=main then fails. The fix: add 'git fetch origin main' step to create the remote-tracking ref, or use origin/main instead of main as the base. Both changes together are safest. The push step already says --base=origin/main~1 and is fine; only the PR step uses the bare 'main' ref."
+    },
+    {
+      "id": "SCF-017",
+      "title": "Move service/category models from util/ to models/ folder",
+      "description": "As a developer, I want model interfaces in a dedicated models/ folder so that the codebase follows the convention that util/ contains utility functions only, not type definitions.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/models/",
+        "service.models.ts moved to libs/chairly/src/lib/services/models/service.models.ts",
+        "service-category.models.ts moved to libs/chairly/src/lib/services/models/service-category.models.ts",
+        "libs/chairly/src/lib/services/models/index.ts created, exporting all model types with 'export type { ... }'",
+        "libs/chairly/src/lib/services/util/index.ts updated: model type exports removed, only duration utilities remain",
+        "libs/chairly/src/lib/services/data-access/*.ts files updated: imports from '../util' for model types changed to '../models'",
+        "libs/chairly/src/lib/services/ui/*.ts files updated: imports from '../util' for model types changed to '../models' (DurationPipe import from '../util' is unchanged for now)",
+        "libs/chairly/src/lib/services/feature/*.ts files updated: imports from '../util' for model types changed to '../models'",
+        "Old model files no longer exist in util/",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "This is a structural refactor \u2014 no logic changes, only file moves and import updates. The model files are: service.models.ts (ServiceResponse, CreateServiceRequest, UpdateServiceRequest) and service-category.models.ts (ServiceCategoryResponse, CreateServiceCategoryRequest, UpdateServiceCategoryRequest). The util/ folder should only contain pure utility functions (parseDuration, formatDurationToTimeSpan) after this change. Update all barrel files accordingly."
+    },
+    {
+      "id": "SCF-018",
+      "title": "Move DurationPipe from util/ to pipes/ folder",
+      "description": "As a developer, I want Angular pipes in a dedicated pipes/ folder so that the codebase follows the convention that util/ contains pure functions only, not Angular-specific constructs.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/pipes/",
+        "duration.pipe.ts moved to libs/chairly/src/lib/services/pipes/duration.pipe.ts",
+        "duration.pipe.spec.ts moved to libs/chairly/src/lib/services/pipes/duration.pipe.spec.ts",
+        "libs/chairly/src/lib/services/pipes/index.ts created, exporting DurationPipe",
+        "libs/chairly/src/lib/services/util/index.ts updated: DurationPipe export removed",
+        "libs/chairly/src/lib/services/ui/service-table.component.ts updated: DurationPipe import changed from '../util' to '../pipes'",
+        "duration.utils.ts and duration.utils.spec.ts remain in util/ (they are pure utility functions)",
+        "Old duration.pipe.ts no longer exists in util/",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "This is a structural refactor \u2014 no logic changes, only file moves and import updates. After this change, util/ should only contain: duration.utils.ts, duration.utils.spec.ts, and index.ts. The DurationPipe import in service-table.component.ts is the only consumer (besides the index barrel)."
+    },
+    {
+      "id": "SCF-019",
+      "title": "Move services.routes.ts from feature/ to services domain root",
+      "description": "As a developer, I want the route configuration file at the root of the services domain (not inside feature/) so that it is accessible without being buried inside a UI layer folder.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/services/services.routes.ts created (file moved from feature/services.routes.ts)",
+        "libs/chairly/src/lib/services/feature/services.routes.ts deleted",
+        "libs/chairly/src/lib/services/feature/index.ts updated: no longer exports servicesRoutes",
+        "libs/chairly/src/index.ts updated: exports servicesRoutes from './lib/services/services.routes' instead of './lib/services/feature'",
+        "Imports inside services.routes.ts updated: relative imports to data-access and feature adjusted for new location (e.g., './data-access' and './feature/service-list-page/service-list-page.component' or './feature' barrel)",
+        "app.routes.ts still works: import('@org/chairly-lib').then(m => m.servicesRoutes) resolves correctly",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "The services.routes.ts file logically belongs at the domain root because it is the entry point for the services feature, not a feature component itself. After moving, the relative imports inside services.routes.ts will need updating. The file currently imports from '../data-access' and './service-list-page.component' \u2014 from the domain root these become './data-access' and './feature/service-list-page.component'. Note: story SCF-020 will move service-list-page.component into a subfolder, so coordinate import path \u2014 use the feature/index.ts barrel (import from './feature') to avoid coupling to internal structure."
+    },
+    {
+      "id": "SCF-020",
+      "title": "Move ServiceListPageComponent into its own subfolder within feature/",
+      "description": "As a developer, I want each feature component to have its own subfolder inside feature/ so that related files (component, spec, template) are grouped together and the feature/ folder is not a flat list of files.",
+      "acceptanceCriteria": [
+        "New folder created: libs/chairly/src/lib/services/feature/service-list-page/",
+        "service-list-page.component.ts moved to feature/service-list-page/service-list-page.component.ts",
+        "service-list-page.component.spec.ts moved to feature/service-list-page/service-list-page.component.spec.ts",
+        "libs/chairly/src/lib/services/feature/index.ts updated: exports ServiceListPageComponent from './service-list-page/service-list-page.component'",
+        "Old service-list-page.component.ts and service-list-page.component.spec.ts no longer exist directly in feature/",
+        "services.routes.ts (now at domain root per SCF-019) imports ServiceListPageComponent from './feature' barrel \u2014 no change needed if barrel is used, otherwise update path",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "This story must be implemented AFTER SCF-019 (routes moved to domain root). Each feature page/smart component should live in its own subfolder. Currently only ServiceListPageComponent exists in feature/. Move it to feature/service-list-page/. If additional feature components are added in future, they each get their own subfolder (e.g., feature/service-detail/). The feature/index.ts barrel hides the internal subfolder structure from consumers."
+    },
+    {
+      "id": "SCF-021",
+      "title": "Extract all inline component templates to separate .html files and enforce via ESLint",
+      "description": "As a developer, I want all Angular component templates in dedicated .html files (not inline) so that templates are separately navigable, diffable, and clearly separated from component logic.",
+      "acceptanceCriteria": [
+        "ESLint rule added to root eslint.config.mjs in the Angular TS rules section: '@angular-eslint/component-max-inline-declarations': ['error', { 'template': 0 }]",
+        "ServiceListPageComponent: template extracted to feature/service-list-page/service-list-page.component.html, component uses templateUrl: './service-list-page.component.html'",
+        "CategoryPanelComponent: template extracted to ui/category-panel.component.html, component uses templateUrl: './category-panel.component.html'",
+        "ServiceFormDialogComponent: template extracted to ui/service-form-dialog.component.html, component uses templateUrl: './service-form-dialog.component.html'",
+        "ServiceTableComponent: template extracted to ui/service-table.component.html, component uses templateUrl: './service-table.component.html'",
+        "ConfirmationDialogComponent (in shared/ui/): template extracted to ui/confirmation-dialog.component.html, component uses templateUrl: './confirmation-dialog.component.html'",
+        "No component in the codebase uses inline 'template:' property \u2014 only 'templateUrl:' is used",
+        "All extracted .html files contain valid Angular template syntax (same as the inline template, exactly)",
+        "Unit tests for all components still pass (test setup uses TestBed which resolves templateUrl correctly with Vite)",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": "This story must be implemented AFTER SCF-020 (feature subfolders) so that ServiceListPageComponent is already in its subfolder before its .html file is created there. The ESLint rule '@angular-eslint/component-max-inline-declarations' with { 'template': 0 } makes inline templates a lint error. When extracting templates: (1) remove the 'template:' property from the @Component decorator, (2) add 'templateUrl:' pointing to the .html file, (3) create the .html file with the exact same content as the inline template. The Angular/Vite test setup in this project resolves templateUrl correctly \u2014 no special test configuration needed."
+    },
+    {
+      "id": "SCF-022",
+      "title": "Remove .gitkeep files from non-empty folders",
+      "description": "As a developer, I want .gitkeep files removed from folders that now contain real files so that the codebase is clean.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/services/data-access/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/feature/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/ui/.gitkeep deleted (folder has real files)",
+        "libs/chairly/src/lib/services/util/.gitkeep deleted (folder has real files)",
+        "libs/shared/src/lib/ui/.gitkeep deleted (folder has confirmation-dialog files)",
+        "libs/shared/src/lib/util/.gitkeep deleted (folder has api-base-url.token.ts)",
+        "libs/shared/src/lib/data-access/.gitkeep kept if folder is still empty \u2014 delete only if it contains real files",
+        "No .gitkeep files remain in non-empty folders",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": "Simple cleanup. .gitkeep files are placeholder files to force git to track empty directories. Once a directory has real files, the .gitkeep should be deleted. Check each folder listed above before deleting \u2014 if for some reason a folder is empty (after structural refactors in earlier stories), keep the .gitkeep."
+    },
+    {
+      "id": "SCF-023",
+      "title": "Add Playwright e2e tests for service catalog",
+      "description": "As a developer, I want Playwright e2e tests for the service catalog page so that basic UI functionality is verified end-to-end.",
+      "acceptanceCriteria": [
+        "apps/chairly-e2e/src/example.spec.ts updated: the 'has title' test now navigates to '/' and expects the h1 to contain 'Services' (not 'Welcome', since the app now redirects to /services)",
+        "apps/chairly-e2e/src/service-catalog.spec.ts created with at least the following tests:",
+        "  - 'navigates to /services and shows the page header': navigates to '/services', expects page.locator('h1').innerText() to contain 'Services'",
+        "  - 'shows the Add Service button': expects page.getByRole('button', { name: 'Add Service' }) to be visible",
+        "  - 'opens the add service dialog when Add Service is clicked': clicks Add Service button, expects a dialog to be visible",
+        "  - 'closes the add service dialog when Cancel is clicked': opens dialog, clicks Cancel, expects dialog to be hidden",
+        "  - 'shows the Categories panel': expects the text 'Categories' to be visible on the page",
+        "All e2e tests pass when run with npx nx e2e chairly-e2e (app served without backend \u2014 tests do not depend on API responses, only on UI structure)",
+        "npx nx affected -t lint test build e2e --base=origin/main passes"
+      ],
+      "priority": 23,
+      "passes": true,
+      "notes": "The e2e tests run against the Angular app served without a backend. Since the stores make HTTP calls on init (loadServices, loadCategories), these will fail silently \u2014 the page will show empty states, not errors, as the stores set isLoading=false on error. The e2e tests should test UI structure and interactions, NOT API-dependent content (don't assert on table rows or category items since there's no backend). Use @playwright/test. The playwright.config.ts already exists at apps/chairly-e2e/playwright.config.ts \u2014 check the webServer config to understand how the app is served. The test for the dialog should use page.locator('dialog') or similar \u2014 the components use native <dialog> element."
+    },
+    {
+      "id": "SCF-024",
+      "title": "Update CLAUDE.md with new folder conventions and update Ralph stop condition to check CI",
+      "description": "As a developer, I want CLAUDE.md updated with the new folder structure conventions and Ralph's stop condition updated to verify CI passes before signaling completion.",
+      "acceptanceCriteria": [
+        "Root CLAUDE.md Frontend Architecture section updated to document the services domain folder structure: models/ (interfaces and types), pipes/ (Angular pipes), util/ (pure utility functions), feature/{feature-name}/ (each feature gets its own subfolder), and routes file at domain root",
+        "Root CLAUDE.md Code Conventions \u2014 Frontend section updated with: 'Each domain layer has dedicated subfolders: models/ for interfaces, pipes/ for Angular pipes, util/ for pure functions. Routes file lives at domain root, not inside feature/. Each smart component inside feature/ has its own subfolder.'",
+        "Root CLAUDE.md Code Conventions \u2014 Frontend section updated with: 'Component templates must always be in separate .html files (templateUrl:). Inline templates (template:) are forbidden and enforced by ESLint.'",
+        "Root CLAUDE.md Working Method \u2014 Autonomous/Headless Mode section updated: after pushing and creating the PR, add a step to verify CI passes: 'After creating the PR, verify CI passes: run gh run watch --exit-status to wait for the pipeline. If it fails, investigate and fix before signaling COMPLETE.'",
+        "scripts/ralph/CLAUDE.md Stop Condition section updated to include: after creating the PR with git push + gh pr create, run 'gh run watch --exit-status' to wait for CI. Only signal COMPLETE if CI passes. If CI fails, investigate the failure, fix it, push a new commit, and wait again.",
+        "npx nx affected -t lint test build --base=origin/main passes (CLAUDE.md changes don't affect lint/test/build, but verify no regressions)"
+      ],
+      "priority": 24,
+      "passes": true,
+      "notes": "This story updates documentation only (CLAUDE.md files) plus the Ralph agent instruction. The key change to Ralph's behavior: instead of creating PR and immediately signaling COMPLETE, Ralph should wait for CI to pass. Use 'gh run watch --exit-status' which exits 0 if CI passes, non-zero if it fails. If CI fails, Ralph should read the failure logs with 'gh run view --log-failed' and fix the issue. The folder convention changes (models/, pipes/, feature subfolder, templateUrl) should be documented so future Ralph iterations follow them without needing to be told."
+    },
+    {
+      "id": "SCF-025",
+      "title": "Fix Sass @import deprecation: separate Tailwind CSS entry file from styles.scss",
+      "description": "As a developer, I want the Sass @import deprecation warning eliminated so that the build output is clean and only warns about real issues.",
+      "acceptanceCriteria": [
+        "apps/chairly/src/tailwind.css created with a single line: @import 'tailwindcss';",
+        "apps/chairly/src/styles.scss updated to remove the @import 'tailwindcss'; line \u2014 the file should be empty (a comment explaining its purpose is fine)",
+        "apps/chairly/project.json build.options.styles array updated to: [\"apps/chairly/src/tailwind.css\", \"apps/chairly/src/styles.scss\"] \u2014 tailwind.css listed first",
+        "npx nx build chairly produces no Sass deprecation warning about @import rules",
+        "Tailwind utility classes still apply correctly in the built output",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 25,
+      "passes": true,
+      "notes": "Root cause: styles.scss uses @import 'tailwindcss' which Dart Sass intercepts before PostCSS gets a chance to process it, triggering the 'Sass @import rules are deprecated' warning. The fix: move the Tailwind import to a plain .css file. Angular's build pipeline processes .css global style files with PostCSS directly, bypassing Sass. The styles.scss is kept as the SCSS entry point for any future SCSS-specific global styles (custom variables, mixins, font imports) but must NEVER contain @import for CSS libraries. Order in the styles array matters: tailwind.css first so Tailwind base styles load before any custom overrides in styles.scss."
+    },
+    {
+      "id": "SCF-026",
+      "title": "Update CLAUDE.md to document Tailwind/SCSS separation convention",
+      "description": "As a developer, I want CLAUDE.md updated with the Tailwind + SCSS separation convention so that future implementations never put CSS library imports inside .scss files.",
+      "acceptanceCriteria": [
+        "Root CLAUDE.md Frontend Architecture section updated: document that the global styles setup consists of two files \u2014 tailwind.css (Tailwind v4 @import, processed by PostCSS only, never through Sass) and styles.scss (SCSS-specific global styles: variables, mixins, font declarations)",
+        "Root CLAUDE.md Forbidden section updated: add entry 'No @import of CSS libraries (e.g. Tailwind) inside .scss files \u2014 use a separate plain .css entry file instead'",
+        "Root CLAUDE.md Code Conventions \u2014 Frontend section notes: 'Tailwind v4 is imported in apps/chairly/src/tailwind.css (plain CSS). SCSS global styles go in apps/chairly/src/styles.scss. These two files must never be merged.'",
+        "npx nx affected -t lint test build --base=origin/main passes"
+      ],
+      "priority": 26,
+      "passes": true,
+      "notes": "Documentation-only story. The pattern to document: Tailwind v4 uses PostCSS for @import 'tailwindcss' processing. When this import is placed in a .scss file, Dart Sass intercepts it first and emits a deprecation warning because Sass @import is deprecated in Dart Sass 3.x. The structural fix (done in SCF-025) is to keep the Tailwind import in a plain .css file. This story documents that decision in CLAUDE.md so future Ralph iterations and developers never merge these concerns again. Add to the Forbidden section so it is unambiguous."
+    },
+    {
+      "id": "SCF-027",
+      "title": "Remove manual sortOrder from forms; implement drag & drop reordering",
+      "description": "As a user, I do not want to manually enter a sort order number. Instead I want to reorder services and categories by dragging and dropping rows/items in the list.",
+      "acceptanceCriteria": [
+        "ServiceFormDialogComponent: sortOrder field removed from FormGroup and from the template. The category select now spans the full row (no sort-order sibling column).",
+        "ServiceListPageComponent.onServiceSaved: for create, inject sortOrder as this.services().length before calling store.createService(); for update, inject sortOrder as this.selectedService()!.sortOrder to preserve the existing value.",
+        "CategoryPanelComponent: sortOrder field removed from addForm and editForm. Both FormGroups no longer contain sortOrder. Both sortOrder inputs removed from the template. The 'Order: {{ category.sortOrder }}' line removed from the category list display.",
+        "CategoryPanelComponent.saveNewCategory: sets sortOrder = this.categories().length on the emitted CreateServiceCategoryRequest.",
+        "CategoryPanelComponent.saveEdit: preserves the existing category.sortOrder on the emitted UpdateServiceCategoryRequest.",
+        "CategoryPanelComponent: list items are draggable (HTML5 drag & drop, no third-party library). Each <li> has draggable='true', handles (dragstart), (dragover), (drop). On drop, the categories array is reordered in memory and a new categoriesReordered OutputEmitterRef<ServiceCategoryResponse[]> event is emitted with the reordered array.",
+        "ServiceTableComponent: table rows are draggable (HTML5 drag & drop). Each <tr> has draggable='true', handles (dragstart), (dragover), (drop). On drop, a new servicesReordered OutputEmitterRef<ServiceResponse[]> event is emitted with the reordered array.",
+        "ServiceCategoryStore: new reorderCategories(ordered: ServiceCategoryResponse[]) method. Updates local state immediately (optimistic update: replaces categories with the ordered array with sortOrder set to index). Then calls apiService.update(id, { name, sortOrder: index }) for each category in order.",
+        "ServiceStore: new reorderServices(ordered: ServiceResponse[]) method. Updates local state immediately. Then calls apiService.update(id, { name, description, duration, price, categoryId, sortOrder: index }) for each service in order.",
+        "ServiceListPageComponent: wires (categoriesReordered) from CategoryPanelComponent to categoryStore.reorderCategories($event). Wires (servicesReordered) from ServiceTableComponent to serviceStore.reorderServices($event).",
+        "Unit tests updated: sortOrder-related tests removed or updated in ServiceFormDialogComponent spec, CategoryPanelComponent spec, and store specs. New store method tests added for reorderCategories and reorderServices.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 27,
+      "passes": true,
+      "notes": "Use only HTML5 native drag & drop (dragstart/dragover/drop events with event.dataTransfer). No third-party drag & drop libraries. Track the dragged item index in a component signal (draggedIndex = signal<number | null>(null)). On dragstart set draggedIndex. On dragover call event.preventDefault(). On drop: compute new array order, set draggedIndex to null, emit the reordered event. The store reorder methods should first patchState with the new local order (for instant UI feedback), then fire the API calls in sequence. API call failures can be silently ignored for now (no rollback). The sortOrder for each item after reorder is simply its 0-based index in the new array."
+    },
+    {
+      "id": "SCF-028",
+      "title": "Translate all user-facing UI text to Dutch",
+      "description": "As a user, I want the application interface to be in Dutch (Nederlands) because that is the primary language of the target market.",
+      "acceptanceCriteria": [
+        "service-list-page.component.html: h1 'Services' \u2192 'Diensten'. Button 'Add Service' \u2192 'Dienst toevoegen'. Delete service dialog: title 'Delete Service' \u2192 'Dienst verwijderen', message translated, confirmLabel 'Delete' \u2192 'Verwijderen'. Delete category dialog: title 'Delete Category' \u2192 'Categorie verwijderen', message translated, confirmLabel 'Delete' \u2192 'Verwijderen'.",
+        "service-form-dialog.component.html: dialog title 'Edit Service' \u2192 'Dienst bewerken', 'Add Service' \u2192 'Dienst toevoegen'. Label 'Name' \u2192 'Naam'. Label 'Description' \u2192 'Omschrijving'. Label 'Duration (minutes)' \u2192 'Duur (minuten)'. Label 'Price' \u2192 'Prijs'. Label 'Category' \u2192 'Categorie'. Option 'None' \u2192 'Geen'. Button 'Cancel' \u2192 'Annuleren'. Button 'Save' \u2192 'Opslaan'. Validation message for name \u2192 'Naam is verplicht (max. 150 tekens).'. Validation for description \u2192 'Omschrijving mag maximaal 2000 tekens bevatten.'. Validation for duration \u2192 'Duur is verplicht.'. Validation for price \u2192 'Prijs is verplicht en moet 0 of meer zijn.'.",
+        "service-table.component.html: loading text 'Loading services...' \u2192 'Diensten laden...'. Column header 'Name' \u2192 'Naam'. 'Category' \u2192 'Categorie'. 'Duration' \u2192 'Duur'. 'Price' \u2192 'Prijs'. 'Status' \u2192 'Status' (unchanged). 'Actions' \u2192 'Acties'. Badge 'Active' \u2192 'Actief'. Badge 'Inactive' \u2192 'Inactief'. Button title 'Edit service' \u2192 'Dienst bewerken'. Button text 'Edit' \u2192 'Bewerken'. Button title 'Toggle active' \u2192 'Actief/inactief zetten'. Button text 'Deactivate' \u2192 'Deactiveren', 'Activate' \u2192 'Activeren'. Button title 'Delete service' \u2192 'Dienst verwijderen'. Button text 'Delete' \u2192 'Verwijderen'. Empty state text translated to Dutch.",
+        "category-panel.component.html: header 'Categories' \u2192 'Categorie\u00ebn'. Add button '+ Add' \u2192 '+ Toevoegen'. Input placeholder 'Category name' \u2192 'Categorienaam'. Button 'Save' \u2192 'Opslaan'. Button 'Cancel' \u2192 'Annuleren'. Loading text 'Loading...' \u2192 'Laden...'. Empty state 'No categories yet.' \u2192 'Nog geen categorie\u00ebn.'. Button title 'Edit category' \u2192 'Categorie bewerken'. Button text 'Edit' \u2192 'Bewerken'. Button title 'Delete category' \u2192 'Categorie verwijderen'. Button text 'Delete' \u2192 'Verwijderen'.",
+        "confirmation-dialog.component.ts (shared/ui): default confirmLabel changed from 'Confirm' to 'Bevestigen'. Default cancelLabel changed from 'Cancel' to 'Annuleren'.",
+        "All unit test strings updated where tests assert on rendered text (e.g., button labels, dialog titles).",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 28,
+      "passes": true,
+      "notes": "This story MUST be implemented AFTER SCF-027 (drag & drop / sortOrder removal) because SCF-027 changes the form layout and SCF-028 should translate the final state of each file. Template-only changes \u2014 no TypeScript logic changes except the default input values in ConfirmationDialogComponent. The delete confirmation messages in service-list-page.component.html: service message \u2192 'Weet je zeker dat je deze dienst wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' Category message \u2192 'Weet je zeker dat je deze categorie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' All Playwright e2e tests that assert on English text (e.g., 'Add Service' button, 'Services' h1, 'Categories' panel) must be updated to match the Dutch text."
+    },
+    {
+      "id": "SCF-029",
+      "title": "Fix frontend code structure violations",
+      "description": "As a developer, I want the frontend code to follow the domain folder conventions defined in CLAUDE.md so that the codebase is maintainable and consistent.",
+      "acceptanceCriteria": [
+        "Scan all files under libs/chairly/src/lib/services/. Any TypeScript interface or type definition files (.ts files containing only interfaces/types) found inside util/ must be moved to models/. Update all imports across the codebase to point to the new location.",
+        "Scan all files under libs/chairly/src/lib/services/. Any Angular @Pipe class files found inside util/ must be moved to pipes/. Update all imports across the codebase to point to the new location.",
+        "Scan libs/chairly/src/lib/services/feature/. Any component files (.ts, .html, .scss) placed directly inside feature/ (not inside a named subfolder) must be moved to their own subfolder named after the component (e.g., service-list-page/ subfolder for ServiceListPageComponent). Update all imports and references.",
+        "Scan all component .ts files under libs/chairly/src/lib/services/ and libs/shared/src/lib/. Any component using inline template: '...' must have its template extracted to a separate .html file using templateUrl: './component-name.component.html'. The extracted .html file must be created alongside the .ts file. The inline template: property must be removed.",
+        "If a services.routes.ts (or similarly named routes file) exists inside libs/chairly/src/lib/services/feature/, move it to libs/chairly/src/lib/services/ (the domain root). Update any references to this file in the app routing configuration.",
+        "Remove any .gitkeep files from folders that already contain real files. Only .gitkeep files in truly empty folders should remain.",
+        "All imports updated \u2014 no broken import paths after the moves.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 29,
+      "passes": true,
+      "notes": "These are structural violations found during PR review. When scanning, be thorough \u2014 check every .ts file in the services domain and shared lib. The inline template violation is enforced by ESLint (@angular-eslint/component-max-inline-declarations: { template: 0 }) so fixing this will also resolve ESLint errors. After moving files, run a global search for old import paths to ensure nothing is broken."
+    },
+    {
+      "id": "SCF-030",
+      "title": "Fix ESLint failures in CI",
+      "description": "As a developer, I want ESLint to pass cleanly in CI so that code quality is enforced automatically on every push.",
+      "acceptanceCriteria": [
+        "Run npx nx affected -t lint --base=origin/main and capture all lint errors.",
+        "Fix every lint error found. Do not disable lint rules with eslint-disable comments unless the rule is genuinely inapplicable and documented with a reason.",
+        "Common issues to look for: inline template: in components (must use templateUrl:), missing OnPush change detection strategy, use of @Input()/@Output() decorators instead of signal-based input()/model()/OutputEmitterRef, function calls in templates, missing explicit return types on functions, console statements, any types, cross-domain imports violating Sheriff boundaries.",
+        "npx nx affected -t lint --base=origin/main exits with code 0 (no errors, no warnings treated as errors).",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 30,
+      "passes": true,
+      "notes": "This story should be implemented AFTER SCF-029 because fixing the structural violations (inline templates, wrong folder placement) will resolve many lint errors. Run lint first to capture a full list, then fix systematically. If @angular-eslint/component-max-inline-declarations is not yet in the ESLint config for the libs, check eslint.config.mjs in libs/chairly/ and libs/shared/ \u2014 it should be configured with { template: 0 }."
+    },
+    {
+      "id": "SCF-031",
+      "title": "Configure .NET Aspire to orchestrate API and PostgreSQL",
+      "description": "As a developer, I want .NET Aspire to start the API and a PostgreSQL database together so that I can run the full stack locally without manually starting services.",
+      "acceptanceCriteria": [
+        "In Chairly.AppHost/Program.cs: add a PostgreSQL resource using builder.AddPostgres('postgres') and a database resource using .AddDatabase('chairlydb') (or equivalent names matching the connection string convention).",
+        "The Chairly.Api project is added to Aspire as a resource using builder.AddProject<Projects.Chairly_Api>('api') and has a reference to the database resource via .WithReference(db).",
+        "Chairly.Api reads the connection string from the Aspire-injected connection string named 'chairlydb' (or the name used above). In Chairly.Infrastructure, the DbContext registration uses builder.Configuration.GetConnectionString('chairlydb') or the Aspire-provided environment variable.",
+        "Running dotnet run --project src/backend/Chairly.AppHost starts both the API and the PostgreSQL container without errors.",
+        "The Aspire dashboard shows both the 'api' and 'postgres' resources as healthy.",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes"
+      ],
+      "priority": 31,
+      "passes": true,
+      "notes": "Use the Aspire hosting packages: Aspire.Hosting.PostgreSQL for PostgreSQL. Add the NuGet package Aspire.Hosting.PostgreSQL to Chairly.AppHost if not present. For the API to read the injected connection string, ensure Chairly.Api references Aspire.ServiceDefaults or uses builder.AddServiceDefaults() in Program.cs. The connection string name used in AddDatabase must match GetConnectionString() call in the Infrastructure layer. Check existing DbContext registration in Chairly.Infrastructure for the current connection string name."
+    },
+    {
+      "id": "SCF-032",
+      "title": "Create admin dashboard shell with navigation",
+      "description": "As a user, I want the application to have a consistent admin dashboard layout with a sidebar navigation menu so that I can navigate between features easily and the application looks professional.",
+      "acceptanceCriteria": [
+        "Create a shared shell/layout component at libs/shared/src/lib/ui/shell/ named ShellComponent (selector: chairly-shell). It must use OnPush change detection and templateUrl.",
+        "ShellComponent renders a sidebar navigation on the left and a <router-outlet> content area on the right. The sidebar must include a navigation link for 'Diensten' (Services) pointing to /diensten.",
+        "The sidebar must be styled using Tailwind CSS v4 classes to look like a professional admin dashboard: dark sidebar background (e.g. bg-gray-900 or bg-slate-800), white text, hover states on nav items, active link highlighting.",
+        "The main app routing in apps/chairly/src/app/app.routes.ts wraps all feature routes inside the ShellComponent layout. The /diensten route loads the services domain routes lazily.",
+        "The services domain route is updated: the URL path is 'diensten' (Dutch) instead of 'services' if it currently uses English. The lazy-loaded route still points to the services domain routes file.",
+        "The root path '/' redirects to '/diensten'.",
+        "ShellComponent is exported from libs/shared/src/lib/index.ts (or equivalent barrel file).",
+        "Existing unit tests for the app still pass. Update any route-related tests to use the new paths.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 32,
+      "passes": true,
+      "notes": "The shell should be minimal but polished \u2014 a vertical sidebar on the left (~240px wide) with the app name/logo at the top, navigation links in the middle, and the router-outlet taking up the remaining space. Use RouterLink and RouterLinkActive for navigation. The active route class should be applied via routerLinkActive='bg-gray-700' (or similar). Keep the shell component simple \u2014 no complex state management needed. The sidebar nav items can be hardcoded for now (only 'Diensten' needed). All user-facing text in the shell must be in Dutch."
+    },
+    {
+      "id": "SCF-033",
+      "title": "Fix modal/dialog positioning \u2014 center on screen",
+      "description": "As a user, I want popup dialogs to always appear centered on my screen so that they are easy to see and interact with.",
+      "acceptanceCriteria": [
+        "Identify all dialog/modal components in the codebase (e.g., ServiceFormDialogComponent, ConfirmationDialogComponent in shared/ui, and any others).",
+        "Each dialog must render a full-screen overlay (position: fixed, inset-0, z-50) with a semi-transparent background (bg-black/50 or equivalent).",
+        "The dialog box itself must be centered both horizontally and vertically within the overlay using Tailwind classes: flex items-center justify-center on the overlay element.",
+        "The dialog box must have a maximum width (e.g., max-w-lg or max-w-md) and be responsive \u2014 on small screens it should not overflow horizontally.",
+        "When a dialog is open, the page behind it must not be scrollable (overflow-hidden on body, or equivalent).",
+        "Opening any dialog/popup in the application shows it centered on the screen at all viewport sizes.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 33,
+      "passes": true,
+      "notes": "The current issue is that the popup opens in the top-left corner of the screen. This is typically caused by the overlay using position: absolute or by missing flex centering classes. The fix is to ensure the overlay element has: class='fixed inset-0 z-50 flex items-center justify-center bg-black/50' and the inner dialog box has: class='bg-white rounded-lg shadow-xl w-full max-w-lg mx-4'. Check both ServiceFormDialogComponent and ConfirmationDialogComponent (and any others). Also check if the dialog is rendered inside a positioned parent \u2014 if so, use a CDK portal or move the dialog rendering to the document body level."
+    },
+    {
+      "id": "SCF-034",
+      "title": "Add Playwright E2E tests for the services feature",
+      "description": "As a developer, I want comprehensive E2E tests for the services management feature so that regressions are caught automatically.",
+      "acceptanceCriteria": [
+        "Create E2E test file at apps/chairly-e2e/src/services.spec.ts.",
+        "Test: navigating to /diensten shows the 'Diensten' page heading and the services table.",
+        "Test: clicking 'Dienst toevoegen' opens a centered dialog with the service form fields (Naam, Omschrijving, Duur, Prijs, Categorie).",
+        "Test: filling in the form and clicking 'Opslaan' calls the API and shows the new service in the table (mock or intercept the API response).",
+        "Test: clicking 'Bewerken' on a service row opens the form dialog pre-filled with that service's data.",
+        "Test: clicking 'Verwijderen' on a service row shows the confirmation dialog; clicking 'Verwijderen' in the dialog removes the service from the table.",
+        "Test: the category panel shows the 'Categorie\u00ebn' header and a list of categories.",
+        "Test: clicking '+ Toevoegen' in the category panel shows an input field for a new category name.",
+        "All tests must pass with npx nx e2e chairly-e2e.",
+        "Tests use page.route() to intercept and mock API calls \u2014 do not depend on a running backend.",
+        "npx nx affected -t lint --base=origin/main passes"
+      ],
+      "priority": 34,
+      "passes": true,
+      "notes": "Use Playwright's page.route() to intercept API calls and return mock data. This way the tests are fast and deterministic without needing a real backend. The base URL for the dev server is configured in playwright.config.ts \u2014 check that it points to the correct port (typically 4200). Use data-testid attributes sparingly \u2014 prefer role-based or text-based selectors (getByRole, getByText) following Playwright best practices. The tests must run in CI with the app served statically or with a dev server started by Playwright's webServer config."
+    },
+    {
+      "id": "SCF-035",
+      "title": "Fix Nx Daemon EPIPE error on Windows",
+      "description": "As a developer, I want the Nx Daemon to work reliably (or be disabled cleanly) so that I don't see 'Nx Daemon is disabled' warnings and file changes are detected correctly.",
+      "acceptanceCriteria": [
+        "Investigate the root cause of the EPIPE error in the Nx daemon log (write EPIPE on the socket connection).",
+        "If the issue is Windows-specific and cannot be fixed reliably, disable the daemon by setting 'useDaemonProcess': false in nx.json. This prevents misleading 'daemon disabled' warnings and makes Nx behavior predictable.",
+        "If a config fix is possible (e.g., increasing socket timeout, using a different IPC mechanism), apply it instead of disabling.",
+        "After the fix, running any nx command (e.g., npx nx show projects) does not print 'Nx Daemon is disabled' or EPIPE errors.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 35,
+      "passes": true,
+      "notes": "The EPIPE error occurs because the Nx daemon socket connection is broken mid-request on Windows (named pipe issue). The simplest fix is to add 'useDaemonProcess': false to the root nx.json. This disables the daemon entirely and makes Nx run in-process, which is slower but reliable. Check nx.json at src/frontend/chairly/nx.json \u2014 add the useDaemonProcess property. If the daemon is already configured but broken, also run 'npx nx daemon --stop' before the fix to ensure a clean state."
+    },
+    {
+      "id": "SCF-036",
+      "title": "Apply EF Core migrations automatically on API startup",
+      "description": "As a developer, I want the database schema to be created/migrated automatically when the API starts so that the ServiceCategories and Services tables exist and API calls succeed without manual migration steps.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.Api/Program.cs, add an async scope before app.Run() that retrieves ChairlyDbContext from the DI container and calls Database.MigrateAsync()",
+        "The migration call must run after the app is built (after var app = builder.Build()) but before app.Run()",
+        "Use CreateAsyncScope() and await db.Database.MigrateAsync(CancellationToken.None) to apply all pending EF Core migrations on startup",
+        "When the Aspire AppHost starts the API, the postgres database is automatically migrated \u2014 ServiceCategories and Services tables are created",
+        "GET /api/service-categories returns 200 (empty list) instead of 500",
+        "GET /api/services returns 200 (empty list) instead of 500",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes"
+      ],
+      "priority": 36,
+      "passes": true,
+      "notes": "The existing EF Core migrations (InitialCreate + AddAuditFields) already include the ServiceCategories and Services table definitions \u2014 they are simply never applied because Program.cs does not call MigrateAsync(). Add these lines in Program.cs after 'var app = builder.Build();': await using (var scope = app.Services.CreateAsyncScope()) { var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>(); await db.Database.MigrateAsync(); }"
+    },
+    {
+      "id": "SCF-037",
+      "title": "Add Scalar API reference link to .NET Aspire dashboard",
+      "description": "As a developer, I want a direct clickable link to the Scalar API documentation page in the .NET Aspire dashboard so I can quickly navigate to it without manually constructing the URL.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.AppHost/Program.cs, configure the 'api' project resource with a URL annotation that surfaces a 'Scalar' link in the Aspire dashboard",
+        "The Scalar link must point to the http endpoint of the API at path /scalar",
+        "When the Aspire dashboard is open, the API resource shows a clickable link (labeled 'Scalar' or 'API Docs') that opens the Scalar page",
+        "dotnet build src/backend/Chairly.slnx passes"
+      ],
+      "priority": 37,
+      "passes": true,
+      "notes": "Scalar is already mapped in Program.cs via app.MapScalarApiReference() which serves at /scalar. The Aspire dashboard does not automatically surface this URL. In Aspire, use the WithUrls() extension or configure endpoint annotations on the project resource builder. Look at how Aspire resource URLs are configured in the Aspire docs or check if IResourceWithEndpoints supports adding a custom URL annotation. A possible approach: use .WithAnnotation(new ResourceCommandAnnotation(...)) or .WithUrls(ctx => [...]) to add a named URL."
+    },
+    {
+      "id": "SCF-038",
+      "title": "Implement custom brand theme \u2014 soft violet and soft pink",
+      "description": "As a user, I want the application to have a premium, friendly but professional look & feel with a soft violet and soft pink color scheme so it feels like a high-quality salon management tool.",
+      "acceptanceCriteria": [
+        "Define a custom Tailwind CSS v4 color palette in apps/chairly/src/tailwind.css using @theme directive with primary (violet) and accent (pink) color tokens",
+        "Primary: soft violet (e.g. #7C3AED to #A78BFA range) \u2014 choose a pleasing, muted palette",
+        "Accent: soft pink (e.g. #F9A8D4 to #EC4899 range) \u2014 choose a pleasing, muted palette",
+        "Update the admin dashboard shell (sidebar/top navigation) to use the primary violet color scheme",
+        "Update primary action buttons to use the violet primary color",
+        "The overall look is premium and professional \u2014 avoid bright/neon colors, use soft/muted tones",
+        "All existing functionality remains intact \u2014 no regressions",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 38,
+      "passes": true,
+      "notes": "Tailwind CSS v4 uses @theme { } blocks in the CSS entry file (apps/chairly/src/tailwind.css) to define design tokens as CSS custom properties. Define --color-primary-* (violet) and --color-accent-* (pink) inside @theme. Then apply these via Tailwind utility classes in component templates. Follow the existing Tailwind v4 pattern \u2014 the tailwind.css file must not be merged with styles.scss."
+    },
+    {
+      "id": "SCF-039",
+      "title": "Add dark theme toggle with CSS custom properties",
+      "description": "As a user, I want to switch between a light and dark theme so that I can use the application comfortably in different lighting conditions.",
+      "acceptanceCriteria": [
+        "Define dark theme CSS custom property overrides using Tailwind v4's dark variant or a [data-theme='dark'] selector on the html element",
+        "Add a theme toggle button (sun/moon icon) in the admin dashboard shell navigation bar (AppShellComponent)",
+        "Clicking the toggle switches a data-theme='dark' attribute on the <html> element",
+        "The selected theme is persisted in localStorage (key: 'chairly-theme') and restored on page load",
+        "Dark theme uses dark backgrounds (e.g. slate-900/800) with light text while maintaining the violet/pink accents",
+        "Create a ThemeService in libs/shared/src/lib/ui/ that manages theme state as a signal and reads/writes localStorage",
+        "The ThemeService uses inject(DOCUMENT) to set document.documentElement's data-theme attribute",
+        "All pages render correctly in both themes \u2014 no broken contrast or invisible elements",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 39,
+      "passes": true,
+      "notes": "Tailwind CSS v4 dark mode should be configured to use a selector strategy targeting html[data-theme='dark']. In tailwind.css, use @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)) or the Tailwind v4 .dark class approach. The ThemeService should be providedIn: 'root' and placed in libs/shared/src/lib/ui/. Use inject(DOCUMENT) from @angular/common to safely access the DOM. Toggle button must use self-closing tags per CLAUDE.md conventions. Templates must be in separate .html files."
+    },
+    {
+      "id": "SCF-040",
+      "title": "Rebalance brand palette to softer violet/pink",
+      "description": "As a user, I want a softer violet + pink look so the UI feels premium without reading as overly purple.",
+      "acceptanceCriteria": [
+        "Adjust the Tailwind theme tokens in src/frontend/chairly/apps/chairly/src/tailwind.css so primary appears softer/less saturated and accent pink is balanced",
+        "Update UI usages where needed so the result is clearly soft violet + soft pink rather than strongly purple",
+        "Keep contrast accessible for text, focus, and interactive states in both light and dark theme",
+        "npx nx test shared-lib --skip-nx-cache passes",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 40,
+      "passes": true,
+      "notes": "Current theme is perceived as too purple. Rebalance tokens rather than removing the violet/pink direction. Avoid neon or highly saturated values."
+    },
+    {
+      "id": "SCF-041",
+      "title": "Set Dutch locale as frontend default",
+      "description": "As a Dutch user, I want nl-NL formatting by default so currency and decimals render in Dutch format.",
+      "acceptanceCriteria": [
+        "In src/frontend/chairly/apps/chairly/src/app/app.config.ts, register Dutch locale data and provide LOCALE_ID='nl-NL'",
+        "Ensure currency/number formatting defaults to Dutch conventions (e.g., comma decimal separator and euro formatting)",
+        "Service table prices no longer render in US dollar style by default",
+        "Add or update tests that validate locale-dependent formatting behavior where practical",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 41,
+      "passes": true,
+      "notes": "Investigate CurrencyPipe defaults in ServiceTableComponent and ensure Dutch locale is applied app-wide."
+    },
+    {
+      "id": "SCF-042",
+      "title": "Improve action button clickability and affordance",
+      "description": "As a user, I want edit/deactivate/delete actions to look clearly clickable so I can confidently interact with them.",
+      "acceptanceCriteria": [
+        "Update action button styles in src/frontend/chairly/libs/chairly/src/lib/services/ui/service-table.component.html and src/frontend/chairly/libs/chairly/src/lib/services/ui/category-panel.component.html",
+        "Buttons must have clear visual affordance at rest (not only on hover), with distinct hover/active/focus-visible states",
+        "Keyboard focus indicators are obvious and meet accessible contrast",
+        "Do not regress current functionality or emitted events",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 42,
+      "passes": true,
+      "notes": "Current text-like buttons are hard to identify as interactive. Use stronger button treatment while keeping the design refined."
+    },
+    {
+      "id": "SCF-043",
+      "title": "Fix add-category form background in dark mode",
+      "description": "As a dark-theme user, I want the add-category form to match dark surfaces so no light block appears.",
+      "acceptanceCriteria": [
+        "Update add-category form container in src/frontend/chairly/libs/chairly/src/lib/services/ui/category-panel.component.html to use theme-aware/dark-aware background classes",
+        "In dark mode, the add form background and borders visually integrate with surrounding panel",
+        "Light mode appearance remains clean and readable",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 43,
+      "passes": true,
+      "notes": "Current bg-primary-50 remains light in dark mode and breaks visual consistency."
+    },
+    {
+      "id": "SCF-044",
+      "title": "Make startup migration behavior production-safe and explicit",
+      "description": "As an operator, I want migration execution behavior to be explicit and safe in production rollouts.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.Api/Program.cs, make migration-on-start behavior explicitly controlled by configuration/env flag with sensible default",
+        "Document the intended rollout model for production (dedicated migrator OR serialized/single-leader startup migration strategy)",
+        "If startup migration remains enabled, implementation must avoid unsafe multi-instance race behavior",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 44,
+      "passes": true,
+      "notes": "Automatic production migrations are acceptable when operational controls are explicit. Avoid hidden coupling and unsafe concurrent migration attempts."
+    },
+    {
+      "id": "SCF-045",
+      "title": "Use application shutdown token for EF migrations",
+      "description": "As an operator, I want startup migrations to honor shutdown so deploy/rollback termination is graceful.",
+      "acceptanceCriteria": [
+        "Replace CancellationToken.None in src/backend/Chairly.Api/Program.cs migration call with an app lifetime shutdown-aware token",
+        "Code remains async-safe and preserves existing behavior when no shutdown is requested",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 45,
+      "passes": true,
+      "notes": "Use app.Lifetime.ApplicationStopping or linked token so long migrations can be cancelled during shutdown."
+    },
+    {
+      "id": "SCF-046",
+      "title": "Fix first-run migration bootstrap failure on fresh PostgreSQL database",
+      "description": "As a developer, I want API startup migrations to succeed reliably on a brand new database so AppHost can boot without '__EFMigrationsHistory does not exist' failures.",
+      "acceptanceCriteria": [
+        "Align EF Core provider package versions in backend projects (including Npgsql.EntityFrameworkCore.PostgreSQL) to the same EF patch version used elsewhere to remove Relational assembly conflict warnings",
+        "Starting the backend against a fresh PostgreSQL database applies migrations successfully and does not crash on '__EFMigrationsHistory' lookup",
+        "Migrations still run under the configured startup migration flow (Migrations:RunOnStartup=true)",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 46,
+      "passes": true,
+      "notes": "Observed in Aspire logs: relation '__EFMigrationsHistory' does not exist during startup migration on clean DB. Also observed MSB3277 warning due to Microsoft.EntityFrameworkCore.Relational version mismatch (10.0.0 vs 10.0.3), likely caused by Npgsql.EntityFrameworkCore.PostgreSQL pinned at 10.0.0 in Chairly.Infrastructure.csproj."
+    },
+    {
+      "id": "SCF-047",
+      "title": "Persist local PostgreSQL data across AppHost restarts",
+      "description": "As a developer, I want my local database data to survive restarts so previously entered records are not lost each time the stack is restarted.",
+      "acceptanceCriteria": [
+        "Configure src/backend/Chairly.AppHost/Program.cs so the postgres container uses persistent storage (named volume or stable bind mount) instead of ephemeral storage",
+        "Document where local PostgreSQL data is stored and how to reset it intentionally when needed",
+        "After restart of the local Aspire stack, previously inserted service/category records remain available",
+        "dotnet build src/backend/Chairly.AppHost/Chairly.AppHost.csproj passes",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes"
+      ],
+      "priority": 47,
+      "passes": true,
+      "notes": "Current AddPostgres(\"postgres\").AddDatabase(\"ChairlyDb\") setup appears to use ephemeral storage in local runs, causing data loss after restart. Use Aspire Postgres persistent volume support (e.g., WithDataVolume or equivalent stable mount strategy)."
+    },
+    {
+      "id": "SCF-048",
+      "title": "Fix dark-mode action button and table-row hover contrast regressions",
+      "description": "As a user, I want clear dark-mode contrast so actions and hovered rows remain readable and visually consistent.",
+      "acceptanceCriteria": [
+        "In dark mode, service/category action buttons (edit/deactivate/delete) use inverted dark-theme styling: colored background with white text (not light background with colored text)",
+        "Hover/active/focus-visible states for these buttons remain clear and accessible in dark mode",
+        "In dark mode, table row hover state no longer produces white background with white text; hovered rows remain fully readable",
+        "Apply fixes in relevant templates/styles (including service table and category panel) without regressing light mode",
+        "npx nx test chairly-lib --skip-nx-cache passes",
+        "npx nx test shared-lib --skip-nx-cache passes"
+      ],
+      "priority": 48,
+      "passes": true,
+      "notes": "Current dark-mode overrides create low-contrast combinations: action buttons appear too bright with colored text, and table row hover can become white background with light text. Ensure dark-mode-specific classes/overrides handle these states explicitly."
     }
   ]
 }

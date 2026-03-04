@@ -20,7 +20,7 @@
             "input": "apps/chairly/public"
           }
         ],
-        "styles": ["apps/chairly/src/styles.scss"]
+        "styles": ["apps/chairly/src/tailwind.css", "apps/chairly/src/styles.scss"]
       },
       "configurations": {
         "production": {
@@ -49,6 +49,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/chairly/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "chairly:build:production"

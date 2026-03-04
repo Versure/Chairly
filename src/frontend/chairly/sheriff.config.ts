@@ -4,6 +4,7 @@ export const sheriffConfig: SheriffConfig = {
   version: 1,
 
   tagging: {
+    'libs/chairly/src': ['chairly-lib'],
     'libs/chairly/src/lib': {
       'bookings/<layer>': ['domain:bookings', 'layer:<layer>'],
       'clients/<layer>': ['domain:clients', 'layer:<layer>'],
@@ -12,6 +13,7 @@ export const sheriffConfig: SheriffConfig = {
       'billing/<layer>': ['domain:billing', 'layer:<layer>'],
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
     },
+    'libs/shared/src': ['shared'],
     'libs/shared/src/lib': {
       'ui': ['shared', 'layer:ui'],
       'data-access': ['shared', 'layer:data-access'],
@@ -20,17 +22,27 @@ export const sheriffConfig: SheriffConfig = {
   },
 
   depRules: {
+    // App (root) can depend on any library barrel or shared
+    'root': ['chairly-lib', 'shared'],
+
+    // chairly-lib barrel re-exports from domain layers
+    'chairly-lib': ['domain:services', 'shared'],
+
     // Domain isolation: domains cannot depend on each other
     'domain:*': [sameTag, 'shared'],
 
     // Layer rules within a domain:
-    // feature -> ui, data-access, util
-    // ui -> util only
-    // data-access -> util only
+    // feature -> ui, data-access, models, pipes, util, shared
+    // ui -> models, pipes, util, shared
+    // data-access -> models, util, shared
+    // pipes -> util (pipes can use pure utility functions)
+    // models -> nothing (within domain)
     // util -> nothing (within domain)
-    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:util'],
-    'layer:ui': ['layer:util'],
-    'layer:data-access': ['layer:util'],
+    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:models', 'layer:pipes', 'layer:util', 'shared'],
+    'layer:ui': ['layer:models', 'layer:pipes', 'layer:util', 'shared'],
+    'layer:data-access': ['layer:models', 'layer:util', 'shared'],
+    'layer:pipes': ['layer:util'],
+    'layer:models': noDependencies,
     'layer:util': noDependencies,
 
     // Shared can only depend on other shared
