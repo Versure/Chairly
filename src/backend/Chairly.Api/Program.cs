@@ -53,4 +53,17 @@ app.UseHttpsRedirection();
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
 
-app.Run();
+{
+    var scope = app.Services.CreateAsyncScope();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
+        await db.Database.MigrateAsync(CancellationToken.None).ConfigureAwait(false);
+    }
+    finally
+    {
+        await scope.DisposeAsync().ConfigureAwait(false);
+    }
+}
+
+await app.RunAsync().ConfigureAwait(false);
