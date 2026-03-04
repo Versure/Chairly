@@ -895,7 +895,7 @@
         "npx nx test shared-lib --skip-nx-cache passes"
       ],
       "priority": 48,
-      "passes": false,
+      "passes": true,
       "notes": "Current dark-mode overrides create low-contrast combinations: action buttons appear too bright with colored text, and table row hover can become white background with light text. Ensure dark-mode-specific classes/overrides handle these states explicitly."
     }
   ]
