@@ -9,31 +9,31 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 @theme {
-  /* Primary: soft violet palette */
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
-  --color-primary-950: #2e1065;
+  /* Primary: soft muted violet (desaturated, less vivid than standard violet) */
+  --color-primary-50: #f5f4fb;
+  --color-primary-100: #ede9fa;
+  --color-primary-200: #dbd5f5;
+  --color-primary-300: #c3b9ed;
+  --color-primary-400: #a99bdf;
+  --color-primary-500: #8f7fcf;
+  --color-primary-600: #7362b8;
+  --color-primary-700: #5e4e9a;
+  --color-primary-800: #4d3f7f;
+  --color-primary-900: #3f3367;
+  --color-primary-950: #251e3d;
 
-  /* Accent: soft pink palette */
+  /* Accent: soft dusty rose (muted pink, less vivid than hot pink) */
   --color-accent-50: #fdf2f8;
   --color-accent-100: #fce7f3;
-  --color-accent-200: #fbcfe8;
-  --color-accent-300: #f9a8d4;
-  --color-accent-400: #f472b6;
-  --color-accent-500: #ec4899;
-  --color-accent-600: #db2777;
-  --color-accent-700: #be185d;
-  --color-accent-800: #9d174d;
-  --color-accent-900: #831843;
-  --color-accent-950: #500724;
+  --color-accent-200: #f9cfe8;
+  --color-accent-300: #f4a8d4;
+  --color-accent-400: #e87db9;
+  --color-accent-500: #d45e9e;
+  --color-accent-600: #b94686;
+  --color-accent-700: #9a346d;
+  --color-accent-800: #7d2b5a;
+  --color-accent-900: #68244b;
+  --color-accent-950: #3e1330;
 }
 
 /* Dark theme overrides applied when html[data-theme="dark"] is set */
