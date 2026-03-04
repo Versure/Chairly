@@ -2,6 +2,16 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-036
+- Added automatic EF Core migration call in `src/backend/Chairly.Api/Program.cs`
+- Used try/finally pattern instead of `await using` to satisfy CA2007/MA0004 ConfigureAwait analyzers
+- Changed `app.Run()` to `await app.RunAsync().ConfigureAwait(false)` as required by CA1849
+- Files changed: Program.cs, prd.json
+- **Learnings for future iterations:**
+  - `await using` triggers CA2007/MA0004 analyzers — use try/finally with `await scope.DisposeAsync().ConfigureAwait(false)` instead
+  - After introducing `await`, `app.Run()` must become `await app.RunAsync().ConfigureAwait(false)`
+---
+
 ## 2026-03-04 - SCF-035
 - Added `"useDaemonProcess": false` to `src/frontend/chairly/nx.json`
 - Verified `npx nx show projects` produces no EPIPE or daemon errors
@@ -597,4 +607,27 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Previous iterations (SCF-016 through SCF-028) already fixed most structural violations as they implemented the feature. SCF-029 was likely added as a PR review checkpoint but by the time it runs, violations may already be resolved.
   - When a story's acceptance criteria all check out without any code changes, it's valid to mark it as passes: true — the structure verification itself is the work.
   - prd.json can have JSON syntax errors (missing commas) if multiple iterations write to it concurrently or improperly. Always validate with python3 json.load() before relying on it.
+---
+
+## 2026-03-04 - CI Fix (post-SCF-034)
+- Fixed 3 E2E test failures (services.spec.ts) that caused CI to fail twice:
+  1. Test "Opslaan shows new service": `page.route()` with `route.continue()` sends requests to network,
+     NOT to the next registered handler. Fixed by using a single handler that covers all HTTP methods.
+  2. Test "Bewerken pre-fill": Angular signal inputs don't propagate synchronously between parent
+     `signal.set()` and child component `open()` call. Fixed by passing service directly as `open(service)`
+     parameter in `service-form-dialog.component.ts`.
+  3. Test "category panel shows Knippen": Timing issue — no explicit wait for services to load.
+     Fixed by adding `await expect(page.getByText('Herenknippen')).toBeVisible()` before category check.
+     Also scoped locator to `chairly-category-panel` for precision.
+- Also fixed "Verwijderen" test to use same single-handler pattern for consistency.
+- CI (Frontend + Backend) now green.
+- Files changed: services.spec.ts, service-form-dialog.component.ts, service-list-page.component.ts
+- **Learnings for future iterations:**
+  - In Playwright, `route.continue()` = forward to network, NOT to next registered `page.route()` handler.
+    Use a single handler per URL pattern, branching on request.method() inside.
+  - Angular signal-based `input()` propagation is async (change-detection-bound). When calling a method
+    on a child component immediately after setting a parent signal, the child's input() may still be stale.
+    Fix: pass the value explicitly as a method parameter.
+  - Always wait for data-dependent content (`getByText('...')`) before asserting on secondary content
+    that depends on the same data load.
 ---

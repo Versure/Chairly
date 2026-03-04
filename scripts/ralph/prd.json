@@ -707,7 +707,7 @@
         "dotnet test src/backend/Chairly.slnx passes"
       ],
       "priority": 36,
-      "passes": false,
+      "passes": true,
       "notes": "The existing EF Core migrations (InitialCreate + AddAuditFields) already include the ServiceCategories and Services table definitions — they are simply never applied because Program.cs does not call MigrateAsync(). Add these lines in Program.cs after 'var app = builder.Build();': await using (var scope = app.Services.CreateAsyncScope()) { var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>(); await db.Database.MigrateAsync(); }"
     },
     {
