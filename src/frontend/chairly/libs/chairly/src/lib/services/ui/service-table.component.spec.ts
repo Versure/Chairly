@@ -1,8 +1,13 @@
+import { registerLocaleData } from '@angular/common';
+import localeNl from '@angular/common/locales/nl';
+import { DEFAULT_CURRENCY_CODE, LOCALE_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
 import { ServiceResponse } from '../models';
 import { ServiceTableComponent } from './service-table.component';
+
+registerLocaleData(localeNl);
 
 const mockActiveService: ServiceResponse = {
   id: '1',
@@ -43,6 +48,10 @@ describe('ServiceTableComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ServiceTableComponent],
+      providers: [
+        { provide: LOCALE_ID, useValue: 'nl-NL' },
+        { provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ServiceTableComponent);
@@ -79,6 +88,12 @@ describe('ServiceTableComponent', () => {
   it('should display duration via DurationPipe', () => {
     const firstRow = fixture.nativeElement.querySelector('tbody tr') as HTMLTableRowElement;
     expect(firstRow.textContent).toContain('30 min');
+  });
+
+  it('should format price using Dutch (nl-NL) locale', () => {
+    const firstRow = fixture.nativeElement.querySelector('tbody tr') as HTMLTableRowElement;
+    // Dutch locale formats EUR currency with comma as decimal separator, e.g. "€ 25,00"
+    expect(firstRow.textContent).toMatch(/€\s*25[,.]00/);
   });
 
   it('should show active badge for active services', () => {

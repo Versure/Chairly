@@ -791,7 +791,7 @@
         "npx nx test chairly-lib --skip-nx-cache passes"
       ],
       "priority": 41,
-      "passes": false,
+      "passes": true,
       "notes": "Investigate CurrencyPipe defaults in ServiceTableComponent and ensure Dutch locale is applied app-wide."
     },
     {
