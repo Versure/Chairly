@@ -64,40 +64,48 @@ var runMigrations = app.Configuration.GetValue<bool>("Migrations:RunOnStartup", 
 
 if (runMigrations)
 {
-    var scope = app.Services.CreateAsyncScope();
+    var stoppingToken = app.Lifetime.ApplicationStopping;
+
+    // Use a dedicated scope/connection for the advisory lock so that the migration
+    // scope can manage its own connection lifecycle. This allows EF Core to correctly
+    // bootstrap __EFMigrationsHistory on a fresh database (pre-opening the migration
+    // connection bypasses EF Core's own connection setup and breaks the history check).
+    var lockScope = app.Services.CreateAsyncScope();
     try
     {
-        var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
+        var dbLock = lockScope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
 
-        var stoppingToken = app.Lifetime.ApplicationStopping;
+        await dbLock.Database.OpenConnectionAsync(stoppingToken).ConfigureAwait(false);
+        var lockConn = dbLock.Database.GetDbConnection();
 
-        await db.Database.OpenConnectionAsync(stoppingToken).ConfigureAwait(false);
-        var conn = db.Database.GetDbConnection();
-
-        using (var lockCmd = conn.CreateCommand())
+        using (var lockCmd = lockConn.CreateCommand())
         {
             lockCmd.CommandText = "SELECT pg_advisory_lock(1000000001)";
             await lockCmd.ExecuteNonQueryAsync(stoppingToken).ConfigureAwait(false);
         }
 
+        var migrateScope = app.Services.CreateAsyncScope();
         try
         {
+            var db = migrateScope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
             await db.Database.MigrateAsync(stoppingToken).ConfigureAwait(false);
         }
         finally
         {
-            using (var unlockCmd = conn.CreateCommand())
+            await migrateScope.DisposeAsync().ConfigureAwait(false);
+
+            using (var unlockCmd = lockConn.CreateCommand())
             {
                 unlockCmd.CommandText = "SELECT pg_advisory_unlock(1000000001)";
                 await unlockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            await db.Database.CloseConnectionAsync().ConfigureAwait(false);
+            await dbLock.Database.CloseConnectionAsync().ConfigureAwait(false);
         }
     }
     finally
     {
-        await scope.DisposeAsync().ConfigureAwait(false);
+        await lockScope.DisposeAsync().ConfigureAwait(false);
     }
 }
 
