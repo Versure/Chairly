@@ -72,6 +72,10 @@ Interfaces: `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>`, `IMed
 - Database-per-tenant: all entities carry `TenantId`, tenant resolution via middleware
 - Test coverage: unit tests for handlers, integration tests for API endpoints
 
+**Async patterns in Program.cs (analyzer rules):**
+- Avoid `await using` for `IAsyncDisposable` scopes — use try/finally with `await scope.DisposeAsync().ConfigureAwait(false)` instead (required by CA2007/MA0004)
+- As soon as any `await` is introduced in Program.cs, change `app.Run()` to `await app.RunAsync().ConfigureAwait(false)` (required by CA1849)
+
 ## Frontend Architecture — Nx Monorepo with DDD & Sheriff (ADR-006)
 
 **Workspace:** `src/frontend/chairly/` — Nx monorepo with apps/libs layout.
@@ -121,13 +125,16 @@ src/frontend/chairly/
 - `shared/` cannot import from any domain
 - Within a domain: `feature/` → `ui/`, `data-access/`, `models/`, `pipes/`, `util/`. `ui/` → `models/`, `pipes/`, `util/` only. `data-access/` → `models/`, `util/` only.
 
-**Domain folder conventions:**
-- `models/` — TypeScript interfaces and types that match backend DTOs. Never mix utility functions into this folder.
-- `pipes/` — Angular `@Pipe` classes only. One file per pipe.
-- `util/` — Pure TypeScript utility functions (no Angular constructs). No interfaces, no pipes.
-- `feature/{feature-name}/` — Each smart (container) component gets its own subfolder. Never place component files directly in `feature/`.
-- `{domain}.routes.ts` — Route configuration lives at the **domain root**, not inside `feature/`.
-- `.gitkeep` files must be removed as soon as a folder contains real files.
+**Domain folder conventions — checklist (verify before creating any file):**
+
+| File type | Correct folder | Common mistake |
+|---|---|---|
+| TypeScript interfaces/DTOs | `models/` | Putting them in `util/` |
+| Angular `@Pipe` classes | `pipes/` | Putting them in `util/` |
+| Pure TS utility functions | `util/` | No interfaces or pipes here |
+| Smart (container) components | `feature/{feature-name}/` subfolder | Placing files directly in `feature/` |
+| Route configuration | `{domain}.routes.ts` at **domain root** | Placing it inside `feature/` |
+| `.gitkeep` | Delete immediately when real files are added | Leaving it after the folder is populated |
 
 ## Code Conventions — Frontend
 
@@ -142,7 +149,8 @@ src/frontend/chairly/
 - Lazy-loaded routes per domain
 - Each domain layer has dedicated subfolders: `models/` for interfaces, `pipes/` for Angular pipes, `util/` for pure functions. Routes file (`{domain}.routes.ts`) lives at the **domain root**, not inside `feature/`. Each smart component inside `feature/` has its own subfolder.
 - Component prefix: `chairly-` (e.g. `<chairly-booking-list>`)
-- **UI language is Dutch (Nederlands).** All user-facing text must be in Dutch: labels, button text, placeholders, validation/error messages, empty states, dialog titles, loading indicators, table headers, and all other UI copy. English is only acceptable in code identifiers, comments, and technical documentation.
+- **UI language is Dutch (Nederlands) — write Dutch from the first keystroke.** Do not write English UI first and translate later. Every label, button, placeholder, header, validation message, empty state, loading indicator, and dialog title must be Dutch when first written. Common translations: Save→Opslaan, Cancel→Annuleren, Add→Toevoegen, Edit→Bewerken, Delete→Verwijderen, Active→Actief, Inactive→Inactief, Loading→Laden, Confirm→Bevestigen.
+- Register Dutch locale in `app.config.ts`: call `registerLocaleData(localeNl)`, and provide both `{ provide: LOCALE_ID, useValue: 'nl-NL' }` and `{ provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' }` — `LOCALE_ID` alone does not change the currency default of `CurrencyPipe`.
 - No `any` types in TypeScript
 - No `console` statements (use proper logging)
 - Explicit return types on all functions
@@ -152,6 +160,32 @@ src/frontend/chairly/
 - **Templates must always be in a separate `.html` file** using `templateUrl:`. Inline `template:` is forbidden and enforced by ESLint (`@angular-eslint/component-max-inline-declarations: { template: 0 }`)
 - **E2E tests with Playwright** must be written for all pages/features whenever possible
 - Add E2E tests to `apps/chairly-e2e/src/` for each feature page
+
+## Dark Mode Convention
+
+The dark theme is activated by `data-theme="dark"` on the `<html>` element (managed by `ThemeService`).
+
+- Global CSS overrides in `tailwind.css` cover standard Tailwind classes: `bg-white`, `bg-gray-50`, `text-gray-*`, `border-gray-*`, form inputs.
+- **Custom/brand color classes (`bg-primary-*`, `bg-accent-*`) have NO global dark override.** Always add an explicit `dark:` Tailwind variant in the template when using these classes (e.g. `bg-primary-50 dark:bg-slate-800`).
+- When adding any light-mode background color to a component, always pair it with a `dark:` variant. Missing a `dark:` on a custom color will cause a light block in dark mode.
+
+## Native `<dialog>` Pattern
+
+Always implement `<dialog>` as a full-screen overlay using `showModal()`:
+
+```html
+<dialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none flex items-center justify-center border-0 bg-black/50 p-4"
+>
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto">
+    <!-- content -->
+  </div>
+</dialog>
+```
+
+- Inject `DOCUMENT` and set `document.body.style.overflow = 'hidden'` when opening, `''` when closing.
+- Use `[open]` CSS attribute selector (or `pointer-events: none` when closed) to prevent closed dialogs from intercepting pointer events.
+- To close cross-browser reliably in Playwright e2e tests, use `page.keyboard.press('Escape')` rather than clicking the Cancel button inside a `showModal()` dialog (unreliable in Firefox/WebKit with zoneless Angular).
 
 ## Ubiquitous Language
 
