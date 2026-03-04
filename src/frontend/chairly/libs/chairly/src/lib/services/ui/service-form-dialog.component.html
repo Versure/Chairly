@@ -1,7 +1,8 @@
 <dialog
-  class="fixed inset-0 z-50 m-0 flex h-screen w-screen max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-4"
+  class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden"
   #dialogEl
 >
+  <div class="flex h-full w-full items-center justify-center bg-black/50 p-4">
   <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
     <form [formGroup]="form" (ngSubmit)="onSave()">
       <div class="p-6">
@@ -102,5 +103,6 @@
         </div>
       </div>
     </form>
+  </div>
   </div>
 </dialog>
