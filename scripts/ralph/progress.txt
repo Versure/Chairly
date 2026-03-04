@@ -2,6 +2,20 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-044
+- Added `Migrations:RunOnStartup` config flag to `appsettings.json` (default: `true`)
+- Updated `Program.cs` to read the flag before running migrations
+- Added PostgreSQL advisory lock (`pg_advisory_lock(1000000001)`) around `MigrateAsync` to serialise concurrent startup migration attempts in multi-instance deployments
+- Added inline comments documenting the production rollout model and the alternative dedicated-migrator approach
+- Files changed: Program.cs, appsettings.json, prd.json, progress.txt
+- **Learnings for future iterations:**
+  - `app.Configuration.GetValue<bool>("Key", defaultValue: true)` is the pattern to read a bool config with a fallback default
+  - `db.Database.OpenConnectionAsync()` explicitly opens the EF Core connection so subsequent commands (`pg_advisory_lock`) share the same session as `MigrateAsync`
+  - `pg_advisory_lock` (session-scoped) blocks competing instances at the DB level until migration is complete; all arrive but only one proceeds at a time, rest skip already-applied migrations
+  - Using `using (var cmd = conn.CreateCommand())` for IDisposable DbCommand does NOT trigger CA2007 (that rule targets IAsyncDisposable / `await using` only)
+  - `db.Database.CloseConnectionAsync()` must be called after migration when you explicitly opened the connection via `OpenConnectionAsync`
+---
+
 ## 2026-03-04 - SCF-043
 - Added `dark:bg-slate-800` to add-category form container in `category-panel.component.html`
 - The form used `bg-primary-50` which has no global dark mode override in `tailwind.css`, causing a light block in dark mode
