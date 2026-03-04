@@ -671,3 +671,29 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Always wait for data-dependent content (`getByText('...')`) before asserting on secondary content
     that depends on the same data load.
 ---
+
+## 2026-03-04 14:18 CET - SCF-040..SCF-045 Added
+- Added follow-up stories SCF-040 through SCF-045 in scripts/ralph/prd.json for the orchestrator queue.
+- Scope of added work:
+  - Rebalance brand colors (soft violet + soft pink, less dominant purple)
+  - Set Dutch locale defaults (nl-NL) for currency/number formatting
+  - Improve clickability/affordance for Edit/Deactivate/Delete action buttons
+  - Fix add-category form background for dark mode
+  - Make production startup migration behavior explicit and operationally safe
+  - Replace CancellationToken.None in startup migrations with app shutdown-aware token
+- **Learnings for future iterations:**
+  - Ralph only picks up new work from prd.json stories with `passes: false`; adding actionable acceptance criteria there is the reliable handoff path.
+  - Keep UI and backend operational hardening as separate stories so the orchestrator can implement and validate incrementally.
+---
+
+## 2026-03-04 - SCF-040
+- Replaced standard Tailwind violet/pink palette with meaningfully desaturated variants
+- Primary (soft violet): reduced HSL saturation from ~89% to ~45-50%, keeping hue around 250-258; e.g. primary-500 changed from #8b5cf6 → #8f7fcf, primary-600 from #7c3aed → #7362b8, primary-700 from #6d28d9 → #5e4e9a
+- Accent (dusty rose): reduced saturation from ~80% to ~45-50%; e.g. accent-500 changed from #ec4899 → #d45e9e, accent-600 from #db2777 → #b94686
+- No class name changes — only token hex values updated; all existing `primary-*`/`accent-*` utility classes continue to work
+- Tests pass: 18 shared-lib tests, 116 chairly-lib tests
+- Files changed: tailwind.css, prd.json
+- **Learnings for future iterations:**
+  - Changing palette "feel" is done by editing the hex values in the `@theme` block — no HTML/TS template changes needed when the utility class names remain the same
+  - Reducing saturation (HSL S%) by 35-40% while keeping hue produces a clearly softer look without losing the color identity
+---

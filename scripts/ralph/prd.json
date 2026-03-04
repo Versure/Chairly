@@ -763,6 +763,94 @@
       "priority": 39,
       "passes": true,
       "notes": "Tailwind CSS v4 dark mode should be configured to use a selector strategy targeting html[data-theme='dark']. In tailwind.css, use @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)) or the Tailwind v4 .dark class approach. The ThemeService should be providedIn: 'root' and placed in libs/shared/src/lib/ui/. Use inject(DOCUMENT) from @angular/common to safely access the DOM. Toggle button must use self-closing tags per CLAUDE.md conventions. Templates must be in separate .html files."
+    },
+    {
+      "id": "SCF-040",
+      "title": "Rebalance brand palette to softer violet/pink",
+      "description": "As a user, I want a softer violet + pink look so the UI feels premium without reading as overly purple.",
+      "acceptanceCriteria": [
+        "Adjust the Tailwind theme tokens in src/frontend/chairly/apps/chairly/src/tailwind.css so primary appears softer/less saturated and accent pink is balanced",
+        "Update UI usages where needed so the result is clearly soft violet + soft pink rather than strongly purple",
+        "Keep contrast accessible for text, focus, and interactive states in both light and dark theme",
+        "npx nx test shared-lib --skip-nx-cache passes",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 40,
+      "passes": true,
+      "notes": "Current theme is perceived as too purple. Rebalance tokens rather than removing the violet/pink direction. Avoid neon or highly saturated values."
+    },
+    {
+      "id": "SCF-041",
+      "title": "Set Dutch locale as frontend default",
+      "description": "As a Dutch user, I want nl-NL formatting by default so currency and decimals render in Dutch format.",
+      "acceptanceCriteria": [
+        "In src/frontend/chairly/apps/chairly/src/app/app.config.ts, register Dutch locale data and provide LOCALE_ID='nl-NL'",
+        "Ensure currency/number formatting defaults to Dutch conventions (e.g., comma decimal separator and euro formatting)",
+        "Service table prices no longer render in US dollar style by default",
+        "Add or update tests that validate locale-dependent formatting behavior where practical",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": "Investigate CurrencyPipe defaults in ServiceTableComponent and ensure Dutch locale is applied app-wide."
+    },
+    {
+      "id": "SCF-042",
+      "title": "Improve action button clickability and affordance",
+      "description": "As a user, I want edit/deactivate/delete actions to look clearly clickable so I can confidently interact with them.",
+      "acceptanceCriteria": [
+        "Update action button styles in src/frontend/chairly/libs/chairly/src/lib/services/ui/service-table.component.html and src/frontend/chairly/libs/chairly/src/lib/services/ui/category-panel.component.html",
+        "Buttons must have clear visual affordance at rest (not only on hover), with distinct hover/active/focus-visible states",
+        "Keyboard focus indicators are obvious and meet accessible contrast",
+        "Do not regress current functionality or emitted events",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 42,
+      "passes": false,
+      "notes": "Current text-like buttons are hard to identify as interactive. Use stronger button treatment while keeping the design refined."
+    },
+    {
+      "id": "SCF-043",
+      "title": "Fix add-category form background in dark mode",
+      "description": "As a dark-theme user, I want the add-category form to match dark surfaces so no light block appears.",
+      "acceptanceCriteria": [
+        "Update add-category form container in src/frontend/chairly/libs/chairly/src/lib/services/ui/category-panel.component.html to use theme-aware/dark-aware background classes",
+        "In dark mode, the add form background and borders visually integrate with surrounding panel",
+        "Light mode appearance remains clean and readable",
+        "npx nx test chairly-lib --skip-nx-cache passes"
+      ],
+      "priority": 43,
+      "passes": false,
+      "notes": "Current bg-primary-50 remains light in dark mode and breaks visual consistency."
+    },
+    {
+      "id": "SCF-044",
+      "title": "Make startup migration behavior production-safe and explicit",
+      "description": "As an operator, I want migration execution behavior to be explicit and safe in production rollouts.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.Api/Program.cs, make migration-on-start behavior explicitly controlled by configuration/env flag with sensible default",
+        "Document the intended rollout model for production (dedicated migrator OR serialized/single-leader startup migration strategy)",
+        "If startup migration remains enabled, implementation must avoid unsafe multi-instance race behavior",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 44,
+      "passes": false,
+      "notes": "Automatic production migrations are acceptable when operational controls are explicit. Avoid hidden coupling and unsafe concurrent migration attempts."
+    },
+    {
+      "id": "SCF-045",
+      "title": "Use application shutdown token for EF migrations",
+      "description": "As an operator, I want startup migrations to honor shutdown so deploy/rollback termination is graceful.",
+      "acceptanceCriteria": [
+        "Replace CancellationToken.None in src/backend/Chairly.Api/Program.cs migration call with an app lifetime shutdown-aware token",
+        "Code remains async-safe and preserves existing behavior when no shutdown is requested",
+        "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes",
+        "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
+      ],
+      "priority": 45,
+      "passes": false,
+      "notes": "Use app.Lifetime.ApplicationStopping or linked token so long migrations can be cancelled during shutdown."
     }
   ]
 }
