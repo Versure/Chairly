@@ -2,6 +2,15 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-035
+- Added `"useDaemonProcess": false` to `src/frontend/chairly/nx.json`
+- Verified `npx nx show projects` produces no EPIPE or daemon errors
+- lint + build pass
+- Files changed: nx.json, prd.json
+- **Learnings for future iterations:**
+  - `"useDaemonProcess": false` in nx.json disables the daemon — reliable on Windows WSL2 but slightly slower
+---
+
 ## 2026-03-04 - SCF-034
 - Fixed "Edit" button text to "Bewerken" in `service-table.component.html` (missed in SCF-028)
 - Created `apps/chairly-e2e/src/services.spec.ts` with 7 comprehensive E2E tests using `page.route()` mocks:

@@ -689,7 +689,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 35,
-      "passes": false,
+      "passes": true,
       "notes": "The EPIPE error occurs because the Nx daemon socket connection is broken mid-request on Windows (named pipe issue). The simplest fix is to add 'useDaemonProcess': false to the root nx.json. This disables the daemon entirely and makes Nx run in-process, which is slower but reliable. Check nx.json at src/frontend/chairly/nx.json \u2014 add the useDaemonProcess property. If the daemon is already configured but broken, also run 'npx nx daemon --stop' before the fix to ensure a clean state."
     }
   ]
