@@ -864,7 +864,7 @@
         "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
       ],
       "priority": 46,
-      "passes": false,
+      "passes": true,
       "notes": "Observed in Aspire logs: relation '__EFMigrationsHistory' does not exist during startup migration on clean DB. Also observed MSB3277 warning due to Microsoft.EntityFrameworkCore.Relational version mismatch (10.0.0 vs 10.0.3), likely caused by Npgsql.EntityFrameworkCore.PostgreSQL pinned at 10.0.0 in Chairly.Infrastructure.csproj."
     },
     {
