@@ -721,7 +721,7 @@
         "dotnet build src/backend/Chairly.slnx passes"
       ],
       "priority": 37,
-      "passes": false,
+      "passes": true,
       "notes": "Scalar is already mapped in Program.cs via app.MapScalarApiReference() which serves at /scalar. The Aspire dashboard does not automatically surface this URL. In Aspire, use the WithUrls() extension or configure endpoint annotations on the project resource builder. Look at how Aspire resource URLs are configured in the Aspire docs or check if IResourceWithEndpoints supports adding a custom URL annotation. A possible approach: use .WithAnnotation(new ResourceCommandAnnotation(...)) or .WithUrls(ctx => [...]) to add a named URL."
     },
     {

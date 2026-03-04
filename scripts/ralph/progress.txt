@@ -2,6 +2,17 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-037
+- Added `.WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" })` to the api project in `src/backend/Chairly.AppHost/Program.cs`
+- Uses the `Func<EndpointReference, ResourceUrlAnnotation>` overload to ADD a new URL annotation (not modify existing endpoint)
+- Files changed: Chairly.AppHost/Program.cs, prd.json
+- **Learnings for future iterations:**
+  - `WithUrlForEndpoint(endpointName, Func<EndpointReference, ResourceUrlAnnotation>)` adds a NEW URL to the dashboard
+  - `WithUrlForEndpoint(endpointName, Action<ResourceUrlAnnotation>)` modifies an EXISTING endpoint URL
+  - `ResourceUrlAnnotation` properties: Url (string), DisplayText (string), Endpoint, DisplayLocation, DisplayOrder
+  - A relative `Url = "/scalar"` works and Aspire resolves it relative to the endpoint base URL
+---
+
 ## 2026-03-04 - SCF-036
 - Added automatic EF Core migration call in `src/backend/Chairly.Api/Program.cs`
 - Used try/finally pattern instead of `await using` to satisfy CA2007/MA0004 ConfigureAwait analyzers
