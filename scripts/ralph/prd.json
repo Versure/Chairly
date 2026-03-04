@@ -691,6 +691,78 @@
       "priority": 35,
       "passes": true,
       "notes": "The EPIPE error occurs because the Nx daemon socket connection is broken mid-request on Windows (named pipe issue). The simplest fix is to add 'useDaemonProcess': false to the root nx.json. This disables the daemon entirely and makes Nx run in-process, which is slower but reliable. Check nx.json at src/frontend/chairly/nx.json \u2014 add the useDaemonProcess property. If the daemon is already configured but broken, also run 'npx nx daemon --stop' before the fix to ensure a clean state."
+    },
+    {
+      "id": "SCF-036",
+      "title": "Apply EF Core migrations automatically on API startup",
+      "description": "As a developer, I want the database schema to be created/migrated automatically when the API starts so that the ServiceCategories and Services tables exist and API calls succeed without manual migration steps.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.Api/Program.cs, add an async scope before app.Run() that retrieves ChairlyDbContext from the DI container and calls Database.MigrateAsync()",
+        "The migration call must run after the app is built (after var app = builder.Build()) but before app.Run()",
+        "Use CreateAsyncScope() and await db.Database.MigrateAsync(CancellationToken.None) to apply all pending EF Core migrations on startup",
+        "When the Aspire AppHost starts the API, the postgres database is automatically migrated — ServiceCategories and Services tables are created",
+        "GET /api/service-categories returns 200 (empty list) instead of 500",
+        "GET /api/services returns 200 (empty list) instead of 500",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes"
+      ],
+      "priority": 36,
+      "passes": false,
+      "notes": "The existing EF Core migrations (InitialCreate + AddAuditFields) already include the ServiceCategories and Services table definitions — they are simply never applied because Program.cs does not call MigrateAsync(). Add these lines in Program.cs after 'var app = builder.Build();': await using (var scope = app.Services.CreateAsyncScope()) { var db = scope.ServiceProvider.GetRequiredService<ChairlyDbContext>(); await db.Database.MigrateAsync(); }"
+    },
+    {
+      "id": "SCF-037",
+      "title": "Add Scalar API reference link to .NET Aspire dashboard",
+      "description": "As a developer, I want a direct clickable link to the Scalar API documentation page in the .NET Aspire dashboard so I can quickly navigate to it without manually constructing the URL.",
+      "acceptanceCriteria": [
+        "In src/backend/Chairly.AppHost/Program.cs, configure the 'api' project resource with a URL annotation that surfaces a 'Scalar' link in the Aspire dashboard",
+        "The Scalar link must point to the http endpoint of the API at path /scalar",
+        "When the Aspire dashboard is open, the API resource shows a clickable link (labeled 'Scalar' or 'API Docs') that opens the Scalar page",
+        "dotnet build src/backend/Chairly.slnx passes"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": "Scalar is already mapped in Program.cs via app.MapScalarApiReference() which serves at /scalar. The Aspire dashboard does not automatically surface this URL. In Aspire, use the WithUrls() extension or configure endpoint annotations on the project resource builder. Look at how Aspire resource URLs are configured in the Aspire docs or check if IResourceWithEndpoints supports adding a custom URL annotation. A possible approach: use .WithAnnotation(new ResourceCommandAnnotation(...)) or .WithUrls(ctx => [...]) to add a named URL."
+    },
+    {
+      "id": "SCF-038",
+      "title": "Implement custom brand theme — soft violet and soft pink",
+      "description": "As a user, I want the application to have a premium, friendly but professional look & feel with a soft violet and soft pink color scheme so it feels like a high-quality salon management tool.",
+      "acceptanceCriteria": [
+        "Define a custom Tailwind CSS v4 color palette in apps/chairly/src/tailwind.css using @theme directive with primary (violet) and accent (pink) color tokens",
+        "Primary: soft violet (e.g. #7C3AED to #A78BFA range) — choose a pleasing, muted palette",
+        "Accent: soft pink (e.g. #F9A8D4 to #EC4899 range) — choose a pleasing, muted palette",
+        "Update the admin dashboard shell (sidebar/top navigation) to use the primary violet color scheme",
+        "Update primary action buttons to use the violet primary color",
+        "The overall look is premium and professional — avoid bright/neon colors, use soft/muted tones",
+        "All existing functionality remains intact — no regressions",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": "Tailwind CSS v4 uses @theme { } blocks in the CSS entry file (apps/chairly/src/tailwind.css) to define design tokens as CSS custom properties. Define --color-primary-* (violet) and --color-accent-* (pink) inside @theme. Then apply these via Tailwind utility classes in component templates. Follow the existing Tailwind v4 pattern — the tailwind.css file must not be merged with styles.scss."
+    },
+    {
+      "id": "SCF-039",
+      "title": "Add dark theme toggle with CSS custom properties",
+      "description": "As a user, I want to switch between a light and dark theme so that I can use the application comfortably in different lighting conditions.",
+      "acceptanceCriteria": [
+        "Define dark theme CSS custom property overrides using Tailwind v4's dark variant or a [data-theme='dark'] selector on the html element",
+        "Add a theme toggle button (sun/moon icon) in the admin dashboard shell navigation bar (AppShellComponent)",
+        "Clicking the toggle switches a data-theme='dark' attribute on the <html> element",
+        "The selected theme is persisted in localStorage (key: 'chairly-theme') and restored on page load",
+        "Dark theme uses dark backgrounds (e.g. slate-900/800) with light text while maintaining the violet/pink accents",
+        "Create a ThemeService in libs/shared/src/lib/ui/ that manages theme state as a signal and reads/writes localStorage",
+        "The ThemeService uses inject(DOCUMENT) to set document.documentElement's data-theme attribute",
+        "All pages render correctly in both themes — no broken contrast or invisible elements",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": "Tailwind CSS v4 dark mode should be configured to use a selector strategy targeting html[data-theme='dark']. In tailwind.css, use @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *)) or the Tailwind v4 .dark class approach. The ThemeService should be providedIn: 'root' and placed in libs/shared/src/lib/ui/. Use inject(DOCUMENT) from @angular/common to safely access the DOM. Toggle button must use self-closing tags per CLAUDE.md conventions. Templates must be in separate .html files."
     }
   ]
 }
