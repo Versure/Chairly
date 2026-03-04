@@ -561,6 +561,136 @@
       "priority": 28,
       "passes": true,
       "notes": "This story MUST be implemented AFTER SCF-027 (drag & drop / sortOrder removal) because SCF-027 changes the form layout and SCF-028 should translate the final state of each file. Template-only changes — no TypeScript logic changes except the default input values in ConfirmationDialogComponent. The delete confirmation messages in service-list-page.component.html: service message → 'Weet je zeker dat je deze dienst wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' Category message → 'Weet je zeker dat je deze categorie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.' All Playwright e2e tests that assert on English text (e.g., 'Add Service' button, 'Services' h1, 'Categories' panel) must be updated to match the Dutch text."
+    },
+    {
+      "id": "SCF-029",
+      "title": "Fix frontend code structure violations",
+      "description": "As a developer, I want the frontend code to follow the domain folder conventions defined in CLAUDE.md so that the codebase is maintainable and consistent.",
+      "acceptanceCriteria": [
+        "Scan all files under libs/chairly/src/lib/services/. Any TypeScript interface or type definition files (.ts files containing only interfaces/types) found inside util/ must be moved to models/. Update all imports across the codebase to point to the new location.",
+        "Scan all files under libs/chairly/src/lib/services/. Any Angular @Pipe class files found inside util/ must be moved to pipes/. Update all imports across the codebase to point to the new location.",
+        "Scan libs/chairly/src/lib/services/feature/. Any component files (.ts, .html, .scss) placed directly inside feature/ (not inside a named subfolder) must be moved to their own subfolder named after the component (e.g., service-list-page/ subfolder for ServiceListPageComponent). Update all imports and references.",
+        "Scan all component .ts files under libs/chairly/src/lib/services/ and libs/shared/src/lib/. Any component using inline template: '...' must have its template extracted to a separate .html file using templateUrl: './component-name.component.html'. The extracted .html file must be created alongside the .ts file. The inline template: property must be removed.",
+        "If a services.routes.ts (or similarly named routes file) exists inside libs/chairly/src/lib/services/feature/, move it to libs/chairly/src/lib/services/ (the domain root). Update any references to this file in the app routing configuration.",
+        "Remove any .gitkeep files from folders that already contain real files. Only .gitkeep files in truly empty folders should remain.",
+        "All imports updated — no broken import paths after the moves.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "These are structural violations found during PR review. When scanning, be thorough — check every .ts file in the services domain and shared lib. The inline template violation is enforced by ESLint (@angular-eslint/component-max-inline-declarations: { template: 0 }) so fixing this will also resolve ESLint errors. After moving files, run a global search for old import paths to ensure nothing is broken."
+    },
+    {
+      "id": "SCF-030",
+      "title": "Fix ESLint failures in CI",
+      "description": "As a developer, I want ESLint to pass cleanly in CI so that code quality is enforced automatically on every push.",
+      "acceptanceCriteria": [
+        "Run npx nx affected -t lint --base=origin/main and capture all lint errors.",
+        "Fix every lint error found. Do not disable lint rules with eslint-disable comments unless the rule is genuinely inapplicable and documented with a reason.",
+        "Common issues to look for: inline template: in components (must use templateUrl:), missing OnPush change detection strategy, use of @Input()/@Output() decorators instead of signal-based input()/model()/OutputEmitterRef, function calls in templates, missing explicit return types on functions, console statements, any types, cross-domain imports violating Sheriff boundaries.",
+        "npx nx affected -t lint --base=origin/main exits with code 0 (no errors, no warnings treated as errors).",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "This story should be implemented AFTER SCF-029 because fixing the structural violations (inline templates, wrong folder placement) will resolve many lint errors. Run lint first to capture a full list, then fix systematically. If @angular-eslint/component-max-inline-declarations is not yet in the ESLint config for the libs, check eslint.config.mjs in libs/chairly/ and libs/shared/ — it should be configured with { template: 0 }."
+    },
+    {
+      "id": "SCF-031",
+      "title": "Configure .NET Aspire to orchestrate API and PostgreSQL",
+      "description": "As a developer, I want .NET Aspire to start the API and a PostgreSQL database together so that I can run the full stack locally without manually starting services.",
+      "acceptanceCriteria": [
+        "In Chairly.AppHost/Program.cs: add a PostgreSQL resource using builder.AddPostgres('postgres') and a database resource using .AddDatabase('chairlydb') (or equivalent names matching the connection string convention).",
+        "The Chairly.Api project is added to Aspire as a resource using builder.AddProject<Projects.Chairly_Api>('api') and has a reference to the database resource via .WithReference(db).",
+        "Chairly.Api reads the connection string from the Aspire-injected connection string named 'chairlydb' (or the name used above). In Chairly.Infrastructure, the DbContext registration uses builder.Configuration.GetConnectionString('chairlydb') or the Aspire-provided environment variable.",
+        "Running dotnet run --project src/backend/Chairly.AppHost starts both the API and the PostgreSQL container without errors.",
+        "The Aspire dashboard shows both the 'api' and 'postgres' resources as healthy.",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "Use the Aspire hosting packages: Aspire.Hosting.PostgreSQL for PostgreSQL. Add the NuGet package Aspire.Hosting.PostgreSQL to Chairly.AppHost if not present. For the API to read the injected connection string, ensure Chairly.Api references Aspire.ServiceDefaults or uses builder.AddServiceDefaults() in Program.cs. The connection string name used in AddDatabase must match GetConnectionString() call in the Infrastructure layer. Check existing DbContext registration in Chairly.Infrastructure for the current connection string name."
+    },
+    {
+      "id": "SCF-032",
+      "title": "Create admin dashboard shell with navigation",
+      "description": "As a user, I want the application to have a consistent admin dashboard layout with a sidebar navigation menu so that I can navigate between features easily and the application looks professional.",
+      "acceptanceCriteria": [
+        "Create a shared shell/layout component at libs/shared/src/lib/ui/shell/ named ShellComponent (selector: chairly-shell). It must use OnPush change detection and templateUrl.",
+        "ShellComponent renders a sidebar navigation on the left and a <router-outlet> content area on the right. The sidebar must include a navigation link for 'Diensten' (Services) pointing to /diensten.",
+        "The sidebar must be styled using Tailwind CSS v4 classes to look like a professional admin dashboard: dark sidebar background (e.g. bg-gray-900 or bg-slate-800), white text, hover states on nav items, active link highlighting.",
+        "The main app routing in apps/chairly/src/app/app.routes.ts wraps all feature routes inside the ShellComponent layout. The /diensten route loads the services domain routes lazily.",
+        "The services domain route is updated: the URL path is 'diensten' (Dutch) instead of 'services' if it currently uses English. The lazy-loaded route still points to the services domain routes file.",
+        "The root path '/' redirects to '/diensten'.",
+        "ShellComponent is exported from libs/shared/src/lib/index.ts (or equivalent barrel file).",
+        "Existing unit tests for the app still pass. Update any route-related tests to use the new paths.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "The shell should be minimal but polished — a vertical sidebar on the left (~240px wide) with the app name/logo at the top, navigation links in the middle, and the router-outlet taking up the remaining space. Use RouterLink and RouterLinkActive for navigation. The active route class should be applied via routerLinkActive='bg-gray-700' (or similar). Keep the shell component simple — no complex state management needed. The sidebar nav items can be hardcoded for now (only 'Diensten' needed). All user-facing text in the shell must be in Dutch."
+    },
+    {
+      "id": "SCF-033",
+      "title": "Fix modal/dialog positioning — center on screen",
+      "description": "As a user, I want popup dialogs to always appear centered on my screen so that they are easy to see and interact with.",
+      "acceptanceCriteria": [
+        "Identify all dialog/modal components in the codebase (e.g., ServiceFormDialogComponent, ConfirmationDialogComponent in shared/ui, and any others).",
+        "Each dialog must render a full-screen overlay (position: fixed, inset-0, z-50) with a semi-transparent background (bg-black/50 or equivalent).",
+        "The dialog box itself must be centered both horizontally and vertically within the overlay using Tailwind classes: flex items-center justify-center on the overlay element.",
+        "The dialog box must have a maximum width (e.g., max-w-lg or max-w-md) and be responsive — on small screens it should not overflow horizontally.",
+        "When a dialog is open, the page behind it must not be scrollable (overflow-hidden on body, or equivalent).",
+        "Opening any dialog/popup in the application shows it centered on the screen at all viewport sizes.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t test --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": "The current issue is that the popup opens in the top-left corner of the screen. This is typically caused by the overlay using position: absolute or by missing flex centering classes. The fix is to ensure the overlay element has: class='fixed inset-0 z-50 flex items-center justify-center bg-black/50' and the inner dialog box has: class='bg-white rounded-lg shadow-xl w-full max-w-lg mx-4'. Check both ServiceFormDialogComponent and ConfirmationDialogComponent (and any others). Also check if the dialog is rendered inside a positioned parent — if so, use a CDK portal or move the dialog rendering to the document body level."
+    },
+    {
+      "id": "SCF-034",
+      "title": "Add Playwright E2E tests for the services feature",
+      "description": "As a developer, I want comprehensive E2E tests for the services management feature so that regressions are caught automatically.",
+      "acceptanceCriteria": [
+        "Create E2E test file at apps/chairly-e2e/src/services.spec.ts.",
+        "Test: navigating to /diensten shows the 'Diensten' page heading and the services table.",
+        "Test: clicking 'Dienst toevoegen' opens a centered dialog with the service form fields (Naam, Omschrijving, Duur, Prijs, Categorie).",
+        "Test: filling in the form and clicking 'Opslaan' calls the API and shows the new service in the table (mock or intercept the API response).",
+        "Test: clicking 'Bewerken' on a service row opens the form dialog pre-filled with that service's data.",
+        "Test: clicking 'Verwijderen' on a service row shows the confirmation dialog; clicking 'Verwijderen' in the dialog removes the service from the table.",
+        "Test: the category panel shows the 'Categorieën' header and a list of categories.",
+        "Test: clicking '+ Toevoegen' in the category panel shows an input field for a new category name.",
+        "All tests must pass with npx nx e2e chairly-e2e.",
+        "Tests use page.route() to intercept and mock API calls — do not depend on a running backend.",
+        "npx nx affected -t lint --base=origin/main passes"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": "Use Playwright's page.route() to intercept API calls and return mock data. This way the tests are fast and deterministic without needing a real backend. The base URL for the dev server is configured in playwright.config.ts — check that it points to the correct port (typically 4200). Use data-testid attributes sparingly — prefer role-based or text-based selectors (getByRole, getByText) following Playwright best practices. The tests must run in CI with the app served statically or with a dev server started by Playwright's webServer config."
+    },
+    {
+      "id": "SCF-035",
+      "title": "Fix Nx Daemon EPIPE error on Windows",
+      "description": "As a developer, I want the Nx Daemon to work reliably (or be disabled cleanly) so that I don't see 'Nx Daemon is disabled' warnings and file changes are detected correctly.",
+      "acceptanceCriteria": [
+        "Investigate the root cause of the EPIPE error in the Nx daemon log (write EPIPE on the socket connection).",
+        "If the issue is Windows-specific and cannot be fixed reliably, disable the daemon by setting 'useDaemonProcess': false in nx.json. This prevents misleading 'daemon disabled' warnings and makes Nx behavior predictable.",
+        "If a config fix is possible (e.g., increasing socket timeout, using a different IPC mechanism), apply it instead of disabling.",
+        "After the fix, running any nx command (e.g., npx nx show projects) does not print 'Nx Daemon is disabled' or EPIPE errors.",
+        "npx nx affected -t lint --base=origin/main passes",
+        "npx nx affected -t build --base=origin/main passes"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": "The EPIPE error occurs because the Nx daemon socket connection is broken mid-request on Windows (named pipe issue). The simplest fix is to add 'useDaemonProcess': false to the root nx.json. This disables the daemon entirely and makes Nx run in-process, which is slower but reliable. Check nx.json at src/frontend/chairly/nx.json — add the useDaemonProcess property. If the daemon is already configured but broken, also run 'npx nx daemon --stop' before the fix to ensure a clean state."
     }
   ]
 }
