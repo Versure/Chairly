@@ -2,6 +2,18 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-041
+- Registered Dutch locale (`nl-NL`) in `apps/chairly/src/app/app.config.ts` via `registerLocaleData(localeNl)`
+- Added `{ provide: LOCALE_ID, useValue: 'nl-NL' }` to providers array
+- Added `{ provide: DEFAULT_CURRENCY_CODE, useValue: 'EUR' }` to providers array so CurrencyPipe defaults to EUR
+- Updated `service-table.component.spec.ts`: added `registerLocaleData(localeNl)`, provided `LOCALE_ID` and `DEFAULT_CURRENCY_CODE` in TestBed, added test asserting Dutch EUR currency formatting
+- Files changed: app.config.ts, service-table.component.spec.ts, prd.json
+- **Learnings for future iterations:**
+  - Angular `CurrencyPipe` defaults to `'USD'` even with a Dutch locale — must also provide `DEFAULT_CURRENCY_CODE` token to change default currency to `'EUR'`
+  - `registerLocaleData(localeNl)` must be called at module/config level (not inside a function) before the locale is used
+  - Import order: `@angular/common` → `@angular/common/http` → `@angular/common/locales/*` — the `simple-import-sort` rule enforces alphabetical ordering within groups
+---
+
 ## 2026-03-04 - SCF-039
 - Added `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *))` to `tailwind.css` for Tailwind v4 dark mode support
 - Added global CSS dark mode overrides in `tailwind.css` targeting `[data-theme='dark']` selector for bg-white, bg-gray-50, text-gray-*, border-gray-*, inputs, textareas, and selects
