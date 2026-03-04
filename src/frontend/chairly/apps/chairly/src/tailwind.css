@@ -5,6 +5,9 @@
 @source '../../../libs/**/*.{html,ts}';
 @source '../**/*.{html,ts}';
 
+/* Dark theme variant: activates when html element has data-theme="dark" */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 @theme {
   /* Primary: soft violet palette */
   --color-primary-50: #f5f3ff;
@@ -31,4 +34,67 @@
   --color-accent-800: #9d174d;
   --color-accent-900: #831843;
   --color-accent-950: #500724;
+}
+
+/* Dark theme overrides applied when html[data-theme="dark"] is set */
+[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+[data-theme='dark'] body {
+  background-color: #0f172a; /* slate-900 */
+  color: #f1f5f9; /* slate-100 */
+}
+
+[data-theme='dark'] .bg-white {
+  background-color: #1e293b; /* slate-800 */
+}
+
+[data-theme='dark'] .bg-gray-50 {
+  background-color: #0f172a; /* slate-900 */
+}
+
+[data-theme='dark'] .bg-gray-100 {
+  background-color: #1e293b; /* slate-800 */
+}
+
+[data-theme='dark'] .text-gray-900 {
+  color: #f1f5f9; /* slate-100 */
+}
+
+[data-theme='dark'] .text-gray-800 {
+  color: #e2e8f0; /* slate-200 */
+}
+
+[data-theme='dark'] .text-gray-700 {
+  color: #cbd5e1; /* slate-300 */
+}
+
+[data-theme='dark'] .text-gray-600 {
+  color: #94a3b8; /* slate-400 */
+}
+
+[data-theme='dark'] .text-gray-500 {
+  color: #64748b; /* slate-500 */
+}
+
+[data-theme='dark'] .border-gray-200 {
+  border-color: #334155; /* slate-700 */
+}
+
+[data-theme='dark'] .border-gray-300 {
+  border-color: #475569; /* slate-600 */
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] textarea,
+[data-theme='dark'] select {
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9; /* slate-100 */
+  border-color: #475569; /* slate-600 */
+}
+
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: #64748b; /* slate-500 */
 }

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+import { ThemeService } from '../theme.service';
 
 @Component({
   selector: 'chairly-shell',
@@ -8,4 +10,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   templateUrl: './shell.component.html',
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
 })
-export class ShellComponent {}
+export class ShellComponent {
+  protected readonly themeService = inject(ThemeService);
+}
