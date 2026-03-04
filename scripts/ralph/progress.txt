@@ -744,3 +744,12 @@ Started: Fri Feb 27 14:15:21 CET 2026
   - Changing palette "feel" is done by editing the hex values in the `@theme` block — no HTML/TS template changes needed when the utility class names remain the same
   - Reducing saturation (HSL S%) by 35-40% while keeping hue produces a clearly softer look without losing the color identity
 ---
+
+## 2026-03-04 - SCF-045
+- Replaced `CancellationToken.None` with `app.Lifetime.ApplicationStopping` for `OpenConnectionAsync`, `ExecuteNonQueryAsync` (lock), and `MigrateAsync`
+- The advisory unlock and `CloseConnectionAsync` intentionally retain `CancellationToken.None` so the lock is always released even during shutdown
+- Files changed: src/backend/Chairly.Api/Program.cs, scripts/ralph/prd.json, scripts/ralph/progress.txt
+- **Learnings for future iterations:**
+  - `app.Lifetime.ApplicationStopping` is a `CancellationToken` available on `IWebApplication` after `builder.Build()`; no extra DI needed
+  - Always keep cleanup/unlock paths on `CancellationToken.None` so resources are freed even when the primary token is cancelled
+---

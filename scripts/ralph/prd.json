@@ -849,7 +849,7 @@
         "dotnet test src/backend/Chairly.Tests/Chairly.Tests.csproj passes"
       ],
       "priority": 45,
-      "passes": false,
+      "passes": true,
       "notes": "Use app.Lifetime.ApplicationStopping or linked token so long migrations can be cancelled during shutdown."
     }
   ]
