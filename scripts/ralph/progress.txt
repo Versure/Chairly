@@ -2,6 +2,23 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-032
+- Created `libs/shared/src/lib/ui/shell/shell.component.ts` and `.html`
+  - Selector: `chairly-shell`, OnPush, `templateUrl:`
+  - Slate-800 sidebar (w-60), white text, hover states, RouterLinkActive for active highlighting
+  - Single nav link: 'Diensten' → `/diensten`
+  - Main content area with `<router-outlet />`
+- Updated `libs/shared/src/lib/ui/index.ts` and `libs/shared/src/index.ts` to export `ShellComponent`
+- Updated `apps/chairly/src/app/app.routes.ts`: redirect `''` → `diensten`, wrap feature routes in ShellComponent, `services` → `diensten`
+- Updated e2e tests: `service-catalog.spec.ts` (5 tests, `/services` → `/diensten`, test name updated), `example.spec.ts` (comment updated)
+- All lint, 116 tests, build pass
+- Files changed: shell.component.ts, shell.component.html, ui/index.ts, shared/index.ts, app.routes.ts, service-catalog.spec.ts, example.spec.ts, prd.json
+- **Learnings for future iterations:**
+  - When adding ShellComponent to routes, use `path: ''` with `component: ShellComponent` and `children` for feature routes — avoids duplicate path definitions
+  - `simple-import-sort` requires blank line between import groups (Angular vs project aliases) — eslint --fix handles this automatically
+  - Changing route path from `services` to `diensten` requires updating all e2e test `page.goto()` calls
+---
+
 ## 2026-03-04 - SCF-031
 - Added `Aspire.Hosting.PostgreSQL` 13.1.2 NuGet package to `Chairly.AppHost/Chairly.AppHost.csproj`
 - Updated `Chairly.AppHost/Program.cs`: added PostgreSQL resource (`postgres`) with database (`ChairlyDb`), added API project resource with `.WithReference(db)` and `.WaitFor(db)`

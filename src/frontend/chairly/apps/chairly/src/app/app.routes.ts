@@ -1,9 +1,17 @@
 import { Route } from '@angular/router';
 
+import { ShellComponent } from '@org/shared-lib';
+
 export const appRoutes: Route[] = [
-  { path: '', redirectTo: 'services', pathMatch: 'full' },
+  { path: '', redirectTo: 'diensten', pathMatch: 'full' },
   {
-    path: 'services',
-    loadChildren: () => import('@org/chairly-lib').then((m) => m.servicesRoutes),
+    path: '',
+    component: ShellComponent,
+    children: [
+      {
+        path: 'diensten',
+        loadChildren: () => import('@org/chairly-lib').then((m) => m.servicesRoutes),
+      },
+    ],
   },
 ];

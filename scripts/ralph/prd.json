@@ -633,7 +633,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 32,
-      "passes": false,
+      "passes": true,
       "notes": "The shell should be minimal but polished \u2014 a vertical sidebar on the left (~240px wide) with the app name/logo at the top, navigation links in the middle, and the router-outlet taking up the remaining space. Use RouterLink and RouterLinkActive for navigation. The active route class should be applied via routerLinkActive='bg-gray-700' (or similar). Keep the shell component simple \u2014 no complex state management needed. The sidebar nav items can be hardcoded for now (only 'Diensten' needed). All user-facing text in the shell must be in Dutch."
     },
     {

@@ -1,19 +1,19 @@
 import { expect, test } from '@playwright/test';
 
-test('navigates to /services and shows the page header', async ({ page }) => {
-  await page.goto('/services');
+test('navigates to /diensten and shows the page header', async ({ page }) => {
+  await page.goto('/diensten');
 
   await expect(page.locator('h1')).toContainText('Diensten');
 });
 
 test('shows the Add Service button', async ({ page }) => {
-  await page.goto('/services');
+  await page.goto('/diensten');
 
   await expect(page.getByRole('button', { name: 'Dienst toevoegen' })).toBeVisible();
 });
 
 test('opens the add service dialog when Add Service is clicked', async ({ page }) => {
-  await page.goto('/services');
+  await page.goto('/diensten');
 
   await page.getByRole('button', { name: 'Dienst toevoegen' }).click();
 
@@ -21,7 +21,7 @@ test('opens the add service dialog when Add Service is clicked', async ({ page }
 });
 
 test('closes the add service dialog when Cancel is clicked', async ({ page }) => {
-  await page.goto('/services');
+  await page.goto('/diensten');
 
   await page.getByRole('button', { name: 'Dienst toevoegen' }).click();
   await expect(page.locator('dialog[open]')).toBeVisible();
@@ -34,7 +34,7 @@ test('closes the add service dialog when Cancel is clicked', async ({ page }) =>
 });
 
 test('shows the Categories panel', async ({ page }) => {
-  await page.goto('/services');
+  await page.goto('/diensten');
 
   // Use heading role to avoid strict mode violation with "Nog geen categorieën." text
   await expect(page.getByRole('heading', { name: 'Categorieën' })).toBeVisible();
