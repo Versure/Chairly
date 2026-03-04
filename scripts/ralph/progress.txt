@@ -2,6 +2,17 @@
 Started: Fri Feb 27 14:15:21 CET 2026
 ---
 
+## 2026-03-04 - SCF-042
+- Updated action button styles in `service-table.component.html` (Bewerken, Deactiveren/Activeren, Verwijderen) and `category-panel.component.html` (Bewerken, Verwijderen)
+- Replaced text-only hover buttons with bordered, colored buttons: `border border-{color}-200 bg-{color}-50 text-{color}-600/700 font-medium` at rest
+- Added distinct hover (`hover:bg-{color}-100 hover:border-{color}-300`), active (`active:bg-{color}-200`), and focus (`focus-visible:ring-2 focus-visible:ring-{color}-500`) states
+- Color coding: primary for Edit, yellow for Toggle active/inactive, red for Delete
+- Files changed: service-table.component.html, category-panel.component.html, prd.json
+- **Learnings for future iterations:**
+  - Tests find buttons by `title` attribute, not by CSS class — safe to change button classes without breaking existing tests
+  - Tailwind `focus-visible:ring-offset-1` provides spacing between element border and focus ring for better visibility
+---
+
 ## 2026-03-04 - SCF-041
 - Registered Dutch locale (`nl-NL`) in `apps/chairly/src/app/app.config.ts` via `registerLocaleData(localeNl)`
 - Added `{ provide: LOCALE_ID, useValue: 'nl-NL' }` to providers array

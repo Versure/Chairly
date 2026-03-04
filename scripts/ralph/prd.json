@@ -806,7 +806,7 @@
         "npx nx test chairly-lib --skip-nx-cache passes"
       ],
       "priority": 42,
-      "passes": false,
+      "passes": true,
       "notes": "Current text-like buttons are hard to identify as interactive. Use stronger button treatment while keeping the design refined."
     },
     {
