@@ -101,6 +101,6 @@ describe('ConfirmationDialogComponent', () => {
   it('should apply default styling when isDestructive is false', () => {
     const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
     const confirmButton = buttons[1];
-    expect(confirmButton.className).toContain('bg-indigo-600');
+    expect(confirmButton.className).toContain('bg-primary-600');
   });
 });
