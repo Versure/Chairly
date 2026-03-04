@@ -1,8 +1,10 @@
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   ElementRef,
+  inject,
   input,
   output,
   OutputEmitterRef,
@@ -25,6 +27,7 @@ export class ConfirmationDialogComponent {
   readonly confirmed: OutputEmitterRef<void> = output<void>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
 
+  private readonly document = inject(DOCUMENT);
   private readonly dialogRef =
     viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
@@ -37,10 +40,12 @@ export class ConfirmationDialogComponent {
   });
 
   open(): void {
+    this.document.body.style.overflow = 'hidden';
     this.dialogRef().nativeElement.showModal();
   }
 
   close(): void {
+    this.document.body.style.overflow = '';
     this.dialogRef().nativeElement.close();
   }
 

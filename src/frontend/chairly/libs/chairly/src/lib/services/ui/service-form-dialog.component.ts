@@ -1,7 +1,9 @@
+import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  inject,
   input,
   output,
   OutputEmitterRef,
@@ -32,6 +34,7 @@ export class ServiceFormDialogComponent {
     output<CreateServiceRequest | UpdateServiceRequest>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
 
+  private readonly document = inject(DOCUMENT);
   private readonly dialogRef =
     viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
@@ -73,10 +76,12 @@ export class ServiceFormDialogComponent {
         categoryId: null,
       });
     }
+    this.document.body.style.overflow = 'hidden';
     this.dialogRef().nativeElement.showModal();
   }
 
   close(): void {
+    this.document.body.style.overflow = '';
     this.dialogRef().nativeElement.close();
   }
 

@@ -652,7 +652,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 33,
-      "passes": false,
+      "passes": true,
       "notes": "The current issue is that the popup opens in the top-left corner of the screen. This is typically caused by the overlay using position: absolute or by missing flex centering classes. The fix is to ensure the overlay element has: class='fixed inset-0 z-50 flex items-center justify-center bg-black/50' and the inner dialog box has: class='bg-white rounded-lg shadow-xl w-full max-w-lg mx-4'. Check both ServiceFormDialogComponent and ConfirmationDialogComponent (and any others). Also check if the dialog is rendered inside a positioned parent \u2014 if so, use a CDK portal or move the dialog rendering to the document body level."
     },
     {

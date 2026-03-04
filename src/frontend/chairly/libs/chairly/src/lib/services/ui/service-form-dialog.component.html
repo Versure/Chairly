@@ -1,101 +1,106 @@
-<dialog class="p-0 rounded-lg shadow-xl max-w-lg w-full" #dialogEl>
-  <form [formGroup]="form" (ngSubmit)="onSave()">
-    <div class="p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">
-        {{ service() ? 'Dienst bewerken' : 'Dienst toevoegen' }}
-      </h2>
+<dialog
+  class="fixed inset-0 z-50 m-0 flex h-screen w-screen max-h-none max-w-none items-center justify-center border-0 bg-black/50 p-4"
+  #dialogEl
+>
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-auto">
+    <form [formGroup]="form" (ngSubmit)="onSave()">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+          {{ service() ? 'Dienst bewerken' : 'Dienst toevoegen' }}
+        </h2>
 
-      <!-- Name -->
-      <div class="mb-4">
-        <label for="sfd-name" class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
-        <input
-          id="sfd-name"
-          formControlName="name"
-          type="text"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        />
-        @if (form.controls.name.invalid && form.controls.name.touched) {
-          <p class="mt-1 text-xs text-red-600">Naam is verplicht (max. 150 tekens).</p>
-        }
-      </div>
-
-      <!-- Description -->
-      <div class="mb-4">
-        <label for="sfd-description" class="block text-sm font-medium text-gray-700 mb-1">Omschrijving</label>
-        <textarea
-          id="sfd-description"
-          formControlName="description"
-          rows="3"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        ></textarea>
-        @if (form.controls.description.invalid && form.controls.description.touched) {
-          <p class="mt-1 text-xs text-red-600">Omschrijving mag maximaal 2000 tekens bevatten.</p>
-        }
-      </div>
-
-      <!-- Duration and Price -->
-      <div class="mb-4 grid grid-cols-2 gap-4">
-        <div>
-          <label for="sfd-duration" class="block text-sm font-medium text-gray-700 mb-1">Duur (minuten)</label>
+        <!-- Name -->
+        <div class="mb-4">
+          <label for="sfd-name" class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
           <input
-            id="sfd-duration"
-            formControlName="duration"
-            type="number"
-            min="1"
+            id="sfd-name"
+            formControlName="name"
+            type="text"
             class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
-          @if (form.controls.duration.invalid && form.controls.duration.touched) {
-            <p class="mt-1 text-xs text-red-600">Duur is verplicht.</p>
+          @if (form.controls.name.invalid && form.controls.name.touched) {
+            <p class="mt-1 text-xs text-red-600">Naam is verplicht (max. 150 tekens).</p>
           }
         </div>
-        <div>
-          <label for="sfd-price" class="block text-sm font-medium text-gray-700 mb-1">Prijs</label>
-          <input
-            id="sfd-price"
-            formControlName="price"
-            type="number"
-            min="0"
-            step="0.01"
+
+        <!-- Description -->
+        <div class="mb-4">
+          <label for="sfd-description" class="block text-sm font-medium text-gray-700 mb-1">Omschrijving</label>
+          <textarea
+            id="sfd-description"
+            formControlName="description"
+            rows="3"
             class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-          @if (form.controls.price.invalid && form.controls.price.touched) {
-            <p class="mt-1 text-xs text-red-600">Prijs is verplicht en moet 0 of meer zijn.</p>
+          ></textarea>
+          @if (form.controls.description.invalid && form.controls.description.touched) {
+            <p class="mt-1 text-xs text-red-600">Omschrijving mag maximaal 2000 tekens bevatten.</p>
           }
         </div>
-      </div>
 
-      <!-- Category -->
-      <div class="mb-6">
-        <label for="sfd-categoryId" class="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
-        <select
-          id="sfd-categoryId"
-          formControlName="categoryId"
-          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
-        >
-          <option [value]="null">Geen</option>
-          @for (category of categories(); track category.id) {
-            <option [value]="category.id">{{ category.name }}</option>
-          }
-        </select>
-      </div>
+        <!-- Duration and Price -->
+        <div class="mb-4 grid grid-cols-2 gap-4">
+          <div>
+            <label for="sfd-duration" class="block text-sm font-medium text-gray-700 mb-1">Duur (minuten)</label>
+            <input
+              id="sfd-duration"
+              formControlName="duration"
+              type="number"
+              min="1"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            @if (form.controls.duration.invalid && form.controls.duration.touched) {
+              <p class="mt-1 text-xs text-red-600">Duur is verplicht.</p>
+            }
+          </div>
+          <div>
+            <label for="sfd-price" class="block text-sm font-medium text-gray-700 mb-1">Prijs</label>
+            <input
+              id="sfd-price"
+              formControlName="price"
+              type="number"
+              min="0"
+              step="0.01"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            @if (form.controls.price.invalid && form.controls.price.touched) {
+              <p class="mt-1 text-xs text-red-600">Prijs is verplicht en moet 0 of meer zijn.</p>
+            }
+          </div>
+        </div>
 
-      <!-- Actions -->
-      <div class="flex justify-end gap-3">
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          (click)="onCancel()"
-        >
-          Annuleren
-        </button>
-        <button
-          type="submit"
-          [disabled]="form.invalid"
-          class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Opslaan
-        </button>
+        <!-- Category -->
+        <div class="mb-6">
+          <label for="sfd-categoryId" class="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+          <select
+            id="sfd-categoryId"
+            formControlName="categoryId"
+            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          >
+            <option [value]="null">Geen</option>
+            @for (category of categories(); track category.id) {
+              <option [value]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            (click)="onCancel()"
+          >
+            Annuleren
+          </button>
+          <button
+            type="submit"
+            [disabled]="form.invalid"
+            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Opslaan
+          </button>
+        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
 </dialog>
