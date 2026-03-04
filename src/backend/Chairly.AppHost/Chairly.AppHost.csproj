@@ -4,6 +4,10 @@
     <ProjectReference Include="..\Chairly.Api\Chairly.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Chairly.AppHost</RootNamespace>

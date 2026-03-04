@@ -612,7 +612,7 @@
         "dotnet test src/backend/Chairly.slnx passes"
       ],
       "priority": 31,
-      "passes": false,
+      "passes": true,
       "notes": "Use the Aspire hosting packages: Aspire.Hosting.PostgreSQL for PostgreSQL. Add the NuGet package Aspire.Hosting.PostgreSQL to Chairly.AppHost if not present. For the API to read the injected connection string, ensure Chairly.Api references Aspire.ServiceDefaults or uses builder.AddServiceDefaults() in Program.cs. The connection string name used in AddDatabase must match GetConnectionString() call in the Infrastructure layer. Check existing DbContext registration in Chairly.Infrastructure for the current connection string name."
     },
     {
