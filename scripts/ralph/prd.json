@@ -740,7 +740,7 @@
         "npx nx affected -t build --base=origin/main passes"
       ],
       "priority": 38,
-      "passes": false,
+      "passes": true,
       "notes": "Tailwind CSS v4 uses @theme { } blocks in the CSS entry file (apps/chairly/src/tailwind.css) to define design tokens as CSS custom properties. Define --color-primary-* (violet) and --color-accent-* (pink) inside @theme. Then apply these via Tailwind utility classes in component templates. Follow the existing Tailwind v4 pattern — the tailwind.css file must not be merged with styles.scss."
     },
     {
