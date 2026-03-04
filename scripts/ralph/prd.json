@@ -879,7 +879,7 @@
         "dotnet build src/backend/Chairly.Api/Chairly.Api.csproj passes"
       ],
       "priority": 47,
-      "passes": false,
+      "passes": true,
       "notes": "Current AddPostgres(\"postgres\").AddDatabase(\"ChairlyDb\") setup appears to use ephemeral storage in local runs, causing data loss after restart. Use Aspire Postgres persistent volume support (e.g., WithDataVolume or equivalent stable mount strategy)."
     },
     {
