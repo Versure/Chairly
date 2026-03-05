@@ -45,6 +45,9 @@ internal sealed class StaffMemberConfiguration : IEntityTypeConfiguration<StaffM
         builder.Property(s => s.UpdatedBy)
             .IsRequired(false);
 
+        builder.Property(s => s.Role)
+            .HasConversion<string>();
+
         builder.HasIndex(s => new { s.FirstName, s.LastName, s.TenantId });
     }
 }
