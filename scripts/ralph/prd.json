@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the Service entity pattern in Chairly.Domain/Entities/Service.cs and ServiceConfiguration in Infrastructure. StaffRole is a classification enum (see ADR-009: 'Classification enums are not affected by this ADR — they represent type, not lifecycle'). IsActive is NOT a stored field — it is derived from DeactivatedAtUtc (null = active). ScheduleJson stores the weekly schedule as a plain JSON string (not a JSON column type). If the dotnet-ef tool is not installed, run: dotnet tool install --global dotnet-ef first. The connection string for design-time migration generation may come from appsettings.json or environment. If migration creation fails due to missing connection string, add a design-time factory: create src/backend/Chairly.Infrastructure/ChairlyDbContextFactory.cs implementing IDesignTimeDbContextFactory<ChairlyDbContext> that creates a context with UseNpgsql('Host=localhost;Database=chairly;Username=chairly;Password=chairly')."
     },
     {
@@ -40,7 +40,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the GetServicesListHandler pattern in Chairly.Api/Features/Services/GetServicesList/. Use TenantConstants.DefaultTenantId (from Chairly.Api.Shared.Tenancy) for tenant filtering. Role enum-to-string mapping: use a switch expression — StaffRole.Manager => 'manager', StaffRole.StaffMember => 'staff_member'. For ScheduleJson deserialization: the JSON is stored as a plain text string. Use JsonSerializer.Deserialize with default options (camelCase from ASP.NET Core is for HTTP responses, not for stored JSON — use default options for round-trip). The ScheduleJson stores keys as day names ('monday', 'tuesday', etc.) and values as arrays of {startTime, endTime} objects stored with camelCase keys. Use JsonSerializerOptions with PropertyNameCaseInsensitive = true to handle this. The .gitkeep in Features/Staff/ should be deleted when real files are added."
     },
     {
@@ -60,7 +60,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Follow CreateServiceHandler pattern. Role parsing: 'manager' => StaffRole.Manager, 'staff_member' => StaffRole.StaffMember — use a switch expression. [AllowedValues] is available in .NET 8+ via System.ComponentModel.DataAnnotations. For schedule serialization, use JsonSerializer.Serialize(command.Schedule ?? new Dictionary<string, ShiftBlockCommand[]>()). The ScheduleJson round-trip: store with camelCase keys (the default System.Text.Json behavior for C# record properties). When deserializing in the handler/read side, use PropertyNameCaseInsensitive=true."
     },
     {
@@ -78,7 +78,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Follow UpdateServiceHandler/UpdateServiceCommand pattern. The endpoint receives both a route {id} and a request body — set command.Id = id in the endpoint lambda before calling mediator.Send(command). Reuse ShiftBlockCommand from the CreateStaffMember slice (import it). UpdatedAtUtc is always set on update. IsActive state (DeactivatedAtUtc) is NOT changed by this endpoint — only deactivate/reactivate endpoints touch it."
     },
     {
@@ -99,8 +99,61 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Follow the ToggleServiceActive pattern but as two separate endpoints (not toggle). Deactivate sets DeactivatedAtUtc/DeactivatedBy to values; reactivate sets them to null. Both also update UpdatedAtUtc/UpdatedBy. The response IsActive is computed: entity.DeactivatedAtUtc == null. The frontend calls PATCH /api/staff/{id}/deactivate and PATCH /api/staff/{id}/reactivate (matching the StaffApiService in libs/chairly/src/lib/staff/data-access/staff-api.service.ts). After completing this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
+      "passes": true,
+      "notes": "Follow the ToggleServiceActive pattern but as two separate endpoints (not toggle). Deactivate sets DeactivatedAtUtc/DeactivatedBy to values; reactivate sets them to null. Both also update UpdatedAtUtc/UpdatedBy. The response IsActive is computed: entity.DeactivatedAtUtc == null. The frontend calls PATCH /api/staff/{id}/deactivate and PATCH /api/staff/{id}/reactivate (matching the StaffApiService in libs/chairly/src/lib/staff/data-access/staff-api.service.ts)."
+    },
+    {
+      "id": "SMB-006",
+      "title": "Fix GetStaffListHandler: remove duplicate role mapping and stale .gitkeep",
+      "description": "As a developer, I want GetStaffListHandler to reuse CreateStaffMemberHandler.ToResponse() so that role mapping logic exists in exactly one place.",
+      "acceptanceCriteria": [
+        "src/backend/Chairly.Api/Features/Staff/.gitkeep deleted",
+        "GetStaffListHandler.cs: remove the private static MapRole() method entirely",
+        "GetStaffListHandler.cs: remove the private static _jsonOptions field (no longer needed)",
+        "GetStaffListHandler.cs: replace the members.Select(s => new StaffMemberResponse(...)) block with members.Select(CreateStaffMemberHandler.ToResponse)",
+        "GetStaffListHandler.cs: remove unused 'using Chairly.Domain.Enums;' import",
+        "GetStaffListHandler.cs: remove unused 'using System.Text.Json;' import",
+        "GetStaffListHandler.cs: add 'using Chairly.Api.Features.Staff.CreateStaffMember;' import",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "CreateStaffMemberHandler.ToResponse() is already internal static and is used by UpdateStaffMemberHandler, DeactivateStaffMemberHandler, and ReactivateStaffMemberHandler. GetStaffListHandler currently has its own private MapRole() that is an exact duplicate — introduced in SMB-002. After the fix, the return statement should be: return members.Select(CreateStaffMemberHandler.ToResponse); — one line replacing the entire Select lambda and the MapRole method. Verify the existing test GetStaffListHandler_HappyPath_ReturnsListOrderedByFirstNameLastName still passes."
+    },
+    {
+      "id": "SMB-007",
+      "title": "Fix DeactivateStaffMemberHandler: add idempotency guard",
+      "description": "As a developer, I want DeactivateStaffMemberHandler to be idempotent so that calling deactivate on an already-inactive member does not overwrite the original DeactivatedAtUtc audit timestamp.",
+      "acceptanceCriteria": [
+        "DeactivateStaffMemberHandler.cs: after the NotFound check, add an early-return guard: if (member.DeactivatedAtUtc != null) return CreateStaffMemberHandler.ToResponse(member);",
+        "The guard returns the current state without calling SaveChangesAsync when the member is already deactivated",
+        "StaffHandlerTests.cs: add test DeactivateStaffMemberHandler_AlreadyInactive_DoesNotOverwriteDeactivatedAtUtc — seeds a member with DeactivatedAtUtc set to a known past timestamp, calls the handler, then asserts that db.StaffMembers.First().DeactivatedAtUtc equals the original timestamp (not a new value)",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Place the idempotency guard immediately after the 'if (member is null) return new NotFound();' block and before any timestamp assignments. The guard is: if (member.DeactivatedAtUtc != null) return CreateStaffMemberHandler.ToResponse(member); — no SaveChangesAsync call. For the new test: set the member's DeactivatedAtUtc to a specific past value (e.g. DateTimeOffset.UtcNow.AddDays(-1)), save to DB, call the handler, then assert db.StaffMembers.First().DeactivatedAtUtc equals the original past timestamp."
+    },
+    {
+      "id": "SMB-008",
+      "title": "Store StaffRole as string in database",
+      "description": "As a developer, I want StaffRole to be stored as a string column so that the data is human-readable and resilient to enum value reordering.",
+      "acceptanceCriteria": [
+        "StaffMemberConfiguration.cs: add builder.Property(s => s.Role).HasConversion<string>(); inside the Configure() method",
+        "New EF Core migration named 'ConvertStaffRoleToString' created by running: dotnet ef migrations add ConvertStaffRoleToString -p src/backend/Chairly.Infrastructure/Chairly.Infrastructure.csproj -s src/backend/Chairly.Api/Chairly.Api.csproj",
+        "Migration Up() method replaced with raw SQL that converts integer values to their string names — see notes for exact SQL",
+        "Migration Down() method replaced with raw SQL that converts string names back to integers — see notes for exact SQL",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "In StaffMemberConfiguration.cs add after the existing property configs: builder.Property(s => s.Role).HasConversion<string>(); — After running 'dotnet ef migrations add ConvertStaffRoleToString', EF Core generates an AlterColumn call that uses CAST, which would produce '0'/'1' instead of 'Manager'/'StaffMember'. Replace the entire generated Up() and Down() body with raw SQL instead. Up(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE text USING CASE \\\"Role\\\" WHEN 0 THEN 'Manager' WHEN 1 THEN 'StaffMember' END;\"); Down(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE integer USING CASE \\\"Role\\\" WHEN 'Manager' THEN 0 WHEN 'StaffMember' THEN 1 END;\"); — The in-memory database used in tests does not enforce column types, so all existing tests pass without modification. After completing this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push (to the existing PR branch), wait for CI."
     }
   ]
 }

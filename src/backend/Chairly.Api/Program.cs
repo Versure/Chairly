@@ -1,4 +1,5 @@
 using Chairly.Api.Features.Services;
+using Chairly.Api.Features.Staff;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
@@ -52,6 +53,7 @@ app.UseHttpsRedirection();
 
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
+app.MapStaffEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts
