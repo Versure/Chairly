@@ -142,6 +142,7 @@ src/frontend/chairly/
 - **OnPush change detection** on all components
 - Angular signals over decorators: `input()` over `@Input()`, `model()` over `@Input`+`@Output`, `OutputEmitterRef` over `EventEmitter`
 - NgRx SignalStore for shared/feature state
+- Use `takeUntilDestroyed(destroyRef)` from `@angular/core/rxjs-interop` for subscription cleanup — always inject `DestroyRef` and pass it explicitly, even inside a constructor where the argument is optional. Never use the `Subject` + `ngOnDestroy` teardown pattern.
 - Smart/Dumb component pattern: containers load data, presentational components display it
 - Services for API calls, one service per backend context
 - Tailwind CSS v4 for styling, SCSS for component styles. Tailwind v4 is imported in `apps/chairly/src/tailwind.css` (plain CSS). SCSS global styles go in `apps/chairly/src/styles.scss`. These two files must never be merged.
@@ -275,6 +276,7 @@ npx nx affected -t build --base=main
 - No cross-domain imports in the frontend without going through `shared/`
 - No MediatR NuGet package — use the custom mediator
 - No `@Input()`/`@Output()`/`@ViewChild()` decorators — use signal-based APIs (`input()`, `model()`, `viewChild()`, `OutputEmitterRef`)
+- No `Subject` + `ngOnDestroy` for subscription cleanup — use `takeUntilDestroyed(destroyRef)` with an injected `DestroyRef`
 - No function calls in Angular templates — use signals or pipes
 - No inline styles in Angular templates
 - No inline `template:` in Angular components — always use `templateUrl:` with a separate `.html` file

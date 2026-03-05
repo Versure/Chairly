@@ -93,7 +93,8 @@ export default [
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/no-any': 'error',
-      '@angular-eslint/template/no-inline-styles': 'error',
+      // allowBindToStyle: true — needed for dynamic [style.background-color] binding in color picker
+      '@angular-eslint/template/no-inline-styles': ['error', { allowBindToStyle: true }],
     },
   },
 
@@ -164,12 +165,14 @@ export default [
     },
     plugins: { 'rxjs-angular-x': rxjsAngular },
     rules: {
+      // checkDestroy: false — takeUntilDestroyed(destroyRef) handles cleanup via DestroyRef,
+      // ngOnDestroy is not needed with this modern Angular pattern (CLAUDE.md convention)
       'rxjs-angular-x/prefer-takeuntil': [
         'error',
         {
           alias: ['takeUntilDestroyed'],
           checkDecorators: ['Component', 'Directive'],
-          checkDestroy: true,
+          checkDestroy: false,
         },
       ],
       'rxjs-angular-x/prefer-async-pipe': 'warn',
