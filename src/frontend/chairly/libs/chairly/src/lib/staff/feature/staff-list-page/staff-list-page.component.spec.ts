@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
@@ -106,5 +106,32 @@ describe('StaffListPageComponent', () => {
     fixture.detectChanges();
 
     expect(mockApi.create).toHaveBeenCalledWith(request);
+  });
+
+  it('shows error message when StaffApiService.create throws an error', () => {
+    mockApi.create = vi.fn().mockReturnValue(throwError(() => new Error('Server error')));
+
+    const request: CreateStaffMemberRequest = {
+      firstName: 'Anna',
+      lastName: 'Bakker',
+      role: 'staff_member',
+      color: '#6366f1',
+      photoUrl: null,
+      schedule: {},
+    };
+
+    const formDialogComponent =
+      fixture.debugElement.children
+        .map((de) => de.componentInstance)
+        .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+
+    expect(formDialogComponent).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    formDialogComponent!.saved.emit(request);
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector('p.text-red-600, p.text-red-400') as Element | null;
+    expect(errorEl).toBeTruthy();
+    expect(errorEl?.textContent?.trim()).toBeTruthy();
   });
 });

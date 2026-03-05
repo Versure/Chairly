@@ -13,6 +13,11 @@
     </button>
   </div>
 
+  <!-- Mutation error -->
+  @if (mutationError()) {
+    <p class="px-6 pt-3 text-sm text-red-600 dark:text-red-400">{{ mutationError() }}</p>
+  }
+
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {

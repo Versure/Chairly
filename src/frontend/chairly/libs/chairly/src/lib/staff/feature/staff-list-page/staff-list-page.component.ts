@@ -35,6 +35,7 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
   protected readonly selectedStaff = signal<StaffMemberResponse | null>(null);
   protected readonly staffMembers = this.store.staffMembers;
   protected readonly isLoading = this.store.isLoading;
+  protected readonly mutationError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.store.loadAll();
@@ -61,22 +62,34 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
   }
 
   protected onReactivate(member: StaffMemberResponse): void {
+    this.mutationError.set(null);
     this.staffApi
       .reactivate(member.id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.store.reactivateStaffMember(member.id);
+      .subscribe({
+        next: () => {
+          this.store.reactivateStaffMember(member.id);
+        },
+        error: () => {
+          this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+        },
       });
   }
 
   protected onConfirmDeactivate(): void {
     const member = this.selectedStaff();
+    this.mutationError.set(null);
     if (member) {
       this.staffApi
         .deactivate(member.id)
         .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          this.store.deactivateStaffMember(member.id);
+        .subscribe({
+          next: () => {
+            this.store.deactivateStaffMember(member.id);
+          },
+          error: () => {
+            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          },
         });
     }
     this.selectedStaff.set(null);
@@ -84,20 +97,31 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
 
   protected onSave(request: CreateStaffMemberRequest): void {
     const member = this.selectedStaff();
+    this.mutationError.set(null);
     this.selectedStaff.set(null);
     if (member) {
       this.staffApi
         .update(member.id, request)
         .pipe(takeUntil(this.destroy$))
-        .subscribe((updated) => {
-          this.store.updateStaffMember(updated);
+        .subscribe({
+          next: (updated) => {
+            this.store.updateStaffMember(updated);
+          },
+          error: () => {
+            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          },
         });
     } else {
       this.staffApi
         .create(request)
         .pipe(takeUntil(this.destroy$))
-        .subscribe((created) => {
-          this.store.addStaffMember(created);
+        .subscribe({
+          next: (created) => {
+            this.store.addStaffMember(created);
+          },
+          error: () => {
+            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          },
         });
     }
   }
