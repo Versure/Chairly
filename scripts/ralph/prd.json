@@ -262,7 +262,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "This is a pure refactor — no behaviour change. takeUntilDestroyed(this.destroyRef) is functionally equivalent to takeUntil(this.destroy$) + ngOnDestroy. Angular 16+ supports this pattern; the project uses Angular 21."
     }
   ]

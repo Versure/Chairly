@@ -1,3 +1,13 @@
+## 2026-03-05 - SM-012
+- What was implemented: Refactored StaffListPageComponent to use `takeUntilDestroyed(this.destroyRef)` instead of Subject+takeUntil. Removed `OnDestroy`, `ngOnDestroy()`, and `destroy$`. Added `private readonly destroyRef = inject(DestroyRef)`. Updated ESLint config to set `checkDestroy: false` on `prefer-takeuntil` rule (DestroyRef handles cleanup without ngOnDestroy).
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (refactored)
+  - src/frontend/chairly/eslint.config.mjs (checkDestroy: false + comment)
+- **Learnings for future iterations:**
+  - `rxjs-angular-x/prefer-takeuntil` with `checkDestroy: true` requires `ngOnDestroy` even when using `takeUntilDestroyed` alias — must set `checkDestroy: false` to use the modern Angular pattern
+  - With `checkDestroy: false`, the rule still enforces `takeUntilDestroyed` usage in pipes
+---
+
 ## 2026-03-05 - SM-011
 - What was implemented: Removed StaffApiService from staff.routes.ts providers (it is providedIn: 'root'). Added inline comment on no-inline-styles ESLint rule explaining the allowBindToStyle exception.
 - Files changed:
@@ -113,7 +123,7 @@
 - Two-way bindings: use `model<T>()` (ModelSignal) instead of `input()` + `output()` — `@angular-eslint/prefer-signal-model` enforces this; `model.set()` both updates locally and emits `${name}Change` to parent
 - `TestBed.flushEffects()` is deprecated in Angular 21 — avoid `effect()` for sync patterns; prefer `model()` where possible
 - When adding a new domain, update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>`
-- Components with subscriptions need Subject+takeUntil: `private destroy$ = new Subject<void>(); ngOnDestroy() { destroy$.next(); destroy$.complete(); }` with `.pipe(takeUntil(this.destroy$))`
+- Components with subscriptions use `takeUntilDestroyed(this.destroyRef)` with `private readonly destroyRef = inject(DestroyRef)` — no `ngOnDestroy` needed. ESLint `prefer-takeuntil` must have `checkDestroy: false` for this pattern to work.
 - `vitest/no-conditional-expect`: never put `expect()` inside `if` blocks — assert outside, then use `x!.method()` if needed
 - Angular `input()` signals update only during change detection — calling a child method immediately after `signal.set()` won't see the updated input; pass data as method parameter instead
 
