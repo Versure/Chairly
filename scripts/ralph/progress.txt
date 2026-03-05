@@ -1,3 +1,15 @@
+## 2026-03-05 - CI fix: form dialog pre-fill in edit mode
+- What was implemented: Fixed E2E test failure where clicking 'Medewerker bewerken' opened the dialog but Voornaam was empty instead of pre-filled
+- Root cause: Angular `input()` signals are only updated during change detection, not synchronously. Calling `open()` immediately after `selectedStaff.set(member)` meant the child's `this.staffMember()` still read `null`
+- Fix: Changed `open()` to accept an optional `member` parameter; list page now passes the member directly to `open(member)` instead of relying on the input signal
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (open() now accepts optional StaffMemberResponse | null)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (passes member to open())
+- **Learnings for future iterations:**
+  - Angular `input()` signals are NOT updated synchronously — they only update during change detection. NEVER call a child method immediately after setting a signal that feeds an input binding and expect the child's `input()` to be current.
+  - Pattern: when a parent needs to call a child method with data, pass the data as a method parameter rather than relying on the input binding to propagate first
+---
+
 ## 2026-03-05 - SM-009
 - What was implemented: Playwright E2E spec for staff management — 7 tests covering page load, member display, form dialog open, POST create, edit pre-fill, PATCH deactivate with confirmation, and nav link
 - Files changed:
@@ -85,6 +97,7 @@
 - When adding a new domain, update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>`
 - Components with subscriptions need Subject+takeUntil: `private destroy$ = new Subject<void>(); ngOnDestroy() { destroy$.next(); destroy$.complete(); }` with `.pipe(takeUntil(this.destroy$))`
 - `vitest/no-conditional-expect`: never put `expect()` inside `if` blocks — assert outside, then use `x!.method()` if needed
+- Angular `input()` signals update only during change detection — calling a child method immediately after `signal.set()` won't see the updated input; pass data as method parameter instead
 
 # Ralph Progress Log
 Started: Thu Mar  5 07:56:07 CET 2026
