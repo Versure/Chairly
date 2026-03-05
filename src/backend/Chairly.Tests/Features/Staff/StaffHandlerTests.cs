@@ -207,6 +207,23 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task DeactivateStaffMemberHandler_AlreadyInactive_DoesNotOverwriteDeactivatedAtUtc()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        var originalDeactivatedAt = DateTimeOffset.UtcNow.AddDays(-1);
+        existing.DeactivatedAtUtc = originalDeactivatedAt;
+        existing.DeactivatedBy = Guid.Empty;
+        await db.SaveChangesAsync();
+
+        var handler = new DeactivateStaffMemberHandler(db);
+        await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
+
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.Equal(originalDeactivatedAt, saved.DeactivatedAtUtc);
+    }
+
+    [Fact]
     public async Task ReactivateStaffMemberHandler_HappyPath_ClearsDeactivatedAtUtc()
     {
         await using var db = CreateDbContext();

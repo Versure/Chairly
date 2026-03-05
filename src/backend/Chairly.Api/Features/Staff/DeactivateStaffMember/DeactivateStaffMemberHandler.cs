@@ -24,6 +24,11 @@ internal sealed class DeactivateStaffMemberHandler(ChairlyDbContext db) : IReque
             return new NotFound();
         }
 
+        if (member.DeactivatedAtUtc != null)
+        {
+            return CreateStaffMemberHandler.ToResponse(member);
+        }
+
         member.DeactivatedAtUtc = DateTimeOffset.UtcNow;
 #pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
         member.DeactivatedBy = Guid.Empty;
