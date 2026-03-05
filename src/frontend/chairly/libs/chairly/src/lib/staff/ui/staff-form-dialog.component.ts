@@ -19,12 +19,13 @@ import {
   StaffRole,
   WeeklySchedule,
 } from '../models';
+import { ShiftScheduleEditorComponent } from './shift-schedule-editor.component';
 
 @Component({
   selector: 'chairly-staff-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ShiftScheduleEditorComponent],
   templateUrl: './staff-form-dialog.component.html',
 })
 export class StaffFormDialogComponent {
