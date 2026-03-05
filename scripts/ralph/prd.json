@@ -225,7 +225,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Look at how StaffStore.loadAll() handles errors (sets error state) — apply the same idea in the component for mutations. Keep the error message generic and Dutch. The store's own error state is for loadAll only; mutation errors belong to the component."
     },
     {

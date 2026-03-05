@@ -1,3 +1,14 @@
+## 2026-03-05 - SM-010
+- What was implemented: Added `mutationError` signal to StaffListPageComponent, reset on each mutation attempt, error handler sets Dutch message on API failure. Template renders error below page header. Added test verifying error appears when create API throws.
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (mutationError signal, error handlers in onSave/onReactivate/onConfirmDeactivate)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.html (error message paragraph)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts (new test using throwError)
+- **Learnings for future iterations:**
+  - Test mutation errors via DOM (`querySelector('p.text-red-600')`) rather than accessing protected signals directly
+  - Use `throwError(() => new Error(...))` from rxjs to simulate Observable errors in tests
+---
+
 ## 2026-03-05 - CI fix: form dialog pre-fill in edit mode
 - What was implemented: Fixed E2E test failure where clicking 'Medewerker bewerken' opened the dialog but Voornaam was empty instead of pre-filled
 - Root cause: Angular `input()` signals are only updated during change detection, not synchronously. Calling `open()` immediately after `selectedStaff.set(member)` meant the child's `this.staffMember()` still read `null`
