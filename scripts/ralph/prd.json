@@ -1,159 +1,102 @@
 {
   "project": "Chairly",
-  "branchName": "ralph/staff-management-backend",
-  "description": "Staff Management Backend - .NET 10 Web API for managing staff members with CRUD operations, role assignment, weekly schedule storage as JSON, and explicit deactivation/reactivation following ADR-009 timestamps pattern",
+  "branchName": "ralph/client-management-backend",
+  "description": "Client Management Backend — .NET 10 Web API for managing salon clients with full CRUD and soft-delete to preserve booking history",
   "userStories": [
     {
-      "id": "SMB-001",
-      "title": "StaffMember entity, EF Core configuration, and migration",
-      "description": "As a developer, I need a StaffMember entity with EF Core mapping and a database migration so that staff data can be persisted.",
+      "id": "CLB-001",
+      "title": "Client entity, EF Core configuration, and migration",
+      "description": "As a developer, I need the Client domain entity, EF Core configuration, and a database migration so that client data can be persisted.",
       "acceptanceCriteria": [
-        "src/backend/Chairly.Domain/Enums/StaffRole.cs created with: public enum StaffRole { Manager, StaffMember } — note: classification enum, not affected by ADR-009",
-        "src/backend/Chairly.Domain/Entities/StaffMember.cs created with properties: Id (Guid), TenantId (Guid), FirstName (string), LastName (string), Role (StaffRole), Color (string, hex color), PhotoUrl (string?), ScheduleJson (string, stores JSON of weekly schedule, default '{}'), DeactivatedAtUtc (DateTimeOffset?, null = active per ADR-009), DeactivatedBy (Guid?, null = active), CreatedAtUtc (DateTimeOffset), CreatedBy (Guid), UpdatedAtUtc (DateTimeOffset?), UpdatedBy (Guid?)",
-        ".gitkeep removed from Chairly.Domain/Enums/ and Chairly.Domain/Entities/",
-        "src/backend/Chairly.Infrastructure/Persistence/Configurations/StaffMemberConfiguration.cs created implementing IEntityTypeConfiguration<StaffMember> with: HasKey on Id, TenantId required, FirstName required MaxLength(100), LastName required MaxLength(100), Color required MaxLength(20), PhotoUrl optional MaxLength(500), ScheduleJson required HasColumnType('text'), CreatedBy required, DeactivatedBy optional, UpdatedBy optional, index on (FirstName, LastName, TenantId) not unique",
-        "ChairlyDbContext.cs updated: add 'public DbSet<StaffMember> StaffMembers => Set<StaffMember>();'",
-        "EF Core migration created named 'AddStaffMember' by running: dotnet ef migrations add AddStaffMember -p src/backend/Chairly.Infrastructure/Chairly.Infrastructure.csproj -s src/backend/Chairly.Api/Chairly.Api.csproj (run from repo root)",
+        "src/backend/Chairly.Domain/Entities/Client.cs created with properties: Id (Guid), TenantId (Guid), FirstName (string), LastName (string), Email (string?), PhoneNumber (string?), Notes (string?), CreatedAtUtc (DateTimeOffset), CreatedBy (Guid), UpdatedAtUtc (DateTimeOffset?), UpdatedBy (Guid?), DeletedAtUtc (DateTimeOffset?), DeletedBy (Guid?)",
+        "No EF Core dependency in Chairly.Domain",
+        "src/backend/Chairly.Infrastructure/Persistence/Configurations/ClientConfiguration.cs created implementing IEntityTypeConfiguration<Client>: table name 'Clients', TenantId required, FirstName required MaxLength(100), LastName required MaxLength(100), Email optional MaxLength(256), PhoneNumber optional MaxLength(50), Notes optional MaxLength(1000), CreatedBy required, UpdatedBy optional, DeletedBy optional, index on TenantId",
+        "ChairlyDbContext.cs updated: add 'public DbSet<Client> Clients => Set<Client>();'",
+        "EF Core migration 'AddClient' created by running: dotnet ef migrations add AddClient -p src/backend/Chairly.Infrastructure/Chairly.Infrastructure.csproj -s src/backend/Chairly.Api/Chairly.Api.csproj (run from repo root)",
+        ".gitkeep removed from Chairly.Api/Features/Clients/ when real files are added in subsequent stories",
         "dotnet build src/backend/Chairly.slnx passes",
         "dotnet test src/backend/Chairly.slnx passes",
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "Follow the Service entity pattern in Chairly.Domain/Entities/Service.cs and ServiceConfiguration in Infrastructure. StaffRole is a classification enum (see ADR-009: 'Classification enums are not affected by this ADR — they represent type, not lifecycle'). IsActive is NOT a stored field — it is derived from DeactivatedAtUtc (null = active). ScheduleJson stores the weekly schedule as a plain JSON string (not a JSON column type). If the dotnet-ef tool is not installed, run: dotnet tool install --global dotnet-ef first. The connection string for design-time migration generation may come from appsettings.json or environment. If migration creation fails due to missing connection string, add a design-time factory: create src/backend/Chairly.Infrastructure/ChairlyDbContextFactory.cs implementing IDesignTimeDbContextFactory<ChairlyDbContext> that creates a context with UseNpgsql('Host=localhost;Database=chairly;Username=chairly;Password=chairly')."
+      "passes": false,
+      "notes": "Follow the same pattern as StaffMember entity in Chairly.Domain/Entities/StaffMember.cs and its configuration in Chairly.Infrastructure/Persistence/Configurations/StaffMemberConfiguration.cs. No enum fields on Client — no HasConversion needed. Run dotnet format before --verify-no-changes to auto-fix any encoding issues. If migration creation fails due to missing connection string, add a design-time factory: src/backend/Chairly.Infrastructure/ChairlyDbContextFactory.cs implementing IDesignTimeDbContextFactory<ChairlyDbContext> — check if this file already exists first."
     },
     {
-      "id": "SMB-002",
-      "title": "StaffMemberResponse DTO and GetStaffList endpoint",
-      "description": "As a frontend developer, I need a GET /api/staff endpoint that returns all staff members so the frontend can display the staff list.",
+      "id": "CLB-002",
+      "title": "ClientResponse DTO and GetClientsList endpoint",
+      "description": "As a developer, I need a GET /api/clients endpoint that returns all non-deleted clients for the current tenant so that the frontend can display the client list.",
       "acceptanceCriteria": [
-        "src/backend/Chairly.Api/Features/Staff/ShiftBlockResponse.cs created: internal sealed record ShiftBlockResponse(string StartTime, string EndTime)",
-        "src/backend/Chairly.Api/Features/Staff/StaffMemberResponse.cs created: internal sealed record StaffMemberResponse(Guid Id, string FirstName, string LastName, string Role, string Color, string? PhotoUrl, bool IsActive, Dictionary<string, ShiftBlockResponse[]> Schedule, DateTimeOffset CreatedAtUtc, DateTimeOffset? UpdatedAtUtc)",
-        "src/backend/Chairly.Api/Features/Staff/GetStaffList/GetStaffListQuery.cs created: internal sealed record GetStaffListQuery() : IRequest<IEnumerable<StaffMemberResponse>>",
-        "src/backend/Chairly.Api/Features/Staff/GetStaffList/GetStaffListHandler.cs created: queries db.StaffMembers where TenantId == TenantConstants.DefaultTenantId, orders by FirstName then LastName, maps to StaffMemberResponse. Role is mapped by converting the enum value: StaffRole.Manager -> 'manager', StaffRole.StaffMember -> 'staff_member'. IsActive = (entity.DeactivatedAtUtc == null). Schedule = deserialize ScheduleJson using System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, ShiftBlockResponse[]>>(entity.ScheduleJson) ?? new Dictionary<string, ShiftBlockResponse[]>()",
-        "src/backend/Chairly.Api/Features/Staff/GetStaffList/GetStaffListEndpoint.cs created: MapGet on '/' returning Results.Ok(result)",
-        "src/backend/Chairly.Api/Features/Staff/StaffEndpoints.cs created: internal static class StaffEndpoints with MapStaffEndpoints extension method that creates group on '/api/staff' and calls MapGetStaffList()",
-        "Program.cs updated: add 'app.MapStaffEndpoints();' after app.MapServiceEndpoints()",
-        "src/backend/Chairly.Tests/Features/Staff/StaffHandlerTests.cs created with test: GetStaffListHandler_HappyPath_ReturnsListOrderedByFirstNameLastName — seeds two StaffMembers and asserts count and ordering",
+        "src/backend/Chairly.Api/Features/Clients/ClientResponse.cs created: internal sealed record ClientResponse(Guid Id, string FirstName, string LastName, string? Email, string? PhoneNumber, string? Notes, DateTimeOffset CreatedAtUtc, DateTimeOffset? UpdatedAtUtc)",
+        "src/backend/Chairly.Api/Features/Clients/GetClientsList/GetClientsListQuery.cs created: internal sealed record GetClientsListQuery() : IRequest<IEnumerable<ClientResponse>>",
+        "src/backend/Chairly.Api/Features/Clients/GetClientsList/GetClientsListHandler.cs created: queries db.Clients where TenantId == TenantConstants.DefaultTenantId AND DeletedAtUtc == null, orders by LastName then FirstName, maps to ClientResponse[]",
+        "src/backend/Chairly.Api/Features/Clients/GetClientsList/GetClientsListEndpoint.cs created: MapGet on '/' returning Results.Ok(result)",
+        "src/backend/Chairly.Api/Features/Clients/ClientEndpoints.cs created: static class with MapClientEndpoints extension method that creates a group on '/api/clients' and calls MapGetClientsList()",
+        "Program.cs updated: add 'app.MapClientEndpoints();' after app.MapStaffEndpoints()",
+        "src/backend/Chairly.Tests/Features/Clients/ClientHandlerTests.cs created with at least 1 test: GetClientsListHandler_ReturnsOnlyNonDeletedClientsForTenant — seeds one active and one soft-deleted client, asserts only the active one is returned",
+        "#pragma warning disable CA1812 on all handler classes",
         "dotnet build src/backend/Chairly.slnx passes",
         "dotnet test src/backend/Chairly.slnx passes",
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Follow the GetServicesListHandler pattern in Chairly.Api/Features/Services/GetServicesList/. Use TenantConstants.DefaultTenantId (from Chairly.Api.Shared.Tenancy) for tenant filtering. Role enum-to-string mapping: use a switch expression — StaffRole.Manager => 'manager', StaffRole.StaffMember => 'staff_member'. For ScheduleJson deserialization: the JSON is stored as a plain text string. Use JsonSerializer.Deserialize with default options (camelCase from ASP.NET Core is for HTTP responses, not for stored JSON — use default options for round-trip). The ScheduleJson stores keys as day names ('monday', 'tuesday', etc.) and values as arrays of {startTime, endTime} objects stored with camelCase keys. Use JsonSerializerOptions with PropertyNameCaseInsensitive = true to handle this. The .gitkeep in Features/Staff/ should be deleted when real files are added."
+      "passes": false,
+      "notes": "Follow the GetStaffListHandler pattern. TenantId filtering: use TenantConstants.DefaultTenantId from Chairly.Api.Shared.Tenancy (check how GetStaffListHandler does it). Add #pragma warning disable CA1812 on all handler classes (instantiated via DI reflection). Delete the Chairly.Api/Features/Clients/.gitkeep file when creating real files. Use StringComparer.OrdinalIgnoreCase on any new Dictionary constructors (MA0002)."
     },
     {
-      "id": "SMB-003",
-      "title": "CreateStaffMember endpoint",
-      "description": "As a frontend developer, I need a POST /api/staff endpoint to create a new staff member.",
+      "id": "CLB-003",
+      "title": "CreateClient endpoint",
+      "description": "As a developer, I need a POST /api/clients endpoint that creates a new client so that salon staff can register new clients.",
       "acceptanceCriteria": [
-        "src/backend/Chairly.Api/Features/Staff/CreateStaffMember/ShiftBlockCommand.cs created: internal sealed record ShiftBlockCommand(string StartTime, string EndTime)",
-        "src/backend/Chairly.Api/Features/Staff/CreateStaffMember/CreateStaffMemberCommand.cs created implementing IRequest<StaffMemberResponse> with properties: FirstName (string, [Required][MaxLength(100)]), LastName (string, [Required][MaxLength(100)]), Role (string, [Required][AllowedValues('manager','staff_member')]), Color (string, [Required][MaxLength(20)]), PhotoUrl (string?, [MaxLength(500)]), Schedule (Dictionary<string, ShiftBlockCommand[]>?, nullable — empty schedule if not provided)",
-        "#pragma warning disable CA1812 on command class (ASP.NET Core model binding)",
-        "src/backend/Chairly.Api/Features/Staff/CreateStaffMember/CreateStaffMemberHandler.cs created: creates StaffMember entity with TenantId=TenantConstants.DefaultTenantId, Id=Guid.NewGuid(), parses Role string to StaffRole enum, serializes Schedule dict to ScheduleJson using System.Text.Json.JsonSerializer.Serialize, sets CreatedAtUtc=DateTimeOffset.UtcNow, CreatedBy=Guid.Empty (with MA0026 pragma), IsActive derived from null DeactivatedAtUtc. Returns StaffMemberResponse.",
-        "src/backend/Chairly.Api/Features/Staff/CreateStaffMember/CreateStaffMemberEndpoint.cs created: MapPost on '/' returning Results.Created('/api/staff/{id}', result)",
-        "StaffEndpoints.cs updated: add group.MapCreateStaffMember()",
-        "src/backend/Chairly.Tests/Features/Staff/StaffHandlerTests.cs updated with tests: CreateStaffMemberHandler_HappyPath_CreatesWithCorrectRole — creates a member with role 'manager' and asserts Role==StaffRole.Manager in DB. CreateStaffMemberHandler_HappyPath_StoresScheduleJson — creates with a schedule and asserts ScheduleJson is non-empty. CreateStaffMemberCommand_EmptyFirstName_FailsValidation. CreateStaffMemberCommand_InvalidRole_FailsValidation.",
+        "src/backend/Chairly.Api/Features/Clients/CreateClient/CreateClientCommand.cs created implementing IRequest<ClientResponse> with: FirstName (string, [Required][MaxLength(100)]), LastName (string, [Required][MaxLength(100)]), Email (string?, [EmailAddress] validation attribute), PhoneNumber (string?, [MaxLength(50)]), Notes (string?, [MaxLength(1000)])",
+        "src/backend/Chairly.Api/Features/Clients/CreateClient/CreateClientHandler.cs created: validates command using Validator.TryValidateObject, creates Client entity with TenantId=TenantConstants.DefaultTenantId, Id=Guid.NewGuid(), CreatedAtUtc=DateTimeOffset.UtcNow, CreatedBy=Guid.Empty, saves to DB, returns ClientResponse via internal static ToResponse(Client) method",
+        "CreateClientHandler.ToResponse(Client client) is internal static so it can be reused by UpdateClientHandler and DeleteClientHandler within the same bounded context",
+        "src/backend/Chairly.Api/Features/Clients/CreateClient/CreateClientEndpoint.cs created: POST /api/clients, returns Results.Created('/api/clients/{id}', result)",
+        "ClientEndpoints.cs updated to register the CreateClient endpoint",
+        "ClientHandlerTests.cs updated with at least 2 tests: CreateClientHandler_HappyPath_CreatesAndReturnsClient, CreateClientHandler_MissingFirstName_ReturnsValidationError (or assert validation attribute directly)",
         "dotnet build src/backend/Chairly.slnx passes",
         "dotnet test src/backend/Chairly.slnx passes",
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Follow CreateServiceHandler pattern. Role parsing: 'manager' => StaffRole.Manager, 'staff_member' => StaffRole.StaffMember — use a switch expression. [AllowedValues] is available in .NET 8+ via System.ComponentModel.DataAnnotations. For schedule serialization, use JsonSerializer.Serialize(command.Schedule ?? new Dictionary<string, ShiftBlockCommand[]>()). The ScheduleJson round-trip: store with camelCase keys (the default System.Text.Json behavior for C# record properties). When deserializing in the handler/read side, use PropertyNameCaseInsensitive=true."
+      "passes": false,
+      "notes": "Follow CreateStaffMemberHandler pattern. No enum parsing needed — Client has no enums. The ToResponse() static method maps Client entity fields directly. Use Guid.Empty for CreatedBy (with #pragma warning disable MA0026 if the analyzer fires). Validation: use System.ComponentModel.DataAnnotations.Validator.TryValidateObject to manually validate the command before processing — this is consistent with existing handlers."
     },
     {
-      "id": "SMB-004",
-      "title": "UpdateStaffMember endpoint",
-      "description": "As a frontend developer, I need a PUT /api/staff/{id} endpoint to update an existing staff member's details.",
+      "id": "CLB-004",
+      "title": "UpdateClient endpoint",
+      "description": "As a developer, I need a PUT /api/clients/{id} endpoint that updates an existing client's information.",
       "acceptanceCriteria": [
-        "src/backend/Chairly.Api/Features/Staff/UpdateStaffMember/UpdateStaffMemberCommand.cs created implementing IRequest<OneOf<StaffMemberResponse, NotFound>> with Id (Guid), FirstName ([Required][MaxLength(100)]), LastName ([Required][MaxLength(100)]), Role ([Required][AllowedValues('manager','staff_member')]), Color ([Required][MaxLength(20)]), PhotoUrl (string?, [MaxLength(500)]), Schedule (Dictionary<string, ShiftBlockCommand[]>?)",
-        "src/backend/Chairly.Api/Features/Staff/UpdateStaffMember/UpdateStaffMemberHandler.cs created: finds by Id and TenantId, returns NotFound if missing, updates all fields (FirstName, LastName, Role, Color, PhotoUrl, ScheduleJson), sets UpdatedAtUtc=DateTimeOffset.UtcNow, UpdatedBy=Guid.Empty (MA0026 pragma), saves, returns StaffMemberResponse",
-        "src/backend/Chairly.Api/Features/Staff/UpdateStaffMember/UpdateStaffMemberEndpoint.cs created: MapPut on '/{id:guid}', binds Guid id from route and UpdateStaffMemberCommand from body, sets command.Id = id before sending, returns Results.Ok on success, Results.NotFound on NotFound",
-        "StaffEndpoints.cs updated: add group.MapUpdateStaffMember()",
-        "src/backend/Chairly.Tests/Features/Staff/StaffHandlerTests.cs updated with tests: UpdateStaffMemberHandler_HappyPath_UpdatesFieldsAndSetsUpdatedAtUtc. UpdateStaffMemberHandler_NotFound_ReturnsNotFound.",
+        "src/backend/Chairly.Api/Features/Clients/UpdateClient/UpdateClientCommand.cs created implementing IRequest<OneOf<ClientResponse, NotFound>> with: Id (Guid), FirstName (string, [Required][MaxLength(100)]), LastName (string, [Required][MaxLength(100)]), Email (string?, [EmailAddress]), PhoneNumber (string?, [MaxLength(50)]), Notes (string?, [MaxLength(1000)])",
+        "src/backend/Chairly.Api/Features/Clients/UpdateClient/UpdateClientHandler.cs created: fetches client by Id and TenantId where DeletedAtUtc == null, returns NotFound if not found or already deleted, validates command, updates FirstName/LastName/Email/PhoneNumber/Notes, sets UpdatedAtUtc=DateTimeOffset.UtcNow and UpdatedBy=Guid.Empty, saves, returns ClientResponse via CreateClientHandler.ToResponse()",
+        "src/backend/Chairly.Api/Features/Clients/UpdateClient/UpdateClientEndpoint.cs created: PUT /api/clients/{id:guid}, returns Results.Ok on success, Results.NotFound on NotFound",
+        "ClientEndpoints.cs updated to register the UpdateClient endpoint",
+        "ClientHandlerTests.cs updated with at least 2 tests: UpdateClientHandler_HappyPath_UpdatesAndReturnsClient, UpdateClientHandler_NotFound_ReturnsNotFound",
         "dotnet build src/backend/Chairly.slnx passes",
         "dotnet test src/backend/Chairly.slnx passes",
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Follow UpdateServiceHandler/UpdateServiceCommand pattern. The endpoint receives both a route {id} and a request body — set command.Id = id in the endpoint lambda before calling mediator.Send(command). Reuse ShiftBlockCommand from the CreateStaffMember slice (import it). UpdatedAtUtc is always set on update. IsActive state (DeactivatedAtUtc) is NOT changed by this endpoint — only deactivate/reactivate endpoints touch it."
+      "passes": false,
+      "notes": "Follow UpdateStaffMemberHandler pattern. Reuse CreateClientHandler.ToResponse() (internal static, same bounded context — import using Chairly.Api.Features.Clients.CreateClient). The endpoint receives both route id and body: bind Guid id from route and UpdateClientCommand from body, set command.Id = id before calling mediator.Send(command). A deleted client (DeletedAtUtc != null) cannot be updated — return NotFound in that case."
     },
     {
-      "id": "SMB-005",
-      "title": "DeactivateStaffMember and ReactivateStaffMember endpoints",
-      "description": "As a frontend developer, I need PATCH /api/staff/{id}/deactivate and PATCH /api/staff/{id}/reactivate endpoints to manage staff member active status.",
+      "id": "CLB-005",
+      "title": "DeleteClient endpoint (soft delete)",
+      "description": "As a developer, I need a DELETE /api/clients/{id} endpoint that soft-deletes a client so that their booking history is preserved.",
       "acceptanceCriteria": [
-        "src/backend/Chairly.Api/Features/Staff/DeactivateStaffMember/DeactivateStaffMemberCommand.cs created: internal sealed record DeactivateStaffMemberCommand(Guid Id) : IRequest<OneOf<StaffMemberResponse, NotFound>>",
-        "src/backend/Chairly.Api/Features/Staff/DeactivateStaffMember/DeactivateStaffMemberHandler.cs created: finds by Id+TenantId, returns NotFound if missing, sets DeactivatedAtUtc=DateTimeOffset.UtcNow and DeactivatedBy=Guid.Empty (MA0026 pragma), sets UpdatedAtUtc=DateTimeOffset.UtcNow and UpdatedBy=Guid.Empty, saves, returns StaffMemberResponse with IsActive=false",
-        "src/backend/Chairly.Api/Features/Staff/DeactivateStaffMember/DeactivateStaffMemberEndpoint.cs created: MapPatch on '/{id:guid}/deactivate', returns Results.Ok on success, Results.NotFound on NotFound",
-        "src/backend/Chairly.Api/Features/Staff/ReactivateStaffMember/ReactivateStaffMemberCommand.cs created: internal sealed record ReactivateStaffMemberCommand(Guid Id) : IRequest<OneOf<StaffMemberResponse, NotFound>>",
-        "src/backend/Chairly.Api/Features/Staff/ReactivateStaffMember/ReactivateStaffMemberHandler.cs created: finds by Id+TenantId, returns NotFound if missing, sets DeactivatedAtUtc=null and DeactivatedBy=null, sets UpdatedAtUtc=DateTimeOffset.UtcNow and UpdatedBy=Guid.Empty (MA0026 pragma), saves, returns StaffMemberResponse with IsActive=true",
-        "src/backend/Chairly.Api/Features/Staff/ReactivateStaffMember/ReactivateStaffMemberEndpoint.cs created: MapPatch on '/{id:guid}/reactivate', returns Results.Ok on success, Results.NotFound on NotFound",
-        "StaffEndpoints.cs updated: add group.MapDeactivateStaffMember() and group.MapReactivateStaffMember()",
-        "src/backend/Chairly.Tests/Features/Staff/StaffHandlerTests.cs updated with tests: DeactivateStaffMemberHandler_HappyPath_SetsDeactivatedAtUtc (asserts IsActive=false and DeactivatedAtUtc non-null). DeactivateStaffMemberHandler_NotFound_ReturnsNotFound. ReactivateStaffMemberHandler_HappyPath_ClearsDeactivatedAtUtc (asserts IsActive=true and DeactivatedAtUtc null). ReactivateStaffMemberHandler_NotFound_ReturnsNotFound.",
+        "src/backend/Chairly.Api/Features/Clients/DeleteClient/DeleteClientCommand.cs created implementing IRequest<OneOf<Success, NotFound, Conflict>> with: Id (Guid)",
+        "src/backend/Chairly.Api/Features/Clients/DeleteClient/DeleteClientHandler.cs created: fetches client by Id and TenantId (including already-deleted ones — do NOT filter by DeletedAtUtc == null), returns NotFound if client does not exist, returns Conflict (idempotency) if DeletedAtUtc != null, sets DeletedAtUtc=DateTimeOffset.UtcNow and DeletedBy=Guid.Empty (with MA0026 pragma if needed), saves, returns Success",
+        "src/backend/Chairly.Api/Features/Clients/DeleteClient/DeleteClientEndpoint.cs created: DELETE /api/clients/{id:guid}, returns Results.NoContent() on Success, Results.NotFound() on NotFound, Results.Conflict() on Conflict",
+        "ClientEndpoints.cs updated to register the DeleteClient endpoint",
+        "ClientHandlerTests.cs updated with at least 3 tests: DeleteClientHandler_HappyPath_SetsDeletedAtUtc (asserts client.DeletedAtUtc is non-null after delete), DeleteClientHandler_NotFound_ReturnsNotFound, DeleteClientHandler_AlreadyDeleted_ReturnsConflict (idempotency: re-deleting returns Conflict without overwriting original DeletedAtUtc)",
         "dotnet build src/backend/Chairly.slnx passes",
         "dotnet test src/backend/Chairly.slnx passes",
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "Follow the ToggleServiceActive pattern but as two separate endpoints (not toggle). Deactivate sets DeactivatedAtUtc/DeactivatedBy to values; reactivate sets them to null. Both also update UpdatedAtUtc/UpdatedBy. The response IsActive is computed: entity.DeactivatedAtUtc == null. The frontend calls PATCH /api/staff/{id}/deactivate and PATCH /api/staff/{id}/reactivate (matching the StaffApiService in libs/chairly/src/lib/staff/data-access/staff-api.service.ts)."
-    },
-    {
-      "id": "SMB-006",
-      "title": "Fix GetStaffListHandler: remove duplicate role mapping and stale .gitkeep",
-      "description": "As a developer, I want GetStaffListHandler to reuse CreateStaffMemberHandler.ToResponse() so that role mapping logic exists in exactly one place.",
-      "acceptanceCriteria": [
-        "src/backend/Chairly.Api/Features/Staff/.gitkeep deleted",
-        "GetStaffListHandler.cs: remove the private static MapRole() method entirely",
-        "GetStaffListHandler.cs: remove the private static _jsonOptions field (no longer needed)",
-        "GetStaffListHandler.cs: replace the members.Select(s => new StaffMemberResponse(...)) block with members.Select(CreateStaffMemberHandler.ToResponse)",
-        "GetStaffListHandler.cs: remove unused 'using Chairly.Domain.Enums;' import",
-        "GetStaffListHandler.cs: remove unused 'using System.Text.Json;' import",
-        "GetStaffListHandler.cs: add 'using Chairly.Api.Features.Staff.CreateStaffMember;' import",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 6,
-      "passes": true,
-      "notes": "CreateStaffMemberHandler.ToResponse() is already internal static and is used by UpdateStaffMemberHandler, DeactivateStaffMemberHandler, and ReactivateStaffMemberHandler. GetStaffListHandler currently has its own private MapRole() that is an exact duplicate — introduced in SMB-002. After the fix, the return statement should be: return members.Select(CreateStaffMemberHandler.ToResponse); — one line replacing the entire Select lambda and the MapRole method. Verify the existing test GetStaffListHandler_HappyPath_ReturnsListOrderedByFirstNameLastName still passes."
-    },
-    {
-      "id": "SMB-007",
-      "title": "Fix DeactivateStaffMemberHandler: add idempotency guard",
-      "description": "As a developer, I want DeactivateStaffMemberHandler to be idempotent so that calling deactivate on an already-inactive member does not overwrite the original DeactivatedAtUtc audit timestamp.",
-      "acceptanceCriteria": [
-        "DeactivateStaffMemberHandler.cs: after the NotFound check, add an early-return guard: if (member.DeactivatedAtUtc != null) return CreateStaffMemberHandler.ToResponse(member);",
-        "The guard returns the current state without calling SaveChangesAsync when the member is already deactivated",
-        "StaffHandlerTests.cs: add test DeactivateStaffMemberHandler_AlreadyInactive_DoesNotOverwriteDeactivatedAtUtc — seeds a member with DeactivatedAtUtc set to a known past timestamp, calls the handler, then asserts that db.StaffMembers.First().DeactivatedAtUtc equals the original timestamp (not a new value)",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": "Place the idempotency guard immediately after the 'if (member is null) return new NotFound();' block and before any timestamp assignments. The guard is: if (member.DeactivatedAtUtc != null) return CreateStaffMemberHandler.ToResponse(member); — no SaveChangesAsync call. For the new test: set the member's DeactivatedAtUtc to a specific past value (e.g. DateTimeOffset.UtcNow.AddDays(-1)), save to DB, call the handler, then assert db.StaffMembers.First().DeactivatedAtUtc equals the original past timestamp."
-    },
-    {
-      "id": "SMB-008",
-      "title": "Store StaffRole as string in database",
-      "description": "As a developer, I want StaffRole to be stored as a string column so that the data is human-readable and resilient to enum value reordering.",
-      "acceptanceCriteria": [
-        "StaffMemberConfiguration.cs: add builder.Property(s => s.Role).HasConversion<string>(); inside the Configure() method",
-        "New EF Core migration named 'ConvertStaffRoleToString' created by running: dotnet ef migrations add ConvertStaffRoleToString -p src/backend/Chairly.Infrastructure/Chairly.Infrastructure.csproj -s src/backend/Chairly.Api/Chairly.Api.csproj",
-        "Migration Up() method replaced with raw SQL that converts integer values to their string names — see notes for exact SQL",
-        "Migration Down() method replaced with raw SQL that converts string names back to integers — see notes for exact SQL",
-        "dotnet build src/backend/Chairly.slnx passes",
-        "dotnet test src/backend/Chairly.slnx passes",
-        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": "In StaffMemberConfiguration.cs add after the existing property configs: builder.Property(s => s.Role).HasConversion<string>(); — After running 'dotnet ef migrations add ConvertStaffRoleToString', EF Core generates an AlterColumn call that uses CAST, which would produce '0'/'1' instead of 'Manager'/'StaffMember'. Replace the entire generated Up() and Down() body with raw SQL instead. Up(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE text USING CASE \\\"Role\\\" WHEN 0 THEN 'Manager' WHEN 1 THEN 'StaffMember' END;\"); Down(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE integer USING CASE \\\"Role\\\" WHEN 'Manager' THEN 0 WHEN 'StaffMember' THEN 1 END;\"); — The in-memory database used in tests does not enforce column types, so all existing tests pass without modification. After completing this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push (to the existing PR branch), wait for CI."
+      "passes": false,
+      "notes": "Follow DeactivateStaffMemberHandler pattern for idempotency guard. The key difference from deactivate: soft-delete is permanent (no reactivate endpoint). Use OneOf<Success, NotFound, Conflict> — check how other handlers return Success (no payload). The Conflict type may be from OneOf library or a custom result type — check what exists in the codebase. The fetch query must NOT filter out deleted clients (to detect the already-deleted case): db.Clients.FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantId) — no DeletedAtUtc filter here. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
     }
   ]
 }
