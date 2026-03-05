@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Staff.CreateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
 
 namespace Chairly.Api.Features.Staff;
@@ -9,6 +10,7 @@ internal static class StaffEndpoints
         var group = app.MapGroup("/api/staff");
 
         group.MapGetStaffList();
+        group.MapCreateStaffMember();
 
         return app;
     }
