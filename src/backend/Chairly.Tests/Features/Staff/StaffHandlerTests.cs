@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Staff.CreateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
+using Chairly.Api.Features.Staff.UpdateStaffMember;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using OneOf.Types;
 
 namespace Chairly.Tests.Features.Staff;
 
@@ -132,5 +134,47 @@ public class StaffHandlerTests
 
         Assert.False(isValid);
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Role), StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public async Task UpdateStaffMemberHandler_HappyPath_UpdatesFieldsAndSetsUpdatedAtUtc()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db, firstName: "Oud", lastName: "Naam");
+        var handler = new UpdateStaffMemberHandler(db);
+        var command = new UpdateStaffMemberCommand
+        {
+            Id = existing.Id,
+            FirstName = "Nieuw",
+            LastName = "Naam",
+            Role = "manager",
+            Color = "#AABBCC",
+        };
+
+        var result = await handler.Handle(command);
+
+        var response = result.AsT0;
+        Assert.Equal("Nieuw", response.FirstName);
+        Assert.Equal("manager", response.Role);
+        Assert.NotNull(response.UpdatedAtUtc);
+    }
+
+    [Fact]
+    public async Task UpdateStaffMemberHandler_NotFound_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var handler = new UpdateStaffMemberHandler(db);
+        var command = new UpdateStaffMemberCommand
+        {
+            Id = Guid.NewGuid(),
+            FirstName = "Test",
+            LastName = "Test",
+            Role = "staff_member",
+            Color = "#000000",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.IsType<NotFound>(result.AsT1);
     }
 }
