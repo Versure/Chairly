@@ -207,7 +207,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same page.route() mocking pattern as apps/chairly-e2e/src/services.spec.ts. For test 6, use page.keyboard.press('Escape') if the confirmation is inside a showModal() dialog — or use window.confirm mock. Mock PATCH requests by checking request.method() === 'PATCH' inside the route handler."
     }
   ]

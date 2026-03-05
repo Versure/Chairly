@@ -1,3 +1,15 @@
+## 2026-03-05 - SM-009
+- What was implemented: Playwright E2E spec for staff management — 7 tests covering page load, member display, form dialog open, POST create, edit pre-fill, PATCH deactivate with confirmation, and nav link
+- Files changed:
+  - apps/chairly-e2e/src/staff.spec.ts (new)
+- **Learnings for future iterations:**
+  - E2E tests do NOT run via `npx nx affected -t test` — only lint + build checks needed for e2e (acceptance criteria in prd)
+  - Mock PATCH sub-routes like `/api/staff/{id}/deactivate` with `**/api/staff/staff-1/deactivate` pattern
+  - `dialog[open]` selector reliably finds the active modal in Playwright
+  - `confirmDialog.getByRole('button', { name: 'Deactiveren' })` works for clicking confirm in a showModal() ConfirmationDialogComponent
+  - After a store update (deactivateStaffMember sets isActive: false), `page.getByText('Inactief')` becomes visible reactively without page reload
+---
+
 ## 2026-03-05 - SM-008
 - What was implemented: Added 'Medewerkers' nav link to shell sidebar directly below 'Diensten', using identical class pattern and routerLinkActive styling
 - Files changed:
