@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Staff.CreateStaffMember;
+using Chairly.Api.Features.Staff.DeactivateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
+using Chairly.Api.Features.Staff.ReactivateStaffMember;
 using Chairly.Api.Features.Staff.UpdateStaffMember;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
@@ -174,6 +176,61 @@ public class StaffHandlerTests
         };
 
         var result = await handler.Handle(command);
+
+        Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task DeactivateStaffMemberHandler_HappyPath_SetsDeactivatedAtUtc()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        var handler = new DeactivateStaffMemberHandler(db);
+
+        var result = await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
+
+        var response = result.AsT0;
+        Assert.False(response.IsActive);
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.NotNull(saved.DeactivatedAtUtc);
+    }
+
+    [Fact]
+    public async Task DeactivateStaffMemberHandler_NotFound_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var handler = new DeactivateStaffMemberHandler(db);
+
+        var result = await handler.Handle(new DeactivateStaffMemberCommand(Guid.NewGuid()));
+
+        Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task ReactivateStaffMemberHandler_HappyPath_ClearsDeactivatedAtUtc()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.DeactivatedAtUtc = DateTimeOffset.UtcNow;
+        existing.DeactivatedBy = Guid.Empty;
+        await db.SaveChangesAsync();
+
+        var handler = new ReactivateStaffMemberHandler(db);
+        var result = await handler.Handle(new ReactivateStaffMemberCommand(existing.Id));
+
+        var response = result.AsT0;
+        Assert.True(response.IsActive);
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.Null(saved.DeactivatedAtUtc);
+    }
+
+    [Fact]
+    public async Task ReactivateStaffMemberHandler_NotFound_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var handler = new ReactivateStaffMemberHandler(db);
+
+        var result = await handler.Handle(new ReactivateStaffMemberCommand(Guid.NewGuid()));
 
         Assert.IsType<NotFound>(result.AsT1);
     }
