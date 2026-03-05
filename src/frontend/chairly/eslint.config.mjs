@@ -165,12 +165,14 @@ export default [
     },
     plugins: { 'rxjs-angular-x': rxjsAngular },
     rules: {
+      // checkDestroy: false — takeUntilDestroyed(destroyRef) handles cleanup via DestroyRef,
+      // ngOnDestroy is not needed with this modern Angular pattern (CLAUDE.md convention)
       'rxjs-angular-x/prefer-takeuntil': [
         'error',
         {
           alias: ['takeUntilDestroyed'],
           checkDecorators: ['Component', 'Directive'],
-          checkDestroy: true,
+          checkDestroy: false,
         },
       ],
       'rxjs-angular-x/prefer-async-pipe': 'warn',

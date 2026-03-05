@@ -1,14 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
-  OnDestroy,
   OnInit,
   signal,
   viewChild,
 } from '@angular/core';
-
-import { Subject, takeUntil } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ConfirmationDialogComponent } from '@org/shared-lib';
 
@@ -23,10 +22,10 @@ import { StaffFormDialogComponent, StaffTableComponent } from '../../ui';
   imports: [ConfirmationDialogComponent, StaffFormDialogComponent, StaffTableComponent],
   templateUrl: './staff-list-page.component.html',
 })
-export class StaffListPageComponent implements OnInit, OnDestroy {
+export class StaffListPageComponent implements OnInit {
   private readonly store = inject(StaffStore);
   private readonly staffApi = inject(StaffApiService);
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly formDialogRef = viewChild.required(StaffFormDialogComponent);
   private readonly deactivateDialogRef =
@@ -39,11 +38,6 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.store.loadAll();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   protected openAddDialog(): void {
@@ -65,7 +59,7 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
     this.mutationError.set(null);
     this.staffApi
       .reactivate(member.id)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.store.reactivateStaffMember(member.id);
@@ -82,7 +76,7 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
     if (member) {
       this.staffApi
         .deactivate(member.id)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: () => {
             this.store.deactivateStaffMember(member.id);
@@ -102,7 +96,7 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
     if (member) {
       this.staffApi
         .update(member.id, request)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (updated) => {
             this.store.updateStaffMember(updated);
@@ -114,7 +108,7 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
     } else {
       this.staffApi
         .create(request)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (created) => {
             this.store.addStaffMember(created);
