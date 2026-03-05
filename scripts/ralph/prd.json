@@ -187,7 +187,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Read shell.component.html first and copy the exact class pattern from the Diensten nav link. This is a small, focused change — only touch the nav template."
     },
     {

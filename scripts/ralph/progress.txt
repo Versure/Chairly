@@ -1,3 +1,11 @@
+## 2026-03-05 - SM-008
+- What was implemented: Added 'Medewerkers' nav link to shell sidebar directly below 'Diensten', using identical class pattern and routerLinkActive styling
+- Files changed:
+  - libs/shared/src/lib/ui/shell/shell.component.html (updated — added Medewerkers <li> after Diensten <li>)
+- **Learnings for future iterations:**
+  - Shell nav items use `routerLinkActive="bg-primary-600"` (not `[routerLinkActiveOptions]`) — exact match not needed for top-level routes
+---
+
 ## 2026-03-05 - SM-006
 - What was implemented: ShiftScheduleEditorComponent with 7-day schedule editor, checkbox per day, shift blocks (startTime/endTime) with add/remove, inline validation (endTime <= startTime shows error), Dutch labels, and 8 unit tests. Embedded as 'Werkrooster' section in staff-form-dialog.
 - Files changed:
