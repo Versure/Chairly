@@ -47,12 +47,12 @@ export class StaffListPageComponent implements OnInit, OnDestroy {
 
   protected openAddDialog(): void {
     this.selectedStaff.set(null);
-    this.formDialogRef().open();
+    this.formDialogRef().open(null);
   }
 
   protected onEdit(member: StaffMemberResponse): void {
     this.selectedStaff.set(member);
-    this.formDialogRef().open();
+    this.formDialogRef().open(member);
   }
 
   protected onDeactivate(member: StaffMemberResponse): void {

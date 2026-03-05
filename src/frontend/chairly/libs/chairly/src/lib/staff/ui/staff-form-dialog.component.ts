@@ -65,18 +65,18 @@ export class StaffFormDialogComponent {
     photoUrl: new FormControl<string | null>(null),
   });
 
-  open(): void {
-    const member = this.staffMember();
-    if (member) {
+  open(member?: StaffMemberResponse | null): void {
+    const staffMember = member !== undefined ? member : this.staffMember();
+    if (staffMember) {
       this.form.reset({
-        firstName: member.firstName,
-        lastName: member.lastName,
-        role: member.role,
-        color: member.color,
-        photoUrl: member.photoUrl,
+        firstName: staffMember.firstName,
+        lastName: staffMember.lastName,
+        role: staffMember.role,
+        color: staffMember.color,
+        photoUrl: staffMember.photoUrl,
       });
-      this.selectedColor.set(member.color);
-      this.scheduleSignal.set(member.schedule);
+      this.selectedColor.set(staffMember.color);
+      this.scheduleSignal.set(staffMember.schedule);
     } else {
       this.form.reset({
         firstName: '',
