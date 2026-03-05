@@ -93,6 +93,7 @@ export default [
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/no-any': 'error',
+      // allowBindToStyle: true — needed for dynamic [style.background-color] binding in color picker
       '@angular-eslint/template/no-inline-styles': ['error', { allowBindToStyle: true }],
     },
   },
