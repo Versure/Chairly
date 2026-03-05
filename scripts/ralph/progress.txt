@@ -1,3 +1,64 @@
+## Codebase Patterns
+- API services use `inject(API_BASE_URL)` token from `@org/shared-lib` for base URL (not hardcoded `/api`)
+- `simple-import-sort` ESLint plugin enforces export sort order — run `nx run chairly-lib:lint --fix` to auto-fix
+- Models use `export type` (not `export`) in index.ts re-exports
+- Staff API: deactivate/reactivate use PATCH with `null` body
+- `[style.xxx]` property bindings require `allowBindToStyle: true` in ESLint `no-inline-styles` rule — already configured
+
 # Ralph Progress Log
-Started: Wed Mar 04 00:00:00 CET 2026
+Started: Thu Mar  5 07:56:07 CET 2026
+---
+
+## 2026-03-05 - SM-004
+- What was implemented: StaffTableComponent with avatar column (chairly-staff-avatar), name, role (Dutch labels), status badge, action buttons (Bewerken/Deactiveren/Activeren), opacity-60 for inactive rows, empty state, and 15 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-table.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-table.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-table.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added StaffTableComponent export)
+- **Learnings for future iterations:**
+  - SlicePipe can be used in binding expressions to get initials: `[initials]="(member.firstName | slice:0:1) + (member.lastName | slice:0:1)"`
+  - `[class.opacity-60]="!member.isActive"` is a class binding (not an inline style) so it is ESLint-safe
+  - Separate @if blocks for Deactiveren/Activeren buttons gives cleaner conditional rendering vs. a single toggled button
+---
+
+## 2026-03-05 - SM-003
+- What was implemented: StaffAvatarComponent with photo/initials rendering, dynamic color background via [style.background-color], size variants (sm/md/lg), and 8 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (new)
+  - libs/chairly/src/lib/staff/ui/.gitkeep (deleted)
+  - src/frontend/chairly/eslint.config.mjs (updated — added allowBindToStyle: true to no-inline-styles rule)
+- **Learnings for future iterations:**
+  - `@angular-eslint/template/no-inline-styles` blocks `[style.xxx]` bindings by default — must set `allowBindToStyle: true` in eslint.config.mjs (already done)
+  - The correct option name is `allowBindToStyle` (not `allowBindingToStyle`)
+  - Size computed signal using `computed()` is the clean approach for mapping input enum to CSS class string
+---
+
+## 2026-03-05 - SM-002
+- What was implemented: NgRx SignalStore for staff state with StaffState interface, StaffStore with loadAll/addStaffMember/updateStaffMember/deactivateStaffMember/reactivateStaffMember methods, plus unit tests covering all methods and edge cases
+- Files changed:
+  - libs/chairly/src/lib/staff/data-access/staff.store.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff.store.spec.ts (new)
+  - libs/chairly/src/lib/staff/data-access/index.ts (updated — added StaffStore export)
+- **Learnings for future iterations:**
+  - StaffStore methods (deactivate/reactivate) only update local state — no API calls, the page component calls the API and then delegates to the store. This is different from ServiceStore's toggleActive which calls the API.
+  - simple-import-sort auto-fix needed: `npx nx run chairly-lib:lint --fix` after updating index.ts
+---
+
+## 2026-03-05 - SM-001
+- What was implemented: TypeScript interfaces for staff models (StaffRole, ShiftBlock, DayOfWeek, WeeklySchedule, StaffMemberResponse, CreateStaffMemberRequest, UpdateStaffMemberRequest), StaffApiService with getAll/create/update/deactivate/reactivate methods, unit tests for all API methods
+- Files changed:
+  - libs/chairly/src/lib/staff/models/staff.models.ts (new)
+  - libs/chairly/src/lib/staff/models/index.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff-api.service.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff-api.service.spec.ts (new)
+  - libs/chairly/src/lib/staff/data-access/index.ts (new)
+  - libs/chairly/src/lib/staff/data-access/.gitkeep (deleted)
+- **Learnings for future iterations:**
+  - No models/ .gitkeep existed (only data-access, feature, ui, util had .gitkeep) — models/ directory was created fresh
+  - simple-import-sort enforces alphabetical export order in index.ts — auto-fix with `npx nx run chairly-lib:lint --fix`
+  - API services inject `API_BASE_URL` token from shared-lib, not hardcoded strings
 ---

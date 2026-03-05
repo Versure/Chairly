@@ -19,7 +19,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as ServiceApiService in libs/chairly/src/lib/services/data-access/service-api.service.ts. deactivate uses PATCH /api/staff/{id}/deactivate, reactivate uses PATCH /api/staff/{id}/reactivate."
     },
     {
@@ -37,7 +37,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as ServiceStore in libs/chairly/src/lib/services/data-access/service.store.ts."
     },
     {
@@ -59,7 +59,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Use [style.background-color] binding for the color property since it is a dynamic hex value, not a Tailwind class. No dark: variant needed on the colored circle itself — the color is user-chosen."
     },
     {
@@ -83,7 +83,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Use the same action button style as service-table.component.html: border + colored background at rest (e.g. border border-yellow-200 bg-yellow-50 text-yellow-700), hover:bg-{color}-100. Import StaffAvatarComponent for use in the template."
     },
     {
