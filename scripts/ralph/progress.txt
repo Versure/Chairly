@@ -1,9 +1,29 @@
+## 2026-03-05 - SM-005
+- What was implemented: StaffFormDialogComponent with dialog (showModal/close), reactive form (firstName, lastName, role, color, photoUrl), color picker (10 circles with ring on selected), Dutch labels, create/edit mode, and 6 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added StaffFormDialogComponent export)
+- **Learnings for future iterations:**
+  - `cancel` is a native DOM event — `@angular-eslint/no-output-native` blocks it. Rename to `cancelled` (and `save` → `saved`) to match service-form-dialog pattern.
+  - Color picker buttons (empty circles) need `[attr.aria-label]` to satisfy `@angular-eslint/template/elements-content` rule
+  - The "Kleur" label cannot use `<label>` (no associated form control for the circle group) — use `<p>` instead
+  - When multiple `button[type="button"]` elements exist in a component (e.g. color picker circles + Annuleren), use text content to find the specific button in tests: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
+  - `scheduleSignal` and `selectedColor` are separate signals (not in FormGroup) managed via open()/selectColor() methods — SM-006 will bind ShiftScheduleEditorComponent to scheduleSignal
+  - Output names in prd.json were `save`/`cancel` but must be `saved`/`cancelled` to avoid ESLint no-output-native error
+---
+
 ## Codebase Patterns
 - API services use `inject(API_BASE_URL)` token from `@org/shared-lib` for base URL (not hardcoded `/api`)
 - `simple-import-sort` ESLint plugin enforces export sort order — run `nx run chairly-lib:lint --fix` to auto-fix
 - Models use `export type` (not `export`) in index.ts re-exports
 - Staff API: deactivate/reactivate use PATCH with `null` body
 - `[style.xxx]` property bindings require `allowBindToStyle: true` in ESLint `no-inline-styles` rule — already configured
+- Output names `save`/`cancel` are native DOM events — use `saved`/`cancelled` to satisfy `@angular-eslint/no-output-native`
+- Empty `<button>` elements (icon-only, color circles) need `[attr.aria-label]` to satisfy `@angular-eslint/template/elements-content`
+- Color group labels: use `<p>` instead of `<label>` when no single form control can be associated
+- Test selector tip: when a component has multiple `button[type="button"]` elements, find by textContent: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
 
 # Ralph Progress Log
 Started: Thu Mar  5 07:56:07 CET 2026

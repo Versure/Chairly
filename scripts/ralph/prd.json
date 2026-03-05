@@ -111,7 +111,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same dialog pattern as service-form-dialog.component. The save output always emits CreateStaffMemberRequest shape — the list page decides whether to call create or update based on whether it passed a staffMember input. Default color when creating: #6366f1 (first in palette)."
     },
     {
