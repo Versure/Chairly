@@ -1,28 +1,52 @@
+# Ralph Progress Log
+Started: Thu Mar  5 15:34:24 CET 2026
+---
+
 ## Codebase Patterns
+- CA1056 analyzer treats `string? PhotoUrl` as error on Domain entities — suppress with `#pragma warning disable CA1056` around the property
+- IDE1006 requires `_` prefix for private static readonly fields in Chairly.Api (e.g. `_jsonOptions`)
+- MA0002 requires StringComparer on `new Dictionary<string, T>()` — use `StringComparer.OrdinalIgnoreCase`
+- CA2208/MA0015 require `ArgumentOutOfRangeException` to use a local parameter name, not `nameof(property.Subproperty)` — extract to local variable first
+- Slices in the same bounded context (e.g. Staff) can reference each other: UpdateStaffMemberHandler and Deactivate/ReactivateStaffMemberHandler call `CreateStaffMemberHandler.ToResponse()` and `ParseRole()` (declared `internal static`)
+- dotnet format auto-fixes migration file encoding issues (CHARSET error) — always run `dotnet format` before `dotnet format --verify-no-changes`
+- `#pragma warning disable CA1812` is needed on all handler classes (instantiated via DI reflection)
 
-### Backend
-- Slice structure: Chairly.Api/Features/{Context}/{UseCase}/ with Command/Query, Handler, Endpoint files
-- Use #pragma warning disable CA1812 on command/query classes (ASP.NET Core model binding instantiation)
-- Use #pragma warning disable/restore MA0026 around CreatedBy/UpdatedBy = Guid.Empty (TODO: replace with Keycloak)
-- TenantConstants.DefaultTenantId from Chairly.Api.Shared.Tenancy for tenant filtering
-- OneOf<T, NotFound> return type for handlers that may not find an entity
-- result.Match(ok => Results.Ok(ok), _ => Results.NotFound()) pattern in endpoints
-- IEntityTypeConfiguration<T> in separate files in Infrastructure/Persistence/Configurations/
-- Endpoints registered as extension methods (MapXxx) grouped per feature in XxxEndpoints.cs
-- All endpoints wired in Program.cs via app.MapXxxEndpoints()
-- Unit tests use InMemory EF Core (Guid.NewGuid() database name per test)
-- await using var db = CreateDbContext() pattern in tests (or try/finally for CA2007)
+---
 
-### Frontend
-- Components use OnPush, standalone: true, templateUrl (never inline template)
-- Signal-based inputs: input(), model(), viewChild() — no @Input/@Output decorators
-- OutputEmitterRef for outputs (not EventEmitter)
-- takeUntilDestroyed(this.destroyRef) for subscription cleanup — inject DestroyRef explicitly
-- rxjs-angular-x/prefer-takeuntil requires checkDestroy: false in ESLint config when using DestroyRef pattern
-- NgRx SignalStore for state management
-- Dutch UI text throughout
-- Dynamic color binding: use [style.background-color]="color()" not Tailwind classes
-- Dialog: <dialog> with showModal(), fixed inset-0 overlay, DOCUMENT injection for body scroll lock
-- Dark mode: explicit dark: variants needed for custom/brand color classes (bg-primary-*, bg-accent-*)
-- Tests find buttons by title attribute (safe to change button classes)
-- ESLint allowBindToStyle: true needed for dynamic [style.background-color] bindings
+## 2026-03-05 - SMB-001
+- Implemented StaffRole enum, StaffMember entity, StaffMemberConfiguration, AddStaffMember migration
+- Files changed: Chairly.Domain/Enums/StaffRole.cs, Chairly.Domain/Entities/StaffMember.cs, Chairly.Infrastructure/Persistence/Configurations/StaffMemberConfiguration.cs, ChairlyDbContext.cs, Migrations/AddStaffMember
+- Learnings:
+  - CA1056 fires on `string? PhotoUrl` — suppress with pragma
+  - dotnet-ef tool was already installed globally
+  - Migration file encoding fixed by running `dotnet format` first
+---
+
+## 2026-03-05 - SMB-002
+- Implemented ShiftBlockResponse, StaffMemberResponse, GetStaffListQuery/Handler/Endpoint, StaffEndpoints, StaffHandlerTests (1 test)
+- Files changed: All Features/Staff/ files + Program.cs + Tests/Features/Staff/
+- Learnings:
+  - MA0002 on `new Dictionary<string, T>()` — always pass StringComparer
+  - IDE1006: `_jsonOptions` not `JsonOptions` for private static readonly
+---
+
+## 2026-03-05 - SMB-003
+- Implemented ShiftBlockCommand, CreateStaffMemberCommand, CreateStaffMemberHandler, CreateStaffMemberEndpoint
+- Made `ParseRole`, `MapRoleToString`, `ToResponse` internal static on CreateStaffMemberHandler for reuse by other handlers in the same bounded context
+- Files changed: Features/Staff/CreateStaffMember/ + StaffEndpoints.cs + StaffHandlerTests.cs (4 additional tests)
+- Learnings:
+  - CA2208/MA0015: use a named parameter (`nameof(staffRole)`) not `nameof(member.Role)` in ArgumentOutOfRangeException
+---
+
+## 2026-03-05 - SMB-004
+- Implemented UpdateStaffMemberCommand, UpdateStaffMemberHandler, UpdateStaffMemberEndpoint
+- Reused CreateStaffMemberHandler.ParseRole and .ToResponse (internal static, same bounded context)
+- Files changed: Features/Staff/UpdateStaffMember/ + StaffEndpoints.cs + StaffHandlerTests.cs (2 additional tests)
+---
+
+## 2026-03-05 - SMB-005
+- Implemented DeactivateStaffMemberCommand/Handler/Endpoint, ReactivateStaffMemberCommand/Handler/Endpoint
+- Reused CreateStaffMemberHandler.ToResponse for consistent response mapping
+- Files changed: Features/Staff/DeactivateStaffMember/, Features/Staff/ReactivateStaffMember/, StaffEndpoints.cs, StaffHandlerTests.cs (4 additional tests)
+- ALL stories complete — following COMPLETE protocol: push, create PR, wait for CI
+---
