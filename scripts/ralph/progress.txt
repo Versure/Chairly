@@ -1,3 +1,10 @@
+## 2026-03-05 - SM-011
+- What was implemented: Removed StaffApiService from staff.routes.ts providers (it is providedIn: 'root'). Added inline comment on no-inline-styles ESLint rule explaining the allowBindToStyle exception.
+- Files changed:
+  - libs/chairly/src/lib/staff/staff.routes.ts (removed StaffApiService from providers)
+  - src/frontend/chairly/eslint.config.mjs (added comment on no-inline-styles rule)
+---
+
 ## 2026-03-05 - SM-010
 - What was implemented: Added `mutationError` signal to StaffListPageComponent, reset on each mutation attempt, error handler sets Dutch message on API failure. Template renders error below page header. Added test verifying error appears when create API throws.
 - Files changed:

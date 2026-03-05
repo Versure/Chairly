@@ -240,7 +240,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "Two tiny changes in two files. Do not touch anything else. Verify that removing StaffApiService from providers does not break anything — it should not, because providedIn: 'root' services are available everywhere without explicit provision."
     },
     {
