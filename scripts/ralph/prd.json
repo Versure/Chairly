@@ -119,7 +119,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "CreateStaffMemberHandler.ToResponse() is already internal static and is used by UpdateStaffMemberHandler, DeactivateStaffMemberHandler, and ReactivateStaffMemberHandler. GetStaffListHandler currently has its own private MapRole() that is an exact duplicate — introduced in SMB-002. After the fix, the return statement should be: return members.Select(CreateStaffMemberHandler.ToResponse); — one line replacing the entire Select lambda and the MapRole method. Verify the existing test GetStaffListHandler_HappyPath_ReturnsListOrderedByFirstNameLastName still passes."
     },
     {
@@ -135,7 +135,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Place the idempotency guard immediately after the 'if (member is null) return new NotFound();' block and before any timestamp assignments. The guard is: if (member.DeactivatedAtUtc != null) return CreateStaffMemberHandler.ToResponse(member); — no SaveChangesAsync call. For the new test: set the member's DeactivatedAtUtc to a specific past value (e.g. DateTimeOffset.UtcNow.AddDays(-1)), save to DB, call the handler, then assert db.StaffMembers.First().DeactivatedAtUtc equals the original past timestamp."
     },
     {
@@ -152,7 +152,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "In StaffMemberConfiguration.cs add after the existing property configs: builder.Property(s => s.Role).HasConversion<string>(); — After running 'dotnet ef migrations add ConvertStaffRoleToString', EF Core generates an AlterColumn call that uses CAST, which would produce '0'/'1' instead of 'Manager'/'StaffMember'. Replace the entire generated Up() and Down() body with raw SQL instead. Up(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE text USING CASE \\\"Role\\\" WHEN 0 THEN 'Manager' WHEN 1 THEN 'StaffMember' END;\"); Down(): migrationBuilder.Sql(\"ALTER TABLE \\\"StaffMembers\\\" ALTER COLUMN \\\"Role\\\" TYPE integer USING CASE \\\"Role\\\" WHEN 'Manager' THEN 0 WHEN 'StaffMember' THEN 1 END;\"); — The in-memory database used in tests does not enforce column types, so all existing tests pass without modification. After completing this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push (to the existing PR branch), wait for CI."
     }
   ]

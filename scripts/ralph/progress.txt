@@ -50,3 +50,26 @@ Started: Thu Mar  5 15:34:24 CET 2026
 - Files changed: Features/Staff/DeactivateStaffMember/, Features/Staff/ReactivateStaffMember/, StaffEndpoints.cs, StaffHandlerTests.cs (4 additional tests)
 - ALL stories complete — following COMPLETE protocol: push, create PR, wait for CI
 ---
+
+## 2026-03-05 - SMB-008
+- Added HasConversion<string>() for StaffRole in StaffMemberConfiguration
+- Created ConvertStaffRoleToString migration with raw SQL Up/Down (avoid CAST producing integers)
+- Files changed: StaffMemberConfiguration.cs, new migration files
+- **Learnings for future iterations:**
+  - EF Core AlterColumn with enum->string conversion produces bad CAST — always replace generated Up/Down with raw SQL for column type conversions
+---
+
+## 2026-03-05 - SMB-007
+- Added idempotency guard to DeactivateStaffMemberHandler: early-return if already inactive
+- Added test DeactivateStaffMemberHandler_AlreadyInactive_DoesNotOverwriteDeactivatedAtUtc
+- Files changed: DeactivateStaffMemberHandler.cs, StaffHandlerTests.cs
+---
+
+## 2026-03-05 - SMB-006
+- Removed duplicate MapRole() and _jsonOptions from GetStaffListHandler, replaced Select lambda with members.Select(CreateStaffMemberHandler.ToResponse)
+- Removed unused `using System.Text.Json` and `using Chairly.Domain.Enums` imports, added `using Chairly.Api.Features.Staff.CreateStaffMember`
+- .gitkeep was already absent (removed in a prior iteration)
+- Files changed: GetStaffList/GetStaffListHandler.cs
+- **Learnings for future iterations:**
+  - Reusing a static method via method group in Select() keeps related slices DRY without cross-context coupling
+---
