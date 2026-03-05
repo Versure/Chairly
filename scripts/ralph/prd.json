@@ -171,7 +171,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Check if ConfirmationDialogComponent exists at libs/shared/src/lib/ui/ before deciding to use window.confirm. Follow the same page layout pattern as service-list-page.component. The form dialog is rendered in the template with *ngIf or @if bound to a showDialog signal."
     },
     {

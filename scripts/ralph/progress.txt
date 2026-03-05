@@ -31,6 +31,25 @@
   - Output names in prd.json were `save`/`cancel` but must be `saved`/`cancelled` to avoid ESLint no-output-native error
 ---
 
+## 2026-03-05 - SM-007
+- What was implemented: StaffListPageComponent — smart container page for /medewerkers. Loads staff on init, renders staff table with edit/deactivate/reactivate events, form dialog for create/edit, confirmation dialog for deactivation. Routing via staff.routes.ts, registered in app.routes.ts, exported from lib barrel. Sheriff config updated to allow chairly-lib → domain:staff.
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (new)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.html (new)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/feature/index.ts (new)
+  - libs/chairly/src/lib/staff/staff.routes.ts (new)
+  - libs/chairly/src/index.ts (updated — added staffRoutes export)
+  - apps/chairly/src/app/app.routes.ts (updated — added medewerkers route)
+  - sheriff.config.ts (updated — added domain:staff to chairly-lib dep rules)
+  - libs/chairly/src/lib/staff/feature/.gitkeep (deleted)
+- **Learnings for future iterations:**
+  - When adding a new domain, must update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>` (e.g. `'chairly-lib': ['domain:services', 'domain:staff', 'shared']`)
+  - `rxjs-angular-x/prefer-takeuntil` with `checkDestroy: true` requires Subject + takeUntil pattern (NOT takeUntilDestroyed): `private readonly destroy$ = new Subject<void>(); ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }` and `.pipe(takeUntil(this.destroy$))`
+  - `vitest/no-conditional-expect` forbids `expect()` inside `if` blocks — use `expect(x).toBeDefined()` then `x!.method()` (non-null assertion is only a warning)
+  - Service-list-page pattern: ALL API calls go through store methods. Staff page calls API directly then delegates to store — this is valid but requires the Subject+takeUntil cleanup pattern
+---
+
 ## Codebase Patterns
 - API services use `inject(API_BASE_URL)` token from `@org/shared-lib` for base URL (not hardcoded `/api`)
 - `simple-import-sort` ESLint plugin enforces export sort order — run `nx run chairly-lib:lint --fix` to auto-fix
@@ -43,6 +62,9 @@
 - Test selector tip: when a component has multiple `button[type="button"]` elements, find by textContent: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
 - Two-way bindings: use `model<T>()` (ModelSignal) instead of `input()` + `output()` — `@angular-eslint/prefer-signal-model` enforces this; `model.set()` both updates locally and emits `${name}Change` to parent
 - `TestBed.flushEffects()` is deprecated in Angular 21 — avoid `effect()` for sync patterns; prefer `model()` where possible
+- When adding a new domain, update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>`
+- Components with subscriptions need Subject+takeUntil: `private destroy$ = new Subject<void>(); ngOnDestroy() { destroy$.next(); destroy$.complete(); }` with `.pipe(takeUntil(this.destroy$))`
+- `vitest/no-conditional-expect`: never put `expect()` inside `if` blocks — assert outside, then use `x!.method()` if needed
 
 # Ralph Progress Log
 Started: Thu Mar  5 07:56:07 CET 2026
