@@ -1,3 +1,20 @@
+## 2026-03-05 - SM-006
+- What was implemented: ShiftScheduleEditorComponent with 7-day schedule editor, checkbox per day, shift blocks (startTime/endTime) with add/remove, inline validation (endTime <= startTime shows error), Dutch labels, and 8 unit tests. Embedded as 'Werkrooster' section in staff-form-dialog.
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.html (new)
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added ShiftScheduleEditorComponent export)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (updated — imports ShiftScheduleEditorComponent)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.html (updated — added Werkrooster section)
+- **Learnings for future iterations:**
+  - Use `model<T>()` (ModelSignal) instead of separate `input()` + `output()` for two-way bindings — `@angular-eslint/prefer-signal-model` enforces this
+  - `TestBed.flushEffects()` is deprecated in Angular 21 (sonarjs/deprecation) — with `model()` there's no need for `effect` sync, so `fixture.detectChanges()` alone is sufficient
+  - `model.set(newValue)` updates the local value AND emits `${name}Change` output to parent — no separate emit needed
+  - Parent binding: `[schedule]="scheduleSignal()" (scheduleChange)="scheduleSignal.set($event)"` works correctly with `model()`; or use `[(schedule)]="scheduleSignal"` sugar
+  - Computed `dayRows` from `this.schedule()` (the model signal) provides template data without function calls in templates
+---
+
 ## 2026-03-05 - SM-005
 - What was implemented: StaffFormDialogComponent with dialog (showModal/close), reactive form (firstName, lastName, role, color, photoUrl), color picker (10 circles with ring on selected), Dutch labels, create/edit mode, and 6 unit tests
 - Files changed:
@@ -24,6 +41,8 @@
 - Empty `<button>` elements (icon-only, color circles) need `[attr.aria-label]` to satisfy `@angular-eslint/template/elements-content`
 - Color group labels: use `<p>` instead of `<label>` when no single form control can be associated
 - Test selector tip: when a component has multiple `button[type="button"]` elements, find by textContent: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
+- Two-way bindings: use `model<T>()` (ModelSignal) instead of `input()` + `output()` — `@angular-eslint/prefer-signal-model` enforces this; `model.set()` both updates locally and emits `${name}Change` to parent
+- `TestBed.flushEffects()` is deprecated in Angular 21 — avoid `effect()` for sync patterns; prefer `model()` where possible
 
 # Ralph Progress Log
 Started: Thu Mar  5 07:56:07 CET 2026

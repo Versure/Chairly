@@ -139,7 +139,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Manage local mutable state for the schedule inside this component using a signal (toSignal or plain signal). Emit the full updated WeeklySchedule on every change. Use DayOfWeek type from staff.models.ts for iteration. The day-to-Dutch-label mapping: monday→Maandag, tuesday→Dinsdag, wednesday→Woensdag, thursday→Donderdag, friday→Vrijdag, saturday→Zaterdag, sunday→Zondag."
     },
     {
