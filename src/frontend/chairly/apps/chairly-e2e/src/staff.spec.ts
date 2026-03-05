@@ -40,7 +40,7 @@ test('mocked staff member shows full name, role label Medewerker, and status bad
   await page.goto('/medewerkers');
 
   await expect(page.getByText('Jan Jansen')).toBeVisible();
-  await expect(page.getByText('Medewerker')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Medewerker', exact: true })).toBeVisible();
   await expect(page.getByText('Actief')).toBeVisible();
 });
 
