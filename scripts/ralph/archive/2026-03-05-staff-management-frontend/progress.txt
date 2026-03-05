@@ -1,0 +1,186 @@
+## 2026-03-05 - SM-012
+- What was implemented: Refactored StaffListPageComponent to use `takeUntilDestroyed(this.destroyRef)` instead of Subject+takeUntil. Removed `OnDestroy`, `ngOnDestroy()`, and `destroy$`. Added `private readonly destroyRef = inject(DestroyRef)`. Updated ESLint config to set `checkDestroy: false` on `prefer-takeuntil` rule (DestroyRef handles cleanup without ngOnDestroy).
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (refactored)
+  - src/frontend/chairly/eslint.config.mjs (checkDestroy: false + comment)
+- **Learnings for future iterations:**
+  - `rxjs-angular-x/prefer-takeuntil` with `checkDestroy: true` requires `ngOnDestroy` even when using `takeUntilDestroyed` alias — must set `checkDestroy: false` to use the modern Angular pattern
+  - With `checkDestroy: false`, the rule still enforces `takeUntilDestroyed` usage in pipes
+---
+
+## 2026-03-05 - SM-011
+- What was implemented: Removed StaffApiService from staff.routes.ts providers (it is providedIn: 'root'). Added inline comment on no-inline-styles ESLint rule explaining the allowBindToStyle exception.
+- Files changed:
+  - libs/chairly/src/lib/staff/staff.routes.ts (removed StaffApiService from providers)
+  - src/frontend/chairly/eslint.config.mjs (added comment on no-inline-styles rule)
+---
+
+## 2026-03-05 - SM-010
+- What was implemented: Added `mutationError` signal to StaffListPageComponent, reset on each mutation attempt, error handler sets Dutch message on API failure. Template renders error below page header. Added test verifying error appears when create API throws.
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (mutationError signal, error handlers in onSave/onReactivate/onConfirmDeactivate)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.html (error message paragraph)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts (new test using throwError)
+- **Learnings for future iterations:**
+  - Test mutation errors via DOM (`querySelector('p.text-red-600')`) rather than accessing protected signals directly
+  - Use `throwError(() => new Error(...))` from rxjs to simulate Observable errors in tests
+---
+
+## 2026-03-05 - CI fix: form dialog pre-fill in edit mode
+- What was implemented: Fixed E2E test failure where clicking 'Medewerker bewerken' opened the dialog but Voornaam was empty instead of pre-filled
+- Root cause: Angular `input()` signals are only updated during change detection, not synchronously. Calling `open()` immediately after `selectedStaff.set(member)` meant the child's `this.staffMember()` still read `null`
+- Fix: Changed `open()` to accept an optional `member` parameter; list page now passes the member directly to `open(member)` instead of relying on the input signal
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (open() now accepts optional StaffMemberResponse | null)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (passes member to open())
+- **Learnings for future iterations:**
+  - Angular `input()` signals are NOT updated synchronously — they only update during change detection. NEVER call a child method immediately after setting a signal that feeds an input binding and expect the child's `input()` to be current.
+  - Pattern: when a parent needs to call a child method with data, pass the data as a method parameter rather than relying on the input binding to propagate first
+---
+
+## 2026-03-05 - SM-009
+- What was implemented: Playwright E2E spec for staff management — 7 tests covering page load, member display, form dialog open, POST create, edit pre-fill, PATCH deactivate with confirmation, and nav link
+- Files changed:
+  - apps/chairly-e2e/src/staff.spec.ts (new)
+- **Learnings for future iterations:**
+  - E2E tests do NOT run via `npx nx affected -t test` — only lint + build checks needed for e2e (acceptance criteria in prd)
+  - Mock PATCH sub-routes like `/api/staff/{id}/deactivate` with `**/api/staff/staff-1/deactivate` pattern
+  - `dialog[open]` selector reliably finds the active modal in Playwright
+  - `confirmDialog.getByRole('button', { name: 'Deactiveren' })` works for clicking confirm in a showModal() ConfirmationDialogComponent
+  - After a store update (deactivateStaffMember sets isActive: false), `page.getByText('Inactief')` becomes visible reactively without page reload
+---
+
+## 2026-03-05 - SM-008
+- What was implemented: Added 'Medewerkers' nav link to shell sidebar directly below 'Diensten', using identical class pattern and routerLinkActive styling
+- Files changed:
+  - libs/shared/src/lib/ui/shell/shell.component.html (updated — added Medewerkers <li> after Diensten <li>)
+- **Learnings for future iterations:**
+  - Shell nav items use `routerLinkActive="bg-primary-600"` (not `[routerLinkActiveOptions]`) — exact match not needed for top-level routes
+---
+
+## 2026-03-05 - SM-006
+- What was implemented: ShiftScheduleEditorComponent with 7-day schedule editor, checkbox per day, shift blocks (startTime/endTime) with add/remove, inline validation (endTime <= startTime shows error), Dutch labels, and 8 unit tests. Embedded as 'Werkrooster' section in staff-form-dialog.
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.html (new)
+  - libs/chairly/src/lib/staff/ui/shift-schedule-editor.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added ShiftScheduleEditorComponent export)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (updated — imports ShiftScheduleEditorComponent)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.html (updated — added Werkrooster section)
+- **Learnings for future iterations:**
+  - Use `model<T>()` (ModelSignal) instead of separate `input()` + `output()` for two-way bindings — `@angular-eslint/prefer-signal-model` enforces this
+  - `TestBed.flushEffects()` is deprecated in Angular 21 (sonarjs/deprecation) — with `model()` there's no need for `effect` sync, so `fixture.detectChanges()` alone is sufficient
+  - `model.set(newValue)` updates the local value AND emits `${name}Change` output to parent — no separate emit needed
+  - Parent binding: `[schedule]="scheduleSignal()" (scheduleChange)="scheduleSignal.set($event)"` works correctly with `model()`; or use `[(schedule)]="scheduleSignal"` sugar
+  - Computed `dayRows` from `this.schedule()` (the model signal) provides template data without function calls in templates
+---
+
+## 2026-03-05 - SM-005
+- What was implemented: StaffFormDialogComponent with dialog (showModal/close), reactive form (firstName, lastName, role, color, photoUrl), color picker (10 circles with ring on selected), Dutch labels, create/edit mode, and 6 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-form-dialog.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added StaffFormDialogComponent export)
+- **Learnings for future iterations:**
+  - `cancel` is a native DOM event — `@angular-eslint/no-output-native` blocks it. Rename to `cancelled` (and `save` → `saved`) to match service-form-dialog pattern.
+  - Color picker buttons (empty circles) need `[attr.aria-label]` to satisfy `@angular-eslint/template/elements-content` rule
+  - The "Kleur" label cannot use `<label>` (no associated form control for the circle group) — use `<p>` instead
+  - When multiple `button[type="button"]` elements exist in a component (e.g. color picker circles + Annuleren), use text content to find the specific button in tests: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
+  - `scheduleSignal` and `selectedColor` are separate signals (not in FormGroup) managed via open()/selectColor() methods — SM-006 will bind ShiftScheduleEditorComponent to scheduleSignal
+  - Output names in prd.json were `save`/`cancel` but must be `saved`/`cancelled` to avoid ESLint no-output-native error
+---
+
+## 2026-03-05 - SM-007
+- What was implemented: StaffListPageComponent — smart container page for /medewerkers. Loads staff on init, renders staff table with edit/deactivate/reactivate events, form dialog for create/edit, confirmation dialog for deactivation. Routing via staff.routes.ts, registered in app.routes.ts, exported from lib barrel. Sheriff config updated to allow chairly-lib → domain:staff.
+- Files changed:
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts (new)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.html (new)
+  - libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/feature/index.ts (new)
+  - libs/chairly/src/lib/staff/staff.routes.ts (new)
+  - libs/chairly/src/index.ts (updated — added staffRoutes export)
+  - apps/chairly/src/app/app.routes.ts (updated — added medewerkers route)
+  - sheriff.config.ts (updated — added domain:staff to chairly-lib dep rules)
+  - libs/chairly/src/lib/staff/feature/.gitkeep (deleted)
+- **Learnings for future iterations:**
+  - When adding a new domain, must update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>` (e.g. `'chairly-lib': ['domain:services', 'domain:staff', 'shared']`)
+  - `rxjs-angular-x/prefer-takeuntil` with `checkDestroy: true` requires Subject + takeUntil pattern (NOT takeUntilDestroyed): `private readonly destroy$ = new Subject<void>(); ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }` and `.pipe(takeUntil(this.destroy$))`
+  - `vitest/no-conditional-expect` forbids `expect()` inside `if` blocks — use `expect(x).toBeDefined()` then `x!.method()` (non-null assertion is only a warning)
+  - Service-list-page pattern: ALL API calls go through store methods. Staff page calls API directly then delegates to store — this is valid but requires the Subject+takeUntil cleanup pattern
+---
+
+## Codebase Patterns
+- API services use `inject(API_BASE_URL)` token from `@org/shared-lib` for base URL (not hardcoded `/api`)
+- `simple-import-sort` ESLint plugin enforces export sort order — run `nx run chairly-lib:lint --fix` to auto-fix
+- Models use `export type` (not `export`) in index.ts re-exports
+- Staff API: deactivate/reactivate use PATCH with `null` body
+- `[style.xxx]` property bindings require `allowBindToStyle: true` in ESLint `no-inline-styles` rule — already configured
+- Output names `save`/`cancel` are native DOM events — use `saved`/`cancelled` to satisfy `@angular-eslint/no-output-native`
+- Empty `<button>` elements (icon-only, color circles) need `[attr.aria-label]` to satisfy `@angular-eslint/template/elements-content`
+- Color group labels: use `<p>` instead of `<label>` when no single form control can be associated
+- Test selector tip: when a component has multiple `button[type="button"]` elements, find by textContent: `buttons.find(b => b.textContent?.trim() === 'Annuleren')`
+- Two-way bindings: use `model<T>()` (ModelSignal) instead of `input()` + `output()` — `@angular-eslint/prefer-signal-model` enforces this; `model.set()` both updates locally and emits `${name}Change` to parent
+- `TestBed.flushEffects()` is deprecated in Angular 21 — avoid `effect()` for sync patterns; prefer `model()` where possible
+- When adding a new domain, update `sheriff.config.ts` `chairly-lib` dep rules to include `domain:<new>`
+- Components with subscriptions use `takeUntilDestroyed(this.destroyRef)` with `private readonly destroyRef = inject(DestroyRef)` — no `ngOnDestroy` needed. ESLint `prefer-takeuntil` must have `checkDestroy: false` for this pattern to work.
+- `vitest/no-conditional-expect`: never put `expect()` inside `if` blocks — assert outside, then use `x!.method()` if needed
+- Angular `input()` signals update only during change detection — calling a child method immediately after `signal.set()` won't see the updated input; pass data as method parameter instead
+
+# Ralph Progress Log
+Started: Thu Mar  5 07:56:07 CET 2026
+---
+
+## 2026-03-05 - SM-004
+- What was implemented: StaffTableComponent with avatar column (chairly-staff-avatar), name, role (Dutch labels), status badge, action buttons (Bewerken/Deactiveren/Activeren), opacity-60 for inactive rows, empty state, and 15 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-table.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-table.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-table.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (updated — added StaffTableComponent export)
+- **Learnings for future iterations:**
+  - SlicePipe can be used in binding expressions to get initials: `[initials]="(member.firstName | slice:0:1) + (member.lastName | slice:0:1)"`
+  - `[class.opacity-60]="!member.isActive"` is a class binding (not an inline style) so it is ESLint-safe
+  - Separate @if blocks for Deactiveren/Activeren buttons gives cleaner conditional rendering vs. a single toggled button
+---
+
+## 2026-03-05 - SM-003
+- What was implemented: StaffAvatarComponent with photo/initials rendering, dynamic color background via [style.background-color], size variants (sm/md/lg), and 8 unit tests
+- Files changed:
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.ts (new)
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.html (new)
+  - libs/chairly/src/lib/staff/ui/staff-avatar.component.spec.ts (new)
+  - libs/chairly/src/lib/staff/ui/index.ts (new)
+  - libs/chairly/src/lib/staff/ui/.gitkeep (deleted)
+  - src/frontend/chairly/eslint.config.mjs (updated — added allowBindToStyle: true to no-inline-styles rule)
+- **Learnings for future iterations:**
+  - `@angular-eslint/template/no-inline-styles` blocks `[style.xxx]` bindings by default — must set `allowBindToStyle: true` in eslint.config.mjs (already done)
+  - The correct option name is `allowBindToStyle` (not `allowBindingToStyle`)
+  - Size computed signal using `computed()` is the clean approach for mapping input enum to CSS class string
+---
+
+## 2026-03-05 - SM-002
+- What was implemented: NgRx SignalStore for staff state with StaffState interface, StaffStore with loadAll/addStaffMember/updateStaffMember/deactivateStaffMember/reactivateStaffMember methods, plus unit tests covering all methods and edge cases
+- Files changed:
+  - libs/chairly/src/lib/staff/data-access/staff.store.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff.store.spec.ts (new)
+  - libs/chairly/src/lib/staff/data-access/index.ts (updated — added StaffStore export)
+- **Learnings for future iterations:**
+  - StaffStore methods (deactivate/reactivate) only update local state — no API calls, the page component calls the API and then delegates to the store. This is different from ServiceStore's toggleActive which calls the API.
+  - simple-import-sort auto-fix needed: `npx nx run chairly-lib:lint --fix` after updating index.ts
+---
+
+## 2026-03-05 - SM-001
+- What was implemented: TypeScript interfaces for staff models (StaffRole, ShiftBlock, DayOfWeek, WeeklySchedule, StaffMemberResponse, CreateStaffMemberRequest, UpdateStaffMemberRequest), StaffApiService with getAll/create/update/deactivate/reactivate methods, unit tests for all API methods
+- Files changed:
+  - libs/chairly/src/lib/staff/models/staff.models.ts (new)
+  - libs/chairly/src/lib/staff/models/index.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff-api.service.ts (new)
+  - libs/chairly/src/lib/staff/data-access/staff-api.service.spec.ts (new)
+  - libs/chairly/src/lib/staff/data-access/index.ts (new)
+  - libs/chairly/src/lib/staff/data-access/.gitkeep (deleted)
+- **Learnings for future iterations:**
+  - No models/ .gitkeep existed (only data-access, feature, ui, util had .gitkeep) — models/ directory was created fresh
+  - simple-import-sort enforces alphabetical export order in index.ts — auto-fix with `npx nx run chairly-lib:lint --fix`
+  - API services inject `API_BASE_URL` token from shared-lib, not hardcoded strings
+---
