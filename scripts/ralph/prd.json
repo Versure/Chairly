@@ -209,6 +209,61 @@
       "priority": 9,
       "passes": true,
       "notes": "Follow the same page.route() mocking pattern as apps/chairly-e2e/src/services.spec.ts. For test 6, use page.keyboard.press('Escape') if the confirmation is inside a showModal() dialog — or use window.confirm mock. Mock PATCH requests by checking request.method() === 'PATCH' inside the route handler."
+    },
+    {
+      "id": "SM-010",
+      "title": "Add error handling for API mutations in staff list page",
+      "description": "As a user, I want to see an error message when creating, updating, or (de)activating a staff member fails, so I am not left in a broken UI state.",
+      "acceptanceCriteria": [
+        "StaffListPageComponent adds a local `mutationError` signal<string | null> initialized to null",
+        "onSave, onConfirmDeactivate, and onReactivate each add an error handler: on error set mutationError to a Dutch user-facing message (e.g. 'Er is een fout opgetreden. Probeer het opnieuw.')",
+        "The template renders the error message below the page header when mutationError() is non-null: red text, small font, Dutch message",
+        "mutationError is reset to null at the start of each new mutation attempt (before calling the API)",
+        "libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts: add test that when StaffApiService.create throws an error, mutationError signal is set to a non-null string",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Look at how StaffStore.loadAll() handles errors (sets error state) — apply the same idea in the component for mutations. Keep the error message generic and Dutch. The store's own error state is for loadAll only; mutation errors belong to the component."
+    },
+    {
+      "id": "SM-011",
+      "title": "Cleanup — remove redundant provider and document ESLint exception",
+      "description": "As a developer, I want the route provider list and ESLint config to be accurate so there is no confusion about intent.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/staff/staff.routes.ts: remove StaffApiService from the providers array — it is providedIn: 'root' and does not need to be route-scoped. Only StaffStore remains: providers: [StaffStore]",
+        "src/frontend/chairly/eslint.config.mjs: add an inline comment on the no-inline-styles rule explaining the exception, e.g.: // allowBindToStyle: true — needed for dynamic [style.background-color] binding in color picker",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Two tiny changes in two files. Do not touch anything else. Verify that removing StaffApiService from providers does not break anything — it should not, because providedIn: 'root' services are available everywhere without explicit provision."
+    },
+    {
+      "id": "SM-012",
+      "title": "Refactor StaffListPageComponent to use takeUntilDestroyed()",
+      "description": "As a developer, I want the subscription cleanup to use the modern Angular pattern so there is less boilerplate.",
+      "acceptanceCriteria": [
+        "StaffListPageComponent no longer implements OnDestroy",
+        "The private destroy$ Subject<void> field is removed",
+        "The ngOnDestroy() method is removed",
+        "A private readonly destroyRef = inject(DestroyRef) field is added",
+        "All .pipe(takeUntil(this.destroy$)) usages are replaced with .pipe(takeUntilDestroyed(this.destroyRef))",
+        "takeUntilDestroyed is imported from '@angular/core/rxjs-interop', DestroyRef from '@angular/core'",
+        "Subject and takeUntil are no longer imported (remove unused imports)",
+        "OnDestroy is no longer imported from @angular/core (remove unused import)",
+        "libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.spec.ts still passes unchanged",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "This is a pure refactor — no behaviour change. takeUntilDestroyed(this.destroyRef) is functionally equivalent to takeUntil(this.destroy$) + ngOnDestroy. Angular 16+ supports this pattern; the project uses Angular 21."
     }
   ]
 }
