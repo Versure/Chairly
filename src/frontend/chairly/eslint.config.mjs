@@ -93,7 +93,7 @@ export default [
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/no-any': 'error',
-      '@angular-eslint/template/no-inline-styles': 'error',
+      '@angular-eslint/template/no-inline-styles': ['error', { allowBindToStyle: true }],
     },
   },
 
