@@ -19,7 +19,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as StaffApiService in libs/chairly/src/lib/staff/data-access/staff-api.service.ts and its spec. The API_BASE_URL token is imported from '@org/shared-lib'. The models/ folder does not exist yet — create it. No .gitkeep exists in models/ — just create the files directly."
     },
     {
@@ -37,7 +37,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as StaffStore in libs/chairly/src/lib/staff/data-access/staff.store.ts. The key difference: instead of deactivate/reactivate methods, use removeClient(id) which filters out the deleted client entirely (soft-delete means it disappears from the list)."
     },
     {
@@ -60,7 +60,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as StaffTableComponent in libs/chairly/src/lib/staff/ui/staff-table.component.ts. No avatar column, no status column — clients only have Naam, E-mailadres, Telefoonnummer, Acties. The delete button emits immediately — the confirmation dialog is handled by the parent (list page), not this component. Use the existing dark: button variants from staff-table.component.html as a reference for the danger button style."
     },
     {
@@ -88,7 +88,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Follow staff-form-dialog.component.ts/.html exactly for the dialog infrastructure (open/close pattern, DOCUMENT injection, showModal, body overflow). Differences: no color picker, no schedule editor, no role dropdown. email FormControl uses Validators.email (not Validators.required), so the field is valid when empty — only invalid when a non-empty non-email string is entered. The notes field uses a <textarea> element. The spec in the component test: stub dialog.showModal and dialog.close in beforeEach since JSDOM does not implement them (same pattern as staff-list-page.component.spec.ts)."
     },
     {
@@ -125,7 +125,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "Follow StaffListPageComponent (libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts) as the primary reference. Key differences: no deactivate/reactivate — only delete which removes from list. ConfirmationDialogComponent is imported from '@org/shared-lib'. The page layout HTML: use the same bg-gray-50 dark:bg-slate-900 outer div, header with border-b pattern, and flex-1 overflow-auto p-6 content area as staff-list-page.component.html. Import ClientTableComponent and ClientFormDialogComponent from '../../../ui' (relative), ConfirmationDialogComponent from '@org/shared-lib'."
     },
     {
@@ -147,7 +147,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Follow apps/chairly-e2e/src/staff.spec.ts exactly for the test structure and page.route() mocking pattern. Mock client: { id: 'client-1', firstName: 'Anna', lastName: 'Bakker', email: 'anna@example.com', phoneNumber: null, notes: null, createdAtUtc: '2026-01-01T00:00:00Z', updatedAtUtc: null }. For test 6 (delete), mock the DELETE route as: page.route('**/api/clients/client-1', route => route.fulfill({ status: 204, body: '' })). After delete the row for 'Bakker, Anna' should no longer be visible. When ALL stories are complete (all passes: true), follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
     }
   ]
