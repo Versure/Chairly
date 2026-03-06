@@ -117,3 +117,10 @@ Started: Fri Mar  6 15:15:30 CET 2026
   - CA1849 fires when calling synchronous SaveChanges() inside an async method — use SaveChangesAsync() for inline DB operations in test methods (helper methods that are sync don't trigger this)
   - Coverage threshold raised from 35% to 48% after adding 25 passing handler tests
 ---
+
+## Rework Phase — PR #13 Review Feedback
+The following rework items were identified during code review:
+1. **RW-001 (Critical):** The AddBookings migration has empty Up()/Down() — tables will never be created. Must be regenerated.
+2. **RW-002 (Suggestion):** ToResponse/DeriveStatus in GetBookingsListHandler creates cross-slice coupling. Extract to BookingMapper.
+3. **RW-003 (Minor):** Skipped tests need TODO comments documenting need for integration test coverage.
+---
