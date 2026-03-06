@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the pattern of ClientConfiguration.cs exactly. The OwnsMany configuration for BookingServices must be inside BookingConfiguration — do NOT create a separate BookingServiceConfiguration file. BookingService.Id is a Guid primary key (auto-assigned at creation, not meaningful in the domain). ServiceId in BookingService has no FK constraint to Services — this is intentional to preserve booking history after service deletion. For the migration command: if 'dotnet ef' is not installed globally, install it with 'dotnet tool install --global dotnet-ef' first. Run the command from the repo root (C:\\Projects\\Prive\\Chairly\\Chairly or equivalent). The --output-dir path is relative to the --project directory."
     },
     {
@@ -42,7 +42,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Use GetBookingsListQuery with [AsParameters] binding so the optional 'date' and 'staffMemberId' query params are bound from the query string (same pattern as ASP.NET Core parameter binding). For the Date filter: compare using StartTime.Date — in EF Core with Npgsql, use b.StartTime.Date == query.Date.Value.ToDateTime(TimeOnly.MinValue) or cast via EF.Functions. Simplest approach: filter in-memory after ToListAsync if EF Core cannot translate the Date comparison, but try EF translation first. The ToResponse helper (internal static method on the handler) should be reused by ALL subsequent handlers — define it as 'internal static BookingResponse ToResponse(Booking b)' so CreateBookingHandler etc. can call GetBookingsListHandler.ToResponse(booking). Import OneOf and OneOf.Types as needed."
     },
     {
@@ -59,7 +59,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "The ValidationException is the custom type from Chairly.Api.Shared.Mediator.ValidationException — it takes a Dictionary<string, string[]> errors (same as used by the ValidationBehavior pipeline). The ValidationBehavior already handles Data Annotations automatically. For manual cross-entity validation failures (empty service list), throw ValidationException directly in the handler. For the service snapshot order: preserve the order from command.ServiceIds (same index = same SortOrder). Use #pragma warning disable/restore MA0026 around Guid.Empty for CreatedBy. The Conflict type is Chairly.Api.Shared.Results.Conflict (not OneOf.Types). NotFound is OneOf.Types.NotFound. Verify these by checking existing DeleteClientHandler.cs as the reference."
     },
     {

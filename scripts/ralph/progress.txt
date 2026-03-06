@@ -1,49 +1,65 @@
-## Codebase Patterns
-- Client models live in `libs/chairly/src/lib/clients/models/` — never in `util/`
-- API service follows StaffApiService pattern: inject HttpClient + API_BASE_URL, one method per HTTP verb
-- Spec files use HttpTestingController from `@angular/common/http/testing`
-- models/index.ts must use `export type { ... }` (not `export { ... }`) for interface re-exports — required by isolatedModules
-- sheriff.config.ts chairly-lib depRules must include each new domain (e.g. 'domain:clients') when adding a new domain
-- Run `npx nx run chairly-lib:lint --fix` to auto-fix simple-import-sort errors quickly
-- `viewChild.required<ComponentType>('templateRefName')` for typed access to template ref components
-
 # Ralph Progress Log
-Started: Fri Mar  6 10:32:13 CET 2026
+Started: Fri Mar  6 15:15:30 CET 2026
 ---
 
-## 2026-03-06 - CLF-001
-- Created clients/models/client.models.ts with ClientResponse, CreateClientRequest, UpdateClientRequest
-- Created clients/models/index.ts
-- Created clients/data-access/client-api.service.ts with getAll/create/update/delete methods
-- Created clients/data-access/client-api.service.spec.ts with HttpTestingController tests
-- Created clients/data-access/index.ts
-- Removed .gitkeep from data-access/
-- All lint, test, build checks pass
+## Codebase Patterns
+- Migration output-dir is `Migrations` (relative to --project), NOT `Persistence/Migrations`. Existing migrations are in `src/backend/Chairly.Infrastructure/Migrations/`.
+- EF Core-generated migration files need `dotnet format` run after creation (encoding fix).
+- Domain entities with collection navigation properties: use `List<T>` with `#pragma warning disable CA2227, CA1002, MA0016` for EF Core OwnsMany.
+- Configuration methods exceeding 60 lines: split into private static helper methods (MA0051 rule).
+- DesignTimeDbContextFactory is in `Chairly.Infrastructure/Persistence/` with `#pragma warning disable CA1812`.
+- MA0132: Never implicitly convert `DateTime` to `DateTimeOffset` — use `new DateTimeOffset(dt, TimeSpan.Zero)` explicitly.
+- `GetBookingsListHandler.ToResponse` is `internal static` so all other booking handlers can reuse it (cross-slice reference within same bounded context is allowed).
+- Date filter in EF Core: use explicit `DateTimeOffset` range (`>= startOfDay && < endOfDay`) rather than `.Date` comparison (always translatable).
+- MA0002: `new Dictionary<string, string[]>` triggers MA0002 — always pass `StringComparer.Ordinal` as constructor argument.
+- MA0051: Handler methods exceeding 60 lines must be split into private helpers (e.g., `HasOverlapAsync`, `CreateBooking`).
+- Command classes with `List<T>` properties need `#pragma warning disable CA2227, CA1002, MA0016` on the property for model binding.
+
+## 2026-03-06 - CBK-001
+- What was implemented: Booking and BookingService domain entities, BookingConfiguration (EF Core), DesignTimeDbContextFactory, AddBookings migration, updated ChairlyDbContext with Bookings DbSet.
+- Files changed:
+  - src/backend/Chairly.Domain/Entities/Booking.cs (new)
+  - src/backend/Chairly.Domain/Entities/BookingService.cs (new)
+  - src/backend/Chairly.Infrastructure/Persistence/Configurations/BookingConfiguration.cs (new)
+  - src/backend/Chairly.Infrastructure/Persistence/DesignTimeDbContextFactory.cs (new)
+  - src/backend/Chairly.Infrastructure/Persistence/ChairlyDbContext.cs (updated)
+  - src/backend/Chairly.Infrastructure/Migrations/20260306141947_AddBookings.cs (new)
 - **Learnings for future iterations:**
-  - Pattern is identical to StaffApiService — inject HttpClient + API_BASE_URL, return Observables
-  - Spec uses HttpTestingController pattern from staff-api.service.spec.ts
-  - models/ folder had no .gitkeep — just create files directly
+  - The --output-dir for `dotnet ef migrations add` must be `Migrations` not `Persistence/Migrations`
+  - Generated migration files have encoding issues — run `dotnet format` after adding a migration
+  - BookingConfiguration.Configure was too long (MA0051); split into 4 private static helpers
+  - EF Core OwnsMany needs settable List<T>; suppress CA2227/CA1002/MA0016 with pragma
 ---
 
-## 2026-03-06 - CLF-002 through CLF-006
-- CLF-002: Created client.store.ts (SignalStore with loadAll/addClient/updateClient/removeClient) and spec
-- CLF-003: Created client-table.component.ts/.html/.spec.ts with 4 columns (Naam, E-mail, Tel, Acties)
-- CLF-004: Created client-form-dialog.component.ts/.html/.spec.ts with create/edit dialog
-- CLF-005: Created client-list-page.component.ts/.html/.spec.ts, clients.routes.ts, updated app.routes.ts, shell nav, libs/chairly/src/index.ts
-- CLF-006: Created apps/chairly-e2e/src/clients.spec.ts with 7 Playwright tests
-- Files changed: 20+ files across data-access/, ui/, feature/, apps/, libs/
+## 2026-03-06 - CBK-002
+- What was implemented: GET /api/bookings and GET /api/bookings/{id} endpoints with query filtering (date, staffMemberId), status derivation, and BookingEndpoints registration.
+- Files changed:
+  - src/backend/Chairly.Api/Features/Bookings/BookingResponse.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/BookingServiceResponse.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBookingsList/GetBookingsListQuery.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBookingsList/GetBookingsListHandler.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBookingsList/GetBookingsListEndpoint.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBooking/GetBookingQuery.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBooking/GetBookingHandler.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBooking/GetBookingEndpoint.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/BookingEndpoints.cs (new)
+  - src/backend/Chairly.Api/Program.cs (updated)
 - **Learnings for future iterations:**
-  - Need `export type` not `export {}` in models/index.ts (isolatedModules requirement)
-  - Must add new domain to sheriff.config.ts chairly-lib depRules when adding a new domain
-  - ConfirmationDialogComponent from '@org/shared-lib' supports [isDestructive]="true" input
-  - E2E delete test: mock DELETE route via page.route('**/api/clients/client-1', ...) separately from collection route
+  - MA0132 fires when implicitly converting DateTime to DateTimeOffset — use `new DateTimeOffset(dt, TimeSpan.Zero)` to be explicit
+  - Date range filter (`>= startOfDay && < endOfDay`) is preferred over `.Date` property comparison for EF Core translation reliability
+  - `GetBookingsListQuery` must be a `class` (not `record`) to allow settable properties for [AsParameters] query string binding
 ---
 
-## 2026-03-06 - CLF-R001
-- Fixed missing space after comma in import: `import { ClientResponse,CreateClientRequest }` → `import { ClientResponse, CreateClientRequest }` in client-form-dialog.component.spec.ts and client-list-page.component.spec.ts
-- Removed empty `imports: []` property from @Component decorator in client-table.component.ts
-- All lint, test, build checks pass
+## 2026-03-06 - CBK-003
+- What was implemented: POST /api/bookings endpoint with service snapshotting, overlap detection, client/staff/service validation, and ValidationException for empty ServiceIds.
+- Files changed:
+  - src/backend/Chairly.Api/Features/Bookings/CreateBooking/CreateBookingCommand.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/CreateBooking/CreateBookingHandler.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/CreateBooking/CreateBookingEndpoint.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/BookingEndpoints.cs (updated)
 - **Learnings for future iterations:**
-  - Prettier enforces space after comma in import lists — always include spaces
-  - Empty `imports: []` should be omitted from @Component decorators when there are no imports
+  - MA0002 fires on `new Dictionary<string, string[]>` without a comparer — use `new Dictionary<string, string[]>(StringComparer.Ordinal)`
+  - MA0051 fires when Handle method exceeds 60 lines — extract `HasOverlapAsync` (instance, accesses db) and `CreateBooking` (static, pure factory) as private helpers
+  - Command class with `List<Guid>` property needs `#pragma warning disable CA2227, CA1002, MA0016` on that property
+  - Overlap query: `StartTime < endTime && EndTime > startTime` is the correct interval overlap formula
 ---
