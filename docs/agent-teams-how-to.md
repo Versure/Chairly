@@ -19,82 +19,68 @@ Use Ralph (`docs/ai-workflow.md`) when you prefer story-by-story iteration with 
 
 ## Prerequisites
 
-Install these in WSL before first use:
+Install these before first use:
 
 ```bash
-# tmux — required to run Claude in a detachable session
-sudo apt-get install tmux
-
 # gh — GitHub CLI (must be authenticated)
 gh auth login
 
 # jq — required by rework.sh
-sudo apt-get install jq
-
-# claude — Claude Code CLI
-npm install -g @anthropic-ai/claude-code
+sudo apt-get install jq   # WSL/Linux
+# or: winget install jqlang.jq  # Windows
 
 # dotnet ef (for backend migrations)
 dotnet tool install --global dotnet-ef
 ```
 
-Verify everything works:
+Verify:
 ```bash
-tmux -V && gh auth status && jq --version && claude --version
+gh auth status && jq --version
 ```
 
 ---
 
 ## Implementing a feature
 
-### 1. Open WSL and navigate to the project
+### 1. Open Claude Code on the main branch
 
 ```bash
-wsl
-cd ~/projects/Chairly   # or wherever your WSL clone lives
-git pull
+git checkout main
+git pull origin main
+claude   # or open Claude Code in your editor
 ```
 
-### 2. Run the start script
+### 2. Run the feature-team skill
 
-Pass a short feature description as a single argument:
+Pass a short description or a path to a spec file:
 
-```bash
-./scripts/agent-team/start.sh "Add booking CRUD for clients"
+```
+/feature-team "Add booking CRUD for clients"
 ```
 
-Or point to a description file:
-
-```bash
-./scripts/agent-team/start.sh /path/to/feature-description.md
+```
+/feature-team docs/specs/bookings.md
 ```
 
-The script will:
+The skill will automatically:
 - Derive a kebab-case feature name (e.g. `add-booking-crud`)
 - Create a feature branch `feat/add-booking-crud` from `main`
 - Create two git worktrees:
-  - `.worktrees/backend/` on branch `feat/add-booking-crud/backend`
-  - `.worktrees/frontend/` on branch `feat/add-booking-crud/frontend`
-- Start a tmux session and launch Claude Code
-- Automatically invoke the `/feature-team` skill
+  - `.worktrees/backend/` on branch `impl/add-booking-crud-backend`
+  - `.worktrees/frontend/` on branch `impl/add-booking-crud-frontend`
+- Run all phases (spec → backend → frontend → review → QA → merge/PR)
 
-### 3. Watch progress (optional)
-
-```bash
-tmux attach -t feature-team-add-booking-crud
-```
-
-Detach at any time with `Ctrl+B D` — the agents keep running.
+### 3. Follow progress
 
 The lead agent logs its phase status in every response:
 ```
-[Phase 0 ✓] [Phase 1 ✓] [Phase 2 running...]
+[Step 0 ✓] [Phase 0 ✓] [Phase 1 ✓] [Phase 2 running...]
 ```
 
 ### 4. Wait for the PR
 
 When all phases complete, a pull request is created on `feat/add-booking-crud` targeting
-`main`. The PR URL is printed in the tmux session. You can also find it with:
+`main`. The PR URL is printed at the end. You can also find it with:
 
 ```bash
 gh pr list
@@ -134,18 +120,14 @@ Repeat this cycle until you are satisfied, then merge normally.
 
 ## Aborting a run
 
-Kill the tmux session to stop the agents at any point:
-
-```bash
-tmux kill-session -t feature-team-add-booking-crud
-```
+Press `Ctrl+C` or close Claude Code to stop the agents at any point.
 
 Clean up worktrees if you want to start fresh:
 
 ```bash
 git worktree remove --force .worktrees/backend
 git worktree remove --force .worktrees/frontend
-git branch -D feat/add-booking-crud/backend feat/add-booking-crud/frontend
+git branch -D impl/add-booking-crud-backend impl/add-booking-crud-frontend
 ```
 
 ---
@@ -158,8 +140,8 @@ git branch -D feat/add-booking-crud/backend feat/add-booking-crud/frontend
 └── tasks.json       ← machine-readable task list (written by Phase 0)
 
 .worktrees/
-├── backend/         ← backend git worktree (feat/{name}/backend)
-└── frontend/        ← frontend git worktree (feat/{name}/frontend)
+├── backend/         ← backend git worktree (impl/{name}-backend)
+└── frontend/        ← frontend git worktree (impl/{name}-frontend)
 ```
 
 The spec and tasks files are committed to the feature branch at the end of Phase 5
@@ -182,20 +164,17 @@ so they are visible in the PR.
 
 ## Troubleshooting
 
-**The skill command was not sent to Claude (tmux timing issue)**
-
-The `start.sh` sleeps 6 seconds before sending the `/feature-team` command. If Claude
-took longer to start, attach to the session and send it manually:
+**The skill reports "must be run from the main branch"**
 
 ```bash
-tmux attach -t feature-team-{feature-name}
-# Then type:
-/feature-team "your feature description"
+git checkout main && git pull origin main
 ```
+
+Then re-run `/feature-team`.
 
 **The worktrees already exist from a previous run**
 
-`start.sh` removes stale worktrees automatically. If it fails, remove them manually:
+The skill removes stale worktrees automatically. If it fails, remove them manually:
 
 ```bash
 git worktree remove --force .worktrees/backend
@@ -230,6 +209,4 @@ cd .worktrees/frontend/src/frontend/chairly && npx nx affected -t build --base=m
 | Skill | Invocation | Purpose |
 |---|---|---|
 | `feature-team` | `/feature-team "description"` | Start full feature implementation |
-| `rework-team` | `/rework-team 42` | Address PR review comments |
-
-Both skills are also triggered automatically by the shell scripts.
+| `rework-team` | triggered by `rework.sh` | Address PR review comments |
