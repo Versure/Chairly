@@ -31,10 +31,7 @@ describe('ClientStore', () => {
     vi.clearAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [
-        ClientStore,
-        { provide: ClientApiService, useValue: mockApiService },
-      ],
+      providers: [ClientStore, { provide: ClientApiService, useValue: mockApiService }],
     });
 
     store = TestBed.inject(ClientStore);

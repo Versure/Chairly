@@ -90,10 +90,9 @@ describe('ClientListPageComponent', () => {
       notes: null,
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -114,17 +113,18 @@ describe('ClientListPageComponent', () => {
       notes: null,
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     formDialogComponent!.saved.emit(request);
     fixture.detectChanges();
 
-    const errorEl = fixture.nativeElement.querySelector('p.text-red-600, p.text-red-400') as Element | null;
+    const errorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
     expect(errorEl).toBeTruthy();
     expect(errorEl?.textContent?.trim()).toBeTruthy();
   });

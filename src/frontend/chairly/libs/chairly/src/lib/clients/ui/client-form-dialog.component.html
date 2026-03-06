@@ -1,98 +1,111 @@
 <dialog
   #dialogEl
-  class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden"
->
+  class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden">
   <div class="flex h-full w-full items-center justify-center bg-black/50 p-4">
-  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
-    <form [formGroup]="form" (ngSubmit)="onSave()">
-      <div class="p-6">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          {{ client() ? 'Klant bewerken' : 'Klant toevoegen' }}
-        </h2>
+    <div
+      class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto">
+      <form [formGroup]="form" (ngSubmit)="onSave()">
+        <div class="p-6">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            {{ client() ? 'Klant bewerken' : 'Klant toevoegen' }}
+          </h2>
 
-        <!-- Voornaam -->
-        <div class="mb-4">
-          <label for="cfd-firstName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Voornaam</label>
-          <input
-            id="cfd-firstName"
-            formControlName="firstName"
-            type="text"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-          @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
-            <p class="mt-1 text-xs text-red-600">Voornaam is verplicht (max. 100 tekens).</p>
-          }
-        </div>
+          <!-- Voornaam -->
+          <div class="mb-4">
+            <label
+              for="cfd-firstName"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Voornaam</label
+            >
+            <input
+              id="cfd-firstName"
+              formControlName="firstName"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" />
+            @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+              <p class="mt-1 text-xs text-red-600">Voornaam is verplicht (max. 100 tekens).</p>
+            }
+          </div>
 
-        <!-- Achternaam -->
-        <div class="mb-4">
-          <label for="cfd-lastName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Achternaam</label>
-          <input
-            id="cfd-lastName"
-            formControlName="lastName"
-            type="text"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-          @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
-            <p class="mt-1 text-xs text-red-600">Achternaam is verplicht (max. 100 tekens).</p>
-          }
-        </div>
+          <!-- Achternaam -->
+          <div class="mb-4">
+            <label
+              for="cfd-lastName"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Achternaam</label
+            >
+            <input
+              id="cfd-lastName"
+              formControlName="lastName"
+              type="text"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" />
+            @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+              <p class="mt-1 text-xs text-red-600">Achternaam is verplicht (max. 100 tekens).</p>
+            }
+          </div>
 
-        <!-- E-mailadres -->
-        <div class="mb-4">
-          <label for="cfd-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mailadres</label>
-          <input
-            id="cfd-email"
-            formControlName="email"
-            type="email"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-          @if (form.controls.email.invalid && form.controls.email.touched) {
-            <p class="mt-1 text-xs text-red-600">Voer een geldig e-mailadres in.</p>
-          }
-        </div>
+          <!-- E-mailadres -->
+          <div class="mb-4">
+            <label
+              for="cfd-email"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >E-mailadres</label
+            >
+            <input
+              id="cfd-email"
+              formControlName="email"
+              type="email"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" />
+            @if (form.controls.email.invalid && form.controls.email.touched) {
+              <p class="mt-1 text-xs text-red-600">Voer een geldig e-mailadres in.</p>
+            }
+          </div>
 
-        <!-- Telefoonnummer -->
-        <div class="mb-4">
-          <label for="cfd-phoneNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefoonnummer</label>
-          <input
-            id="cfd-phoneNumber"
-            formControlName="phoneNumber"
-            type="tel"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          />
-        </div>
+          <!-- Telefoonnummer -->
+          <div class="mb-4">
+            <label
+              for="cfd-phoneNumber"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Telefoonnummer</label
+            >
+            <input
+              id="cfd-phoneNumber"
+              formControlName="phoneNumber"
+              type="tel"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" />
+          </div>
 
-        <!-- Notities -->
-        <div class="mb-6">
-          <label for="cfd-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notities</label>
-          <textarea
-            id="cfd-notes"
-            formControlName="notes"
-            rows="4"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-          ></textarea>
-        </div>
+          <!-- Notities -->
+          <div class="mb-6">
+            <label
+              for="cfd-notes"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >Notities</label
+            >
+            <textarea
+              id="cfd-notes"
+              formControlName="notes"
+              rows="4"
+              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"></textarea>
+          </div>
 
-        <!-- Acties -->
-        <div class="flex justify-end gap-3">
-          <button
-            type="button"
-            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            (click)="onCancel()"
-          >
-            Annuleren
-          </button>
-          <button
-            type="submit"
-            [disabled]="form.invalid"
-            class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Opslaan
-          </button>
+          <!-- Acties -->
+          <div class="flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              (click)="onCancel()">
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              [disabled]="form.invalid"
+              class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+              Opslaan
+            </button>
+          </div>
         </div>
-      </div>
-    </form>
-  </div>
+      </form>
+    </div>
   </div>
 </dialog>

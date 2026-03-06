@@ -1,14 +1,12 @@
 <div class="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
   <!-- Page header -->
   <div
-    class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800"
-  >
+    class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
     <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Klanten</h1>
     <button
       type="button"
       class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-      (click)="openAddDialog()"
-    >
+      (click)="openAddDialog()">
       + Klant toevoegen
     </button>
   </div>
@@ -26,8 +24,7 @@
       <chairly-client-table
         [clients]="clients()"
         (edit)="onEdit($event)"
-        (delete)="onDelete($event)"
-      />
+        (delete)="onDelete($event)" />
     }
   </div>
 </div>
@@ -36,8 +33,7 @@
 <chairly-client-form-dialog
   [client]="selectedClient()"
   (saved)="onSave($event)"
-  (cancelled)="onCancelled()"
-/>
+  (cancelled)="onCancelled()" />
 
 <!-- Delete confirmation dialog -->
 <chairly-confirmation-dialog
@@ -46,5 +42,4 @@
   message="Weet je zeker dat je deze klant wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
   confirmLabel="Verwijderen"
   [isDestructive]="true"
-  (confirmed)="onConfirmDelete()"
-/>
+  (confirmed)="onConfirmDelete()" />

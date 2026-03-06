@@ -119,7 +119,9 @@ describe('ClientFormDialogComponent', () => {
     const buttons = Array.from(
       fixture.nativeElement.querySelectorAll('button[type="button"]'),
     ) as HTMLButtonElement[];
-    const cancelButton = buttons.find((b) => b.textContent?.trim() === 'Annuleren') as HTMLButtonElement;
+    const cancelButton = buttons.find(
+      (b) => b.textContent?.trim() === 'Annuleren',
+    ) as HTMLButtonElement;
     cancelButton.click();
     fixture.detectChanges();
 

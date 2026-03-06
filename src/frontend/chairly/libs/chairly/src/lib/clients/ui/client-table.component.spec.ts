@@ -45,7 +45,9 @@ describe('ClientTableComponent', () => {
   });
 
   it('should render a row for each client', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows.length).toBe(2);
   });
 
@@ -55,7 +57,9 @@ describe('ClientTableComponent', () => {
   });
 
   it('should show "—" for null email', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows[1].textContent).toContain('—');
   });
 
@@ -65,7 +69,9 @@ describe('ClientTableComponent', () => {
       emitted = c;
     });
 
-    const editButton = fixture.nativeElement.querySelector('[title="Klant bewerken"]') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector(
+      '[title="Klant bewerken"]',
+    ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
 
@@ -78,7 +84,9 @@ describe('ClientTableComponent', () => {
       emitted = c;
     });
 
-    const deleteButton = fixture.nativeElement.querySelector('[title="Klant verwijderen"]') as HTMLButtonElement;
+    const deleteButton = fixture.nativeElement.querySelector(
+      '[title="Klant verwijderen"]',
+    ) as HTMLButtonElement;
     deleteButton.click();
     fixture.detectChanges();
 
@@ -89,7 +97,9 @@ describe('ClientTableComponent', () => {
     fixture.componentRef.setInput('clients', []);
     fixture.detectChanges();
 
-    const emptyCell = fixture.nativeElement.querySelector('td[colspan="4"]') as HTMLTableCellElement | null;
+    const emptyCell = fixture.nativeElement.querySelector(
+      'td[colspan="4"]',
+    ) as HTMLTableCellElement | null;
     expect(emptyCell).toBeTruthy();
     expect(emptyCell?.textContent).toContain('Geen klanten gevonden');
   });

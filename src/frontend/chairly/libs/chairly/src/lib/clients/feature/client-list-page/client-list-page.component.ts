@@ -12,7 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConfirmationDialogComponent } from '@org/shared-lib';
 
 import { ClientApiService, ClientStore } from '../../data-access';
-import { ClientResponse,CreateClientRequest } from '../../models';
+import { ClientResponse, CreateClientRequest } from '../../models';
 import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
 
 @Component({
