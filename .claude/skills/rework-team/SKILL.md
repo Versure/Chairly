@@ -118,20 +118,20 @@ cycle as the main workflow (up to 2 retries per layer).
 ## Step 4 — Commit and push
 
 ```bash
-# Commit and push backend worktree (its branch is feat/{FEATURE_NAME}/backend)
+# Commit and push backend worktree (its branch is impl/{FEATURE_NAME}-backend)
 cd .worktrees/backend && git add -A
 git diff --cached --quiet || git commit -m "fix({FEATURE_NAME}): address PR review comments (backend)"
-git push origin feat/{FEATURE_NAME}/backend
+git push origin impl/{FEATURE_NAME}-backend
 
-# Commit and push frontend worktree (its branch is feat/{FEATURE_NAME}/frontend)
+# Commit and push frontend worktree (its branch is impl/{FEATURE_NAME}-frontend)
 cd .worktrees/frontend && git add -A
 git diff --cached --quiet || git commit -m "fix({FEATURE_NAME}): address PR review comments (frontend)"
-git push origin feat/{FEATURE_NAME}/frontend
+git push origin impl/{FEATURE_NAME}-frontend
 
 # Merge worktree branches into feature branch in main checkout
 git checkout {FEATURE_BRANCH}
-git merge --no-ff feat/{FEATURE_NAME}/backend -m "chore: merge backend rework fixes"
-git merge --no-ff feat/{FEATURE_NAME}/frontend -m "chore: merge frontend rework fixes"
+git merge --no-ff impl/{FEATURE_NAME}-backend -m "chore: merge backend rework fixes"
+git merge --no-ff impl/{FEATURE_NAME}-frontend -m "chore: merge frontend rework fixes"
 git push origin {FEATURE_BRANCH}
 ```
 
