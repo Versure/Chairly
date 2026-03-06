@@ -91,13 +91,14 @@ git checkout main
 git pull --ff-only origin main
 
 # ---------------------------------------------------------------------------
-# Create feature branch from main
+# Create feature branch from main (stay on main — never checkout feature branch
+# here, as that would swap the script file on disk mid-execution)
 # ---------------------------------------------------------------------------
 if git rev-parse --verify "$FEATURE_BRANCH" >/dev/null 2>&1; then
   echo "Branch $FEATURE_BRANCH already exists, reusing it."
-  git checkout "$FEATURE_BRANCH"
 else
-  git checkout -b "$FEATURE_BRANCH"
+  git branch "$FEATURE_BRANCH"
+  echo "Created branch $FEATURE_BRANCH."
 fi
 
 # ---------------------------------------------------------------------------
