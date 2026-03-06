@@ -14,7 +14,7 @@
       Current unit tests cover handlers and mediator infrastructure only. Endpoint route-mapping
       code requires integration tests (not yet implemented) to reach 80% line coverage.
     -->
-    <Threshold>35</Threshold>
+    <Threshold>48</Threshold>
     <ThresholdType>line</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
