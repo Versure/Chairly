@@ -112,7 +112,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Add the test to the existing ClientHandlerTests.cs alongside the other handler tests. Insert clients in a deliberately non-alphabetical order (e.g. 'de Vries' first, then 'Bakker, Piet', then 'Bakker, Anna') so the test validates the ORDER BY rather than insertion order. Use the existing CreateTestClient helper. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push to the existing branch, then wait for CI."
     }
   ]

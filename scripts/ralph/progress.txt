@@ -38,3 +38,12 @@ Started: Thu Mar  5 16:35:08 CET 2026
   - Test file must import `Chairly.Api.Shared.Results` for `Conflict`, not use `OneOf.Types`
   - Unused `using Chairly.Api.Features.Clients` in test file causes IDE0005 build error — only import sub-namespaces actually used
 ---
+
+## 2026-03-06 - CLB-006
+- Added `GetClientsListHandler_ReturnsSortedByLastNameThenFirstName` test to `ClientHandlerTests.cs`
+- Seeds 3 clients in non-alphabetical order (de Vries, Bakker/Piet, Bakker/Anna) and asserts sort order
+- Files changed: Chairly.Tests/Features/Clients/ClientHandlerTests.cs
+- **Learnings:**
+  - The existing `CreateTestClient` helper is sufficient for seeding sorted clients — no changes needed
+  - InMemory EF returns records in insertion order if no ordering is applied, so testing ORDER BY requires deliberate non-alphabetical insertion
+---
