@@ -149,6 +149,22 @@
       "priority": 6,
       "passes": true,
       "notes": "Follow apps/chairly-e2e/src/staff.spec.ts exactly for the test structure and page.route() mocking pattern. Mock client: { id: 'client-1', firstName: 'Anna', lastName: 'Bakker', email: 'anna@example.com', phoneNumber: null, notes: null, createdAtUtc: '2026-01-01T00:00:00Z', updatedAtUtc: null }. For test 6 (delete), mock the DELETE route as: page.route('**/api/clients/client-1', route => route.fulfill({ status: 204, body: '' })). After delete the row for 'Bakker, Anna' should no longer be visible. When ALL stories are complete (all passes: true), follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
+    },
+    {
+      "id": "CLF-R001",
+      "title": "Fix import formatting and empty imports array from code review",
+      "description": "As a developer, I want the code review nits resolved so the codebase is consistent with Prettier formatting rules.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/ui/client-form-dialog.component.spec.ts: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add missing space after comma)",
+        "libs/chairly/src/lib/clients/feature/client-list-page/client-list-page.component.spec.ts: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add missing space after comma)",
+        "libs/chairly/src/lib/clients/ui/client-table.component.ts: remove the empty 'imports: []' property from the @Component decorator — the component has no imports so the property should be omitted entirely",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Three tiny edits across three files — do not change anything else. After committing and verifying checks pass, push to origin/ralph/client-management-frontend. The PR #9 is already open, so no new PR is needed. This is the only remaining story so after it passes, follow the COMPLETE protocol in CLAUDE.md: push, wait for CI, signal COMPLETE."
     }
   ]
 }
