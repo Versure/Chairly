@@ -1,75 +1,40 @@
 # Ralph Progress Log
-Started: Thu Mar  5 15:34:24 CET 2026
+Started: Thu Mar  5 16:35:08 CET 2026
 ---
 
 ## Codebase Patterns
-- CA1056 analyzer treats `string? PhotoUrl` as error on Domain entities — suppress with `#pragma warning disable CA1056` around the property
-- IDE1006 requires `_` prefix for private static readonly fields in Chairly.Api (e.g. `_jsonOptions`)
-- MA0002 requires StringComparer on `new Dictionary<string, T>()` — use `StringComparer.OrdinalIgnoreCase`
-- CA2208/MA0015 require `ArgumentOutOfRangeException` to use a local parameter name, not `nameof(property.Subproperty)` — extract to local variable first
-- Slices in the same bounded context (e.g. Staff) can reference each other: UpdateStaffMemberHandler and Deactivate/ReactivateStaffMemberHandler call `CreateStaffMemberHandler.ToResponse()` and `ParseRole()` (declared `internal static`)
-- dotnet format auto-fixes migration file encoding issues (CHARSET error) — always run `dotnet format` before `dotnet format --verify-no-changes`
-- `#pragma warning disable CA1812` is needed on all handler classes (instantiated via DI reflection)
+- EF Core migrations auto-generate with BOM/encoding issues — always run `dotnet format` before `--verify-no-changes` to auto-fix them
+- `Conflict` type is NOT in the OneOf library — create a custom `internal readonly struct Conflict` in `Chairly.Api/Shared/Results/` and add `#pragma warning disable CA1716` (VB keyword conflict on "Shared")
+- The `.editorconfig` suppresses CA1716 only for `Chairly.Api/Shared/Mediator/**` — new Shared subfolders need their own pragma or editorconfig entry
+- `InternalsVisibleTo("Chairly.Tests")` is set in `Chairly.Api.csproj`, so internal types in the API project are accessible from tests
+- CA1515 fires on `public` types in the API project — always use `internal` for handler classes and result types
+- GetClientsListHandler references CreateClientHandler.ToResponse — these two handlers are coupled and must be committed together
 
 ---
 
-## 2026-03-05 - SMB-001
-- Implemented StaffRole enum, StaffMember entity, StaffMemberConfiguration, AddStaffMember migration
-- Files changed: Chairly.Domain/Enums/StaffRole.cs, Chairly.Domain/Entities/StaffMember.cs, Chairly.Infrastructure/Persistence/Configurations/StaffMemberConfiguration.cs, ChairlyDbContext.cs, Migrations/AddStaffMember
-- Learnings:
-  - CA1056 fires on `string? PhotoUrl` — suppress with pragma
-  - dotnet-ef tool was already installed globally
-  - Migration file encoding fixed by running `dotnet format` first
+## 2026-03-06 - CLB-001
+- Implemented Client domain entity in `Chairly.Domain/Entities/Client.cs`
+- Added `ClientConfiguration` EF Core config in `Chairly.Infrastructure/Persistence/Configurations/`
+- Added `public DbSet<Client> Clients` to `ChairlyDbContext`
+- Ran `dotnet ef migrations add AddClient` to create migration
+- Removed `.gitkeep` from `Chairly.Api/Features/Clients/`
+- Files changed: Client.cs, ClientConfiguration.cs, ChairlyDbContext.cs, Migrations/AddClient.*
+- **Learnings:**
+  - No design-time factory needed (already existed via Aspire host configuration)
+  - Migration files have encoding issues fixed by `dotnet format`
 ---
 
-## 2026-03-05 - SMB-002
-- Implemented ShiftBlockResponse, StaffMemberResponse, GetStaffListQuery/Handler/Endpoint, StaffEndpoints, StaffHandlerTests (1 test)
-- Files changed: All Features/Staff/ files + Program.cs + Tests/Features/Staff/
-- Learnings:
-  - MA0002 on `new Dictionary<string, T>()` — always pass StringComparer
-  - IDE1006: `_jsonOptions` not `JsonOptions` for private static readonly
----
-
-## 2026-03-05 - SMB-003
-- Implemented ShiftBlockCommand, CreateStaffMemberCommand, CreateStaffMemberHandler, CreateStaffMemberEndpoint
-- Made `ParseRole`, `MapRoleToString`, `ToResponse` internal static on CreateStaffMemberHandler for reuse by other handlers in the same bounded context
-- Files changed: Features/Staff/CreateStaffMember/ + StaffEndpoints.cs + StaffHandlerTests.cs (4 additional tests)
-- Learnings:
-  - CA2208/MA0015: use a named parameter (`nameof(staffRole)`) not `nameof(member.Role)` in ArgumentOutOfRangeException
----
-
-## 2026-03-05 - SMB-004
-- Implemented UpdateStaffMemberCommand, UpdateStaffMemberHandler, UpdateStaffMemberEndpoint
-- Reused CreateStaffMemberHandler.ParseRole and .ToResponse (internal static, same bounded context)
-- Files changed: Features/Staff/UpdateStaffMember/ + StaffEndpoints.cs + StaffHandlerTests.cs (2 additional tests)
----
-
-## 2026-03-05 - SMB-005
-- Implemented DeactivateStaffMemberCommand/Handler/Endpoint, ReactivateStaffMemberCommand/Handler/Endpoint
-- Reused CreateStaffMemberHandler.ToResponse for consistent response mapping
-- Files changed: Features/Staff/DeactivateStaffMember/, Features/Staff/ReactivateStaffMember/, StaffEndpoints.cs, StaffHandlerTests.cs (4 additional tests)
-- ALL stories complete — following COMPLETE protocol: push, create PR, wait for CI
----
-
-## 2026-03-05 - SMB-008
-- Added HasConversion<string>() for StaffRole in StaffMemberConfiguration
-- Created ConvertStaffRoleToString migration with raw SQL Up/Down (avoid CAST producing integers)
-- Files changed: StaffMemberConfiguration.cs, new migration files
-- **Learnings for future iterations:**
-  - EF Core AlterColumn with enum->string conversion produces bad CAST — always replace generated Up/Down with raw SQL for column type conversions
----
-
-## 2026-03-05 - SMB-007
-- Added idempotency guard to DeactivateStaffMemberHandler: early-return if already inactive
-- Added test DeactivateStaffMemberHandler_AlreadyInactive_DoesNotOverwriteDeactivatedAtUtc
-- Files changed: DeactivateStaffMemberHandler.cs, StaffHandlerTests.cs
----
-
-## 2026-03-05 - SMB-006
-- Removed duplicate MapRole() and _jsonOptions from GetStaffListHandler, replaced Select lambda with members.Select(CreateStaffMemberHandler.ToResponse)
-- Removed unused `using System.Text.Json` and `using Chairly.Domain.Enums` imports, added `using Chairly.Api.Features.Staff.CreateStaffMember`
-- .gitkeep was already absent (removed in a prior iteration)
-- Files changed: GetStaffList/GetStaffListHandler.cs
-- **Learnings for future iterations:**
-  - Reusing a static method via method group in Select() keeps related slices DRY without cross-context coupling
+## 2026-03-06 - CLB-002 through CLB-005
+- CLB-002: ClientResponse DTO, GetClientsList query/handler/endpoint, ClientEndpoints, Program.cs updated
+- CLB-003: CreateClient command/handler/endpoint with `ToResponse` static helper
+- CLB-004: UpdateClient command/handler/endpoint, reuses `CreateClientHandler.ToResponse`
+- CLB-005: DeleteClient command/handler/endpoint with soft-delete idempotency guard (returns Conflict if already deleted)
+- Added `Chairly.Api.Shared.Results.Conflict` struct (custom type, not in OneOf)
+- Added `ClientHandlerTests.cs` with 8 tests covering all stories
+- Files changed: ClientResponse.cs, GetClientsList/*, CreateClient/*, UpdateClient/*, DeleteClient/*, ClientEndpoints.cs, Shared/Results/Conflict.cs, Tests/Features/Clients/ClientHandlerTests.cs
+- **Learnings:**
+  - Stories CLB-002 through CLB-005 are tightly coupled (GetClientsListHandler depends on CreateClientHandler.ToResponse), so committed together
+  - `Conflict` struct needs `#pragma warning disable CA1716` due to "Shared" being a VB keyword
+  - Test file must import `Chairly.Api.Shared.Results` for `Conflict`, not use `OneOf.Types`
+  - Unused `using Chairly.Api.Features.Clients` in test file causes IDE0005 build error — only import sub-namespaces actually used
 ---
