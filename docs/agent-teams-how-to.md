@@ -47,8 +47,10 @@ gh auth status && jq --version
 ```bash
 git checkout main
 git pull origin main
-claude   # or open Claude Code in your editor
+claude --dangerously-skip-permissions
 ```
+
+> The `--dangerously-skip-permissions` flag is required so Claude can create branches, worktrees, write files, and run quality checks without prompting at every step. Only use this in the Chairly project directory.
 
 ### 2. Run the feature-team skill
 
