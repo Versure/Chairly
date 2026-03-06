@@ -1,23 +1,170 @@
 {
   "project": "Chairly",
   "branchName": "ralph/client-management-frontend",
-  "description": "Client Management Frontend — code review fixes: import formatting and empty imports array cleanup",
+  "description": "Client Management Frontend — Angular UI for managing salon clients with full CRUD, soft-delete confirmation, and Dutch UI at /klanten",
   "userStories": [
     {
-      "id": "CLF-R001",
-      "title": "Fix import formatting and empty imports array from code review",
-      "description": "As a developer, I want the code review nits resolved so the codebase is consistent with the Prettier formatting rules.",
+      "id": "CLF-001",
+      "title": "Client models and API service",
+      "description": "As a developer, I need TypeScript interfaces and an HTTP service for clients so that the frontend can communicate with the backend.",
       "acceptanceCriteria": [
-        "libs/chairly/src/lib/clients/ui/client-form-dialog.component.spec.ts line 3: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add space after comma)",
-        "libs/chairly/src/lib/clients/feature/client-list-page/client-list-page.component.spec.ts line 8: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add space after comma)",
-        "libs/chairly/src/lib/clients/ui/client-table.component.ts: remove the empty 'imports: []' array from the @Component decorator (the component has no imports, so the property should be omitted entirely)",
+        "libs/chairly/src/lib/clients/models/client.models.ts created (new folder) with: ClientResponse interface ({ id: string; firstName: string; lastName: string; email: string | null; phoneNumber: string | null; notes: string | null; createdAtUtc: string; updatedAtUtc: string | null }), CreateClientRequest interface ({ firstName: string; lastName: string; email: string | null; phoneNumber: string | null; notes: string | null }), UpdateClientRequest type alias (same shape as CreateClientRequest)",
+        "libs/chairly/src/lib/clients/models/index.ts created, exports all three types",
+        "libs/chairly/src/lib/clients/data-access/client-api.service.ts created with ClientApiService (@Injectable({ providedIn: 'root' })): getAll(): Observable<ClientResponse[]> → GET /api/clients, create(request: CreateClientRequest): Observable<ClientResponse> → POST /api/clients, update(id: string, request: UpdateClientRequest): Observable<ClientResponse> → PUT /api/clients/{id}, delete(id: string): Observable<void> → DELETE /api/clients/{id}",
+        "libs/chairly/src/lib/clients/data-access/client-api.service.spec.ts created: unit tests verifying correct HTTP verb and URL for getAll (GET /api/clients), create (POST /api/clients), update (PUT /api/clients/{id}), delete (DELETE /api/clients/{id}). Follow the pattern of staff-api.service.spec.ts using HttpTestingController",
+        "libs/chairly/src/lib/clients/data-access/index.ts created, exports ClientApiService",
+        ".gitkeep removed from libs/chairly/src/lib/clients/data-access/ when real files are added",
         "npx nx affected -t lint --base=main passes",
         "npx nx affected -t test --base=main passes",
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 1,
+      "passes": true,
+      "notes": "Follow the same pattern as StaffApiService in libs/chairly/src/lib/staff/data-access/staff-api.service.ts and its spec. The API_BASE_URL token is imported from '@org/shared-lib'. The models/ folder does not exist yet — create it. No .gitkeep exists in models/ — just create the files directly."
+    },
+    {
+      "id": "CLF-002",
+      "title": "NgRx SignalStore for client state",
+      "description": "As a developer, I need a SignalStore that manages the client list so that components have a single source of truth with loading and error state.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/data-access/client.store.ts created with ClientStore using NgRx SignalStore",
+        "State shape: { clients: ClientResponse[]; isLoading: boolean; error: string | null }",
+        "Methods: loadAll() (calls ClientApiService.getAll, sets isLoading: true before call, sets clients and isLoading: false on success, sets error and isLoading: false on error), addClient(client: ClientResponse) (appends to clients array), updateClient(client: ClientResponse) (replaces matching client by id), removeClient(id: string) (filters out client with matching id — used after successful soft-delete)",
+        "libs/chairly/src/lib/clients/data-access/client.store.spec.ts created with tests: initial state is empty/not loading/no error, loadAll sets clients and clears isLoading on success, loadAll sets error and clears isLoading on failure, addClient appends to the array, updateClient replaces by id, removeClient filters out by id",
+        "ClientStore exported from libs/chairly/src/lib/clients/data-access/index.ts (update the existing index.ts from CLF-001)",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Follow the same pattern as StaffStore in libs/chairly/src/lib/staff/data-access/staff.store.ts. The key difference: instead of deactivate/reactivate methods, use removeClient(id) which filters out the deleted client entirely (soft-delete means it disappears from the list)."
+    },
+    {
+      "id": "CLF-003",
+      "title": "Client table component",
+      "description": "As an owner, manager, or staff member, I want to see all clients in a table so I can get an overview and take actions.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/ui/client-table.component.ts and client-table.component.html created with selector chairly-client-table",
+        "Input: clients: InputSignal<ClientResponse[]> (required)",
+        "Outputs: edit: OutputEmitterRef<ClientResponse>, delete: OutputEmitterRef<ClientResponse>",
+        "Table columns: Naam (displays '{{ client.lastName }}, {{ client.firstName }}'), E-mailadres (shows email or '—' when null), Telefoonnummer (shows phoneNumber or '—' when null), Acties",
+        "Acties column per row: 'Bewerken' button with title='Klant bewerken' (primary style: border border-primary-200 bg-primary-50 text-primary-600 hover:bg-primary-100, with dark: variants matching staff-table pattern), 'Verwijderen' button with title='Klant verwijderen' (red/danger style: border border-red-200 bg-red-50 text-red-600 hover:bg-red-100, with dark: variants)",
+        "Empty state: a row spanning all 4 columns showing 'Geen klanten gevonden' centered when clients() is empty",
+        "Component uses OnPush, standalone: true, templateUrl:",
+        "libs/chairly/src/lib/clients/ui/client-table.component.spec.ts: renders a row for each client, shows formatted name as 'lastName, firstName', shows '—' for null email, emits edit event on Bewerken click, emits delete event on Verwijderen click, shows empty state when clients array is empty",
+        "libs/chairly/src/lib/clients/ui/index.ts created, exports ClientTableComponent",
+        ".gitkeep removed from libs/chairly/src/lib/clients/ui/ when real files are added",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Follow the same pattern as StaffTableComponent in libs/chairly/src/lib/staff/ui/staff-table.component.ts. No avatar column, no status column — clients only have Naam, E-mailadres, Telefoonnummer, Acties. The delete button emits immediately — the confirmation dialog is handled by the parent (list page), not this component. Use the existing dark: button variants from staff-table.component.html as a reference for the danger button style."
+    },
+    {
+      "id": "CLF-004",
+      "title": "Client form dialog (create and edit)",
+      "description": "As an owner, manager, or staff member, I want a dialog to create or edit a client's information.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/ui/client-form-dialog.component.ts and client-form-dialog.component.html created with selector chairly-client-form-dialog",
+        "Input: client: InputSignal<ClientResponse | null> (null = create mode)",
+        "Outputs: saved: OutputEmitterRef<CreateClientRequest>, cancelled: OutputEmitterRef<void>",
+        "Form fields with Dutch labels: Voornaam (text, required, maxlength 100 — show error 'Voornaam is verplicht (max. 100 tekens).' when invalid and touched), Achternaam (text, required, maxlength 100 — show error 'Achternaam is verplicht (max. 100 tekens).' when invalid and touched), E-mailadres (email input, optional — show error 'Voer een geldig e-mailadres in.' when email validator fails and touched), Telefoonnummer (tel input, optional), Notities (textarea, optional, maxlength 1000)",
+        "Dialog title: 'Klant toevoegen' in create mode (client() is null), 'Klant bewerken' in edit mode (client() is set)",
+        "Buttons: 'Opslaan' (bg-primary-600, disabled when form.invalid), 'Annuleren'",
+        "Uses <dialog #dialogEl> with showModal() and full-screen overlay pattern (same as staff-form-dialog.component.html): dialog class 'fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden', inner wrapper div class 'flex h-full w-full items-center justify-center bg-black/50 p-4', content div class 'bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto'",
+        "inject DOCUMENT, set document.body.style.overflow='hidden' on open(), '' on close()",
+        "open(client?: ClientResponse | null) method: pre-fills form when client is non-null, resets to empty when null",
+        "onSave() guards with if (form.invalid) return; then emits CreateClientRequest via saved.emit() and calls close()",
+        "onCancel() calls close() then cancelled.emit()",
+        "Uses typed ReactiveFormsModule FormGroup (nonNullable for text fields, nullable for optional fields)",
+        "Component uses OnPush, standalone: true, templateUrl:",
+        "libs/chairly/src/lib/clients/ui/client-form-dialog.component.spec.ts: create mode shows 'Klant toevoegen' title, edit mode shows 'Klant bewerken' title and pre-fills firstName/lastName, Opslaan is disabled when form is invalid, saved emits correct payload on valid submit, cancelled emits on Annuleren click",
+        "ClientFormDialogComponent exported from libs/chairly/src/lib/clients/ui/index.ts",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Follow staff-form-dialog.component.ts/.html exactly for the dialog infrastructure (open/close pattern, DOCUMENT injection, showModal, body overflow). Differences: no color picker, no schedule editor, no role dropdown. email FormControl uses Validators.email (not Validators.required), so the field is valid when empty — only invalid when a non-empty non-email string is entered. The notes field uses a <textarea> element. The spec in the component test: stub dialog.showModal and dialog.close in beforeEach since JSDOM does not implement them (same pattern as staff-list-page.component.spec.ts)."
+    },
+    {
+      "id": "CLF-005",
+      "title": "Client list page, routing, and nav link",
+      "description": "As an owner, manager, or staff member, I want to navigate to a client list page at /klanten so I can manage the client database.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/feature/client-list-page/client-list-page.component.ts and .html created with selector chairly-client-list-page",
+        "Smart container: injects ClientStore and ClientApiService",
+        "On init calls store.loadAll()",
+        "Page header: <h1> with text 'Klanten' and a '+ Klant toevoegen' button (bg-primary-600 hover:bg-primary-700, white text)",
+        "Mutation error: shows paragraph below page header with red text when mutationError() is non-null",
+        "Loading state: shows 'Laden...' text (text-gray-500) while store.isLoading() is true",
+        "Renders <chairly-client-table [clients]=\"store.clients()\" (edit)=\"onEdit($event)\" (delete)=\"onDelete($event)\"> when not loading",
+        "Edit event: sets selectedClient signal to the client, opens form dialog in edit mode via formDialogRef().open(client)",
+        "Delete event: sets selectedClient signal to the client, opens delete confirmation dialog via deleteDialogRef().open()",
+        "Opening the add dialog: sets selectedClient to null, calls formDialogRef().open(null)",
+        "Save event from form dialog: if selectedClient() is null calls ClientApiService.create(request).pipe(takeUntilDestroyed(destroyRef)).subscribe({ next: created => store.addClient(created), error: () => mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.') }); if selectedClient() is non-null calls ClientApiService.update(id, request).pipe(takeUntilDestroyed(destroyRef)).subscribe({ next: updated => store.updateClient(updated), error: () => mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.') }); resets selectedClient to null and mutationError to null before each API call",
+        "Confirm delete event from confirmation dialog: takes selectedClient(), calls ClientApiService.delete(id).pipe(takeUntilDestroyed(destroyRef)).subscribe({ next: () => store.removeClient(id), error: () => mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.') }); resets selectedClient to null and mutationError to null before the call",
+        "Cancel event from form dialog: sets selectedClient to null",
+        "Uses viewChild.required(ClientFormDialogComponent) for formDialogRef and viewChild.required<ConfirmationDialogComponent>('deleteDialog') for deleteDialogRef",
+        "Delete confirmation dialog in template: <chairly-confirmation-dialog #deleteDialog title=\"Klant verwijderen\" message=\"Weet je zeker dat je deze klant wilt verwijderen? Dit kan niet ongedaan worden gemaakt.\" confirmLabel=\"Verwijderen\" [isDestructive]=\"true\" (confirmed)=\"onConfirmDelete()\" />",
+        "Uses OnPush, standalone: true, templateUrl:, imports: [ClientTableComponent, ClientFormDialogComponent, ConfirmationDialogComponent]",
+        "Uses takeUntilDestroyed(destroyRef) for subscription cleanup — inject DestroyRef, pass explicitly",
+        "libs/chairly/src/lib/clients/feature/index.ts created, exports ClientListPageComponent",
+        ".gitkeep removed from libs/chairly/src/lib/clients/feature/ when real files are added",
+        "libs/chairly/src/lib/clients/clients.routes.ts created at domain root: export const clientsRoutes: Route[] = [{ path: '', component: ClientListPageComponent, providers: [ClientStore] }]",
+        "libs/chairly/src/index.ts updated: add export { clientsRoutes } from './lib/clients/clients.routes'",
+        "apps/chairly/src/app/app.routes.ts updated: add { path: 'klanten', loadChildren: () => import('@org/chairly-lib').then(m => m.clientsRoutes) } inside the shell children array between the 'diensten' and 'medewerkers' entries",
+        "libs/shared/src/lib/ui/shell/shell.component.html updated: add a 'Klanten' nav link pointing to /klanten, inserted between the 'Diensten' and 'Medewerkers' links, using the same routerLink/routerLinkActive/class pattern as the existing links",
+        "libs/chairly/src/lib/clients/feature/client-list-page/client-list-page.component.spec.ts: renders client table, clicking '+ Klant toevoegen' calls formDialogRef().open(null) (stub showModal in beforeEach), save event triggers create API call when no client is selected, shows error message when ClientApiService.create throws an error",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Follow StaffListPageComponent (libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts) as the primary reference. Key differences: no deactivate/reactivate — only delete which removes from list. ConfirmationDialogComponent is imported from '@org/shared-lib'. The page layout HTML: use the same bg-gray-50 dark:bg-slate-900 outer div, header with border-b pattern, and flex-1 overflow-auto p-6 content area as staff-list-page.component.html. Import ClientTableComponent and ClientFormDialogComponent from '../../../ui' (relative), ConfirmationDialogComponent from '@org/shared-lib'."
+    },
+    {
+      "id": "CLF-006",
+      "title": "Playwright E2E tests for client management",
+      "description": "As a developer, I want E2E tests for the clients page so regressions are caught automatically.",
+      "acceptanceCriteria": [
+        "apps/chairly-e2e/src/clients.spec.ts created with Playwright tests mocking /api/clients via page.route()",
+        "Test 1: navigating to /klanten shows h1 'Klanten' and a table row for the mocked client",
+        "Test 2: mocked client shows formatted name as 'lastName, firstName' in the table",
+        "Test 3: clicking '+ Klant toevoegen' opens the form dialog (dialog element has open attribute)",
+        "Test 4: filling in Voornaam + Achternaam and clicking Opslaan calls POST /api/clients and the new client appears in the table",
+        "Test 5: clicking button with title='Klant bewerken' opens the dialog pre-filled with the client's Voornaam",
+        "Test 6: clicking button with title='Klant verwijderen' shows the confirmation dialog; clicking the 'Verwijderen' button in the dialog calls DELETE /api/clients/{id} and the row is removed from the table",
+        "Test 7: 'Klanten' link is visible in the sidebar nav and clicking it navigates to /klanten",
+        "For test 7, mock /api/service-categories, /api/services, /api/staff, and /api/clients so the app can render other pages too",
+        "Use page.keyboard.press('Escape') to close dialogs in tests that need to dismiss without confirming",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Follow apps/chairly-e2e/src/staff.spec.ts exactly for the test structure and page.route() mocking pattern. Mock client: { id: 'client-1', firstName: 'Anna', lastName: 'Bakker', email: 'anna@example.com', phoneNumber: null, notes: null, createdAtUtc: '2026-01-01T00:00:00Z', updatedAtUtc: null }. For test 6 (delete), mock the DELETE route as: page.route('**/api/clients/client-1', route => route.fulfill({ status: 204, body: '' })). After delete the row for 'Bakker, Anna' should no longer be visible. When ALL stories are complete (all passes: true), follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
+    },
+    {
+      "id": "CLF-R001",
+      "title": "Fix import formatting and empty imports array from code review",
+      "description": "As a developer, I want the code review nits resolved so the codebase is consistent with Prettier formatting rules.",
+      "acceptanceCriteria": [
+        "libs/chairly/src/lib/clients/ui/client-form-dialog.component.spec.ts: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add missing space after comma)",
+        "libs/chairly/src/lib/clients/feature/client-list-page/client-list-page.component.spec.ts: change 'import { ClientResponse,CreateClientRequest }' to 'import { ClientResponse, CreateClientRequest }' (add missing space after comma)",
+        "libs/chairly/src/lib/clients/ui/client-table.component.ts: remove the empty 'imports: []' property from the @Component decorator — the component has no imports so the property should be omitted entirely",
+        "npx nx affected -t lint --base=main passes",
+        "npx nx affected -t test --base=main passes",
+        "npx nx affected -t build --base=main passes"
+      ],
+      "priority": 7,
       "passes": false,
-      "notes": "Three tiny edits across three files — do not change anything else. After committing and verifying checks, push to origin/ralph/client-management-frontend (the PR #9 is already open). This is the only story so after it passes, follow the COMPLETE protocol in CLAUDE.md: push, wait for CI, signal COMPLETE."
+      "notes": "Three tiny edits across three files — do not change anything else. After committing and verifying checks pass, push to origin/ralph/client-management-frontend. The PR #9 is already open, so no new PR is needed. This is the only remaining story so after it passes, follow the COMPLETE protocol in CLAUDE.md: push, wait for CI, signal COMPLETE."
     }
   ]
 }
