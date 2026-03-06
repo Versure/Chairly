@@ -56,8 +56,8 @@ FEATURE_NAME=$(echo "$FEATURE_NAME_SOURCE" \
   | cut -c1-40)
 
 FEATURE_BRANCH="feat/${FEATURE_NAME}"
-BACKEND_BRANCH="${FEATURE_BRANCH}/backend"
-FRONTEND_BRANCH="${FEATURE_BRANCH}/frontend"
+BACKEND_BRANCH="impl/${FEATURE_NAME}-backend"
+FRONTEND_BRANCH="impl/${FEATURE_NAME}-frontend"
 BACKEND_WT="${REPO_ROOT}/.worktrees/backend"
 FRONTEND_WT="${REPO_ROOT}/.worktrees/frontend"
 TMUX_SESSION="feature-team-${FEATURE_NAME}"

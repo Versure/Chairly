@@ -9,8 +9,8 @@ All paths are relative to the repo root (main checkout).
 - `BACKEND_WT` — `.worktrees/backend/`
 - `FRONTEND_WT` — `.worktrees/frontend/`
 - Feature branch: `feat/{FEATURE_NAME}` (already exists — created by start.sh)
-- Backend branch: `feat/{FEATURE_NAME}/backend`
-- Frontend branch: `feat/{FEATURE_NAME}/frontend`
+- Backend branch: `impl/{FEATURE_NAME}-backend`
+- Frontend branch: `impl/{FEATURE_NAME}-frontend`
 
 ## Step 1 — Commit any uncommitted changes in worktrees
 
@@ -27,8 +27,8 @@ git diff --cached --quiet || git commit -m "feat({FEATURE_NAME}): frontend imple
 ## Step 2 — Push worktree branches
 
 ```bash
-cd .worktrees/backend && git push -u origin feat/{FEATURE_NAME}/backend
-cd .worktrees/frontend && git push -u origin feat/{FEATURE_NAME}/frontend
+cd .worktrees/backend && git push -u origin impl/{FEATURE_NAME}-backend
+cd .worktrees/frontend && git push -u origin impl/{FEATURE_NAME}-frontend
 ```
 
 ## Step 3 — Merge worktrees into the feature branch
@@ -38,10 +38,10 @@ cd .worktrees/frontend && git push -u origin feat/{FEATURE_NAME}/frontend
 git checkout feat/{FEATURE_NAME}
 
 # Merge backend branch
-git merge --no-ff feat/{FEATURE_NAME}/backend -m "chore: merge backend implementation"
+git merge --no-ff impl/{FEATURE_NAME}-backend -m "chore: merge backend implementation"
 
 # Merge frontend branch
-git merge --no-ff feat/{FEATURE_NAME}/frontend -m "chore: merge frontend implementation"
+git merge --no-ff impl/{FEATURE_NAME}-frontend -m "chore: merge frontend implementation"
 ```
 
 If there are merge conflicts (unlikely since worktrees operate on separate directories),
