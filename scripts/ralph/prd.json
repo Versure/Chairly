@@ -96,7 +96,24 @@
       ],
       "priority": 5,
       "passes": true,
-      "notes": "Follow DeactivateStaffMemberHandler pattern for idempotency guard. The key difference from deactivate: soft-delete is permanent (no reactivate endpoint). Use OneOf<Success, NotFound, Conflict> — check how other handlers return Success (no payload). The Conflict type may be from OneOf library or a custom result type — check what exists in the codebase. The fetch query must NOT filter out deleted clients (to detect the already-deleted case): db.Clients.FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantId) — no DeletedAtUtc filter here. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
+      "notes": "Follow DeactivateStaffMemberHandler pattern for idempotency guard. The key difference from deactivate: soft-delete is permanent (no reactivate endpoint). Use OneOf<Success, NotFound, Conflict> — check how other handlers return Success (no payload). The Conflict type may be from OneOf library or a custom result type — check what exists in the codebase. The fetch query must NOT filter out deleted clients (to detect the already-deleted case): db.Clients.FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantId) — no DeletedAtUtc filter here."
+    },
+    {
+      "id": "CLB-006",
+      "title": "Add sorting test for GetClientsList",
+      "description": "As a developer, I need a test that verifies GetClientsList returns clients sorted by LastName then FirstName so that the sort order guarantee is covered by tests.",
+      "acceptanceCriteria": [
+        "ClientHandlerTests.cs updated with a new test: GetClientsListHandler_ReturnsSortedByLastNameThenFirstName",
+        "Test seeds at least 3 clients with different LastName/FirstName combinations inserted in a non-sorted order",
+        "Test asserts the returned list is ordered by LastName ascending, then FirstName ascending (e.g. 'Bakker, Anna' before 'Bakker, Piet' before 'de Vries, Jan')",
+        "All seeded clients are non-deleted and belong to TenantConstants.DefaultTenantId",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Add the test to the existing ClientHandlerTests.cs alongside the other handler tests. Insert clients in a deliberately non-alphabetical order (e.g. 'de Vries' first, then 'Bakker, Piet', then 'Bakker, Anna') so the test validates the ORDER BY rather than insertion order. Use the existing CreateTestClient helper. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push to the existing branch, then wait for CI."
     }
   ]
 }
