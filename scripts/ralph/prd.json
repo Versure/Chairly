@@ -146,7 +146,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Follow ClientHandlerTests.cs exactly for the InMemory setup. The CreateTestStaffMember helper must set DeactivatedAtUtc = null for active staff (and optionally DeactivatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1) for the deactivated test case). For the overlap test: create a booking for staffMember A from 10:00-11:00, then try to create another from 10:30-11:30 — expect Conflict. For the no-overlap-when-cancelled test: same times but the existing booking has CancelledAtUtc set — expect Success. The StaffMember entity uses DeactivatedAtUtc (not DeletedAtUtc) — check StaffMember.cs. For CreateTestService, set IsActive = true by default and Duration = TimeSpan.FromMinutes(60) by default. For CreateTestBooking, set EndTime = StartTime + service duration."
     }
   ]

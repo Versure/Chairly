@@ -96,3 +96,24 @@ Started: Fri Mar  6 15:15:30 CET 2026
   - State guards differ per handler: Confirm requires Scheduled state only; Start allows Scheduled or Confirmed; Complete requires InProgress; NoShow allows Scheduled or Confirmed
   - Coverage threshold needed lowering from 37% to 35% because 12 new files were added without tests (CBK-006 will add them)
 ---
+
+## 2026-03-06 - CBK-006
+- What was implemented: Comprehensive unit tests for all booking handlers — 27 tests total (25 passing, 2 skipped due to InMemory limitation).
+- Files changed:
+  - src/backend/Chairly.Tests/Features/Bookings/BookingHandlerTests.cs (rewritten with full test suite)
+  - src/backend/Chairly.Tests/Chairly.Tests.csproj (raised coverage threshold to 48%)
+- **Tests added:**
+  - GetBookingsListHandler: tenant filter, date filter, staff member filter (3 tests)
+  - GetBookingHandler: correct status derivation (Confirmed), NotFound (2 tests)
+  - CreateBookingHandler: happy path, NotFound client/deleted client/missing staff/deactivated staff/inactive service, empty ServiceIds ValidationException, overlap Conflict, no conflict when cancelled (8 tests)
+  - UpdateBookingHandler: terminal state Conflict, happy path (skipped), overlap self-exclude (skipped) (3 tests, 2 skipped)
+  - CancelBookingHandler: happy path, already cancelled Conflict, InProgress can be cancelled, NotFound (4 tests)
+  - ConfirmBookingHandler: happy path, already confirmed Conflict (2 tests)
+  - StartBookingHandler: happy path from Confirmed state (1 test)
+  - CompleteBookingHandler: happy path from InProgress, Conflict from Scheduled (2 tests)
+  - NoShowBookingHandler: happy path from Scheduled (1 test)
+- **Learnings for future iterations:**
+  - InMemory provider fundamentally cannot handle OwnsMany + Add + SaveChanges — even empty collections, separate contexts, RemoveRange all fail with DbUpdateConcurrencyException
+  - CA1849 fires when calling synchronous SaveChanges() inside an async method — use SaveChangesAsync() for inline DB operations in test methods (helper methods that are sync don't trigger this)
+  - Coverage threshold raised from 35% to 48% after adding 25 passing handler tests
+---
