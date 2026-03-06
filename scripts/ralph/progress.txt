@@ -124,3 +124,14 @@ The following rework items were identified during code review:
 2. **RW-002 (Suggestion):** ToResponse/DeriveStatus in GetBookingsListHandler creates cross-slice coupling. Extract to BookingMapper.
 3. **RW-003 (Minor):** Skipped tests need TODO comments documenting need for integration test coverage.
 ---
+
+## 2026-03-06 - RW-001
+- What was implemented: Removed the broken AddBookings migration (empty Up/Down) and regenerated it with proper DDL.
+- Files changed:
+  - src/backend/Chairly.Infrastructure/Migrations/20260306141947_AddBookings.cs (deleted)
+  - src/backend/Chairly.Infrastructure/Migrations/20260306141947_AddBookings.Designer.cs (renamed to 20260306154155)
+  - src/backend/Chairly.Infrastructure/Migrations/20260306154155_AddBookings.cs (new, with proper CreateTable/DropTable)
+- **Learnings for future iterations:**
+  - `dotnet ef migrations remove --force` works without a running database — it only needs to build and read the snapshot
+  - Always verify generated migration Up() is not empty after `dotnet ef migrations add`
+---

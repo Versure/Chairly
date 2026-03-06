@@ -20,7 +20,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "The `dotnet ef migrations remove` command does NOT require a running PostgreSQL — EF Core only needs to build the project and read the snapshot file. Similarly, `dotnet ef migrations add` compares the model against the snapshot without connecting to a database. The DesignTimeDbContextFactory (UseNpgsql) just configures the provider for SQL generation, not an actual connection. After regeneration, check the Up() method is NOT empty. If it is still empty (should not happen), read the AddClient migration at `src/backend/Chairly.Infrastructure/Migrations/20260306071435_AddClient.cs` for the exact pattern and manually write the CreateTable statements based on the BookingConfiguration and the Designer.cs model."
     },
     {
