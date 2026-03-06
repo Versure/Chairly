@@ -13,7 +13,6 @@ import { ClientResponse } from '../models';
   selector: 'chairly-client-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
   templateUrl: './client-table.component.html',
 })
 export class ClientTableComponent {

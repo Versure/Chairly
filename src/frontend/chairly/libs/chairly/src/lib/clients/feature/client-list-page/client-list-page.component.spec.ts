@@ -5,7 +5,7 @@ import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '@org/shared-lib';
 
 import { ClientApiService, ClientStore } from '../../data-access';
-import { ClientResponse,CreateClientRequest } from '../../models';
+import { ClientResponse, CreateClientRequest } from '../../models';
 import { ClientFormDialogComponent } from '../../ui';
 import { ClientListPageComponent } from './client-list-page.component';
 
