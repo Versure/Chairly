@@ -148,3 +148,11 @@ The following rework items were identified during code review:
   - Shared mappers for a bounded context go in the context root folder (e.g., `Features/Bookings/BookingMapper.cs`), not inside a slice
   - When extracting shared logic, also remove the cross-slice `using` imports from consuming files
 ---
+
+## 2026-03-06 - RW-003
+- What was implemented: Updated Skip messages on two skipped UpdateBookingHandler tests to include TODO documentation about needing Testcontainers/Aspire integration tests.
+- Files changed:
+  - src/backend/Chairly.Tests/Features/Bookings/BookingHandlerTests.cs (updated 2 Skip messages)
+- **Learnings for future iterations:**
+  - Skip messages should document the root cause AND the path forward (TODO for future coverage)
+---
