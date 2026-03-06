@@ -1,8 +1,8 @@
-# Feature: Bookings Backend
+# Feature: Bookings
 
 ## Context
 
-Bookings are the core of Chairly. A booking represents a scheduled visit by a client with a staff member, containing one or more services. This spec covers the backend API only. The frontend will be a separate feature.
+Bookings are the core of Chairly. A booking represents a scheduled visit by a client with a staff member, containing one or more services. This spec covers both the backend API and the Angular frontend.
 
 ## User Stories
 
@@ -12,9 +12,12 @@ Bookings are the core of Chairly. A booking represents a scheduled visit by a cl
 - As an owner or manager, I want to update a booking so I can correct mistakes or reschedule.
 - As an owner, manager, or staff member, I want to cancel a booking so I can handle cancellations.
 - As an owner or manager, I want to confirm, start, complete, or mark a booking as no-show to track its progress through the salon.
+- As a user, I want to filter bookings by date and staff member so I can find specific bookings quickly.
+- As a user, I want to see the current status of each booking at a glance so I know what action (if any) is needed.
 
 ## Acceptance Criteria
 
+**Backend:**
 - [ ] GET /api/bookings returns all bookings for the current tenant, optionally filtered by date and/or staffMemberId
 - [ ] GET /api/bookings/{id} returns a single booking with its services
 - [ ] POST /api/bookings creates a booking, validates client/staff/services exist, checks for staff overlap, snapshots service data
@@ -27,6 +30,19 @@ Bookings are the core of Chairly. A booking represents a scheduled visit by a cl
 - [ ] EndTime is always calculated as StartTime + sum of service durations
 - [ ] Service name, duration, and price are snapshotted at booking creation time
 - [ ] Overlap detection: a staff member cannot have two non-cancelled, non-no-show bookings with overlapping times
+
+**Frontend:**
+- [ ] Booking list page at `/bookings` shows all bookings for the tenant in a table
+- [ ] Table can be filtered by date and staff member
+- [ ] Each row shows: client name (placeholder until client lookup), staff member name (placeholder), start/end time, services, status badge
+- [ ] Clicking "Nieuwe boeking" opens the create dialog
+- [ ] Clicking a booking row opens the edit/detail dialog
+- [ ] Create dialog: select date/time, client ID, staff member ID, one or more service IDs, optional notes
+- [ ] Edit dialog: same fields, pre-filled; updates via PUT
+- [ ] Status action buttons (Bevestigen, Starten, Voltooien, Annuleren, Niet-verschenen) shown based on current status
+- [ ] Status transitions call the appropriate action endpoint and refresh the store
+- [ ] All UI text is in Dutch
+- [ ] Playwright e2e tests cover: list renders, create flow, status transitions
 
 ## Domain Model
 
@@ -233,6 +249,269 @@ Returns `409 Conflict` if not in Scheduled or Confirmed state.
 ## Events (async)
 
 None in this iteration. Future: `BookingCreated`, `BookingCancelled`, `BookingCompleted` domain events for Notifications context.
+
+---
+
+## Frontend
+
+### F1 — Booking models
+
+**Folder:** `libs/chairly/src/lib/bookings/models/`
+
+TypeScript interfaces matching the backend `BookingResponse`:
+
+```typescript
+export type BookingStatus =
+  | 'Scheduled'
+  | 'Confirmed'
+  | 'InProgress'
+  | 'Completed'
+  | 'Cancelled'
+  | 'NoShow';
+
+export interface BookingServiceItem {
+  serviceId: string;
+  serviceName: string;
+  duration: string;       // "HH:MM:SS"
+  price: number;
+  sortOrder: number;
+}
+
+export interface Booking {
+  id: string;
+  clientId: string;
+  staffMemberId: string;
+  startTime: string;      // ISO 8601
+  endTime: string;
+  notes: string | null;
+  status: BookingStatus;
+  services: BookingServiceItem[];
+  createdAtUtc: string;
+  updatedAtUtc: string | null;
+  confirmedAtUtc: string | null;
+  startedAtUtc: string | null;
+  completedAtUtc: string | null;
+  cancelledAtUtc: string | null;
+  noShowAtUtc: string | null;
+}
+
+export interface CreateBookingRequest {
+  clientId: string;
+  staffMemberId: string;
+  startTime: string;
+  serviceIds: string[];
+  notes: string | null;
+}
+
+export type UpdateBookingRequest = CreateBookingRequest;
+
+export interface BookingFilter {
+  date?: string;          // YYYY-MM-DD
+  staffMemberId?: string;
+}
+```
+
+Export everything from `models/index.ts`.
+
+### F2 — BookingApiService
+
+**Folder:** `libs/chairly/src/lib/bookings/data-access/`
+
+`BookingApiService` wraps all booking endpoints:
+
+```typescript
+getBookings(filter?: BookingFilter): Observable<Booking[]>
+getBooking(id: string): Observable<Booking>
+createBooking(request: CreateBookingRequest): Observable<Booking>
+updateBooking(id: string, request: UpdateBookingRequest): Observable<Booking>
+cancelBooking(id: string): Observable<void>
+confirmBooking(id: string): Observable<void>
+startBooking(id: string): Observable<void>
+completeBooking(id: string): Observable<void>
+markNoShow(id: string): Observable<void>
+```
+
+- Inject `HttpClient`
+- Base path `/api/bookings`
+- `getBookings` passes `date` and `staffMemberId` as query params when present (use `HttpParams`)
+- All action endpoints (`cancel`, `confirm`, etc.) are `POST` with empty body
+
+### F3 — BookingStore
+
+**Folder:** `libs/chairly/src/lib/bookings/data-access/`
+
+NgRx SignalStore (`bookingStore`) with:
+
+**State:**
+```typescript
+bookings: Booking[]
+selectedBooking: Booking | null
+loading: boolean
+error: string | null
+activeFilter: BookingFilter
+```
+
+**Methods:**
+- `loadBookings(filter?: BookingFilter)` — sets `activeFilter`, calls `getBookings`, updates `bookings`
+- `createBooking(request: CreateBookingRequest)` — calls API, then `loadBookings(activeFilter)`
+- `updateBooking(id, request: UpdateBookingRequest)` — calls API, then `loadBookings(activeFilter)`
+- `cancelBooking(id)` — calls API, then `loadBookings(activeFilter)`
+- `confirmBooking(id)` — calls API, then `loadBookings(activeFilter)`
+- `startBooking(id)` — calls API, then `loadBookings(activeFilter)`
+- `completeBooking(id)` — calls API, then `loadBookings(activeFilter)`
+- `markNoShow(id)` — calls API, then `loadBookings(activeFilter)`
+- `selectBooking(booking: Booking | null)` — sets `selectedBooking`
+
+Export store and service from `data-access/index.ts`.
+
+### F4 — Booking list page
+
+**Folder:** `libs/chairly/src/lib/bookings/feature/booking-list-page/`
+
+Smart container component `chairly-booking-list-page`.
+
+- `OnPush` change detection, standalone
+- On init: calls `store.loadBookings()`
+- Template (`booking-list-page.component.html`):
+  - Page heading: **"Boekingen"**
+  - Filter row: date input (type="date") + staff member ID input (placeholder "Medewerker ID"), with a **"Filteren"** button that calls `store.loadBookings(filter)`
+  - **"Nieuwe boeking"** button (primary) that opens the create dialog
+  - `<chairly-booking-table>` receiving `[bookings]` signal and emitting `(bookingSelected)` and `(statusAction)` events
+  - `<chairly-booking-form-dialog>` controlled by `dialogOpen` and `editingBooking` signals
+
+Signals (all `signal()`):
+- `dialogOpen: boolean`
+- `editingBooking: Booking | null`
+
+When `(bookingSelected)` fires: set `editingBooking` to the booking, set `dialogOpen = true`
+When `(statusAction)` fires with `{ action, bookingId }`: call the appropriate store method
+When dialog closes: set `dialogOpen = false`, set `editingBooking = null`
+
+### F5 — Booking table component
+
+**Folder:** `libs/chairly/src/lib/bookings/ui/`
+
+Presentational component `chairly-booking-table`.
+
+Inputs (`input()`):
+- `bookings: Booking[]`
+
+Outputs (`OutputEmitterRef`):
+- `bookingSelected` emits `Booking`
+- `statusAction` emits `{ action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow', bookingId: string }`
+
+Template columns:
+| Kolomkop | Inhoud |
+|---|---|
+| Datum & tijd | `startTime` formatted as `dd-MM-yyyy HH:mm` — `EndTime` formatted as `HH:mm` |
+| Klant | `clientId` (placeholder — client lookup out of scope for this iteration) |
+| Medewerker | `staffMemberId` (placeholder) |
+| Diensten | comma-separated `serviceName` values |
+| Status | badge using `status` value — Dutch labels: Gepland / Bevestigd / Bezig / Voltooid / Geannuleerd / Niet-verschenen |
+| Acties | `<chairly-booking-status-actions>` |
+
+Clicking a row body emits `bookingSelected` with that booking.
+
+Status badge color mapping:
+- Gepland → gray
+- Bevestigd → blue
+- Bezig → yellow/amber
+- Voltooid → green
+- Geannuleerd → red
+- Niet-verschenen → orange
+
+### F6 — Booking form dialog
+
+**Folder:** `libs/chairly/src/lib/bookings/ui/`
+
+Presentational component `chairly-booking-form-dialog`.
+
+Inputs:
+- `open: boolean` — controls dialog visibility via `showModal()` / `close()`
+- `booking: Booking | null` — when set, pre-fills the form (edit mode); when null, creates new
+
+Outputs:
+- `saved` emits `{ id: string | null, request: CreateBookingRequest }` — `id` is null for create
+- `cancelled` emits void
+
+Form fields (all required unless noted):
+| Veld | Type | Validatie |
+|---|---|---|
+| Klant ID | text | required, valid UUID format |
+| Medewerker ID | text | required, valid UUID format |
+| Datum & tijd | datetime-local | required |
+| Dienst-IDs | text (comma-separated) | required, at least one UUID |
+| Notities | textarea | optional, max 1000 chars |
+
+Title:
+- Create: **"Nieuwe boeking"**
+- Edit: **"Boeking bewerken"**
+
+Buttons: **"Opslaan"** (primary, submits form) / **"Annuleren"** (secondary, emits `cancelled`)
+
+Use native `<dialog>` with `showModal()` per the project convention in `CLAUDE.md`.
+Inject `DOCUMENT`, set `document.body.style.overflow` on open/close.
+
+### F7 — Booking status actions component
+
+**Folder:** `libs/chairly/src/lib/bookings/ui/`
+
+Presentational component `chairly-booking-status-actions`.
+
+Inputs:
+- `booking: Booking`
+
+Outputs:
+- `action` emits `{ action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow', bookingId: string }`
+
+Renders action buttons based on `booking.status`:
+
+| Status | Visible buttons |
+|---|---|
+| Scheduled | Bevestigen, Starten, Annuleren, Niet-verschenen |
+| Confirmed | Starten, Annuleren, Niet-verschenen |
+| InProgress | Voltooien, Annuleren |
+| Completed / Cancelled / NoShow | _(no buttons)_ |
+
+Each button emits `action` with its action key and `booking.id`.
+
+Export all UI components from `ui/index.ts`.
+
+### F8 — Route config and registration
+
+**File:** `libs/chairly/src/lib/bookings/bookings.routes.ts` (at domain root)
+
+```typescript
+export const bookingsRoutes: Routes = [
+  {
+    path: '',
+    component: BookingListPageComponent,
+  },
+];
+```
+
+Register in the app shell under `/bookings` (lazy-loaded):
+```typescript
+{ path: 'bookings', loadChildren: () => import('@org/chairly-lib').then(m => m.bookingsRoutes) }
+```
+
+Add a **"Boekingen"** navigation link in the app shell sidebar/nav.
+
+### F9 — Playwright e2e tests
+
+**Folder:** `apps/chairly-e2e/src/`
+
+File: `bookings.spec.ts`
+
+Scenarios:
+1. **Lijst laadt** — navigate to `/bookings`, verify the heading "Boekingen" and table are visible
+2. **Nieuwe boeking aanmaken** — click "Nieuwe boeking", fill in clientId, staffMemberId, a date/time, a serviceId (comma-separated), click "Opslaan", verify a row appears in the table
+3. **Status actie: Bevestigen** — find a Scheduled booking, click "Bevestigen", verify status badge changes to "Bevestigd"
+4. **Boeking bewerken** — click a row, verify the dialog opens in edit mode with pre-filled values, change notes, click "Opslaan"
+
+Use the API directly (`request.post('/api/bookings', ...)`) to seed test data where necessary.
+
+---
 
 ## Out of Scope
 
