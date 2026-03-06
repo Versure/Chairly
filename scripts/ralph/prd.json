@@ -105,7 +105,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "All four handlers follow the exact same structure: (1) load booking by Id+TenantId, (2) return NotFound if null, (3) return Conflict if invalid state, (4) set the timestamp + by field, (5) SaveChangesAsync, (6) return Success. Use #pragma warning disable/restore MA0026 for each Guid.Empty assignment. All four endpoint files follow the same pattern as CancelBookingEndpoint.cs — just change the route suffix and command type. Keep the MA0026 pragma pattern exactly as in CreateClientHandler."
     },
     {
