@@ -18,12 +18,7 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-FEATURE_INPUT="$*"
-
-# If the input looks like a file path and the file exists, read it
-if [[ -f "$FEATURE_INPUT" ]]; then
-  FEATURE_INPUT="$(cat "$FEATURE_INPUT")"
-fi
+FEATURE_ARG="$*"
 
 # ---------------------------------------------------------------------------
 # Resolve repo root (works from any subdirectory)
@@ -32,10 +27,28 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 # ---------------------------------------------------------------------------
+# If input is a file path:
+#   - derive feature name from the first H1 heading (strip "Feature: " prefix)
+#     or fall back to the filename without extension
+#   - pass the file PATH to the skill (SKILL.md reads the file itself)
+# If input is free-form text:
+#   - derive feature name from the text
+#   - pass the text directly to the skill
+# ---------------------------------------------------------------------------
+if [[ -f "$FEATURE_ARG" ]]; then
+  H1=$(grep -m1 '^# ' "$FEATURE_ARG" 2>/dev/null | sed 's/^# //;s/^Feature: //' || true)
+  FEATURE_NAME_SOURCE="${H1:-$(basename "$FEATURE_ARG" .md)}"
+  SKILL_INPUT="$FEATURE_ARG"
+else
+  FEATURE_NAME_SOURCE="$FEATURE_ARG"
+  SKILL_INPUT="$FEATURE_ARG"
+fi
+
+# ---------------------------------------------------------------------------
 # Derive kebab-case feature name (must match SKILL.md algorithm)
 # lowercase → strip non-alphanumeric-or-space → spaces to hyphens → max 40 chars
 # ---------------------------------------------------------------------------
-FEATURE_NAME=$(echo "$FEATURE_INPUT" \
+FEATURE_NAME=$(echo "$FEATURE_NAME_SOURCE" \
   | tr '[:upper:]' '[:lower:]' \
   | sed 's/[^a-z0-9 ]//g' \
   | tr -s ' ' '-' \
@@ -138,9 +151,9 @@ tmux send-keys -t "$TMUX_SESSION" \
 # Wait for Claude to start and display the prompt
 sleep 6
 
-# Invoke the feature-team skill with the feature input
-# Escape the input for safe shell quoting
-ESCAPED_INPUT=$(printf '%s' "$FEATURE_INPUT" | sed "s/'/'\\\\''/g")
+# Invoke the feature-team skill
+# Pass the file path (or free-form text) — escape single quotes for shell safety
+ESCAPED_INPUT=$(printf '%s' "$SKILL_INPUT" | sed "s/'/'\\\\''/g")
 tmux send-keys -t "$TMUX_SESSION" "/feature-team '${ESCAPED_INPUT}'" Enter
 
 echo ""
