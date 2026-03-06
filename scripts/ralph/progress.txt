@@ -1,49 +1,36 @@
 # Ralph Progress Log
-Started: Thu Mar  5 16:35:08 CET 2026
+Started: Thu Mar  6 00:00:00 CET 2026
 ---
 
 ## Codebase Patterns
-- EF Core migrations auto-generate with BOM/encoding issues — always run `dotnet format` before `--verify-no-changes` to auto-fix them
-- `Conflict` type is NOT in the OneOf library — create a custom `internal readonly struct Conflict` in `Chairly.Api/Shared/Results/` and add `#pragma warning disable CA1716` (VB keyword conflict on "Shared")
-- The `.editorconfig` suppresses CA1716 only for `Chairly.Api/Shared/Mediator/**` — new Shared subfolders need their own pragma or editorconfig entry
-- `InternalsVisibleTo("Chairly.Tests")` is set in `Chairly.Api.csproj`, so internal types in the API project are accessible from tests
-- CA1515 fires on `public` types in the API project — always use `internal` for handler classes and result types
-- GetClientsListHandler references CreateClientHandler.ToResponse — these two handlers are coupled and must be committed together
 
----
+### Frontend (Angular / Nx)
+- All Angular components use OnPush, standalone: true, templateUrl: (no inline templates — ESLint enforces this)
+- Signal APIs only: input(), model(), output(), viewChild(), signal() — no @Input/@Output/@ViewChild decorators
+- Subscription cleanup: inject DestroyRef, use takeUntilDestroyed(destroyRef) — never Subject + ngOnDestroy
+- Dialog pattern: native <dialog #dialogEl> with showModal()/close(), inject DOCUMENT to lock body scroll (overflow: hidden on open, '' on close)
+- Full-screen overlay class on <dialog>: 'fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden'
+- Inner overlay wrapper: 'flex h-full w-full items-center justify-center bg-black/50 p-4'
+- Content box: 'bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto'
+- JSDOM does not implement showModal/close — always stub them in component specs: dialogs.forEach(d => { d.showModal = vi.fn(); d.close = vi.fn(); })
+- NgRx SignalStore: use patchState(store, ...) and withMethods; inject services inside withMethods via inject()
+- Store state error field uses toErrorMessage(err: unknown): string helper → err instanceof Error ? err.message : String(err)
+- Path aliases: '@org/chairly-lib' (libs/chairly), '@org/shared-lib' (libs/shared)
+- API_BASE_URL token imported from '@org/shared-lib'; ConfirmationDialogComponent imported from '@org/shared-lib'
+- ConfirmationDialogComponent inputs: title (required), message (required), confirmLabel (default 'Bevestigen'), isDestructive (boolean, red button when true)
+- ConfirmationDialogComponent has open() and close() methods, outputs: confirmed, cancelled
+- Barrel exports: each layer has an index.ts (models/index.ts, data-access/index.ts, ui/index.ts, feature/index.ts)
+- Delete .gitkeep files immediately when adding real files to a folder
+- npx nx affected -t {lint|test|build} --base=main — always run from src/frontend/chairly/
+- UI language is Dutch — ALL labels, buttons, messages must be Dutch from the first line
+- Dark mode: pair custom color classes with dark: variants; bg-primary-* and bg-accent-* have no automatic dark override
+- No function calls in templates — use signals or pipes
 
-## 2026-03-06 - CLB-001
-- Implemented Client domain entity in `Chairly.Domain/Entities/Client.cs`
-- Added `ClientConfiguration` EF Core config in `Chairly.Infrastructure/Persistence/Configurations/`
-- Added `public DbSet<Client> Clients` to `ChairlyDbContext`
-- Ran `dotnet ef migrations add AddClient` to create migration
-- Removed `.gitkeep` from `Chairly.Api/Features/Clients/`
-- Files changed: Client.cs, ClientConfiguration.cs, ChairlyDbContext.cs, Migrations/AddClient.*
-- **Learnings:**
-  - No design-time factory needed (already existed via Aspire host configuration)
-  - Migration files have encoding issues fixed by `dotnet format`
----
+### Staff management reference (existing, passing)
+- StaffApiService: libs/chairly/src/lib/staff/data-access/staff-api.service.ts
+- StaffStore: libs/chairly/src/lib/staff/data-access/staff.store.ts
+- StaffListPageComponent: libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts
+- StaffFormDialogComponent: libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts
+- E2E reference: apps/chairly-e2e/src/staff.spec.ts
 
-## 2026-03-06 - CLB-002 through CLB-005
-- CLB-002: ClientResponse DTO, GetClientsList query/handler/endpoint, ClientEndpoints, Program.cs updated
-- CLB-003: CreateClient command/handler/endpoint with `ToResponse` static helper
-- CLB-004: UpdateClient command/handler/endpoint, reuses `CreateClientHandler.ToResponse`
-- CLB-005: DeleteClient command/handler/endpoint with soft-delete idempotency guard (returns Conflict if already deleted)
-- Added `Chairly.Api.Shared.Results.Conflict` struct (custom type, not in OneOf)
-- Added `ClientHandlerTests.cs` with 8 tests covering all stories
-- Files changed: ClientResponse.cs, GetClientsList/*, CreateClient/*, UpdateClient/*, DeleteClient/*, ClientEndpoints.cs, Shared/Results/Conflict.cs, Tests/Features/Clients/ClientHandlerTests.cs
-- **Learnings:**
-  - Stories CLB-002 through CLB-005 are tightly coupled (GetClientsListHandler depends on CreateClientHandler.ToResponse), so committed together
-  - `Conflict` struct needs `#pragma warning disable CA1716` due to "Shared" being a VB keyword
-  - Test file must import `Chairly.Api.Shared.Results` for `Conflict`, not use `OneOf.Types`
-  - Unused `using Chairly.Api.Features.Clients` in test file causes IDE0005 build error — only import sub-namespaces actually used
----
-
-## 2026-03-06 - CLB-006
-- Added `GetClientsListHandler_ReturnsSortedByLastNameThenFirstName` test to `ClientHandlerTests.cs`
-- Seeds 3 clients in non-alphabetical order (de Vries, Bakker/Piet, Bakker/Anna) and asserts sort order
-- Files changed: Chairly.Tests/Features/Clients/ClientHandlerTests.cs
-- **Learnings:**
-  - The existing `CreateTestClient` helper is sufficient for seeding sorted clients — no changes needed
-  - InMemory EF returns records in insertion order if no ordering is applied, so testing ORDER BY requires deliberate non-alphabetical insertion
 ---
