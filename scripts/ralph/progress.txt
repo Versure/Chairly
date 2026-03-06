@@ -1,36 +1,49 @@
+## Codebase Patterns
+- Client models live in `libs/chairly/src/lib/clients/models/` — never in `util/`
+- API service follows StaffApiService pattern: inject HttpClient + API_BASE_URL, one method per HTTP verb
+- Spec files use HttpTestingController from `@angular/common/http/testing`
+- models/index.ts must use `export type { ... }` (not `export { ... }`) for interface re-exports — required by isolatedModules
+- sheriff.config.ts chairly-lib depRules must include each new domain (e.g. 'domain:clients') when adding a new domain
+- Run `npx nx run chairly-lib:lint --fix` to auto-fix simple-import-sort errors quickly
+- `viewChild.required<ComponentType>('templateRefName')` for typed access to template ref components
+
 # Ralph Progress Log
-Started: Thu Mar  6 00:00:00 CET 2026
+Started: Fri Mar  6 10:32:13 CET 2026
 ---
 
-## Codebase Patterns
+## 2026-03-06 - CLF-001
+- Created clients/models/client.models.ts with ClientResponse, CreateClientRequest, UpdateClientRequest
+- Created clients/models/index.ts
+- Created clients/data-access/client-api.service.ts with getAll/create/update/delete methods
+- Created clients/data-access/client-api.service.spec.ts with HttpTestingController tests
+- Created clients/data-access/index.ts
+- Removed .gitkeep from data-access/
+- All lint, test, build checks pass
+- **Learnings for future iterations:**
+  - Pattern is identical to StaffApiService — inject HttpClient + API_BASE_URL, return Observables
+  - Spec uses HttpTestingController pattern from staff-api.service.spec.ts
+  - models/ folder had no .gitkeep — just create files directly
+---
 
-### Frontend (Angular / Nx)
-- All Angular components use OnPush, standalone: true, templateUrl: (no inline templates — ESLint enforces this)
-- Signal APIs only: input(), model(), output(), viewChild(), signal() — no @Input/@Output/@ViewChild decorators
-- Subscription cleanup: inject DestroyRef, use takeUntilDestroyed(destroyRef) — never Subject + ngOnDestroy
-- Dialog pattern: native <dialog #dialogEl> with showModal()/close(), inject DOCUMENT to lock body scroll (overflow: hidden on open, '' on close)
-- Full-screen overlay class on <dialog>: 'fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden'
-- Inner overlay wrapper: 'flex h-full w-full items-center justify-center bg-black/50 p-4'
-- Content box: 'bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto'
-- JSDOM does not implement showModal/close — always stub them in component specs: dialogs.forEach(d => { d.showModal = vi.fn(); d.close = vi.fn(); })
-- NgRx SignalStore: use patchState(store, ...) and withMethods; inject services inside withMethods via inject()
-- Store state error field uses toErrorMessage(err: unknown): string helper → err instanceof Error ? err.message : String(err)
-- Path aliases: '@org/chairly-lib' (libs/chairly), '@org/shared-lib' (libs/shared)
-- API_BASE_URL token imported from '@org/shared-lib'; ConfirmationDialogComponent imported from '@org/shared-lib'
-- ConfirmationDialogComponent inputs: title (required), message (required), confirmLabel (default 'Bevestigen'), isDestructive (boolean, red button when true)
-- ConfirmationDialogComponent has open() and close() methods, outputs: confirmed, cancelled
-- Barrel exports: each layer has an index.ts (models/index.ts, data-access/index.ts, ui/index.ts, feature/index.ts)
-- Delete .gitkeep files immediately when adding real files to a folder
-- npx nx affected -t {lint|test|build} --base=main — always run from src/frontend/chairly/
-- UI language is Dutch — ALL labels, buttons, messages must be Dutch from the first line
-- Dark mode: pair custom color classes with dark: variants; bg-primary-* and bg-accent-* have no automatic dark override
-- No function calls in templates — use signals or pipes
+## 2026-03-06 - CLF-002 through CLF-006
+- CLF-002: Created client.store.ts (SignalStore with loadAll/addClient/updateClient/removeClient) and spec
+- CLF-003: Created client-table.component.ts/.html/.spec.ts with 4 columns (Naam, E-mail, Tel, Acties)
+- CLF-004: Created client-form-dialog.component.ts/.html/.spec.ts with create/edit dialog
+- CLF-005: Created client-list-page.component.ts/.html/.spec.ts, clients.routes.ts, updated app.routes.ts, shell nav, libs/chairly/src/index.ts
+- CLF-006: Created apps/chairly-e2e/src/clients.spec.ts with 7 Playwright tests
+- Files changed: 20+ files across data-access/, ui/, feature/, apps/, libs/
+- **Learnings for future iterations:**
+  - Need `export type` not `export {}` in models/index.ts (isolatedModules requirement)
+  - Must add new domain to sheriff.config.ts chairly-lib depRules when adding a new domain
+  - ConfirmationDialogComponent from '@org/shared-lib' supports [isDestructive]="true" input
+  - E2E delete test: mock DELETE route via page.route('**/api/clients/client-1', ...) separately from collection route
+---
 
-### Staff management reference (existing, passing)
-- StaffApiService: libs/chairly/src/lib/staff/data-access/staff-api.service.ts
-- StaffStore: libs/chairly/src/lib/staff/data-access/staff.store.ts
-- StaffListPageComponent: libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts
-- StaffFormDialogComponent: libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts
-- E2E reference: apps/chairly-e2e/src/staff.spec.ts
-
+## 2026-03-06 - CLF-R001
+- Fixed missing space after comma in import: `import { ClientResponse,CreateClientRequest }` → `import { ClientResponse, CreateClientRequest }` in client-form-dialog.component.spec.ts and client-list-page.component.spec.ts
+- Removed empty `imports: []` property from @Component decorator in client-table.component.ts
+- All lint, test, build checks pass
+- **Learnings for future iterations:**
+  - Prettier enforces space after comma in import lists — always include spaces
+  - Empty `imports: []` should be omitted from @Component decorators when there are no imports
 ---

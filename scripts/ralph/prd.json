@@ -163,7 +163,7 @@
         "npx nx affected -t build --base=main passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Three tiny edits across three files — do not change anything else. After committing and verifying checks pass, push to origin/ralph/client-management-frontend. The PR #9 is already open, so no new PR is needed. This is the only remaining story so after it passes, follow the COMPLETE protocol in CLAUDE.md: push, wait for CI, signal COMPLETE."
     }
   ]

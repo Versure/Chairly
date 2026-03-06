@@ -1,0 +1,55 @@
+<div class="overflow-x-auto">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Naam
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          E-mailadres
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Telefoonnummer
+        </th>
+        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+          Acties
+        </th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      @for (client of clients(); track client.id) {
+        <tr class="transition-colors hover:bg-gray-50">
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">
+            {{ client.lastName }}, {{ client.firstName }}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-600">{{ client.email ?? '—' }}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">{{ client.phoneNumber ?? '—' }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center rounded border border-primary-200 bg-primary-50 px-2 py-1 text-xs font-medium text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-100 active:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 dark:border-primary-600 dark:bg-primary-700 dark:text-white dark:hover:border-primary-500 dark:hover:bg-primary-600 dark:active:bg-primary-800"
+                title="Klant bewerken"
+                (click)="edit.emit(client)">
+                Bewerken
+              </button>
+              <button
+                type="button"
+                class="inline-flex items-center rounded border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 active:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 dark:border-red-600 dark:bg-red-700 dark:text-white dark:hover:border-red-500 dark:hover:bg-red-600 dark:active:bg-red-800"
+                title="Klant verwijderen"
+                (click)="delete.emit(client)">
+                Verwijderen
+              </button>
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="4" class="px-4 py-12 text-center text-sm text-gray-400">
+            Geen klanten gevonden
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

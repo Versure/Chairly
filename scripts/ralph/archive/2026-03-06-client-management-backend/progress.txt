@@ -1,0 +1,49 @@
+# Ralph Progress Log
+Started: Thu Mar  6 00:00:00 CET 2026
+---
+
+## Codebase Patterns
+
+### Frontend (Angular / Nx)
+- All Angular components use OnPush, standalone: true, templateUrl: (no inline templates — ESLint enforces this)
+- Signal APIs only: input(), model(), output(), viewChild(), signal() — no @Input/@Output/@ViewChild decorators
+- Subscription cleanup: inject DestroyRef, use takeUntilDestroyed(destroyRef) — never Subject + ngOnDestroy
+- Dialog pattern: native <dialog #dialogEl> with showModal()/close(), inject DOCUMENT to lock body scroll (overflow: hidden on open, '' on close)
+- Full-screen overlay class on <dialog>: 'fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden'
+- Inner overlay wrapper: 'flex h-full w-full items-center justify-center bg-black/50 p-4'
+- Content box: 'bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-lg mx-auto max-h-[90vh] overflow-y-auto'
+- JSDOM does not implement showModal/close — always stub them in component specs: dialogs.forEach(d => { d.showModal = vi.fn(); d.close = vi.fn(); })
+- NgRx SignalStore: use patchState(store, ...) and withMethods; inject services inside withMethods via inject()
+- Store state error field uses toErrorMessage(err: unknown): string helper → err instanceof Error ? err.message : String(err)
+- Path aliases: '@org/chairly-lib' (libs/chairly), '@org/shared-lib' (libs/shared)
+- API_BASE_URL token imported from '@org/shared-lib'; ConfirmationDialogComponent imported from '@org/shared-lib'
+- ConfirmationDialogComponent inputs: title (required), message (required), confirmLabel (default 'Bevestigen'), isDestructive (boolean, red button when true)
+- ConfirmationDialogComponent has open() and close() methods, outputs: confirmed, cancelled
+- Barrel exports: each layer has an index.ts (models/index.ts, data-access/index.ts, ui/index.ts, feature/index.ts)
+- Delete .gitkeep files immediately when adding real files to a folder
+- npx nx affected -t {lint|test|build} --base=main — always run from src/frontend/chairly/
+- UI language is Dutch — ALL labels, buttons, messages must be Dutch from the first line
+- Dark mode: pair custom color classes with dark: variants; bg-primary-* and bg-accent-* have no automatic dark override
+- No function calls in templates — use signals or pipes
+
+### Staff management reference (existing, passing)
+- StaffApiService: libs/chairly/src/lib/staff/data-access/staff-api.service.ts
+- StaffStore: libs/chairly/src/lib/staff/data-access/staff.store.ts
+- StaffListPageComponent: libs/chairly/src/lib/staff/feature/staff-list-page/staff-list-page.component.ts
+- StaffFormDialogComponent: libs/chairly/src/lib/staff/ui/staff-form-dialog.component.ts
+- E2E reference: apps/chairly-e2e/src/staff.spec.ts
+
+---
+
+## 2026-03-06 - CLF-001 through CLF-006 (all stories)
+- All client management frontend stories were pre-implemented; verified, formatted, and committed
+- Files: models (client.models.ts, index.ts), data-access (client-api.service.ts, client.store.ts + specs, index.ts), ui (client-table, client-form-dialog + specs, index.ts), feature (client-list-page + spec, index.ts), clients.routes.ts
+- libs/chairly/src/index.ts updated with clientsRoutes export
+- apps/chairly/src/app/app.routes.ts updated with /klanten route
+- libs/shared/src/lib/ui/shell/shell.component.html updated with Klanten nav link
+- apps/chairly-e2e/src/clients.spec.ts created with 7 Playwright tests
+- Format fixed with npx nx format --base=main; all lint/test/build pass
+- **Learnings for future iterations:**
+  - Format check catches trailing spaces and indentation issues in HTML templates — run format auto-fix before verifying
+  - The playwright lint rule prefers toBeHidden() over not.toBeVisible() (warning, not error)
+---

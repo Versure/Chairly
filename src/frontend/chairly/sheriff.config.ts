@@ -15,18 +15,18 @@ export const sheriffConfig: SheriffConfig = {
     },
     'libs/shared/src': ['shared'],
     'libs/shared/src/lib': {
-      'ui': ['shared', 'layer:ui'],
+      ui: ['shared', 'layer:ui'],
       'data-access': ['shared', 'layer:data-access'],
-      'util': ['shared', 'layer:util'],
+      util: ['shared', 'layer:util'],
     },
   },
 
   depRules: {
     // App (root) can depend on any library barrel or shared
-    'root': ['chairly-lib', 'shared'],
+    root: ['chairly-lib', 'shared'],
 
     // chairly-lib barrel re-exports from domain layers
-    'chairly-lib': ['domain:services', 'domain:staff', 'shared'],
+    'chairly-lib': ['domain:clients', 'domain:services', 'domain:staff', 'shared'],
 
     // Domain isolation: domains cannot depend on each other
     'domain:*': [sameTag, 'shared'],
@@ -38,7 +38,14 @@ export const sheriffConfig: SheriffConfig = {
     // pipes -> util (pipes can use pure utility functions)
     // models -> nothing (within domain)
     // util -> nothing (within domain)
-    'layer:feature': ['layer:ui', 'layer:data-access', 'layer:models', 'layer:pipes', 'layer:util', 'shared'],
+    'layer:feature': [
+      'layer:ui',
+      'layer:data-access',
+      'layer:models',
+      'layer:pipes',
+      'layer:util',
+      'shared',
+    ],
     'layer:ui': ['layer:models', 'layer:pipes', 'layer:util', 'shared'],
     'layer:data-access': ['layer:models', 'layer:util', 'shared'],
     'layer:pipes': ['layer:util'],
@@ -46,6 +53,6 @@ export const sheriffConfig: SheriffConfig = {
     'layer:util': noDependencies,
 
     // Shared can only depend on other shared
-    'shared': ['shared'],
+    shared: ['shared'],
   },
 };

@@ -261,9 +261,11 @@ If `dotnet format` fails, auto-fix with `dotnet format src/backend/Chairly.slnx`
 ```bash
 cd src/frontend/chairly
 npx nx affected -t lint --base=main
+npx nx format:check --base=main
 npx nx affected -t test --base=main
 npx nx affected -t build --base=main
 ```
+If `npx nx format:check` fails, auto-fix with `npx nx format --base=main` then verify again.
 
 ## Forbidden
 
@@ -284,4 +286,5 @@ npx nx affected -t build --base=main
 - No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
 - No PostCSS config in `.js`/`.mjs` format only — always maintain `postcss.config.json` for the Angular builder (it does not read `.mjs`)
 - No English user-facing text in the UI — all labels, buttons, messages, and UI copy must be in Dutch (Nederlands)
+- No `imports: []` in `@Component` decorators — omit the property entirely when a component has no imports
 - Never commit without tests passing
