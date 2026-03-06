@@ -435,7 +435,7 @@ public class BookingHandlerTests
         Assert.IsType<Conflict>(result.AsT2);
     }
 
-    [Fact(Skip = "InMemory provider cannot handle OwnsMany + Add + SaveChanges — needs PostgreSQL integration test")]
+    [Fact(Skip = "InMemory provider cannot handle OwnsMany + Add + SaveChanges — needs PostgreSQL integration test. TODO: Cover with Testcontainers or Aspire-based integration test.")]
     public async Task UpdateBookingHandler_HappyPath_UpdatesBookingAndRecalculatesEndTime()
     {
         await using var db = CreateDbContext();
@@ -478,7 +478,7 @@ public class BookingHandlerTests
         Assert.Equal("Updated", response.Notes);
     }
 
-    [Fact(Skip = "InMemory provider cannot handle OwnsMany + Add + SaveChanges — needs PostgreSQL integration test")]
+    [Fact(Skip = "InMemory provider cannot handle OwnsMany + Add + SaveChanges — needs PostgreSQL integration test. TODO: Cover with Testcontainers or Aspire-based integration test.")]
     public async Task UpdateBookingHandler_OverlapExcludesSelf_NoConflict()
     {
         await using var db = CreateDbContext();
