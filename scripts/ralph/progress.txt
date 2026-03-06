@@ -38,3 +38,12 @@ Started: Fri Mar  6 10:32:13 CET 2026
   - ConfirmationDialogComponent from '@org/shared-lib' supports [isDestructive]="true" input
   - E2E delete test: mock DELETE route via page.route('**/api/clients/client-1', ...) separately from collection route
 ---
+
+## 2026-03-06 - CLF-R001
+- Fixed missing space after comma in import: `import { ClientResponse,CreateClientRequest }` → `import { ClientResponse, CreateClientRequest }` in client-form-dialog.component.spec.ts and client-list-page.component.spec.ts
+- Removed empty `imports: []` property from @Component decorator in client-table.component.ts
+- All lint, test, build checks pass
+- **Learnings for future iterations:**
+  - Prettier enforces space after comma in import lists — always include spaces
+  - Empty `imports: []` should be omitted from @Component decorators when there are no imports
+---
