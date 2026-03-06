@@ -13,6 +13,10 @@ export const appRoutes: Route[] = [
         loadChildren: () => import('@org/chairly-lib').then((m) => m.servicesRoutes),
       },
       {
+        path: 'klanten',
+        loadChildren: () => import('@org/chairly-lib').then((m) => m.clientsRoutes),
+      },
+      {
         path: 'medewerkers',
         loadChildren: () => import('@org/chairly-lib').then((m) => m.staffRoutes),
       },

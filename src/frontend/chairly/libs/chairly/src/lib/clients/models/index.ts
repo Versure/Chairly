@@ -1,1 +1,1 @@
-export { ClientResponse, CreateClientRequest, UpdateClientRequest } from './client.models';
+export type { ClientResponse, CreateClientRequest, UpdateClientRequest } from './client.models';
