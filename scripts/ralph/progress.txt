@@ -63,3 +63,21 @@ Started: Fri Mar  6 15:15:30 CET 2026
   - Command class with `List<Guid>` property needs `#pragma warning disable CA2227, CA1002, MA0016` on that property
   - Overlap query: `StartTime < endTime && EndTime > startTime` is the correct interval overlap formula
 ---
+
+## 2026-03-06 - CBK-004
+- What was implemented: PUT /api/bookings/{id} (update) and POST /api/bookings/{id}/cancel (cancel) endpoints with handlers, commands, and endpoints.
+- Files changed:
+  - src/backend/Chairly.Api/Features/Bookings/UpdateBooking/UpdateBookingCommand.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/UpdateBooking/UpdateBookingHandler.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/UpdateBooking/UpdateBookingEndpoint.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/CancelBooking/CancelBookingCommand.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/CancelBooking/CancelBookingHandler.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/CancelBooking/CancelBookingEndpoint.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/BookingEndpoints.cs (updated)
+  - src/backend/Chairly.Tests/Features/Bookings/BookingHandlerTests.cs (new - cancel handler tests)
+- **Learnings for future iterations:**
+  - InMemory provider has a fundamental bug with OwnsMany + SaveChanges: adding owned entities to a loaded parent fails with DbUpdateConcurrencyException. UpdateBookingHandler tests that modify BookingServices must use SQLite or PostgreSQL test containers.
+  - For update handlers that replace owned entity collections: use `db.RemoveRange(collection)` + `Clear()` + `Add()` pattern — `Clear()` alone doesn't tell EF Core to delete from the separate table.
+  - Cancel handler tests work fine with InMemory since they only modify scalar properties on the parent entity.
+  - UpdateBookingEndpoint assigns route `id` to `command.Id` before sending to mediator.
+---

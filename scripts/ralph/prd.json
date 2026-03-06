@@ -79,7 +79,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "For clearing and rebuilding BookingServices on update: remove all existing items from the collection (booking.BookingServices.Clear()) then add new ones. EF Core will handle deletes/inserts for owned entity collections. For UpdateBookingEndpoint: the Id comes from the route parameter and must be assigned to command.Id before sending — the command itself is bound from the request body. The CancelBookingCommand uses a record with a positional Guid Id parameter (same pattern as DeleteClientCommand). Conflict is Chairly.Api.Shared.Results.Conflict; Success and NotFound are OneOf.Types."
     },
     {
