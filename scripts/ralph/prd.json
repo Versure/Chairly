@@ -19,7 +19,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the same pattern as StaffMember entity in Chairly.Domain/Entities/StaffMember.cs and its configuration in Chairly.Infrastructure/Persistence/Configurations/StaffMemberConfiguration.cs. No enum fields on Client — no HasConversion needed. Run dotnet format before --verify-no-changes to auto-fix any encoding issues. If migration creation fails due to missing connection string, add a design-time factory: src/backend/Chairly.Infrastructure/ChairlyDbContextFactory.cs implementing IDesignTimeDbContextFactory<ChairlyDbContext> — check if this file already exists first."
     },
     {
@@ -40,7 +40,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Follow the GetStaffListHandler pattern. TenantId filtering: use TenantConstants.DefaultTenantId from Chairly.Api.Shared.Tenancy (check how GetStaffListHandler does it). Add #pragma warning disable CA1812 on all handler classes (instantiated via DI reflection). Delete the Chairly.Api/Features/Clients/.gitkeep file when creating real files. Use StringComparer.OrdinalIgnoreCase on any new Dictionary constructors (MA0002)."
     },
     {
@@ -59,7 +59,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Follow CreateStaffMemberHandler pattern. No enum parsing needed — Client has no enums. The ToResponse() static method maps Client entity fields directly. Use Guid.Empty for CreatedBy (with #pragma warning disable MA0026 if the analyzer fires). Validation: use System.ComponentModel.DataAnnotations.Validator.TryValidateObject to manually validate the command before processing — this is consistent with existing handlers."
     },
     {
@@ -77,7 +77,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Follow UpdateStaffMemberHandler pattern. Reuse CreateClientHandler.ToResponse() (internal static, same bounded context — import using Chairly.Api.Features.Clients.CreateClient). The endpoint receives both route id and body: bind Guid id from route and UpdateClientCommand from body, set command.Id = id before calling mediator.Send(command). A deleted client (DeletedAtUtc != null) cannot be updated — return NotFound in that case."
     },
     {
@@ -95,8 +95,25 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Follow DeactivateStaffMemberHandler pattern for idempotency guard. The key difference from deactivate: soft-delete is permanent (no reactivate endpoint). Use OneOf<Success, NotFound, Conflict> — check how other handlers return Success (no payload). The Conflict type may be from OneOf library or a custom result type — check what exists in the codebase. The fetch query must NOT filter out deleted clients (to detect the already-deleted case): db.Clients.FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantId) — no DeletedAtUtc filter here. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push, create PR, wait for CI."
+      "passes": true,
+      "notes": "Follow DeactivateStaffMemberHandler pattern for idempotency guard. The key difference from deactivate: soft-delete is permanent (no reactivate endpoint). Use OneOf<Success, NotFound, Conflict> — check how other handlers return Success (no payload). The Conflict type may be from OneOf library or a custom result type — check what exists in the codebase. The fetch query must NOT filter out deleted clients (to detect the already-deleted case): db.Clients.FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantId) — no DeletedAtUtc filter here."
+    },
+    {
+      "id": "CLB-006",
+      "title": "Add sorting test for GetClientsList",
+      "description": "As a developer, I need a test that verifies GetClientsList returns clients sorted by LastName then FirstName so that the sort order guarantee is covered by tests.",
+      "acceptanceCriteria": [
+        "ClientHandlerTests.cs updated with a new test: GetClientsListHandler_ReturnsSortedByLastNameThenFirstName",
+        "Test seeds at least 3 clients with different LastName/FirstName combinations inserted in a non-sorted order",
+        "Test asserts the returned list is ordered by LastName ascending, then FirstName ascending (e.g. 'Bakker, Anna' before 'Bakker, Piet' before 'de Vries, Jan')",
+        "All seeded clients are non-deleted and belong to TenantConstants.DefaultTenantId",
+        "dotnet build src/backend/Chairly.slnx passes",
+        "dotnet test src/backend/Chairly.slnx passes",
+        "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Add the test to the existing ClientHandlerTests.cs alongside the other handler tests. Insert clients in a deliberately non-alphabetical order (e.g. 'de Vries' first, then 'Bakker, Piet', then 'Bakker, Anna') so the test validates the ORDER BY rather than insertion order. Use the existing CreateTestClient helper. After this story, ALL stories are complete — follow the COMPLETE protocol in CLAUDE.md: push to the existing branch, then wait for CI."
     }
   ]
 }
