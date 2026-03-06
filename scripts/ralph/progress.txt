@@ -9,7 +9,7 @@ Started: Fri Mar  6 15:15:30 CET 2026
 - Configuration methods exceeding 60 lines: split into private static helper methods (MA0051 rule).
 - DesignTimeDbContextFactory is in `Chairly.Infrastructure/Persistence/` with `#pragma warning disable CA1812`.
 - MA0132: Never implicitly convert `DateTime` to `DateTimeOffset` — use `new DateTimeOffset(dt, TimeSpan.Zero)` explicitly.
-- `GetBookingsListHandler.ToResponse` is `internal static` so all other booking handlers can reuse it (cross-slice reference within same bounded context is allowed).
+- `BookingMapper.ToResponse` is the shared mapper for all booking handlers — lives in `Chairly.Api/Features/Bookings/BookingMapper.cs` (context root, not inside a slice).
 - Date filter in EF Core: use explicit `DateTimeOffset` range (`>= startOfDay && < endOfDay`) rather than `.Date` comparison (always translatable).
 - MA0002: `new Dictionary<string, string[]>` triggers MA0002 — always pass `StringComparer.Ordinal` as constructor argument.
 - MA0051: Handler methods exceeding 60 lines must be split into private helpers (e.g., `HasOverlapAsync`, `CreateBooking`).
@@ -134,4 +134,17 @@ The following rework items were identified during code review:
 - **Learnings for future iterations:**
   - `dotnet ef migrations remove --force` works without a running database — it only needs to build and read the snapshot
   - Always verify generated migration Up() is not empty after `dotnet ef migrations add`
+---
+
+## 2026-03-06 - RW-002
+- What was implemented: Extracted ToResponse and DeriveStatus from GetBookingsListHandler to a shared BookingMapper class. Updated all four handlers (GetBookingsListHandler, GetBookingHandler, CreateBookingHandler, UpdateBookingHandler) to use BookingMapper.ToResponse instead.
+- Files changed:
+  - src/backend/Chairly.Api/Features/Bookings/BookingMapper.cs (new)
+  - src/backend/Chairly.Api/Features/Bookings/GetBookingsList/GetBookingsListHandler.cs (removed ToResponse/DeriveStatus)
+  - src/backend/Chairly.Api/Features/Bookings/GetBooking/GetBookingHandler.cs (updated import)
+  - src/backend/Chairly.Api/Features/Bookings/CreateBooking/CreateBookingHandler.cs (updated import)
+  - src/backend/Chairly.Api/Features/Bookings/UpdateBooking/UpdateBookingHandler.cs (updated import)
+- **Learnings for future iterations:**
+  - Shared mappers for a bounded context go in the context root folder (e.g., `Features/Bookings/BookingMapper.cs`), not inside a slice
+  - When extracting shared logic, also remove the cross-slice `using` imports from consuming files
 ---

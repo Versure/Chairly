@@ -38,7 +38,7 @@
         "dotnet format src/backend/Chairly.slnx --verify-no-changes passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "The BookingMapper goes in the Bookings root folder (Chairly.Api/Features/Bookings/BookingMapper.cs) alongside BookingResponse.cs and BookingServiceResponse.cs. It should be an internal static class. DeriveStatus should be private since only ToResponse uses it. The status derivation priority order must be preserved: Cancelled → NoShow → Completed → InProgress → Confirmed → Scheduled. Do NOT change the ToResponse logic — only move it."
     },
     {
