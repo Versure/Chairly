@@ -18,13 +18,23 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-FEATURE_ARG="$*"
-
 # ---------------------------------------------------------------------------
 # Resolve repo root (works from any subdirectory)
 # ---------------------------------------------------------------------------
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
+
+# ---------------------------------------------------------------------------
+# Guard: must run from main to ensure the latest script is executing
+# ---------------------------------------------------------------------------
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" != "main" ]]; then
+  echo "Error: run this script from the main branch (currently on '$CURRENT_BRANCH')." >&2
+  echo "  git checkout main && git pull origin main" >&2
+  exit 1
+fi
+
+FEATURE_ARG="$*"
 
 # ---------------------------------------------------------------------------
 # If input is a file path:
@@ -81,14 +91,6 @@ if tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
   echo "Kill it with: tmux kill-session -t $TMUX_SESSION" >&2
   exit 1
 fi
-
-# ---------------------------------------------------------------------------
-# Ensure main is up to date
-# ---------------------------------------------------------------------------
-echo "Fetching latest main..."
-git fetch origin main
-git checkout main
-git pull --ff-only origin main
 
 # ---------------------------------------------------------------------------
 # Create feature branch from main (stay on main — never checkout feature branch
