@@ -37,3 +37,6 @@ coverage/
 playwright-report/
 test-results/
 .claude/settings.local.json
+
+# Agent team worktrees (created by scripts/agent-team/start.sh and rework.sh)
+.worktrees/
