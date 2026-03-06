@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Chairly.Infrastructure.Migrations
 {
     [DbContext(typeof(ChairlyDbContext))]
-    [Migration("20260306141947_AddBookings")]
+    [Migration("20260306154155_AddBookings")]
     partial class AddBookings
     {
         /// <inheritdoc />
