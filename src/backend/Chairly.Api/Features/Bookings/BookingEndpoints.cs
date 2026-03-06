@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Bookings.CreateBooking;
 using Chairly.Api.Features.Bookings.GetBooking;
 using Chairly.Api.Features.Bookings.GetBookingsList;
 
@@ -11,6 +12,7 @@ internal static class BookingEndpoints
 
         group.MapGetBookingsList();
         group.MapGetBooking();
+        group.MapCreateBooking();
 
         return app;
     }
