@@ -1,4 +1,3 @@
-using Chairly.Api.Features.Bookings.GetBookingsList;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
@@ -67,7 +66,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
         ApplyUpdate(booking, command, newEndTime, serviceMap);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return GetBookingsListHandler.ToResponse(booking);
+        return BookingMapper.ToResponse(booking);
     }
 
     private void ApplyUpdate(Booking booking, UpdateBookingCommand command, DateTimeOffset newEndTime, Dictionary<Guid, Service> serviceMap)

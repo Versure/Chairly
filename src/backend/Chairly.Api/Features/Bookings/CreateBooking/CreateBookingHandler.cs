@@ -1,4 +1,3 @@
-using Chairly.Api.Features.Bookings.GetBookingsList;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
@@ -66,7 +65,7 @@ internal sealed class CreateBookingHandler(ChairlyDbContext db) : IRequestHandle
         db.Bookings.Add(booking);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return GetBookingsListHandler.ToResponse(booking);
+        return BookingMapper.ToResponse(booking);
     }
 
     private async Task<bool> HasOverlapAsync(Guid staffMemberId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)

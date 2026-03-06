@@ -1,4 +1,3 @@
-using Chairly.Api.Features.Bookings.GetBookingsList;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Infrastructure.Persistence;
@@ -25,7 +24,7 @@ internal sealed class GetBookingHandler(ChairlyDbContext db) : IRequestHandler<G
             return new NotFound();
         }
 
-        return GetBookingsListHandler.ToResponse(booking);
+        return BookingMapper.ToResponse(booking);
     }
 }
 #pragma warning restore CA1812
