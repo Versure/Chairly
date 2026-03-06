@@ -135,6 +135,28 @@ public class ClientHandlerTests
         Assert.IsType<NotFound>(result.AsT1);
     }
 
+    // CLB-006
+    [Fact]
+    public async Task GetClientsListHandler_ReturnsSortedByLastNameThenFirstName()
+    {
+        await using var db = CreateDbContext();
+        // Insert deliberately in non-alphabetical order
+        CreateTestClient(db, firstName: "Jan", lastName: "de Vries");
+        CreateTestClient(db, firstName: "Piet", lastName: "Bakker");
+        CreateTestClient(db, firstName: "Anna", lastName: "Bakker");
+
+        var handler = new GetClientsListHandler(db);
+        var result = (await handler.Handle(new GetClientsListQuery())).ToList();
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal("Bakker", result[0].LastName);
+        Assert.Equal("Anna", result[0].FirstName);
+        Assert.Equal("Bakker", result[1].LastName);
+        Assert.Equal("Piet", result[1].FirstName);
+        Assert.Equal("de Vries", result[2].LastName);
+        Assert.Equal("Jan", result[2].FirstName);
+    }
+
     // CLB-005
     [Fact]
     public async Task DeleteClientHandler_HappyPath_SetsDeletedAtUtc()
