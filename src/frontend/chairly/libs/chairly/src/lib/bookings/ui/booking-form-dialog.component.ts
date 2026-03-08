@@ -68,7 +68,7 @@ export class BookingFormDialogComponent {
   open(bookingToEdit?: Booking | null): void {
     const b = bookingToEdit !== undefined ? bookingToEdit : this.booking();
     if (b) {
-      const startLocal = b.startTime ? new Date(b.startTime).toISOString().slice(0, 16) : '';
+      const startLocal = b.startTime ? this.toLocalDateTimeString(new Date(b.startTime)) : '';
       this.form.reset({
         clientId: b.clientId,
         staffMemberId: b.staffMemberId,
@@ -134,5 +134,15 @@ export class BookingFormDialogComponent {
   protected onCancel(): void {
     this.close();
     this.cancelled.emit();
+  }
+
+  /** Format a Date as YYYY-MM-DDTHH:mm using local timezone (for datetime-local input). */
+  private toLocalDateTimeString(date: Date): string {
+    const y = date.getFullYear();
+    const mo = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const mi = String(date.getMinutes()).padStart(2, '0');
+    return `${y}-${mo}-${d}T${h}:${mi}`;
   }
 }
