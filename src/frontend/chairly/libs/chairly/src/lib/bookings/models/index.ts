@@ -6,3 +6,4 @@ export type {
   CreateBookingRequest,
   UpdateBookingRequest,
 } from './booking.models';
+export type { ClientOption, ServiceOption, StaffMemberOption } from './reference-data.models';

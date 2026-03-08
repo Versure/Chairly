@@ -9,7 +9,15 @@ import {
 } from '@angular/core';
 
 import { BookingStore } from '../../data-access';
-import { Booking, BookingFilter, CreateBookingRequest, UpdateBookingRequest } from '../../models';
+import {
+  Booking,
+  BookingFilter,
+  ClientOption,
+  CreateBookingRequest,
+  ServiceOption,
+  StaffMemberOption,
+  UpdateBookingRequest,
+} from '../../models';
 import {
   BookingFormDialogComponent,
   BookingFormSaveEvent,
@@ -33,12 +41,24 @@ export class BookingListPageComponent implements OnInit {
 
   protected readonly bookings = computed<Booking[]>(() => this.bookingStore.bookings());
   protected readonly isLoading = computed<boolean>(() => this.bookingStore.loading());
+  protected readonly clients = computed<ClientOption[]>(() => this.bookingStore.clients());
+  protected readonly staffMembers = computed<StaffMemberOption[]>(() =>
+    this.bookingStore.staffMembers(),
+  );
+  protected readonly services = computed<ServiceOption[]>(() => this.bookingStore.services());
+  protected readonly clientNameMap = computed<Record<string, string>>(() =>
+    this.bookingStore.clientNameMap(),
+  );
+  protected readonly staffMemberNameMap = computed<Record<string, string>>(() =>
+    this.bookingStore.staffMemberNameMap(),
+  );
 
   protected readonly filterDate = signal('');
   protected readonly filterStaffMemberId = signal('');
 
   ngOnInit(): void {
     this.bookingStore.loadBookings();
+    this.bookingStore.loadReferenceData();
   }
 
   protected onFilter(): void {
@@ -101,7 +121,7 @@ export class BookingListPageComponent implements OnInit {
     this.filterDate.set((event.target as HTMLInputElement).value);
   }
 
-  protected onStaffIdChange(event: Event): void {
-    this.filterStaffMemberId.set((event.target as HTMLInputElement).value);
+  protected onStaffFilterChange(event: Event): void {
+    this.filterStaffMemberId.set((event.target as HTMLSelectElement).value);
   }
 }

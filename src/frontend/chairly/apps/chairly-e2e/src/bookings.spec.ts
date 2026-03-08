@@ -1,5 +1,20 @@
 import { expect, test } from '@playwright/test';
 
+const mockClients = [
+  { id: 'client-1', firstName: 'Jan', lastName: 'Jansen' },
+  { id: 'client-2', firstName: 'Piet', lastName: 'Pietersen' },
+];
+
+const mockStaff = [
+  { id: 'staff-1', firstName: 'Anna', lastName: 'de Vries' },
+  { id: 'staff-2', firstName: 'Kees', lastName: 'Bakker' },
+];
+
+const mockServices = [
+  { id: 'svc-1', name: 'Herenknippen', duration: '00:30:00', price: 25 },
+  { id: 'svc-2', name: 'Damesknippen', duration: '00:45:00', price: 35 },
+];
+
 const mockBooking = {
   id: 'booking-1',
   clientId: 'client-1',
@@ -33,18 +48,32 @@ async function setupApiMocks(page: import('@playwright/test').Page): Promise<voi
     }
     return route.fulfill({ status: 404, body: '' });
   });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
+  });
 }
 
-test('navigates to /boekingen and shows the Boekingen heading and table', async ({ page }) => {
+test('navigates to /boekingen and shows the Boekingen heading and table with names', async ({
+  page,
+}) => {
   await setupApiMocks(page);
   await page.goto('/boekingen');
 
   await expect(page.getByRole('heading', { name: 'Boekingen', level: 1 })).toBeVisible();
   await expect(page.getByRole('table')).toBeVisible();
   await expect(page.getByText('Herenknippen')).toBeVisible();
+  // Should display client and staff names instead of IDs
+  await expect(page.getByRole('cell', { name: 'Jan Jansen' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Anna de Vries' })).toBeVisible();
 });
 
-test('clicking Nieuwe boeking opens the booking form dialog', async ({ page }) => {
+test('clicking Nieuwe boeking opens the booking form dialog with dropdowns', async ({ page }) => {
   await setupApiMocks(page);
   await page.goto('/boekingen');
 
@@ -53,11 +82,24 @@ test('clicking Nieuwe boeking opens the booking form dialog', async ({ page }) =
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
 
-  await expect(dialog.getByLabel('Klant ID')).toBeVisible();
-  await expect(dialog.getByLabel('Medewerker ID')).toBeVisible();
+  await expect(dialog.getByLabel('Klant')).toBeVisible();
+  await expect(dialog.getByLabel('Medewerker')).toBeVisible();
   await expect(dialog.getByLabel('Datum & tijd')).toBeVisible();
-  await expect(dialog.getByLabel('Dienst-IDs (komma-gescheiden)')).toBeVisible();
+  await expect(dialog.getByText('Diensten')).toBeVisible();
   await expect(dialog.getByLabel('Notities')).toBeVisible();
+
+  // Verify the dropdowns have options
+  const clientSelect = dialog.getByLabel('Klant');
+  await expect(clientSelect.locator('option')).toHaveCount(3); // placeholder + 2 clients
+  await expect(clientSelect.locator('option', { hasText: 'Jan Jansen' })).toBeVisible();
+
+  const staffSelect = dialog.getByLabel('Medewerker');
+  await expect(staffSelect.locator('option')).toHaveCount(3); // placeholder + 2 staff
+  await expect(staffSelect.locator('option', { hasText: 'Anna de Vries' })).toBeVisible();
+
+  // Verify service checkboxes
+  await expect(dialog.getByLabel('Herenknippen')).toBeVisible();
+  await expect(dialog.getByLabel('Damesknippen')).toBeVisible();
 
   await page.keyboard.press('Escape');
 });
@@ -94,6 +136,15 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
     }
     return route.fulfill({ status: 404, body: '' });
   });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
+  });
 
   await page.goto('/boekingen');
   await expect(page.getByText('Herenknippen')).toBeVisible();
@@ -101,10 +152,10 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
 
   const dialog = page.locator('dialog[open]');
-  await dialog.getByLabel('Klant ID').fill('client-2');
-  await dialog.getByLabel('Medewerker ID').fill('staff-2');
+  await dialog.getByLabel('Klant').selectOption('client-2');
+  await dialog.getByLabel('Medewerker').selectOption('staff-2');
   await dialog.getByLabel('Datum & tijd').fill('2026-03-10T11:00');
-  await dialog.getByLabel('Dienst-IDs (komma-gescheiden)').fill('svc-2');
+  await dialog.getByLabel('Damesknippen').check();
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
@@ -135,6 +186,15 @@ test('clicking Bevestigen on a Scheduled booking calls the confirm API', async (
       });
     }
     return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
   });
 
   await page.goto('/boekingen');
@@ -172,6 +232,15 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
     }
     return route.fulfill({ status: 404, body: '' });
   });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
+  });
 
   await page.goto('/boekingen');
   await expect(page.getByText('Herenknippen')).toBeVisible();
@@ -181,8 +250,8 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
 
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('Klant ID')).toHaveValue('client-1');
-  await expect(dialog.getByLabel('Medewerker ID')).toHaveValue('staff-1');
+  await expect(dialog.getByLabel('Klant')).toHaveValue('client-1');
+  await expect(dialog.getByLabel('Medewerker')).toHaveValue('staff-1');
 
   // Change the notes field
   await dialog.getByLabel('Notities').fill('Aangepaste notities');
@@ -201,4 +270,17 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
   await expect(page.getByText('Herenknippen')).toBeVisible();
   // Dialog should be closed
   await expect(dialog).toBeHidden();
+});
+
+test('staff member filter dropdown shows staff names and filters bookings', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
+
+  const staffFilter = page.getByLabel('Medewerker', { exact: false }).first();
+  await expect(staffFilter).toBeVisible();
+
+  // Verify the default option
+  await expect(staffFilter.locator('option', { hasText: 'Alle medewerkers' })).toBeVisible();
+  await expect(staffFilter.locator('option', { hasText: 'Anna de Vries' })).toBeVisible();
+  await expect(staffFilter.locator('option', { hasText: 'Kees Bakker' })).toBeVisible();
 });
