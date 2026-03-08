@@ -79,6 +79,6 @@ export class BookingScheduleComponent {
   protected readonly scheduleHeight = computed<number>(() => {
     const range = this.scheduleRange();
     const hours = range.endHour - range.startHour;
-    return hours * 60; // 60px per hour
+    return hours * 100; // 100px per hour
   });
 }
