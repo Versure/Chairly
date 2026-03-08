@@ -31,7 +31,7 @@ const initialState: BookingState = {
   selectedBooking: null,
   loading: false,
   error: null,
-  activeFilter: {},
+  activeFilter: { date: new Date().toISOString().split('T')[0] },
   clients: [],
   staffMembers: [],
   services: [],
