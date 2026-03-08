@@ -21,6 +21,7 @@ import {
 import {
   BookingFormDialogComponent,
   BookingFormSaveEvent,
+  BookingScheduleComponent,
   BookingStatusAction,
   BookingTableComponent,
 } from '../../ui';
@@ -29,7 +30,7 @@ import {
   selector: 'chairly-booking-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BookingFormDialogComponent, BookingTableComponent],
+  imports: [BookingFormDialogComponent, BookingScheduleComponent, BookingTableComponent],
   templateUrl: './booking-list-page.component.html',
 })
 export class BookingListPageComponent implements OnInit {
@@ -37,6 +38,7 @@ export class BookingListPageComponent implements OnInit {
 
   private readonly formDialogRef = viewChild.required(BookingFormDialogComponent);
 
+  protected readonly viewMode = signal<'list' | 'schedule'>('list');
   protected readonly editingBooking = signal<Booking | null>(null);
 
   protected readonly bookings = computed<Booking[]>(() => this.bookingStore.bookings());
@@ -123,5 +125,9 @@ export class BookingListPageComponent implements OnInit {
 
   protected onStaffFilterChange(event: Event): void {
     this.filterStaffMemberId.set((event.target as HTMLSelectElement).value);
+  }
+
+  protected setViewMode(mode: 'list' | 'schedule'): void {
+    this.viewMode.set(mode);
   }
 }

@@ -48,14 +48,48 @@
       (click)="onFilter()">
       Filteren
     </button>
+
+    <!-- View toggle -->
+    <div
+      class="ml-auto flex overflow-hidden rounded-md border border-gray-300 dark:border-slate-600">
+      <button
+        type="button"
+        class="px-3 py-2 text-sm font-medium transition-colors"
+        [class]="
+          viewMode() === 'list'
+            ? 'bg-primary-600 text-white dark:bg-primary-500'
+            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600'
+        "
+        (click)="setViewMode('list')">
+        Lijst
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 text-sm font-medium transition-colors"
+        [class]="
+          viewMode() === 'schedule'
+            ? 'bg-primary-600 text-white dark:bg-primary-500'
+            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600'
+        "
+        (click)="setViewMode('schedule')">
+        Rooster
+      </button>
+    </div>
   </div>
 
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {
       <p class="text-gray-500 dark:text-gray-400">Laden...</p>
-    } @else {
+    } @else if (viewMode() === 'list') {
       <chairly-booking-table
+        [bookings]="bookings()"
+        [clientNameMap]="clientNameMap()"
+        [staffMemberNameMap]="staffMemberNameMap()"
+        (bookingSelected)="onBookingSelected($event)"
+        (statusAction)="onStatusAction($event)" />
+    } @else {
+      <chairly-booking-schedule
         [bookings]="bookings()"
         [clientNameMap]="clientNameMap()"
         [staffMemberNameMap]="staffMemberNameMap()"
