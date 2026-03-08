@@ -6,7 +6,7 @@
   } @else {
     <div
       class="relative border border-gray-200 bg-white dark:border-slate-600 dark:bg-slate-800"
-      [style.min-height.px]="scheduleHeight()">
+      [style.height.px]="scheduleHeight()">
       <!-- Time labels along the left side -->
       @for (slot of scheduleRange() | timeSlots; track slot) {
         <div
@@ -20,7 +20,7 @@
       }
 
       <!-- Booking blocks -->
-      <div class="relative ml-16 mr-2">
+      <div class="absolute inset-0 ml-16 mr-2">
         @for (booking of bookings(); track booking.id) {
           @let overlap = booking.id | bookingOverlap: bookings();
           @let staffColor = booking.staffMemberId | staffColor: staffMembers();
