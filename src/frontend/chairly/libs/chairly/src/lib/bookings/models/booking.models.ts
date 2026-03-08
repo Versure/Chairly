@@ -46,3 +46,13 @@ export interface BookingFilter {
   date?: string; // YYYY-MM-DD
   staffMemberId?: string;
 }
+
+export interface ScheduleRange {
+  startHour: number;
+  endHour: number;
+}
+
+export interface BookingOverlapPosition {
+  columnIndex: number;
+  totalColumns: number;
+}
