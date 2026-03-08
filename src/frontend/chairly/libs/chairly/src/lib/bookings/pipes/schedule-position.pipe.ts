@@ -1,18 +1,20 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-const SCHEDULE_START_HOUR = 8;
-const SCHEDULE_END_HOUR = 20;
-const TOTAL_MINUTES = (SCHEDULE_END_HOUR - SCHEDULE_START_HOUR) * 60;
+import { ScheduleRange } from '../models';
 
 @Pipe({
   name: 'scheduleTop',
   standalone: true,
 })
 export class ScheduleTopPipe implements PipeTransform {
-  transform(startTime: string): number {
+  transform(startTime: string, range: ScheduleRange): number {
     const date = new Date(startTime);
-    const minutesFromStart = (date.getHours() - SCHEDULE_START_HOUR) * 60 + date.getMinutes();
-    return Math.max(0, Math.min((minutesFromStart / TOTAL_MINUTES) * 100, 100));
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const startMinutes = range.startHour * 60;
+    const totalMinutes = (range.endHour - range.startHour) * 60;
+    const minutesFromStart = hours * 60 + minutes - startMinutes;
+    return Math.max(0, Math.min((minutesFromStart / totalMinutes) * 100, 100));
   }
 }
 
@@ -21,11 +23,12 @@ export class ScheduleTopPipe implements PipeTransform {
   standalone: true,
 })
 export class ScheduleHeightPipe implements PipeTransform {
-  transform(startTime: string, endTime: string): number {
+  transform(startTime: string, endTime: string, range: ScheduleRange): number {
     const start = new Date(startTime);
     const end = new Date(endTime);
     const durationMinutes = (end.getTime() - start.getTime()) / 60000;
-    return Math.max(0, Math.min((durationMinutes / TOTAL_MINUTES) * 100, 100));
+    const totalMinutes = (range.endHour - range.startHour) * 60;
+    return Math.max(0, Math.min((durationMinutes / totalMinutes) * 100, 100));
   }
 }
 
@@ -34,11 +37,11 @@ export class ScheduleHeightPipe implements PipeTransform {
   standalone: true,
 })
 export class TimeSlotsPipe implements PipeTransform {
-  transform(_trigger: boolean): string[] {
+  transform(range: ScheduleRange): string[] {
     const slots: string[] = [];
-    for (let hour = SCHEDULE_START_HOUR; hour <= SCHEDULE_END_HOUR; hour++) {
+    for (let hour = range.startHour; hour <= range.endHour; hour++) {
       slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      if (hour < SCHEDULE_END_HOUR) {
+      if (hour < range.endHour) {
         slots.push(`${hour.toString().padStart(2, '0')}:30`);
       }
     }
@@ -51,9 +54,11 @@ export class TimeSlotsPipe implements PipeTransform {
   standalone: true,
 })
 export class TimeSlotTopPipe implements PipeTransform {
-  transform(slot: string): number {
+  transform(slot: string, range: ScheduleRange): number {
     const [hours, minutes] = slot.split(':').map(Number);
-    const minutesFromStart = (hours - SCHEDULE_START_HOUR) * 60 + minutes;
-    return (minutesFromStart / TOTAL_MINUTES) * 100;
+    const startMinutes = range.startHour * 60;
+    const totalMinutes = (range.endHour - range.startHour) * 60;
+    const minutesFromStart = hours * 60 + minutes - startMinutes;
+    return (minutesFromStart / totalMinutes) * 100;
   }
 }

@@ -5,12 +5,13 @@
     </p>
   } @else {
     <div
-      class="relative min-h-[720px] border border-gray-200 bg-white dark:border-slate-600 dark:bg-slate-800">
+      class="relative border border-gray-200 bg-white dark:border-slate-600 dark:bg-slate-800"
+      [style.min-height.px]="scheduleHeight()">
       <!-- Time labels along the left side -->
-      @for (slot of slotTrigger | timeSlots; track slot) {
+      @for (slot of scheduleRange() | timeSlots; track slot) {
         <div
           class="absolute left-0 flex h-px w-full items-start border-t border-gray-100 dark:border-slate-700"
-          [style.top.%]="slot | timeSlotTop">
+          [style.top.%]="slot | timeSlotTop: scheduleRange()">
           <span
             class="inline-block w-14 -translate-y-1/2 bg-white pr-2 text-right text-xs text-gray-400 dark:bg-slate-800 dark:text-gray-500">
             {{ slot }}
@@ -21,26 +22,19 @@
       <!-- Booking blocks -->
       <div class="relative ml-16 mr-2">
         @for (booking of bookings(); track booking.id) {
+          @let overlap = booking.id | bookingOverlap: bookings();
+          @let staffColor = booking.staffMemberId | staffColor: staffMembers();
           <div
             role="button"
             tabindex="0"
-            class="absolute left-0 right-0 cursor-pointer overflow-hidden rounded-md border px-3 py-2 transition-shadow hover:shadow-md"
-            [style.top.%]="booking.startTime | scheduleTop"
-            [style.height.%]="booking.startTime | scheduleHeight: booking.endTime"
+            class="absolute cursor-pointer overflow-hidden rounded-md border-l-4 border border-gray-200 bg-white px-3 py-2 shadow-sm transition-shadow hover:shadow-md dark:border-slate-600 dark:bg-slate-700"
+            [style.top.%]="booking.startTime | scheduleTop: scheduleRange()"
+            [style.height.%]="booking.startTime | scheduleHeight: booking.endTime : scheduleRange()"
             [style.min-height.px]="48"
-            [class]="
-              booking.status === 'Scheduled'
-                ? 'border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-700'
-                : booking.status === 'Confirmed'
-                  ? 'border-blue-300 bg-blue-50 dark:border-blue-600 dark:bg-blue-900'
-                  : booking.status === 'InProgress'
-                    ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900'
-                    : booking.status === 'Completed'
-                      ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900'
-                      : booking.status === 'Cancelled'
-                        ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-900'
-                        : 'border-orange-300 bg-orange-50 dark:border-orange-600 dark:bg-orange-900'
-            "
+            [style.left.%]="(overlap.columnIndex / overlap.totalColumns) * 100"
+            [style.width.%]="(1 / overlap.totalColumns) * 100"
+            [style.border-left-color]="staffColor"
+            [style.background-color]="staffColor + '1A'"
             (click)="bookingSelected.emit(booking)"
             (keydown.enter)="bookingSelected.emit(booking)">
             <!-- Time range -->

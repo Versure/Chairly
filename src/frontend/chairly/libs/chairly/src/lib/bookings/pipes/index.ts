@@ -1,3 +1,4 @@
+export { BookingOverlapPipe } from './booking-overlap.pipe';
 export { BookingStatusPipe } from './booking-status.pipe';
 export { NameLookupPipe } from './name-lookup.pipe';
 export {
@@ -7,3 +8,4 @@ export {
   TimeSlotTopPipe,
 } from './schedule-position.pipe';
 export { SetHasPipe } from './set-has.pipe';
+export { StaffColorPipe } from './staff-color.pipe';
