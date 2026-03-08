@@ -53,11 +53,11 @@ export class BookingListPageComponent implements OnInit {
     this.bookingStore.staffMemberNameMap(),
   );
 
-  protected readonly filterDate = signal('');
+  protected readonly filterDate = signal(new Date().toISOString().split('T')[0]);
   protected readonly filterStaffMemberId = signal('');
 
   ngOnInit(): void {
-    this.bookingStore.loadBookings();
+    this.bookingStore.loadBookings({ date: this.filterDate() });
     this.bookingStore.loadReferenceData();
   }
 
