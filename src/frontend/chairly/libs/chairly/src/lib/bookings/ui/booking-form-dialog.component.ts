@@ -7,11 +7,19 @@ import {
   input,
   output,
   OutputEmitterRef,
+  signal,
   viewChild,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { Booking, CreateBookingRequest } from '../models';
+import {
+  Booking,
+  ClientOption,
+  CreateBookingRequest,
+  ServiceOption,
+  StaffMemberOption,
+} from '../models';
+import { SetHasPipe } from '../pipes';
 
 export interface BookingFormSaveEvent {
   id: string | null;
@@ -22,11 +30,14 @@ export interface BookingFormSaveEvent {
   selector: 'chairly-booking-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, SetHasPipe],
   templateUrl: './booking-form-dialog.component.html',
 })
 export class BookingFormDialogComponent {
   readonly booking = input<Booking | null>(null);
+  readonly clients = input<ClientOption[]>([]);
+  readonly staffMembers = input<StaffMemberOption[]>([]);
+  readonly services = input<ServiceOption[]>([]);
 
   readonly saved: OutputEmitterRef<BookingFormSaveEvent> = output<BookingFormSaveEvent>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
@@ -47,14 +58,12 @@ export class BookingFormDialogComponent {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    serviceIds: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
     notes: new FormControl<string | null>(null, {
       validators: [Validators.maxLength(1000)],
     }),
   });
+
+  protected readonly selectedServiceIds = signal<ReadonlySet<string>>(new Set<string>());
 
   open(bookingToEdit?: Booking | null): void {
     const b = bookingToEdit !== undefined ? bookingToEdit : this.booking();
@@ -64,17 +73,17 @@ export class BookingFormDialogComponent {
         clientId: b.clientId,
         staffMemberId: b.staffMemberId,
         startTime: startLocal,
-        serviceIds: b.services.map((s) => s.serviceId).join(', '),
         notes: b.notes,
       });
+      this.selectedServiceIds.set(new Set(b.services.map((s) => s.serviceId)));
     } else {
       this.form.reset({
         clientId: '',
         staffMemberId: '',
         startTime: '',
-        serviceIds: '',
         notes: null,
       });
+      this.selectedServiceIds.set(new Set<string>());
     }
     this.document.body.style.overflow = 'hidden';
     this.dialogRef().nativeElement.showModal();
@@ -85,20 +94,28 @@ export class BookingFormDialogComponent {
     this.dialogRef().nativeElement.close();
   }
 
+  protected onServiceToggle(serviceId: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const current = new Set(this.selectedServiceIds());
+    if (checked) {
+      current.add(serviceId);
+    } else {
+      current.delete(serviceId);
+    }
+    this.selectedServiceIds.set(current);
+  }
+
   protected onSave(): void {
     if (this.form.invalid) {
       return;
     }
-    const { clientId, staffMemberId, startTime, serviceIds, notes } = this.form.getRawValue();
 
-    const parsedServiceIds = serviceIds
-      .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0);
-
-    if (parsedServiceIds.length === 0) {
+    const serviceIds = Array.from(this.selectedServiceIds());
+    if (serviceIds.length === 0) {
       return;
     }
+
+    const { clientId, staffMemberId, startTime, notes } = this.form.getRawValue();
 
     const b = this.booking();
     this.close();
@@ -108,7 +125,7 @@ export class BookingFormDialogComponent {
         clientId,
         staffMemberId,
         startTime: new Date(startTime).toISOString(),
-        serviceIds: parsedServiceIds,
+        serviceIds,
         notes: notes || null,
       },
     });

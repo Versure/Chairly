@@ -29,15 +29,18 @@
       <label
         for="filter-staff"
         class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >Medewerker ID</label
+        >Medewerker</label
       >
-      <input
+      <select
         id="filter-staff"
-        type="text"
-        placeholder="Medewerker ID"
         class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
         [value]="filterStaffMemberId()"
-        (input)="onStaffIdChange($event)" />
+        (change)="onStaffFilterChange($event)">
+        <option value="">Alle medewerkers</option>
+        @for (member of staffMembers(); track member.id) {
+          <option [value]="member.id">{{ member.firstName }} {{ member.lastName }}</option>
+        }
+      </select>
     </div>
     <button
       type="button"
@@ -54,6 +57,8 @@
     } @else {
       <chairly-booking-table
         [bookings]="bookings()"
+        [clientNameMap]="clientNameMap()"
+        [staffMemberNameMap]="staffMemberNameMap()"
         (bookingSelected)="onBookingSelected($event)"
         (statusAction)="onStatusAction($event)" />
     }
@@ -63,5 +68,8 @@
 <!-- Booking form dialog -->
 <chairly-booking-form-dialog
   [booking]="editingBooking()"
+  [clients]="clients()"
+  [staffMembers]="staffMembers()"
+  [services]="services()"
   (saved)="onFormSaved($event)"
   (cancelled)="onFormCancelled()" />

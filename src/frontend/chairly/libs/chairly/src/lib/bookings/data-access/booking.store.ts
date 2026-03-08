@@ -1,10 +1,19 @@
-import { inject } from '@angular/core';
+import { computed, inject } from '@angular/core';
 
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
-import { take } from 'rxjs';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { forkJoin, take } from 'rxjs';
 
-import { Booking, BookingFilter, CreateBookingRequest, UpdateBookingRequest } from '../models';
+import {
+  Booking,
+  BookingFilter,
+  ClientOption,
+  CreateBookingRequest,
+  ServiceOption,
+  StaffMemberOption,
+  UpdateBookingRequest,
+} from '../models';
 import { BookingApiService } from './booking-api.service';
+import { BookingReferenceDataService } from './booking-reference-data.service';
 
 export interface BookingState {
   bookings: Booking[];
@@ -12,6 +21,9 @@ export interface BookingState {
   loading: boolean;
   error: string | null;
   activeFilter: BookingFilter;
+  clients: ClientOption[];
+  staffMembers: StaffMemberOption[];
+  services: ServiceOption[];
 }
 
 const initialState: BookingState = {
@@ -20,6 +32,9 @@ const initialState: BookingState = {
   loading: false,
   error: null,
   activeFilter: {},
+  clients: [],
+  staffMembers: [],
+  services: [],
 };
 
 function toErrorMessage(err: unknown): string {
@@ -28,8 +43,25 @@ function toErrorMessage(err: unknown): string {
 
 export const BookingStore = signalStore(
   withState<BookingState>(initialState),
+  withComputed((store) => ({
+    clientNameMap: computed<Record<string, string>>(() => {
+      const map: Record<string, string> = {};
+      for (const c of store.clients()) {
+        map[c.id] = `${c.firstName} ${c.lastName}`;
+      }
+      return map;
+    }),
+    staffMemberNameMap: computed<Record<string, string>>(() => {
+      const map: Record<string, string> = {};
+      for (const s of store.staffMembers()) {
+        map[s.id] = `${s.firstName} ${s.lastName}`;
+      }
+      return map;
+    }),
+  })),
   withMethods((store) => {
     const bookingApi = inject(BookingApiService);
+    const referenceDataApi = inject(BookingReferenceDataService);
 
     function reloadBookings(): void {
       const filter = store.activeFilter();
@@ -45,6 +77,24 @@ export const BookingStore = signalStore(
     }
 
     return {
+      loadReferenceData(): void {
+        forkJoin({
+          clients: referenceDataApi.getClients(),
+          staffMembers: referenceDataApi.getStaffMembers(),
+          services: referenceDataApi.getServices(),
+        })
+          .pipe(take(1))
+          .subscribe({
+            next: (data) =>
+              patchState(store, {
+                clients: data.clients,
+                staffMembers: data.staffMembers,
+                services: data.services,
+              }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
+          });
+      },
+
       loadBookings(filter?: BookingFilter): void {
         const activeFilter = filter ?? store.activeFilter();
         patchState(store, { activeFilter, loading: true, error: null });

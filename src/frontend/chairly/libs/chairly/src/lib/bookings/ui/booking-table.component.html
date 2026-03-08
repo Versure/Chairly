@@ -32,10 +32,10 @@
             {{ booking.endTime | date: 'HH:mm' }}
           </td>
           <td class="px-4 py-3 text-sm text-gray-600">
-            {{ booking.clientId }}
+            {{ booking.clientId | nameLookup: clientNameMap() }}
           </td>
           <td class="px-4 py-3 text-sm text-gray-600">
-            {{ booking.staffMemberId }}
+            {{ booking.staffMemberId | nameLookup: staffMemberNameMap() }}
           </td>
           <td class="px-4 py-3 text-sm text-gray-600">
             @for (svc of booking.services; track svc.serviceId; let last = $last) {
