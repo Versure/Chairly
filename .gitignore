@@ -33,6 +33,7 @@ Thumbs.db
 
 # Test results
 **/TestResults/
+**/coverage.cobertura.xml
 coverage/
 playwright-report/
 test-results/
