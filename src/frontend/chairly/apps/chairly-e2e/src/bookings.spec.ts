@@ -284,3 +284,40 @@ test('staff member filter dropdown shows staff names and filters bookings', asyn
   await expect(staffFilter.locator('option', { hasText: 'Anna de Vries' })).toBeVisible();
   await expect(staffFilter.locator('option', { hasText: 'Kees Bakker' })).toBeVisible();
 });
+
+test('view toggle buttons are visible and default to Lijst view', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
+
+  // Both toggle buttons should be visible
+  const lijstButton = page.getByRole('button', { name: 'Lijst' });
+  const roosterButton = page.getByRole('button', { name: 'Rooster' });
+  await expect(lijstButton).toBeVisible();
+  await expect(roosterButton).toBeVisible();
+
+  // Default view is list — table should be visible
+  await expect(page.getByRole('table')).toBeVisible();
+});
+
+test('clicking Rooster toggle switches to schedule view and back to Lijst', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
+
+  // Start in list view
+  await expect(page.getByRole('table')).toBeVisible();
+
+  // Switch to schedule view
+  await page.getByRole('button', { name: 'Rooster' }).click();
+
+  // Table should no longer be visible, schedule content should appear
+  await expect(page.getByRole('table')).toBeHidden();
+  // Booking data should still be visible in schedule view
+  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByText('Jan Jansen')).toBeVisible();
+
+  // Switch back to list view
+  await page.getByRole('button', { name: 'Lijst' }).click();
+
+  // Table should be visible again
+  await expect(page.getByRole('table')).toBeVisible();
+});
