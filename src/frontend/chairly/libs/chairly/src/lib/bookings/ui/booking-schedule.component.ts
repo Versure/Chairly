@@ -19,10 +19,7 @@ import {
   TimeSlotsPipe,
   TimeSlotTopPipe,
 } from '../pipes';
-import {
-  BookingStatusAction,
-  BookingStatusActionsComponent,
-} from './booking-status-actions.component';
+import { BookingStatusAction } from './booking-status-actions.component';
 
 @Component({
   selector: 'chairly-booking-schedule',
@@ -38,7 +35,6 @@ import {
     StaffColorPipe,
     TimeSlotsPipe,
     TimeSlotTopPipe,
-    BookingStatusActionsComponent,
   ],
   templateUrl: './booking-schedule.component.html',
 })
