@@ -6,12 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using OneOf;
 using OneOf.Types;
 
-namespace Chairly.Api.Features.Bookings.NoShowBooking;
+namespace Chairly.Api.Features.Bookings.MarkBookingNoShow;
 
 #pragma warning disable CA1812
-internal sealed class NoShowBookingHandler(ChairlyDbContext db) : IRequestHandler<NoShowBookingCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed class MarkBookingNoShowHandler(ChairlyDbContext db) : IRequestHandler<MarkBookingNoShowCommand, OneOf<Success, NotFound, Conflict>>
 {
-    public async Task<OneOf<Success, NotFound, Conflict>> Handle(NoShowBookingCommand command, CancellationToken cancellationToken = default)
+    public async Task<OneOf<Success, NotFound, Conflict>> Handle(MarkBookingNoShowCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 

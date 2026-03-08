@@ -1,17 +1,17 @@
 using Chairly.Api.Shared.Mediator;
 
-namespace Chairly.Api.Features.Bookings.NoShowBooking;
+namespace Chairly.Api.Features.Bookings.MarkBookingNoShow;
 
-internal static class NoShowBookingEndpoint
+internal static class MarkBookingNoShowEndpoint
 {
-    public static void MapNoShowBooking(this RouteGroupBuilder group)
+    public static void MapMarkBookingNoShow(this RouteGroupBuilder group)
     {
         group.MapPost("/{id:guid}/no-show", async (
             Guid id,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
-            var result = await mediator.Send(new NoShowBookingCommand(id), cancellationToken).ConfigureAwait(false);
+            var result = await mediator.Send(new MarkBookingNoShowCommand(id), cancellationToken).ConfigureAwait(false);
             return result.Match(
                 _ => Results.NoContent(),
                 _ => Results.NotFound(),
