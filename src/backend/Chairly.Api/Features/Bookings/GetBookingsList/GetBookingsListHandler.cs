@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Bookings.GetBookingsList;
 
 #pragma warning disable CA1812
-internal sealed class GetBookingsListHandler(ChairlyDbContext db) : IRequestHandler<GetBookingsListQuery, IEnumerable<BookingResponse>>
+internal sealed class GetBookingsListHandler(ChairlyDbContext db) : IRequestHandler<GetBookingsListQuery, IReadOnlyList<BookingResponse>>
 {
-    public async Task<IEnumerable<BookingResponse>> Handle(GetBookingsListQuery query, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<BookingResponse>> Handle(GetBookingsListQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
@@ -35,7 +35,7 @@ internal sealed class GetBookingsListHandler(ChairlyDbContext db) : IRequestHand
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return bookings.Select(BookingMapper.ToResponse);
+        return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 }
 #pragma warning restore CA1812

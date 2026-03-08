@@ -7,33 +7,7 @@ internal static class BookingMapper
     public static string DeriveStatus(Booking booking)
     {
         ArgumentNullException.ThrowIfNull(booking);
-
-        if (booking.CancelledAtUtc != null)
-        {
-            return "Cancelled";
-        }
-
-        if (booking.NoShowAtUtc != null)
-        {
-            return "NoShow";
-        }
-
-        if (booking.CompletedAtUtc != null)
-        {
-            return "Completed";
-        }
-
-        if (booking.StartedAtUtc != null)
-        {
-            return "InProgress";
-        }
-
-        if (booking.ConfirmedAtUtc != null)
-        {
-            return "Confirmed";
-        }
-
-        return "Scheduled";
+        return booking.DeriveStatus().ToString();
     }
 
     public static BookingResponse ToResponse(Booking booking)

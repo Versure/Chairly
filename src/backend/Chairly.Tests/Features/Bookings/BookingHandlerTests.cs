@@ -5,7 +5,7 @@ using Chairly.Api.Features.Bookings.ConfirmBooking;
 using Chairly.Api.Features.Bookings.CreateBooking;
 using Chairly.Api.Features.Bookings.GetBooking;
 using Chairly.Api.Features.Bookings.GetBookingsList;
-using Chairly.Api.Features.Bookings.NoShowBooking;
+using Chairly.Api.Features.Bookings.MarkBookingNoShow;
 using Chairly.Api.Features.Bookings.StartBooking;
 using Chairly.Api.Features.Bookings.UpdateBooking;
 using Chairly.Api.Shared.Results;
@@ -1387,15 +1387,15 @@ public class BookingHandlerTests
     // ==================== B12: No-Show Booking ====================
 
     [Fact]
-    public async Task NoShowBookingHandler_FromScheduled_SetsNoShowAtUtc()
+    public async Task MarkBookingNoShowHandler_FromScheduled_SetsNoShowAtUtc()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT0);
         Assert.IsType<Success>(result.AsT0);
@@ -1404,7 +1404,7 @@ public class BookingHandlerTests
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_FromConfirmed_SetsNoShowAtUtc()
+    public async Task MarkBookingNoShowHandler_FromConfirmed_SetsNoShowAtUtc()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -1412,15 +1412,15 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT0);
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_InProgress_ReturnsConflict()
+    public async Task MarkBookingNoShowHandler_InProgress_ReturnsConflict()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -1428,15 +1428,15 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT2);
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_Completed_ReturnsConflict()
+    public async Task MarkBookingNoShowHandler_Completed_ReturnsConflict()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -1445,15 +1445,15 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT2);
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_Cancelled_ReturnsConflict()
+    public async Task MarkBookingNoShowHandler_Cancelled_ReturnsConflict()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -1461,15 +1461,15 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT2);
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_AlreadyNoShow_ReturnsConflict()
+    public async Task MarkBookingNoShowHandler_AlreadyNoShow_ReturnsConflict()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -1477,20 +1477,20 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(booking.Id));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
         Assert.True(result.IsT2);
     }
 
     [Fact]
-    public async Task NoShowBookingHandler_NotFound_ReturnsNotFound()
+    public async Task MarkBookingNoShowHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new NoShowBookingHandler(db);
+        var handler = new MarkBookingNoShowHandler(db);
 
-        var result = await handler.Handle(new NoShowBookingCommand(Guid.NewGuid()));
+        var result = await handler.Handle(new MarkBookingNoShowCommand(Guid.NewGuid()));
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);

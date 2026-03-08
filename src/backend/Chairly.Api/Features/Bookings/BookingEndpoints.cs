@@ -4,7 +4,7 @@ using Chairly.Api.Features.Bookings.ConfirmBooking;
 using Chairly.Api.Features.Bookings.CreateBooking;
 using Chairly.Api.Features.Bookings.GetBooking;
 using Chairly.Api.Features.Bookings.GetBookingsList;
-using Chairly.Api.Features.Bookings.NoShowBooking;
+using Chairly.Api.Features.Bookings.MarkBookingNoShow;
 using Chairly.Api.Features.Bookings.StartBooking;
 using Chairly.Api.Features.Bookings.UpdateBooking;
 
@@ -24,7 +24,7 @@ internal static class BookingEndpoints
         group.MapConfirmBooking();
         group.MapStartBooking();
         group.MapCompleteBooking();
-        group.MapNoShowBooking();
+        group.MapMarkBookingNoShow();
 
         return app;
     }

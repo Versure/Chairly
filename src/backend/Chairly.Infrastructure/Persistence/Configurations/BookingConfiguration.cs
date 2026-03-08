@@ -46,6 +46,7 @@ internal sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
             .HasForeignKey(bs => bs.BookingId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasIndex(b => b.TenantId);
         builder.HasIndex(b => new { b.TenantId, b.StaffMemberId, b.StartTime });
         builder.HasIndex(b => new { b.TenantId, b.StartTime });
     }
