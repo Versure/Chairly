@@ -19,7 +19,7 @@
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {
-      <p class="text-gray-500 dark:text-slate-400">Laden...</p>
+      <chairly-loading-indicator message="Klanten laden..." />
     } @else {
       <chairly-client-table
         [clients]="clients()"

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ConfirmationDialogComponent } from '@org/shared-lib';
+import { ConfirmationDialogComponent, LoadingIndicatorComponent } from '@org/shared-lib';
 
 import { StaffApiService, StaffStore } from '../../data-access';
 import { CreateStaffMemberRequest, StaffMemberResponse } from '../../models';
@@ -19,7 +19,7 @@ import { StaffFormDialogComponent, StaffTableComponent } from '../../ui';
   selector: 'chairly-staff-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmationDialogComponent, StaffFormDialogComponent, StaffTableComponent],
+  imports: [ConfirmationDialogComponent, LoadingIndicatorComponent, StaffFormDialogComponent, StaffTableComponent],
   templateUrl: './staff-list-page.component.html',
 })
 export class StaffListPageComponent implements OnInit {
