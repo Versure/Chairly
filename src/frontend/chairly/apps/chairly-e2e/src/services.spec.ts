@@ -360,9 +360,9 @@ test('creating a service with a category shows the category name in the table ro
 
   expect(postCalled).toBe(true);
 
-  // Verify the category name "Knippen" appears in the new row
+  // Verify the category name "Knippen" appears in the new row's category cell
   const damesknippen = page.getByRole('row').filter({ hasText: 'Damesknippen' });
-  await expect(damesknippen.getByText('Knippen')).toBeVisible();
+  await expect(damesknippen.getByRole('cell', { name: 'Knippen', exact: true })).toBeVisible();
 });
 
 // HTML5 drag-and-drop is not reliably testable in Playwright across all browsers.
