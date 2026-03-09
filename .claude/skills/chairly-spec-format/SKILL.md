@@ -9,7 +9,7 @@ user-invocable: false
 
 # Chairly Feature Spec Format
 
-When the spec agent writes a feature spec, it produces **two files** in `.claude/tasks/{feature-name}/`:
+When the spec agent writes a feature spec, it produces **two files** — spec in `docs/specs/`, tasks in `.claude/tasks/{feature-name}/`:
 
 1. `spec.md` — human-readable, full detail, single source of truth
 2. `tasks.json` — machine-readable task list, minimal (title + layer + deps only)
@@ -85,7 +85,7 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
 ```json
 {
   "feature": "{feature-name}",
-  "specPath": ".claude/tasks/{feature-name}/spec.md",
+  "specPath": "docs/specs/{feature-name}.md",
   "tasks": [
     {
       "id": "B1",
@@ -149,7 +149,7 @@ Number tasks in implementation order within each layer.
 - `spec.md` is the single source of truth — all detail lives there
 - `tasks.json` is minimal — title and dependencies only; agents open `spec.md` for detail
 - Task titles in `tasks.json` must match headings in `spec.md` exactly (used for cross-referencing)
-- Spec file location: `.claude/tasks/{feature-name}/spec.md`
+- Spec file location: `docs/specs/{feature-name}.md`
 - Tasks file location: `.claude/tasks/{feature-name}/tasks.json`
 - Feature name is kebab-case matching the git branch suffix (e.g. `bookings-crud`)
 - Always include at least one backend task and one frontend task unless the feature is purely one layer

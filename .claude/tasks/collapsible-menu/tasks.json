@@ -1,6 +1,6 @@
 {
   "feature": "collapsible-menu",
-  "specPath": ".claude/tasks/collapsible-menu/spec.md",
+  "specPath": "docs/specs/collapsible-menu.md",
   "tasks": [
     {
       "id": "F1",

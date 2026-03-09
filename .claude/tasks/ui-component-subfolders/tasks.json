@@ -1,6 +1,6 @@
 {
   "feature": "ui-component-subfolders",
-  "specPath": ".claude/tasks/ui-component-subfolders/spec.md",
+  "specPath": "docs/specs/ui-component-subfolders.md",
   "tasks": [
     {
       "id": "F1",

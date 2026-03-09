@@ -1,6 +1,6 @@
 {
   "feature": "e2e-infrastructure",
-  "specPath": ".claude/tasks/e2e-infrastructure/spec.md",
+  "specPath": "docs/specs/e2e-infrastructure.md",
   "tasks": [
     {
       "id": "F1",

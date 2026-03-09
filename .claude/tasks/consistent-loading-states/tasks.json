@@ -1,6 +1,6 @@
 {
   "feature": "consistent-loading-states",
-  "specPath": ".claude/tasks/consistent-loading-states/spec.md",
+  "specPath": "docs/specs/consistent-loading-states.md",
   "tasks": [
     {
       "id": "F1",
