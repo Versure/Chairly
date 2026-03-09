@@ -19,7 +19,12 @@ import { StaffFormDialogComponent, StaffTableComponent } from '../../ui';
   selector: 'chairly-staff-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmationDialogComponent, LoadingIndicatorComponent, StaffFormDialogComponent, StaffTableComponent],
+  imports: [
+    ConfirmationDialogComponent,
+    LoadingIndicatorComponent,
+    StaffFormDialogComponent,
+    StaffTableComponent,
+  ],
   templateUrl: './staff-list-page.component.html',
 })
 export class StaffListPageComponent implements OnInit {

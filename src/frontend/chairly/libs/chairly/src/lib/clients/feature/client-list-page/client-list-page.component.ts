@@ -19,7 +19,12 @@ import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
   selector: 'chairly-client-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmationDialogComponent, ClientFormDialogComponent, ClientTableComponent, LoadingIndicatorComponent],
+  imports: [
+    ConfirmationDialogComponent,
+    ClientFormDialogComponent,
+    ClientTableComponent,
+    LoadingIndicatorComponent,
+  ],
   templateUrl: './client-list-page.component.html',
 })
 export class ClientListPageComponent implements OnInit {

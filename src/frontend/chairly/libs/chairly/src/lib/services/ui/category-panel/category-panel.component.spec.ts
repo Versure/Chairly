@@ -43,7 +43,9 @@ describe('CategoryPanelComponent', () => {
     fixture.componentRef.setInput('isLoading', true);
     fixture.detectChanges();
 
-    const indicator = fixture.nativeElement.querySelector('chairly-loading-indicator') as HTMLElement | null;
+    const indicator = fixture.nativeElement.querySelector(
+      'chairly-loading-indicator',
+    ) as HTMLElement | null;
     expect(indicator).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Laden...');
   });
