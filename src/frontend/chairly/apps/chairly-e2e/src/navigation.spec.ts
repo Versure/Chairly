@@ -67,7 +67,8 @@ test.describe('Collapsible sidebar navigation', () => {
     await expect(sidebar).toBeInViewport();
 
     const backdrop = page.locator('.fixed.inset-0.bg-black\\/50');
-    await backdrop.click();
+    // Click to the right of the sidebar (w-60 = 240px) to avoid pointer interception
+    await backdrop.click({ position: { x: 300, y: 300 } });
 
     await expect(sidebar).not.toBeInViewport();
   });
