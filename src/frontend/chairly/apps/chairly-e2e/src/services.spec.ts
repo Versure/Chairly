@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const mockCategory = {
   id: 'cat-1',
@@ -39,7 +39,9 @@ async function setupApiMocks(page: import('@playwright/test').Page): Promise<voi
   });
 }
 
-test('navigates to /diensten and shows the Diensten heading and services table', async ({ page }) => {
+test('navigates to /diensten and shows the Diensten heading and services table', async ({
+  page,
+}) => {
   await setupApiMocks(page);
   await page.goto('/diensten');
 
@@ -48,7 +50,9 @@ test('navigates to /diensten and shows the Diensten heading and services table',
   await expect(page.getByText('Herenknippen')).toBeVisible();
 });
 
-test('clicking Dienst toevoegen opens a centered dialog with service form fields', async ({ page }) => {
+test('clicking Dienst toevoegen opens a centered dialog with service form fields', async ({
+  page,
+}) => {
   await setupApiMocks(page);
   await page.goto('/diensten');
 
@@ -66,7 +70,9 @@ test('clicking Dienst toevoegen opens a centered dialog with service form fields
   await page.keyboard.press('Escape');
 });
 
-test('filling in the form and clicking Opslaan calls the API and shows the new service in the table', async ({ page }) => {
+test('filling in the form and clicking Opslaan calls the API and shows the new service in the table', async ({
+  page,
+}) => {
   const newService = {
     ...mockService,
     id: 'svc-2',
@@ -127,7 +133,9 @@ test('clicking Bewerken on a service row opens the form dialog pre-filled', asyn
   await page.keyboard.press('Escape');
 });
 
-test('clicking Verwijderen shows the confirmation dialog and removes the service on confirm', async ({ page }) => {
+test('clicking Verwijderen shows the confirmation dialog and removes the service on confirm', async ({
+  page,
+}) => {
   let deleteCount = 0;
 
   await page.route('**/api/service-categories', (route) => {
