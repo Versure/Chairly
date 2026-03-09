@@ -135,7 +135,7 @@ test('clicking button with title Klant verwijderen shows the confirmation dialog
   await confirmDialog.getByRole('button', { name: 'Verwijderen' }).click();
 
   expect(deleteCalled).toBe(true);
-  await expect(page.getByText('Bakker, Anna')).not.toBeVisible();
+  await expect(page.getByText('Bakker, Anna')).toBeHidden();
 });
 
 test('Klanten link is visible in the sidebar nav and clicking it navigates to /klanten', async ({
@@ -158,4 +158,127 @@ test('Klanten link is visible in the sidebar nav and clicking it navigates to /k
 
   await navLink.click();
   await expect(page).toHaveURL(/\/klanten/);
+});
+
+test('empty state is shown when no clients exist', async ({ page }) => {
+  await page.route('**/api/clients', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+
+  await expect(page.getByText('Geen klanten gevonden')).toBeVisible();
+});
+
+test('creating a client with only name (no email or phone) succeeds and shows the client in the table', async ({
+  page,
+}) => {
+  const nameOnlyClient = {
+    ...mockClient,
+    id: 'client-3',
+    firstName: 'Karel',
+    lastName: 'De Vries',
+    email: null,
+    phoneNumber: null,
+  };
+
+  let postCalled = false;
+
+  await page.route('**/api/clients', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      postCalled = true;
+      return route.fulfill({ json: nameOnlyClient });
+    }
+    if (method === 'GET') {
+      return route.fulfill({ json: [mockClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await expect(page.getByText('Bakker, Anna')).toBeVisible();
+
+  await page.getByRole('button', { name: '+ Klant toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await dialog.getByLabel('Voornaam').fill('Karel');
+  await dialog.getByLabel('Achternaam').fill('De Vries');
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+
+  expect(postCalled).toBe(true);
+  await expect(page.getByText('De Vries, Karel')).toBeVisible();
+});
+
+test('clicking Klant verwijderen and then pressing Escape cancels the delete without calling the API', async ({
+  page,
+}) => {
+  let deleteCalled = false;
+
+  await page.route('**/api/clients', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.route('**/api/clients/client-1', (route) => {
+    if (route.request().method() === 'DELETE') {
+      deleteCalled = true;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await expect(page.getByText('Bakker, Anna')).toBeVisible();
+
+  await page.locator('button[title="Klant verwijderen"]').first().click();
+
+  const confirmDialog = page.locator('dialog[open]');
+  await expect(confirmDialog).toBeVisible();
+
+  // Press Escape to dismiss — cross-browser reliable for showModal() dialogs
+  await page.keyboard.press('Escape');
+
+  // Client should still be visible and DELETE should NOT have been called
+  await expect(page.getByText('Bakker, Anna')).toBeVisible();
+  expect(deleteCalled).toBe(false);
+});
+
+test('edit dialog pre-fills all fields including optional ones (email, phone, notes)', async ({
+  page,
+}) => {
+  const fullClient = {
+    ...mockClient,
+    email: 'anna@example.com',
+    phoneNumber: '0612345678',
+    notes: 'Vaste klant',
+  };
+
+  await page.route('**/api/clients', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [fullClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await expect(page.getByText('Bakker, Anna')).toBeVisible();
+
+  await page.locator('button[title="Klant bewerken"]').first().click();
+
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+
+  await expect(dialog.getByLabel('Voornaam')).toHaveValue('Anna');
+  await expect(dialog.getByLabel('Achternaam')).toHaveValue('Bakker');
+  await expect(dialog.getByLabel('E-mailadres')).toHaveValue('anna@example.com');
+  await expect(dialog.getByLabel('Telefoonnummer')).toHaveValue('0612345678');
+  await expect(dialog.getByLabel('Notities')).toHaveValue('Vaste klant');
+
+  await page.keyboard.press('Escape');
 });
