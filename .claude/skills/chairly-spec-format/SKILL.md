@@ -56,6 +56,7 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
 - Model interfaces (Request/Response shapes matching backend)
 - Store methods needed
 - Component structure (smart vs presentational)
+- Entity selection: forms that reference related entities (client, staff, service) must use dropdowns or autocomplete, NEVER raw ID inputs. Specify which entities need to be loaded for selection and how they are fetched.
 - UI copy in Dutch
 - Route registration if new page
 - Playwright e2e scenarios to cover

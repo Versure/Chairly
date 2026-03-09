@@ -286,5 +286,6 @@ If `npx nx format:check` fails, auto-fix with `npx nx format --base=main` then v
 - No `@import` of CSS libraries (e.g. Tailwind) inside `.scss` files — use a separate plain `.css` entry file instead
 - No PostCSS config in `.js`/`.mjs` format only — always maintain `postcss.config.json` for the Angular builder (it does not read `.mjs`)
 - No English user-facing text in the UI — all labels, buttons, messages, and UI copy must be in Dutch (Nederlands)
+- No raw ID inputs in user-facing forms — users must never type UUIDs/GUIDs; use searchable dropdowns, autocomplete, or selection lists instead
 - No `imports: []` in `@Component` decorators — omit the property entirely when a component has no imports
 - Never commit without tests passing

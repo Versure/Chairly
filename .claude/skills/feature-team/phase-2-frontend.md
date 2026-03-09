@@ -22,6 +22,11 @@ Examples:
 
 Never write to frontend source files without the worktree prefix.
 
+## Read-only: spec and task files
+
+**Do NOT modify files in `.claude/tasks/`.** Only Phase 0 (spec agent) writes spec and tasks files.
+Read them for implementation detail only.
+
 ## What to read first
 
 1. Read `SPEC_PATH` — understand all frontend tasks in full detail

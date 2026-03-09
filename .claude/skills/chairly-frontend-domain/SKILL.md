@@ -133,6 +133,32 @@ export { {Entity}ApiService } from './{entity}-api.service';
 
 ---
 
+## Entity Selection — No Raw ID Inputs
+
+User-facing forms must **NEVER** ask users to enter IDs (UUIDs/GUIDs). All entity references
+must use searchable dropdowns, autocomplete inputs, or selection lists that display the entity
+name/label and map the selected entity to its ID internally.
+
+**Wrong:**
+```html
+<input type="text" formControlName="clientId" placeholder="Voer klant-ID in" />
+```
+
+**Correct:**
+```html
+<select formControlName="clientId">
+  @for (client of clients(); track client.id) {
+    <option [value]="client.id">{{ client.lastName }}, {{ client.firstName }}</option>
+  }
+</select>
+```
+
+If a related entity needs to be selected (client, staff member, service), the smart component
+must load the list of available entities and pass them to the form component. The spec must
+define search/filter endpoints if the list is too large for a simple dropdown.
+
+---
+
 ## Forbidden
 
 - No `any` types
