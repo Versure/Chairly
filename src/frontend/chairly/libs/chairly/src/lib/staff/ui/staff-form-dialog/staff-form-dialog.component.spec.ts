@@ -1,0 +1,142 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { CreateStaffMemberRequest, StaffMemberResponse } from '../../models';
+import { StaffFormDialogComponent } from './staff-form-dialog.component';
+
+const mockStaffMember: StaffMemberResponse = {
+  id: 'staff-1',
+  firstName: 'Jan',
+  lastName: 'de Vries',
+  role: 'manager',
+  color: '#8b5cf6',
+  photoUrl: null,
+  isActive: true,
+  schedule: {},
+  createdAtUtc: '2026-01-01T00:00:00Z',
+  updatedAtUtc: null,
+};
+
+describe('StaffFormDialogComponent', () => {
+  let component: StaffFormDialogComponent;
+  let fixture: ComponentFixture<StaffFormDialogComponent>;
+  let dialogEl: HTMLDialogElement;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [StaffFormDialogComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StaffFormDialogComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    dialogEl = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    dialogEl.showModal = vi.fn();
+    dialogEl.close = vi.fn();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should render empty form in create mode', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const firstNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="firstName"]',
+    ) as HTMLInputElement;
+    const lastNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="lastName"]',
+    ) as HTMLInputElement;
+
+    expect(firstNameInput.value).toBe('');
+    expect(lastNameInput.value).toBe('');
+  });
+
+  it('should pre-fill form values in edit mode', () => {
+    fixture.componentRef.setInput('staffMember', mockStaffMember);
+    fixture.detectChanges();
+    component.open();
+    fixture.detectChanges();
+
+    const firstNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="firstName"]',
+    ) as HTMLInputElement;
+    const lastNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="lastName"]',
+    ) as HTMLInputElement;
+    const roleSelect = fixture.nativeElement.querySelector(
+      'select[formControlName="role"]',
+    ) as HTMLSelectElement;
+
+    expect(firstNameInput.value).toBe('Jan');
+    expect(lastNameInput.value).toBe('de Vries');
+    expect(roleSelect.value).toBe('manager');
+  });
+
+  it('should disable Opslaan button when form is invalid', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const submitButton = fixture.nativeElement.querySelector(
+      'button[type="submit"]',
+    ) as HTMLButtonElement;
+
+    expect(submitButton.disabled).toBe(true);
+  });
+
+  it('should emit save event with correct payload on valid submit', () => {
+    let emitted: CreateStaffMemberRequest | undefined;
+    component.saved.subscribe((req) => {
+      emitted = req;
+    });
+
+    component.open();
+
+    const firstNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="firstName"]',
+    ) as HTMLInputElement;
+    firstNameInput.value = 'Anna';
+    firstNameInput.dispatchEvent(new Event('input'));
+
+    const lastNameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="lastName"]',
+    ) as HTMLInputElement;
+    lastNameInput.value = 'Bakker';
+    lastNameInput.dispatchEvent(new Event('input'));
+
+    fixture.detectChanges();
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(emitted).toBeDefined();
+    expect(emitted?.firstName).toBe('Anna');
+    expect(emitted?.lastName).toBe('Bakker');
+    expect(emitted?.role).toBe('staff_member');
+    expect(emitted?.color).toBe('#6366f1');
+  });
+
+  it('should emit cancel event on Annuleren click', () => {
+    let cancelled = false;
+    component.cancelled.subscribe(() => {
+      cancelled = true;
+    });
+
+    component.open();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button[type="button"]'),
+    ) as HTMLButtonElement[];
+    const cancelButton = buttons.find(
+      (b) => b.textContent?.trim() === 'Annuleren',
+    ) as HTMLButtonElement;
+    cancelButton.click();
+    fixture.detectChanges();
+
+    expect(cancelled).toBe(true);
+    expect(dialogEl.close).toHaveBeenCalled();
+  });
+});
