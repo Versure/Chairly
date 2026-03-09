@@ -1,0 +1,41 @@
+{
+  "feature": "e2e-test-coverage",
+  "specPath": ".claude/tasks/e2e-test-coverage/spec.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add missing e2e scenarios for services domain",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Add missing e2e scenarios for staff domain",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Add missing e2e scenarios for clients domain",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Add bookings e2e tests (if bookings feature exists)",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Add navigation and cross-cutting e2e tests",
+      "status": "pending",
+      "dependsOn": []
+    }
+  ]
+}

@@ -165,3 +165,98 @@ test('Medewerkers nav link is visible in the sidebar and clicking it navigates t
   await navLink.click();
   await expect(page).toHaveURL(/\/medewerkers/);
 });
+
+test('empty state is shown when no staff members exist', async ({ page }) => {
+  await page.route('**/api/staff', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/medewerkers');
+
+  await expect(page.getByText('Geen medewerkers gevonden')).toBeVisible();
+});
+
+test('full deactivate and reactivate cycle changes status badges', async ({ page }) => {
+  let isActive = true;
+
+  await page.route('**/api/staff', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: [{ ...mockStaffMember, isActive }],
+      });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.route('**/api/staff/staff-1/deactivate', (route) => {
+    if (route.request().method() === 'PATCH') {
+      isActive = false;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.route('**/api/staff/staff-1/reactivate', (route) => {
+    if (route.request().method() === 'PATCH') {
+      isActive = true;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/medewerkers');
+  await expect(page.getByText('Actief')).toBeVisible();
+
+  // Deactivate
+  await page.locator('button[title="Medewerker deactiveren"]').first().click();
+
+  const confirmDialog = page.locator('dialog[open]');
+  await expect(confirmDialog).toBeVisible();
+  await confirmDialog.getByRole('button', { name: 'Deactiveren' }).click();
+
+  await expect(page.getByText('Inactief')).toBeVisible();
+  await expect(page.locator('button[title="Medewerker activeren"]')).toBeVisible();
+
+  // Reactivate
+  await page.locator('button[title="Medewerker activeren"]').first().click();
+
+  await expect(page.getByText('Actief')).toBeVisible();
+});
+
+test('staff form validation prevents submission when required fields are empty', async ({
+  page,
+}) => {
+  await setupApiMocks(page);
+  await page.goto('/medewerkers');
+
+  await page.getByRole('button', { name: '+ Medewerker toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+
+  // Clear any default values in the required fields
+  await dialog.getByLabel('Voornaam').fill('');
+  await dialog.getByLabel('Achternaam').fill('');
+
+  // The Opslaan button should be disabled because required fields are empty
+  await expect(dialog.getByRole('button', { name: 'Opslaan' })).toBeDisabled();
+
+  // Dialog should still be open (form did not submit)
+  await expect(dialog).toBeVisible();
+
+  await page.keyboard.press('Escape');
+});
+
+test('staff avatar displays initials for a staff member without photo', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/medewerkers');
+
+  await expect(page.getByText('Jan Jansen')).toBeVisible();
+
+  // The avatar component shows initials "JJ" for "Jan Jansen"
+  const avatar = page.locator('chairly-staff-avatar');
+  await expect(avatar.getByText('JJ')).toBeVisible();
+});
