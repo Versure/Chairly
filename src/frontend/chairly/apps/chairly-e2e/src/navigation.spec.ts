@@ -148,7 +148,7 @@ test.describe('Cross-cutting navigation and theme', () => {
 
     // The active link should have bg-primary-600 from routerLinkActive
     const dienstenLink = page.getByRole('link', { name: 'Diensten' });
-    await expect(dienstenLink).toHaveClass(/bg-primary-600/);
+    await expect(dienstenLink).toHaveClass(/(?:^|\s)bg-primary-600(?:\s|$)/);
 
     // Navigate to klanten
     await page.getByRole('link', { name: 'Klanten' }).click();
@@ -156,7 +156,7 @@ test.describe('Cross-cutting navigation and theme', () => {
 
     // Now Klanten link should be active and Diensten should not
     const klantenLink = page.getByRole('link', { name: 'Klanten' });
-    await expect(klantenLink).toHaveClass(/bg-primary-600/);
-    await expect(dienstenLink).not.toHaveClass(/bg-primary-600/);
+    await expect(klantenLink).toHaveClass(/(?:^|\s)bg-primary-600(?:\s|$)/);
+    await expect(dienstenLink).not.toHaveClass(/(?:^|\s)bg-primary-600(?:\s|$)/);
   });
 });

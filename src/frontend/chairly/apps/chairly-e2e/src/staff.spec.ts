@@ -241,8 +241,8 @@ test('staff form validation prevents submission when required fields are empty',
   await dialog.getByLabel('Voornaam').fill('');
   await dialog.getByLabel('Achternaam').fill('');
 
-  // Click Opslaan — form should NOT submit because required fields are empty
-  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+  // The Opslaan button should be disabled because required fields are empty
+  await expect(dialog.getByRole('button', { name: 'Opslaan' })).toBeDisabled();
 
   // Dialog should still be open (form did not submit)
   await expect(dialog).toBeVisible();
