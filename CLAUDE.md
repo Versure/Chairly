@@ -133,6 +133,7 @@ src/frontend/chairly/
 | Angular `@Pipe` classes | `pipes/` | Putting them in `util/` |
 | Pure TS utility functions | `util/` | No interfaces or pipes here |
 | Smart (container) components | `feature/{feature-name}/` subfolder | Placing files directly in `feature/` |
+| Presentational components | `ui/{component-name}/` subfolder | Placing files directly in `ui/` |
 | Route configuration | `{domain}.routes.ts` at **domain root** | Placing it inside `feature/` |
 | `.gitkeep` | Delete immediately when real files are added | Leaving it after the folder is populated |
 
@@ -288,4 +289,5 @@ If `npx nx format:check` fails, auto-fix with `npx nx format --base=main` then v
 - No English user-facing text in the UI — all labels, buttons, messages, and UI copy must be in Dutch (Nederlands)
 - No raw ID inputs in user-facing forms — users must never type UUIDs/GUIDs; use searchable dropdowns, autocomplete, or selection lists instead
 - No `imports: []` in `@Component` decorators — omit the property entirely when a component has no imports
+- No flat component files directly in `ui/` — every presentational component must be in its own `ui/{component-name}/` subfolder
 - Never commit without tests passing

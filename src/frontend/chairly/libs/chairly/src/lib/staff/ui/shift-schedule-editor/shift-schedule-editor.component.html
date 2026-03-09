@@ -1,0 +1,57 @@
+<div class="space-y-2">
+  @for (row of dayRows(); track row.key) {
+    <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3">
+      <div class="flex items-center gap-3">
+        <label
+          class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 w-28 cursor-pointer">
+          <input
+            type="checkbox"
+            [checked]="row.isActive"
+            (change)="toggleDay(row.key, $event)"
+            class="rounded border-gray-300" />
+          {{ row.label }}
+        </label>
+        @if (row.isActive) {
+          <button
+            type="button"
+            class="text-xs text-primary-600 hover:text-primary-700 font-medium"
+            (click)="addBlock(row.key)">
+            + Dienst toevoegen
+          </button>
+        }
+      </div>
+
+      @if (row.isActive) {
+        <div class="mt-2 space-y-2">
+          @for (block of row.blocks; track $index; let i = $index) {
+            <div class="ml-6">
+              <div class="flex items-center gap-2">
+                <input
+                  type="time"
+                  [value]="block.startTime"
+                  (change)="updateStartTime(row.key, i, $event)"
+                  class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm" />
+                <span class="text-gray-500 dark:text-gray-400">–</span>
+                <input
+                  type="time"
+                  [value]="block.endTime"
+                  (change)="updateEndTime(row.key, i, $event)"
+                  class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm" />
+                <button
+                  type="button"
+                  [attr.aria-label]="'Dienst ' + (i + 1) + ' verwijderen'"
+                  class="text-gray-400 hover:text-red-600 font-bold text-lg leading-none"
+                  (click)="removeBlock(row.key, i)">
+                  ×
+                </button>
+              </div>
+              @if (block.endTime <= block.startTime) {
+                <p class="mt-1 text-xs text-red-600">Eindtijd moet na begintijd liggen</p>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
