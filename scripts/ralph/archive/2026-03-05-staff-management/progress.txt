@@ -1,0 +1,28 @@
+## Codebase Patterns
+
+### Backend
+- Slice structure: Chairly.Api/Features/{Context}/{UseCase}/ with Command/Query, Handler, Endpoint files
+- Use #pragma warning disable CA1812 on command/query classes (ASP.NET Core model binding instantiation)
+- Use #pragma warning disable/restore MA0026 around CreatedBy/UpdatedBy = Guid.Empty (TODO: replace with Keycloak)
+- TenantConstants.DefaultTenantId from Chairly.Api.Shared.Tenancy for tenant filtering
+- OneOf<T, NotFound> return type for handlers that may not find an entity
+- result.Match(ok => Results.Ok(ok), _ => Results.NotFound()) pattern in endpoints
+- IEntityTypeConfiguration<T> in separate files in Infrastructure/Persistence/Configurations/
+- Endpoints registered as extension methods (MapXxx) grouped per feature in XxxEndpoints.cs
+- All endpoints wired in Program.cs via app.MapXxxEndpoints()
+- Unit tests use InMemory EF Core (Guid.NewGuid() database name per test)
+- await using var db = CreateDbContext() pattern in tests (or try/finally for CA2007)
+
+### Frontend
+- Components use OnPush, standalone: true, templateUrl (never inline template)
+- Signal-based inputs: input(), model(), viewChild() — no @Input/@Output decorators
+- OutputEmitterRef for outputs (not EventEmitter)
+- takeUntilDestroyed(this.destroyRef) for subscription cleanup — inject DestroyRef explicitly
+- rxjs-angular-x/prefer-takeuntil requires checkDestroy: false in ESLint config when using DestroyRef pattern
+- NgRx SignalStore for state management
+- Dutch UI text throughout
+- Dynamic color binding: use [style.background-color]="color()" not Tailwind classes
+- Dialog: <dialog> with showModal(), fixed inset-0 overlay, DOCUMENT injection for body scroll lock
+- Dark mode: explicit dark: variants needed for custom/brand color classes (bg-primary-*, bg-accent-*)
+- Tests find buttons by title attribute (safe to change button classes)
+- ESLint allowBindToStyle: true needed for dynamic [style.background-color] bindings
