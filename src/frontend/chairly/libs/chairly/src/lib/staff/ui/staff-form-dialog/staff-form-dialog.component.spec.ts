@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CreateStaffMemberRequest, StaffMemberResponse } from '../models';
+import { CreateStaffMemberRequest, StaffMemberResponse } from '../../models';
 import { StaffFormDialogComponent } from './staff-form-dialog.component';
 
 const mockStaffMember: StaffMemberResponse = {
@@ -130,7 +130,9 @@ describe('StaffFormDialogComponent', () => {
     const buttons = Array.from(
       fixture.nativeElement.querySelectorAll('button[type="button"]'),
     ) as HTMLButtonElement[];
-    const cancelButton = buttons.find((b) => b.textContent?.trim() === 'Annuleren') as HTMLButtonElement;
+    const cancelButton = buttons.find(
+      (b) => b.textContent?.trim() === 'Annuleren',
+    ) as HTMLButtonElement;
     cancelButton.click();
     fixture.detectChanges();
 

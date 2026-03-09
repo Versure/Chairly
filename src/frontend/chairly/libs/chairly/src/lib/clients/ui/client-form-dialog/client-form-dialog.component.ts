@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { ClientResponse, CreateClientRequest } from '../models';
+import { ClientResponse, CreateClientRequest } from '../../models';
 
 @Component({
   selector: 'chairly-client-form-dialog',

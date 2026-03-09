@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StaffMemberResponse } from '../models';
+import { StaffMemberResponse } from '../../models';
 import { StaffTableComponent } from './staff-table.component';
 
 const mockActiveStaff: StaffMemberResponse = {
@@ -53,7 +53,11 @@ describe('StaffTableComponent', () => {
 
     fixture = TestBed.createComponent(StaffTableComponent);
     component = fixture.componentInstance;
-    fixture.componentRef.setInput('staffMembers', [mockActiveStaff, mockManagerStaff, mockInactiveStaff]);
+    fixture.componentRef.setInput('staffMembers', [
+      mockActiveStaff,
+      mockManagerStaff,
+      mockInactiveStaff,
+    ]);
     fixture.detectChanges();
   });
 
@@ -62,7 +66,9 @@ describe('StaffTableComponent', () => {
   });
 
   it('should render staff member rows', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows.length).toBe(3);
   });
 
@@ -77,7 +83,9 @@ describe('StaffTableComponent', () => {
   });
 
   it('should show "Manager" for manager role', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows[1].textContent).toContain('Manager');
   });
 
@@ -89,7 +97,9 @@ describe('StaffTableComponent', () => {
   });
 
   it('should show inactive badge when isActive is false', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     const inactiveRow = rows[2];
     expect(inactiveRow.textContent).toContain('Inactief');
     const badge = inactiveRow.querySelector('.bg-gray-100') as HTMLElement | null;
@@ -97,13 +107,17 @@ describe('StaffTableComponent', () => {
   });
 
   it('should show "Deactiveren" button when isActive is true', () => {
-    const deactivateBtn = fixture.nativeElement.querySelector('[title="Medewerker deactiveren"]') as HTMLButtonElement | null;
+    const deactivateBtn = fixture.nativeElement.querySelector(
+      '[title="Medewerker deactiveren"]',
+    ) as HTMLButtonElement | null;
     expect(deactivateBtn).toBeTruthy();
     expect(deactivateBtn?.textContent?.trim()).toBe('Deactiveren');
   });
 
   it('should show "Activeren" button when isActive is false', () => {
-    const activateBtn = fixture.nativeElement.querySelector('[title="Medewerker activeren"]') as HTMLButtonElement | null;
+    const activateBtn = fixture.nativeElement.querySelector(
+      '[title="Medewerker activeren"]',
+    ) as HTMLButtonElement | null;
     expect(activateBtn).toBeTruthy();
     expect(activateBtn?.textContent?.trim()).toBe('Activeren');
   });
@@ -114,7 +128,9 @@ describe('StaffTableComponent', () => {
       emitted = m;
     });
 
-    const editButton = fixture.nativeElement.querySelector('[title="Medewerker bewerken"]') as HTMLButtonElement;
+    const editButton = fixture.nativeElement.querySelector(
+      '[title="Medewerker bewerken"]',
+    ) as HTMLButtonElement;
     editButton.click();
     fixture.detectChanges();
 
@@ -127,7 +143,9 @@ describe('StaffTableComponent', () => {
       emitted = m;
     });
 
-    const deactivateButton = fixture.nativeElement.querySelector('[title="Medewerker deactiveren"]') as HTMLButtonElement;
+    const deactivateButton = fixture.nativeElement.querySelector(
+      '[title="Medewerker deactiveren"]',
+    ) as HTMLButtonElement;
     deactivateButton.click();
     fixture.detectChanges();
 
@@ -140,7 +158,9 @@ describe('StaffTableComponent', () => {
       emitted = m;
     });
 
-    const activateButton = fixture.nativeElement.querySelector('[title="Medewerker activeren"]') as HTMLButtonElement;
+    const activateButton = fixture.nativeElement.querySelector(
+      '[title="Medewerker activeren"]',
+    ) as HTMLButtonElement;
     activateButton.click();
     fixture.detectChanges();
 
@@ -151,18 +171,24 @@ describe('StaffTableComponent', () => {
     fixture.componentRef.setInput('staffMembers', []);
     fixture.detectChanges();
 
-    const emptyCell = fixture.nativeElement.querySelector('td[colspan="5"]') as HTMLTableCellElement | null;
+    const emptyCell = fixture.nativeElement.querySelector(
+      'td[colspan="5"]',
+    ) as HTMLTableCellElement | null;
     expect(emptyCell).toBeTruthy();
     expect(emptyCell?.textContent).toContain('Geen medewerkers gevonden');
   });
 
   it('should apply opacity-60 to inactive rows', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows[2].classList.contains('opacity-60')).toBe(true);
   });
 
   it('should not apply opacity-60 to active rows', () => {
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr') as NodeListOf<HTMLTableRowElement>;
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
     expect(rows[0].classList.contains('opacity-60')).toBe(false);
   });
 });

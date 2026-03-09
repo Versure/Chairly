@@ -1,12 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  model,
-  ModelSignal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, model, ModelSignal } from '@angular/core';
 
-import { DayOfWeek, ShiftBlock, WeeklySchedule } from '../models';
+import { DayOfWeek, ShiftBlock, WeeklySchedule } from '../../models';
 
 interface DayRow {
   key: DayOfWeek;

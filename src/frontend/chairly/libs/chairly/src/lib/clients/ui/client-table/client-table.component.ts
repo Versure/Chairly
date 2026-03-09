@@ -7,7 +7,7 @@ import {
   OutputEmitterRef,
 } from '@angular/core';
 
-import { ClientResponse } from '../models';
+import { ClientResponse } from '../../models';
 
 @Component({
   selector: 'chairly-client-table',

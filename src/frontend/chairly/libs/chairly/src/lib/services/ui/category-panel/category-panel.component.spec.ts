@@ -5,7 +5,7 @@ import {
   CreateServiceCategoryRequest,
   ServiceCategoryResponse,
   UpdateServiceCategoryRequest,
-} from '../models';
+} from '../../models';
 import { CategoryPanelComponent } from './category-panel.component';
 
 const mockCategories: ServiceCategoryResponse[] = [
@@ -43,10 +43,10 @@ describe('CategoryPanelComponent', () => {
     fixture.componentRef.setInput('isLoading', true);
     fixture.detectChanges();
 
-    const loadingEl = fixture.nativeElement.querySelector(
+    const indicator = fixture.nativeElement.querySelector(
       'chairly-loading-indicator',
     ) as HTMLElement | null;
-    expect(loadingEl).toBeTruthy();
+    expect(indicator).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Laden...');
   });
 

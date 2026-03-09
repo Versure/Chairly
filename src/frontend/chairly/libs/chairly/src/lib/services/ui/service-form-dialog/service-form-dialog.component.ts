@@ -16,8 +16,8 @@ import {
   ServiceCategoryResponse,
   ServiceResponse,
   UpdateServiceRequest,
-} from '../models';
-import { formatDurationToTimeSpan, parseDuration } from '../util';
+} from '../../models';
+import { formatDurationToTimeSpan, parseDuration } from '../../util';
 
 @Component({
   selector: 'chairly-service-form-dialog',
@@ -30,13 +30,13 @@ export class ServiceFormDialogComponent {
   readonly categories = input.required<ServiceCategoryResponse[]>();
   readonly service = input<ServiceResponse | null>(null);
 
-  readonly saved: OutputEmitterRef<CreateServiceRequest | UpdateServiceRequest> =
-    output<CreateServiceRequest | UpdateServiceRequest>();
+  readonly saved: OutputEmitterRef<CreateServiceRequest | UpdateServiceRequest> = output<
+    CreateServiceRequest | UpdateServiceRequest
+  >();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
 
   private readonly document = inject(DOCUMENT);
-  private readonly dialogRef =
-    viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
+  private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
   protected readonly form = new FormGroup({
     name: new FormControl('', {
@@ -89,8 +89,7 @@ export class ServiceFormDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    const { name, description, duration, price, categoryId } =
-      this.form.getRawValue();
+    const { name, description, duration, price, categoryId } = this.form.getRawValue();
     this.close();
     this.saved.emit({
       name,

@@ -18,8 +18,8 @@ import {
   StaffMemberResponse,
   StaffRole,
   WeeklySchedule,
-} from '../models';
-import { ShiftScheduleEditorComponent } from './shift-schedule-editor.component';
+} from '../../models';
+import { ShiftScheduleEditorComponent } from '../shift-schedule-editor/shift-schedule-editor.component';
 
 @Component({
   selector: 'chairly-staff-form-dialog',
@@ -29,7 +29,9 @@ import { ShiftScheduleEditorComponent } from './shift-schedule-editor.component'
   templateUrl: './staff-form-dialog.component.html',
 })
 export class StaffFormDialogComponent {
-  readonly staffMember: InputSignal<StaffMemberResponse | null> = input<StaffMemberResponse | null>(null);
+  readonly staffMember: InputSignal<StaffMemberResponse | null> = input<StaffMemberResponse | null>(
+    null,
+  );
 
   readonly saved: OutputEmitterRef<CreateStaffMemberRequest> = output<CreateStaffMemberRequest>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
@@ -41,8 +43,16 @@ export class StaffFormDialogComponent {
   protected readonly selectedColor = signal('#6366f1');
 
   protected readonly colorPalette: readonly string[] = [
-    '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
-    '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#64748b',
+    '#6366f1',
+    '#8b5cf6',
+    '#ec4899',
+    '#ef4444',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#14b8a6',
+    '#3b82f6',
+    '#64748b',
   ];
 
   protected readonly form = new FormGroup({

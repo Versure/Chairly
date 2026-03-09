@@ -1,10 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CreateServiceRequest, ServiceCategoryResponse, ServiceResponse } from '../models';
+import { CreateServiceRequest, ServiceCategoryResponse, ServiceResponse } from '../../models';
 import { ServiceFormDialogComponent } from './service-form-dialog.component';
 
 const mockCategories: ServiceCategoryResponse[] = [
-  { id: 'cat-1', name: 'Hair', sortOrder: 1, createdAtUtc: '2026-01-01T00:00:00Z', createdBy: 'user' },
+  {
+    id: 'cat-1',
+    name: 'Hair',
+    sortOrder: 1,
+    createdAtUtc: '2026-01-01T00:00:00Z',
+    createdBy: 'user',
+  },
 ];
 
 const mockService: ServiceResponse = {

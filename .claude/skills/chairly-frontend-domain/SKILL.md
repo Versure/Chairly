@@ -27,7 +27,12 @@ libs/chairly/src/lib/{domain}/
 ├── models/
 │   ├── {entity}.models.ts
 │   └── index.ts                   ← barrel: export type { ... }
-├── ui/                            ← presentational components
+├── ui/
+│   ├── {component-name}/
+│   │   ├── {component-name}.component.ts
+│   │   ├── {component-name}.component.html
+│   │   └── {component-name}.component.spec.ts
+│   └── index.ts                   ← barrel: export all presentational components
 ├── pipes/                         ← Angular pipes
 ├── util/                          ← pure utility functions
 └── {domain}.routes.ts             ← route config at domain root
@@ -119,6 +124,7 @@ export { {Entity}ApiService } from './{entity}-api.service';
 | Angular `@Pipe` classes | `pipes/` |
 | Pure TS utility functions | `util/` |
 | Smart (container) components | `feature/{feature-name}/` subfolder |
+| Presentational components | `ui/{component-name}/` subfolder |
 | Route configuration | `{domain}.routes.ts` at domain root |
 | `.gitkeep` | Delete immediately when real files are added |
 

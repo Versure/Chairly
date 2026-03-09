@@ -20,9 +20,9 @@ import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ConfirmationDialogComponent,
     ClientFormDialogComponent,
     ClientTableComponent,
-    ConfirmationDialogComponent,
     LoadingIndicatorComponent,
   ],
   templateUrl: './client-list-page.component.html',

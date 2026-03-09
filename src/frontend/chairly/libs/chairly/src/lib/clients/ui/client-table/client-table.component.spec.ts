@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ClientResponse } from '../models';
+import { ClientResponse } from '../../models';
 import { ClientTableComponent } from './client-table.component';
 
 const mockClient: ClientResponse = {

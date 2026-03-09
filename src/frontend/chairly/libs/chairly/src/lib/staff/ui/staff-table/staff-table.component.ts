@@ -8,8 +8,8 @@ import {
   OutputEmitterRef,
 } from '@angular/core';
 
-import { StaffMemberResponse } from '../models';
-import { StaffAvatarComponent } from './staff-avatar.component';
+import { StaffMemberResponse } from '../../models';
+import { StaffAvatarComponent } from '../staff-avatar/staff-avatar.component';
 
 @Component({
   selector: 'chairly-staff-table',
@@ -19,7 +19,8 @@ import { StaffAvatarComponent } from './staff-avatar.component';
   templateUrl: './staff-table.component.html',
 })
 export class StaffTableComponent {
-  readonly staffMembers: InputSignal<StaffMemberResponse[]> = input.required<StaffMemberResponse[]>();
+  readonly staffMembers: InputSignal<StaffMemberResponse[]> =
+    input.required<StaffMemberResponse[]>();
 
   readonly edit: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();
   readonly deactivate: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();

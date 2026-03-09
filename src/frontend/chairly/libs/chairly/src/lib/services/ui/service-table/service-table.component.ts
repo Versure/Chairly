@@ -10,8 +10,8 @@ import {
 
 import { LoadingIndicatorComponent } from '@org/shared-lib';
 
-import { ServiceResponse } from '../models';
-import { DurationPipe } from '../pipes';
+import { ServiceResponse } from '../../models';
+import { DurationPipe } from '../../pipes';
 
 @Component({
   selector: 'chairly-service-table',

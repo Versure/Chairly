@@ -28,8 +28,7 @@ export class ConfirmationDialogComponent {
   readonly cancelled: OutputEmitterRef<void> = output<void>();
 
   private readonly document = inject(DOCUMENT);
-  private readonly dialogRef =
-    viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
+  private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
   protected readonly confirmButtonClass = computed<string>(() => {
     const base =

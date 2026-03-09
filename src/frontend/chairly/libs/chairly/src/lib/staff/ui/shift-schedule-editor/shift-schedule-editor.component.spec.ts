@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WeeklySchedule } from '../models';
+import { WeeklySchedule } from '../../models';
 import { ShiftScheduleEditorComponent } from './shift-schedule-editor.component';
 
 describe('ShiftScheduleEditorComponent', () => {
@@ -40,7 +40,9 @@ describe('ShiftScheduleEditorComponent', () => {
     // Click "+ Dienst toevoegen"
     const addButton = Array.from(
       fixture.nativeElement.querySelectorAll('button[type="button"]'),
-    ).find((b) => (b as HTMLButtonElement).textContent?.trim() === '+ Dienst toevoegen') as HTMLButtonElement;
+    ).find(
+      (b) => (b as HTMLButtonElement).textContent?.trim() === '+ Dienst toevoegen',
+    ) as HTMLButtonElement;
     expect(addButton).toBeTruthy();
     addButton.click();
     fixture.detectChanges();
@@ -114,7 +116,9 @@ describe('ShiftScheduleEditorComponent', () => {
 
     const addButton = Array.from(
       fixture.nativeElement.querySelectorAll('button[type="button"]'),
-    ).find((b) => (b as HTMLButtonElement).textContent?.trim() === '+ Dienst toevoegen') as HTMLButtonElement;
+    ).find(
+      (b) => (b as HTMLButtonElement).textContent?.trim() === '+ Dienst toevoegen',
+    ) as HTMLButtonElement;
     addButton.click();
     fixture.detectChanges();
 
@@ -129,7 +133,9 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', invalidSchedule);
     fixture.detectChanges();
 
-    const errorMessage = fixture.nativeElement.querySelector('p.text-red-600') as HTMLParagraphElement;
+    const errorMessage = fixture.nativeElement.querySelector(
+      'p.text-red-600',
+    ) as HTMLParagraphElement;
     expect(errorMessage).toBeTruthy();
     expect(errorMessage.textContent?.trim()).toBe('Eindtijd moet na begintijd liggen');
   });
@@ -141,7 +147,9 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', validSchedule);
     fixture.detectChanges();
 
-    const errorMessage = fixture.nativeElement.querySelector('p.text-red-600') as HTMLParagraphElement | null;
+    const errorMessage = fixture.nativeElement.querySelector(
+      'p.text-red-600',
+    ) as HTMLParagraphElement | null;
     expect(errorMessage).toBeNull();
   });
 });

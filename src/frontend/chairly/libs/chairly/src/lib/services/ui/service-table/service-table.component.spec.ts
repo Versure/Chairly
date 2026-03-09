@@ -4,7 +4,7 @@ import { DEFAULT_CURRENCY_CODE, LOCALE_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
-import { ServiceResponse } from '../models';
+import { ServiceResponse } from '../../models';
 import { ServiceTableComponent } from './service-table.component';
 
 registerLocaleData(localeNl);
@@ -121,10 +121,10 @@ describe('ServiceTableComponent', () => {
     fixture.componentRef.setInput('isLoading', true);
     fixture.detectChanges();
 
-    const loadingEl = fixture.nativeElement.querySelector(
+    const indicator = fixture.nativeElement.querySelector(
       'chairly-loading-indicator',
     ) as HTMLElement | null;
-    expect(loadingEl).toBeTruthy();
+    expect(indicator).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Diensten laden...');
     const table = fixture.nativeElement.querySelector('table') as HTMLTableElement | null;
     expect(table).toBeNull();

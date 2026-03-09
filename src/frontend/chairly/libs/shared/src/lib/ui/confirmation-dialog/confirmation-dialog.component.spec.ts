@@ -47,7 +47,9 @@ describe('ConfirmationDialogComponent', () => {
 
     component.open();
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     const confirmButton = buttons[1];
     confirmButton.click();
     fixture.detectChanges();
@@ -64,7 +66,9 @@ describe('ConfirmationDialogComponent', () => {
 
     component.open();
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     const cancelButton = buttons[0];
     cancelButton.click();
     fixture.detectChanges();
@@ -74,7 +78,9 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should use default labels when not provided', () => {
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     expect(buttons[0].textContent?.trim()).toBe('Annuleren');
     expect(buttons[1].textContent?.trim()).toBe('Bevestigen');
   });
@@ -84,7 +90,9 @@ describe('ConfirmationDialogComponent', () => {
     fixture.componentRef.setInput('cancelLabel', 'No, keep it');
     fixture.detectChanges();
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     expect(buttons[0].textContent?.trim()).toBe('No, keep it');
     expect(buttons[1].textContent?.trim()).toBe('Yes, delete');
   });
@@ -93,13 +101,17 @@ describe('ConfirmationDialogComponent', () => {
     fixture.componentRef.setInput('isDestructive', true);
     fixture.detectChanges();
 
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     const confirmButton = buttons[1];
     expect(confirmButton.className).toContain('bg-red-600');
   });
 
   it('should apply default styling when isDestructive is false', () => {
-    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll(
+      'button',
+    ) as NodeListOf<HTMLButtonElement>;
     const confirmButton = buttons[1];
     expect(confirmButton.className).toContain('bg-primary-600');
   });
