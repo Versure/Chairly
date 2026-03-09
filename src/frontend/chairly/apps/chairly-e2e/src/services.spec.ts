@@ -300,8 +300,10 @@ test('edit dialog pre-fills all fields (Naam, Omschrijving, Duur, Prijs, Categor
   await expect(dialog).toBeVisible();
 
   await expect(dialog.getByLabel('Naam')).toHaveValue('Herenknippen');
+  await expect(dialog.getByLabel('Omschrijving')).toHaveValue('Klassiek herenknippen');
   await expect(dialog.getByLabel('Prijs')).toHaveValue('25');
   await expect(dialog.getByLabel('Duur (minuten)')).toHaveValue('30');
+  await expect(dialog.getByLabel('Categorie')).toHaveValue('cat-1');
 
   await dialog.getByLabel('Naam').fill('Herenknippen Kort');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
