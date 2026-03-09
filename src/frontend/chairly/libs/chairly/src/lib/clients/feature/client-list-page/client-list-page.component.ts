@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ConfirmationDialogComponent } from '@org/shared-lib';
+import { ConfirmationDialogComponent, LoadingIndicatorComponent } from '@org/shared-lib';
 
 import { ClientApiService, ClientStore } from '../../data-access';
 import { ClientResponse, CreateClientRequest } from '../../models';
@@ -19,7 +19,12 @@ import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
   selector: 'chairly-client-list-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmationDialogComponent, ClientFormDialogComponent, ClientTableComponent],
+  imports: [
+    ClientFormDialogComponent,
+    ClientTableComponent,
+    ConfirmationDialogComponent,
+    LoadingIndicatorComponent,
+  ],
   templateUrl: './client-list-page.component.html',
 })
 export class ClientListPageComponent implements OnInit {

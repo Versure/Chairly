@@ -1,3 +1,4 @@
 export { ConfirmationDialogComponent } from './confirmation-dialog.component';
+export { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
 export { ShellComponent } from './shell/shell.component';
 export { ThemeService } from './theme.service';

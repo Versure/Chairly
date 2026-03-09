@@ -6,8 +6,7 @@
       type="button"
       class="text-xs text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       [disabled]="showAddForm()"
-      (click)="startAdding()"
-    >
+      (click)="startAdding()">
       + Toevoegen
     </button>
   </div>
@@ -17,28 +16,24 @@
     <form
       class="p-3 border-b border-gray-200 bg-primary-50 dark:bg-slate-800"
       [formGroup]="addForm"
-      (ngSubmit)="saveNewCategory()"
-    >
+      (ngSubmit)="saveNewCategory()">
       <div class="flex flex-col gap-2">
         <input
           formControlName="name"
           type="text"
           placeholder="Naam categorie"
-          class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
-        />
+          class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500" />
         <div class="flex gap-2">
           <button
             type="submit"
             [disabled]="addForm.invalid"
-            class="flex-1 text-xs bg-primary-600 text-white rounded py-1 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+            class="flex-1 text-xs bg-primary-600 text-white rounded py-1 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed">
             Opslaan
           </button>
           <button
             type="button"
             class="flex-1 text-xs bg-white border border-gray-300 text-gray-700 rounded py-1 hover:bg-gray-50"
-            (click)="cancelAdding()"
-          >
+            (click)="cancelAdding()">
             Annuleren
           </button>
         </div>
@@ -48,7 +43,7 @@
 
   <!-- Loading state -->
   @if (isLoading()) {
-    <div class="p-4 text-sm text-gray-500 text-center">Laden...</div>
+    <chairly-loading-indicator message="Laden..." />
   }
 
   <!-- Category list -->
@@ -60,32 +55,27 @@
           draggable="true"
           (dragstart)="onDragStart(i)"
           (dragover)="onDragOver($event)"
-          (drop)="onDrop(i)"
-        >
+          (drop)="onDrop(i)">
           @if (editingCategoryId() === category.id) {
             <form
               class="flex flex-col gap-2"
               [formGroup]="editForm"
-              (ngSubmit)="saveEdit(category.id)"
-            >
+              (ngSubmit)="saveEdit(category.id)">
               <input
                 formControlName="name"
                 type="text"
-                class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
+                class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500" />
               <div class="flex gap-2">
                 <button
                   type="submit"
                   [disabled]="editForm.invalid"
-                  class="flex-1 text-xs bg-primary-600 text-white rounded py-1 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  class="flex-1 text-xs bg-primary-600 text-white rounded py-1 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed">
                   Opslaan
                 </button>
                 <button
                   type="button"
                   class="flex-1 text-xs bg-white border border-gray-300 text-gray-700 rounded py-1 hover:bg-gray-50"
-                  (click)="cancelEdit()"
-                >
+                  (click)="cancelEdit()">
                   Annuleren
                 </button>
               </div>
@@ -98,16 +88,14 @@
                   type="button"
                   class="inline-flex items-center rounded border border-primary-200 bg-primary-50 px-2 py-1 text-xs font-medium text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-100 active:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 dark:bg-primary-700 dark:border-primary-600 dark:text-white dark:hover:bg-primary-600 dark:hover:border-primary-500 dark:active:bg-primary-800"
                   title="Categorie bewerken"
-                  (click)="startEdit(category)"
-                >
+                  (click)="startEdit(category)">
                   Bewerken
                 </button>
                 <button
                   type="button"
                   class="inline-flex items-center rounded border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:border-red-300 hover:bg-red-100 active:bg-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 dark:bg-red-700 dark:border-red-600 dark:text-white dark:hover:bg-red-600 dark:hover:border-red-500 dark:active:bg-red-800"
                   title="Categorie verwijderen"
-                  (click)="onDeleteClicked(category.id)"
-                >
+                  (click)="onDeleteClicked(category.id)">
                   Verwijderen
                 </button>
               </div>

@@ -8,6 +8,8 @@ import {
   signal,
 } from '@angular/core';
 
+import { LoadingIndicatorComponent } from '@org/shared-lib';
+
 import { ServiceResponse } from '../models';
 import { DurationPipe } from '../pipes';
 
@@ -15,7 +17,7 @@ import { DurationPipe } from '../pipes';
   selector: 'chairly-service-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CurrencyPipe, DurationPipe],
+  imports: [CurrencyPipe, DurationPipe, LoadingIndicatorComponent],
   templateUrl: './service-table.component.html',
 })
 export class ServiceTableComponent {

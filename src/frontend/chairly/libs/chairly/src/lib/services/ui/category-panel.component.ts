@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { LoadingIndicatorComponent } from '@org/shared-lib';
+
 import {
   CreateServiceCategoryRequest,
   ServiceCategoryResponse,
@@ -19,7 +21,7 @@ import {
   selector: 'chairly-category-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [LoadingIndicatorComponent, ReactiveFormsModule],
   templateUrl: './category-panel.component.html',
 })
 export class CategoryPanelComponent {
