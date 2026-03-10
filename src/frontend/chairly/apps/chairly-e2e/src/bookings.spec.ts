@@ -42,7 +42,7 @@ const mockBooking = {
 };
 
 async function setupApiMocks(page: import('@playwright/test').Page): Promise<void> {
-  await page.route('**/api/bookings', (route) => {
+  await page.route('**/api/bookings*', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: [mockBooking] });
     }
@@ -88,14 +88,14 @@ test('clicking Nieuwe boeking opens the booking form dialog with dropdowns', asy
   await expect(dialog.getByText('Diensten')).toBeVisible();
   await expect(dialog.getByLabel('Notities')).toBeVisible();
 
-  // Verify the dropdowns have options
+  // Verify the dropdowns have options (option elements are hidden in collapsed selects, so use toHaveCount)
   const clientSelect = dialog.getByLabel('Klant');
   await expect(clientSelect.locator('option')).toHaveCount(3); // placeholder + 2 clients
-  await expect(clientSelect.locator('option', { hasText: 'Jan Jansen' })).toBeVisible();
+  await expect(clientSelect).toContainText('Jan Jansen');
 
   const staffSelect = dialog.getByLabel('Medewerker');
   await expect(staffSelect.locator('option')).toHaveCount(3); // placeholder + 2 staff
-  await expect(staffSelect.locator('option', { hasText: 'Anna de Vries' })).toBeVisible();
+  await expect(staffSelect).toContainText('Anna de Vries');
 
   // Verify service checkboxes
   await expect(dialog.getByLabel('Herenknippen')).toBeVisible();
@@ -123,7 +123,7 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
 
   let postCalled = false;
 
-  await page.route('**/api/bookings', (route) => {
+  await page.route('**/api/bookings*', (route) => {
     const method = route.request().method();
     if (method === 'POST') {
       postCalled = true;
@@ -179,7 +179,7 @@ test('clicking Bevestigen on a Scheduled booking calls the confirm API', async (
     return route.fulfill({ status: 404, body: '' });
   });
 
-  await page.route('**/api/bookings', (route) => {
+  await page.route('**/api/bookings*', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({
         json: [confirmCalled ? confirmedBooking : mockBooking],
@@ -224,7 +224,7 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
     return route.fulfill({ status: 404, body: '' });
   });
 
-  await page.route('**/api/bookings', (route) => {
+  await page.route('**/api/bookings*', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({
         json: [putCalled ? updatedBooking : mockBooking],
@@ -279,10 +279,10 @@ test('staff member filter dropdown shows staff names and filters bookings', asyn
   const staffFilter = page.getByLabel('Medewerker', { exact: false }).first();
   await expect(staffFilter).toBeVisible();
 
-  // Verify the default option
-  await expect(staffFilter.locator('option', { hasText: 'Alle medewerkers' })).toBeVisible();
-  await expect(staffFilter.locator('option', { hasText: 'Anna de Vries' })).toBeVisible();
-  await expect(staffFilter.locator('option', { hasText: 'Kees Bakker' })).toBeVisible();
+  // Verify the dropdown options (option elements are hidden in collapsed selects, so use toContainText)
+  await expect(staffFilter).toContainText('Alle medewerkers');
+  await expect(staffFilter).toContainText('Anna de Vries');
+  await expect(staffFilter).toContainText('Kees Bakker');
 });
 
 test('view toggle buttons are visible and default to Lijst view', async ({ page }) => {
