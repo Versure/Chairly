@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { take } from 'rxjs';
 
-import { Invoice, InvoiceSummary } from '../models';
+import { AddLineItemRequest, Invoice, InvoiceFilterParams, InvoiceSummary } from '../models';
 import { InvoiceApiService } from './invoice-api.service';
 
 export interface InvoiceState {
@@ -34,6 +34,8 @@ function replaceInvoiceSummary(invoices: InvoiceSummary[], updated: Invoice): In
           bookingId: updated.bookingId,
           clientId: updated.clientId,
           clientFullName: updated.clientFullName,
+          subTotalAmount: updated.subTotalAmount,
+          totalVatAmount: updated.totalVatAmount,
           totalAmount: updated.totalAmount,
           status: updated.status,
           createdAtUtc: updated.createdAtUtc,
@@ -51,10 +53,10 @@ export const InvoiceStore = signalStore(
     const invoiceApi = inject(InvoiceApiService);
 
     return {
-      loadInvoices(): void {
+      loadInvoices(filters?: InvoiceFilterParams): void {
         patchState(store, { isLoading: true, error: null });
         invoiceApi
-          .getInvoices()
+          .getInvoices(filters)
           .pipe(take(1))
           .subscribe({
             next: (invoices) => patchState(store, { invoices, isLoading: false }),
@@ -112,6 +114,34 @@ export const InvoiceStore = signalStore(
       voidInvoice(id: string): void {
         invoiceApi
           .voidInvoice(id)
+          .pipe(take(1))
+          .subscribe({
+            next: (updated) =>
+              patchState(store, (state) => ({
+                selectedInvoice: updated,
+                invoices: replaceInvoiceSummary(state.invoices, updated),
+              })),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
+          });
+      },
+
+      addLineItem(invoiceId: string, lineItem: AddLineItemRequest): void {
+        invoiceApi
+          .addLineItem(invoiceId, lineItem)
+          .pipe(take(1))
+          .subscribe({
+            next: (updated) =>
+              patchState(store, (state) => ({
+                selectedInvoice: updated,
+                invoices: replaceInvoiceSummary(state.invoices, updated),
+              })),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
+          });
+      },
+
+      removeLineItem(invoiceId: string, lineItemId: string): void {
+        invoiceApi
+          .removeLineItem(invoiceId, lineItemId)
           .pipe(take(1))
           .subscribe({
             next: (updated) =>

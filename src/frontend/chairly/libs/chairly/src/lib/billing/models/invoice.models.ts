@@ -6,6 +6,9 @@ export interface InvoiceLineItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  vatPercentage: number;
+  vatAmount: number;
+  isManual: boolean;
   sortOrder: number;
 }
 
@@ -16,6 +19,8 @@ export interface Invoice {
   bookingId: string;
   clientId: string;
   clientFullName: string;
+  subTotalAmount: number;
+  totalVatAmount: number;
   totalAmount: number;
   status: InvoiceStatus;
   lineItems: InvoiceLineItem[];
@@ -32,10 +37,28 @@ export interface InvoiceSummary {
   bookingId: string;
   clientId: string;
   clientFullName: string;
+  subTotalAmount: number;
+  totalVatAmount: number;
   totalAmount: number;
   status: InvoiceStatus;
   createdAtUtc: string;
   sentAtUtc?: string;
   paidAtUtc?: string;
   voidedAtUtc?: string;
+}
+
+export interface AddLineItemRequest {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  vatPercentage: number;
+  isManual: boolean;
+}
+
+export interface InvoiceFilterParams {
+  clientName?: string;
+  fromDate?: string;
+  toDate?: string;
+  status?: InvoiceStatus | '';
+  clientId?: string;
 }

@@ -1,2 +1,21 @@
 /* Global SCSS styles — variables, mixins, font declarations */
 /* Tailwind v4 is imported in tailwind.css (plain CSS, processed by PostCSS only) */
+
+/* Global print styles — hide shell navigation and mobile top bar */
+@media print {
+  chairly-shell nav {
+    display: none !important;
+  }
+
+  chairly-shell > div > div:first-child {
+    display: none !important;
+  }
+
+  chairly-shell main {
+    overflow: visible !important;
+  }
+
+  chairly-shell > div {
+    display: block !important;
+  }
+}

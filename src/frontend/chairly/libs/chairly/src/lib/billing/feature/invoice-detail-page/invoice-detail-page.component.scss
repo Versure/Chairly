@@ -1,0 +1,39 @@
+@media print {
+  :host {
+    display: block;
+  }
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
+  .overflow-auto {
+    overflow: visible !important;
+  }
+
+  .bg-gray-50,
+  .bg-white,
+  .dark\:bg-slate-900,
+  .dark\:bg-slate-800,
+  .dark\:bg-slate-700 {
+    background-color: white !important;
+  }
+
+  * {
+    color: black !important;
+    border-color: #d1d5db !important;
+  }
+
+  table {
+    width: 100% !important;
+  }
+
+  .shadow-sm,
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+}

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,7 +12,11 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { LoadingIndicatorComponent } from '@org/shared-lib';
+import {
+  ClientInvoiceSummary,
+  InvoiceGenerationService,
+  LoadingIndicatorComponent,
+} from '@org/shared-lib';
 
 import { ClientApiService, RecipesApiService } from '../../data-access';
 import {
@@ -30,6 +34,7 @@ import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CurrencyPipe,
     DatePipe,
     RouterLink,
     LoadingIndicatorComponent,
@@ -44,6 +49,7 @@ export class ClientDetailPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly clientApi = inject(ClientApiService);
   private readonly recipesApi = inject(RecipesApiService);
+  private readonly invoiceService = inject(InvoiceGenerationService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly recipeFormRef = viewChild<RecipeFormComponent>('recipeFormRef');
@@ -52,9 +58,11 @@ export class ClientDetailPageComponent implements OnInit {
   protected readonly client = signal<ClientResponse | null>(null);
   protected readonly clientRecipes = signal<ClientRecipeSummary[]>([]);
   protected readonly clientBookings = signal<ClientBookingSummary[]>([]);
+  protected readonly clientInvoices = signal<ClientInvoiceSummary[]>([]);
   protected readonly isLoadingClient = signal<boolean>(true);
   protected readonly isLoadingRecipes = signal<boolean>(true);
   protected readonly isLoadingBookings = signal<boolean>(true);
+  protected readonly isLoadingInvoices = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
 
   protected readonly clientId = computed<string>(() => {
@@ -86,6 +94,7 @@ export class ClientDetailPageComponent implements OnInit {
     this.loadClient(clientId);
     this.loadRecipes(clientId);
     this.loadBookings(clientId);
+    this.loadInvoices(clientId);
   }
 
   private loadClient(clientId: string): void {
@@ -139,6 +148,22 @@ export class ClientDetailPageComponent implements OnInit {
         },
         error: () => {
           this.isLoadingBookings.set(false);
+        },
+      });
+  }
+
+  private loadInvoices(clientId: string): void {
+    this.isLoadingInvoices.set(true);
+    this.invoiceService
+      .getClientInvoices(clientId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invoices) => {
+          this.clientInvoices.set(invoices);
+          this.isLoadingInvoices.set(false);
+        },
+        error: () => {
+          this.isLoadingInvoices.set(false);
         },
       });
   }

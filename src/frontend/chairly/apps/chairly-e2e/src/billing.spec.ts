@@ -72,7 +72,7 @@ test('invoice list page shows heading and empty state when no invoices', async (
   await page.goto('/facturen');
 
   await expect(page.getByRole('heading', { name: 'Facturen', level: 1 })).toBeVisible();
-  await expect(page.getByText('Nog geen facturen beschikbaar')).toBeVisible();
+  await expect(page.getByText('Geen facturen gevonden')).toBeVisible();
 });
 
 test('invoice list page shows invoices in a table with status badge', async ({ page }) => {
@@ -82,7 +82,7 @@ test('invoice list page shows invoices in a table with status badge', async ({ p
   await expect(page.getByRole('table')).toBeVisible();
   await expect(page.getByText('2026-0001')).toBeVisible();
   await expect(page.getByText('Jan de Vries')).toBeVisible();
-  await expect(page.getByText('Concept')).toBeVisible();
+  await expect(page.locator('td').getByText('Concept', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Bekijken' })).toBeVisible();
 });
 
@@ -134,11 +134,15 @@ test('clicking Markeer als verzonden updates status badge to Verzonden', async (
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(page.getByText('Concept')).toBeVisible();
+  await expect(
+    page.locator('span.rounded-full').getByText('Concept', { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Markeer als verzonden' }).click();
 
-  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('span.rounded-full').getByText('Verzonden', { exact: true }),
+  ).toBeVisible();
 });
 
 test('clicking Markeer als betaald updates status badge to Betaald', async ({ page }) => {
@@ -173,11 +177,15 @@ test('clicking Markeer als betaald updates status badge to Betaald', async ({ pa
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('span.rounded-full').getByText('Verzonden', { exact: true }),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Markeer als betaald' }).click();
 
-  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('span.rounded-full').getByText('Betaald', { exact: true }),
+  ).toBeVisible();
 });
 
 test('Vervallen verklaren button is not shown on a paid invoice', async ({ page }) => {
@@ -202,7 +210,9 @@ test('Vervallen verklaren button is not shown on a paid invoice', async ({ page 
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('span.rounded-full').getByText('Betaald', { exact: true }),
+  ).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Vervallen verklaren' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Markeer als verzonden' })).toBeHidden();

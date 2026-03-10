@@ -1,1 +1,8 @@
-export type { Invoice, InvoiceLineItem, InvoiceStatus, InvoiceSummary } from './invoice.models';
+export type {
+  AddLineItemRequest,
+  Invoice,
+  InvoiceFilterParams,
+  InvoiceLineItem,
+  InvoiceStatus,
+  InvoiceSummary,
+} from './invoice.models';

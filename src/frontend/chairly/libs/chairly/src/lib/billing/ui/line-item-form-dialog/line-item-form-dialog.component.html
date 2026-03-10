@@ -1,0 +1,95 @@
+<dialog
+  class="fixed inset-0 z-50 m-0 h-screen w-screen max-h-none max-w-none border-0 bg-transparent p-0 backdrop:hidden"
+  #dialogEl>
+  <div class="flex h-full w-full items-center justify-center bg-black/50 p-4">
+    <div class="mx-auto w-full max-w-md rounded-lg bg-white shadow-xl dark:bg-slate-800">
+      <form [formGroup]="form" (ngSubmit)="onSave()">
+        <div class="p-6">
+          <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+            {{ dialogTitle() }}
+          </h2>
+
+          <!-- Omschrijving -->
+          <div class="mb-4">
+            <label
+              for="lifd-description"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Omschrijving</label
+            >
+            <input
+              id="lifd-description"
+              formControlName="description"
+              type="text"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+            @if (form.controls.description.invalid && form.controls.description.touched) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                Omschrijving is verplicht (max. 200 tekens).
+              </p>
+            }
+          </div>
+
+          <!-- Bedrag -->
+          <div class="mb-4">
+            <label
+              for="lifd-amount"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Bedrag</label
+            >
+            <input
+              id="lifd-amount"
+              formControlName="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+            @if (form.controls.amount.invalid && form.controls.amount.touched) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                Bedrag is verplicht en moet groter zijn dan 0.
+              </p>
+            }
+          </div>
+
+          <!-- BTW-percentage (hidden for discounts — always 0%) -->
+          @if (!isDiscount()) {
+            <div class="mb-6">
+              <label
+                for="lifd-vat"
+                class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >BTW-percentage</label
+              >
+              <input
+                id="lifd-vat"
+                formControlName="vatPercentage"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+              @if (form.controls.vatPercentage.invalid && form.controls.vatPercentage.touched) {
+                <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                  BTW-percentage is verplicht (0-100%).
+                </p>
+              }
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="flex justify-end gap-3">
+            <button
+              type="button"
+              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+              (click)="onCancel()">
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              [disabled]="form.invalid"
+              class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary-500 dark:hover:bg-primary-600">
+              Toevoegen
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</dialog>

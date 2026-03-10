@@ -8,6 +8,8 @@ public class Invoice
     public Guid ClientId { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
     public DateOnly InvoiceDate { get; set; }
+    public decimal SubTotalAmount { get; set; }
+    public decimal TotalVatAmount { get; set; }
     public decimal TotalAmount { get; set; }
 
 #pragma warning disable CA1002, CA2227, MA0016 // EF Core requires mutable collection for navigation property

@@ -1,8 +1,10 @@
+using Chairly.Api.Features.Billing.AddInvoiceLineItem;
 using Chairly.Api.Features.Billing.GenerateInvoice;
 using Chairly.Api.Features.Billing.GetInvoice;
 using Chairly.Api.Features.Billing.GetInvoicesList;
 using Chairly.Api.Features.Billing.MarkInvoicePaid;
 using Chairly.Api.Features.Billing.MarkInvoiceSent;
+using Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
 using Chairly.Api.Features.Billing.VoidInvoice;
 
 namespace Chairly.Api.Features.Billing;
@@ -19,6 +21,8 @@ internal static class BillingEndpoints
         group.MapMarkInvoiceSent();
         group.MapMarkInvoicePaid();
         group.MapVoidInvoice();
+        group.MapAddInvoiceLineItem();
+        group.MapRemoveInvoiceLineItem();
 
         return app;
     }
