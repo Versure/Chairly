@@ -30,11 +30,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore src/backend/Chairly.slnx
-
       - name: Build
-        run: dotnet build src/backend/Chairly.slnx --no-restore
+        run: dotnet build src/backend/Chairly.slnx
 
       - name: Test
         run: dotnet test src/backend/Chairly.slnx --no-build --collect:"XPlat Code Coverage"
