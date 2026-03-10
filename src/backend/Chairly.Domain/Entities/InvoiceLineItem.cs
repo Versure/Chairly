@@ -7,5 +7,8 @@ public class InvoiceLineItem
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
+    public decimal VatPercentage { get; set; }
+    public decimal VatAmount { get; set; }
     public int SortOrder { get; set; }
+    public bool IsManual { get; set; }
 }

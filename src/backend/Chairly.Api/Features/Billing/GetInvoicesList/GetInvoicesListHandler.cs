@@ -25,6 +25,8 @@ internal sealed class GetInvoicesListHandler(ChairlyDbContext db) : IRequestHand
                 x.Invoice.BookingId,
                 x.Invoice.ClientId,
                 x.ClientFullName,
+                x.Invoice.SubTotalAmount,
+                x.Invoice.TotalVatAmount,
                 x.Invoice.TotalAmount,
                 x.Invoice.VoidedAtUtc != null ? "Vervallen" :
                 x.Invoice.PaidAtUtc != null ? "Betaald" :

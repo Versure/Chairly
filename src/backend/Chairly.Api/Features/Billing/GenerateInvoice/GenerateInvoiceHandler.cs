@@ -12,6 +12,8 @@ namespace Chairly.Api.Features.Billing.GenerateInvoice;
 
 internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHandler<GenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>>
 {
+    private const decimal DefaultVatPercentage = 21.00m;
+
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>> Handle(GenerateInvoiceCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -59,16 +61,27 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
 
         var lineItems = booking.BookingServices
             .OrderBy(bs => bs.SortOrder)
-            .Select(bs => new InvoiceLineItem
+            .Select(bs =>
             {
-                Id = Guid.NewGuid(),
-                Description = bs.ServiceName,
-                Quantity = 1,
-                UnitPrice = bs.Price,
-                TotalPrice = bs.Price,
-                SortOrder = bs.SortOrder,
+                var totalPrice = bs.Price;
+                var vatAmount = Math.Round(totalPrice * DefaultVatPercentage / 100m, 2, MidpointRounding.AwayFromZero);
+                return new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = bs.ServiceName,
+                    Quantity = 1,
+                    UnitPrice = bs.Price,
+                    TotalPrice = totalPrice,
+                    VatPercentage = DefaultVatPercentage,
+                    VatAmount = vatAmount,
+                    SortOrder = bs.SortOrder,
+                    IsManual = false,
+                };
             })
             .ToList();
+
+        var subTotalAmount = lineItems.Sum(li => li.TotalPrice);
+        var totalVatAmount = lineItems.Sum(li => li.VatAmount);
 
         return new Invoice
         {
@@ -78,7 +91,9 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
             ClientId = booking.ClientId,
             InvoiceNumber = invoiceNumber,
             InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            TotalAmount = lineItems.Sum(li => li.TotalPrice),
+            SubTotalAmount = subTotalAmount,
+            TotalVatAmount = totalVatAmount,
+            TotalAmount = subTotalAmount + totalVatAmount,
             LineItems = lineItems,
             CreatedAtUtc = DateTimeOffset.UtcNow,
 #pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
