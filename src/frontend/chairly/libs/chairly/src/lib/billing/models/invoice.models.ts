@@ -54,3 +54,11 @@ export interface AddLineItemRequest {
   vatPercentage: number;
   isManual: boolean;
 }
+
+export interface InvoiceFilterParams {
+  clientName?: string;
+  fromDate?: string;
+  toDate?: string;
+  status?: InvoiceStatus | '';
+  clientId?: string;
+}

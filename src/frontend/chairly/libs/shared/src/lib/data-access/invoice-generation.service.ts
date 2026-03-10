@@ -22,6 +22,15 @@ export interface GenerateInvoiceResponse {
   status: string;
 }
 
+/** Lightweight invoice summary for cross-domain use (e.g. client detail page). */
+export interface ClientInvoiceSummary {
+  id: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  totalAmount: number;
+  status: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class InvoiceGenerationService {
   private readonly http = inject(HttpClient);
@@ -29,5 +38,11 @@ export class InvoiceGenerationService {
 
   generateInvoice(bookingId: string): Observable<GenerateInvoiceResponse> {
     return this.http.post<GenerateInvoiceResponse>(`${this.baseUrl}/invoices`, { bookingId });
+  }
+
+  getClientInvoices(clientId: string): Observable<ClientInvoiceSummary[]> {
+    return this.http.get<ClientInvoiceSummary[]>(`${this.baseUrl}/invoices`, {
+      params: { clientId },
+    });
   }
 }
