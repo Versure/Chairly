@@ -6,7 +6,7 @@
       <form [formGroup]="form" (ngSubmit)="onSave()">
         <div class="p-6">
           <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-            {{ dialogTitle }}
+            {{ dialogTitle() }}
           </h2>
 
           <!-- Omschrijving -->
@@ -50,7 +50,7 @@
           </div>
 
           <!-- BTW-percentage (hidden for discounts — always 0%) -->
-          @if (!isDiscount) {
+          @if (!isDiscount()) {
             <div class="mb-6">
               <label
                 for="lifd-vat"

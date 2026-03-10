@@ -5,14 +5,17 @@
     </div>
   } @else if (invoice(); as inv) {
     <!-- Page header -->
-    <div class="border-b border-gray-200 bg-white px-6 py-4">
+    <div
+      class="min-h-[65px] border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
       <a
         routerLink="/facturen"
         class="print-hidden mb-2 inline-block text-sm text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
         &larr; Terug naar facturen
       </a>
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold text-gray-900">Factuur {{ inv.invoiceNumber }}</h1>
+        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+          Factuur {{ inv.invoiceNumber }}
+        </h1>
         <span [class]="inv.status | invoiceStatusBadge">
           {{ inv.status }}
         </span>
@@ -177,7 +180,7 @@
 
       <!-- Status history -->
       <div
-        class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        class="print-hidden mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Statusgeschiedenis</h2>
         <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
           <li>Aangemaakt op {{ inv.createdAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
