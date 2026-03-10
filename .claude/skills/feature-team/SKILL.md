@@ -45,8 +45,8 @@ TASKS_PATH      = .claude/tasks/{FEATURE_NAME}/tasks.json
 FEATURE_BRANCH  = feat/{FEATURE_NAME}
 BACKEND_BRANCH  = impl/{FEATURE_NAME}-backend
 FRONTEND_BRANCH = impl/{FEATURE_NAME}-frontend
-BACKEND_WT      = .worktrees/backend/
-FRONTEND_WT     = .worktrees/frontend/
+BACKEND_WT      = .worktrees/{FEATURE_NAME}/backend/
+FRONTEND_WT     = .worktrees/{FEATURE_NAME}/frontend/
 ```
 
 ### 0b — Verify we are on main
@@ -72,22 +72,23 @@ git rev-parse --verify "feat/{FEATURE_NAME}" >/dev/null 2>&1 \
 mkdir -p ".claude/tasks/{FEATURE_NAME}"
 
 # Remove stale worktrees if they exist
-[ -d ".worktrees/backend" ] \
-  && (git worktree remove --force ".worktrees/backend" 2>/dev/null || rm -rf ".worktrees/backend") \
+[ -d ".worktrees/{FEATURE_NAME}/backend" ] \
+  && (git worktree remove --force ".worktrees/{FEATURE_NAME}/backend" 2>/dev/null || rm -rf ".worktrees/{FEATURE_NAME}/backend") \
   || true
-[ -d ".worktrees/frontend" ] \
-  && (git worktree remove --force ".worktrees/frontend" 2>/dev/null || rm -rf ".worktrees/frontend") \
+[ -d ".worktrees/{FEATURE_NAME}/frontend" ] \
+  && (git worktree remove --force ".worktrees/{FEATURE_NAME}/frontend" 2>/dev/null || rm -rf ".worktrees/{FEATURE_NAME}/frontend") \
   || true
 
 # Create backend worktree
+mkdir -p ".worktrees/{FEATURE_NAME}"
 git rev-parse --verify "impl/{FEATURE_NAME}-backend" >/dev/null 2>&1 \
-  && git worktree add ".worktrees/backend" "impl/{FEATURE_NAME}-backend" \
-  || git worktree add -b "impl/{FEATURE_NAME}-backend" ".worktrees/backend" "feat/{FEATURE_NAME}"
+  && git worktree add ".worktrees/{FEATURE_NAME}/backend" "impl/{FEATURE_NAME}-backend" \
+  || git worktree add -b "impl/{FEATURE_NAME}-backend" ".worktrees/{FEATURE_NAME}/backend" "feat/{FEATURE_NAME}"
 
 # Create frontend worktree
 git rev-parse --verify "impl/{FEATURE_NAME}-frontend" >/dev/null 2>&1 \
-  && git worktree add ".worktrees/frontend" "impl/{FEATURE_NAME}-frontend" \
-  || git worktree add -b "impl/{FEATURE_NAME}-frontend" ".worktrees/frontend" "feat/{FEATURE_NAME}"
+  && git worktree add ".worktrees/{FEATURE_NAME}/frontend" "impl/{FEATURE_NAME}-frontend" \
+  || git worktree add -b "impl/{FEATURE_NAME}-frontend" ".worktrees/{FEATURE_NAME}/frontend" "feat/{FEATURE_NAME}"
 ```
 
 Log: `[Step 0 ✓] Feature: {FEATURE_NAME} | Branch: feat/{FEATURE_NAME} | Worktrees ready`
