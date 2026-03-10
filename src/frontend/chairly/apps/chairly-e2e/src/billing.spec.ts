@@ -138,7 +138,7 @@ test('clicking Markeer als verzonden updates status badge to Verzonden', async (
 
   await page.getByRole('button', { name: 'Markeer als verzonden' }).click();
 
-  await expect(page.getByText('Verzonden')).toBeVisible();
+  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
 });
 
 test('clicking Markeer als betaald updates status badge to Betaald', async ({ page }) => {
@@ -173,11 +173,11 @@ test('clicking Markeer als betaald updates status badge to Betaald', async ({ pa
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(page.getByText('Verzonden')).toBeVisible();
+  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Markeer als betaald' }).click();
 
-  await expect(page.getByText('Betaald')).toBeVisible();
+  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
 });
 
 test('Vervallen verklaren button is not shown on a paid invoice', async ({ page }) => {
@@ -202,7 +202,7 @@ test('Vervallen verklaren button is not shown on a paid invoice', async ({ page 
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(page.getByText('Betaald')).toBeVisible();
+  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Vervallen verklaren' })).toBeHidden();
   await expect(page.getByRole('button', { name: 'Markeer als verzonden' })).toBeHidden();
