@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Services;
@@ -53,11 +54,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapBillingEndpoints();
 app.MapBookingEndpoints();
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
 app.MapStaffEndpoints();
 app.MapClientEndpoints();
+app.MapRecipeEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts
