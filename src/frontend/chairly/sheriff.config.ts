@@ -27,6 +27,7 @@ export const sheriffConfig: SheriffConfig = {
 
     // chairly-lib barrel re-exports from domain layers
     'chairly-lib': [
+      'domain:billing',
       'domain:bookings',
       'domain:clients',
       'domain:services',

@@ -1,0 +1,87 @@
+<div class="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
+  <!-- Page header -->
+  <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+    <h1 class="text-xl font-semibold text-gray-900">Facturen</h1>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-auto p-6">
+    @if (isLoading()) {
+      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+    } @else if (invoices().length === 0) {
+      <p class="text-gray-500 dark:text-gray-400">Nog geen facturen beschikbaar</p>
+    } @else {
+      <div
+        class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+          <thead class="bg-gray-50 dark:bg-slate-700">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Factuurnummer
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Klant
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Datum
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Totaal
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Status
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                Acties
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
+            @for (invoice of invoices(); track invoice.id) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-slate-700">
+                <td
+                  class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ invoice.invoiceNumber }}
+                </td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {{ invoice.clientFullName }}
+                </td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {{ invoice.invoiceDate | date: 'd MMM yyyy' }}
+                </td>
+                <td
+                  class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
+                  {{ invoice.totalAmount | currency }}
+                </td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm">
+                  <span [class]="invoice.status | invoiceStatusBadge">
+                    {{ invoice.status }}
+                  </span>
+                </td>
+                <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+                  <a
+                    [routerLink]="['/facturen', invoice.id]"
+                    class="font-medium text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                    Bekijken
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

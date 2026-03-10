@@ -1,11 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import { ClientResponse, CreateClientRequest, UpdateClientRequest } from '../models';
+import {
+  ClientBookingSummary,
+  ClientResponse,
+  CreateClientRequest,
+  UpdateClientRequest,
+} from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientApiService {
@@ -26,5 +31,11 @@ export class ClientApiService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/clients/${id}`);
+  }
+
+  getClientBookings(clientId: string): Observable<ClientBookingSummary[]> {
+    return this.http
+      .get<(ClientBookingSummary & { clientId: string })[]>(`${this.baseUrl}/bookings`)
+      .pipe(map((bookings) => bookings.filter((b) => b.clientId === clientId)));
   }
 }
