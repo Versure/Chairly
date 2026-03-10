@@ -1,0 +1,131 @@
+<div class="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
+  <!-- Page header -->
+  <div
+    class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
+    <div class="flex items-center gap-4">
+      <a
+        routerLink="/klanten"
+        class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+        &larr; Terug naar klanten
+      </a>
+      @if (client()) {
+        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
+          {{ client()!.lastName }}, {{ client()!.firstName }}
+        </h1>
+      }
+    </div>
+    @if (client()) {
+      <button
+        type="button"
+        class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+        (click)="onEditClient()">
+        Bewerken
+      </button>
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-auto p-6">
+    @if (isLoadingClient()) {
+      <chairly-loading-indicator message="Klant laden..." />
+    } @else if (error()) {
+      <p class="text-sm text-red-600 dark:text-red-400">{{ error() }}</p>
+    } @else if (client()) {
+      <!-- Client info -->
+      <div
+        class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Klantgegevens</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="font-medium text-gray-500 dark:text-gray-400">Voornaam:</span>
+            <span class="ml-2 text-gray-900 dark:text-white">{{ client()!.firstName }}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-500 dark:text-gray-400">Achternaam:</span>
+            <span class="ml-2 text-gray-900 dark:text-white">{{ client()!.lastName }}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-500 dark:text-gray-400">E-mailadres:</span>
+            <span class="ml-2 text-gray-900 dark:text-white">{{
+              client()!.email ?? '&mdash;'
+            }}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-500 dark:text-gray-400">Telefoonnummer:</span>
+            <span class="ml-2 text-gray-900 dark:text-white">{{
+              client()!.phoneNumber ?? '&mdash;'
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed bookings without a recipe -->
+      <div
+        class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
+          Afgeronde boekingen
+        </h2>
+        @if (isLoadingBookings()) {
+          <chairly-loading-indicator message="Boekingen laden..." />
+        } @else if (completedBookingsWithoutRecipe().length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Geen afgeronde boekingen zonder recept.
+          </p>
+        } @else {
+          <div class="space-y-3">
+            @for (booking of completedBookingsWithoutRecipe(); track booking.id) {
+              <div
+                class="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 p-3 dark:border-slate-600 dark:bg-slate-700/50">
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ booking.startTime | date: 'd MMMM yyyy' }}
+                  </p>
+                  @if (booking.services.length > 0) {
+                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                      @for (
+                        service of booking.services;
+                        track service.serviceName;
+                        let last = $last
+                      ) {
+                        {{ service.serviceName }}
+                        @if (!last) {
+                          ,
+                        }
+                      }
+                    </p>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="rounded-md bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
+                  (click)="onAddRecipe(booking)">
+                  Recept toevoegen
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Recipe history -->
+      <!-- TODO: [canEdit] is hardcoded to true as a placeholder. This will be connected to auth
+           context so that StaffMember role can only edit their own recipes (per spec business rules). -->
+      <chairly-client-recipe-history
+        [recipes]="clientRecipes()"
+        [isLoading]="isLoadingRecipes()"
+        [canEdit]="true"
+        (editRecipe)="onEditRecipe($event)" />
+    }
+  </div>
+</div>
+
+<!-- Client form dialog (edit) -->
+<chairly-client-form-dialog #clientFormDialog [client]="client()" (saved)="onClientSaved($event)" />
+
+<!-- Recipe form dialog — always in DOM to avoid viewChild timing issues -->
+<chairly-recipe-form
+  #recipeFormRef
+  [bookingId]="activeBookingId()"
+  [existingRecipe]="selectedRecipeForEdit()"
+  (saved)="onRecipeSaved()"
+  (cancelled)="onRecipeCancelled()" />

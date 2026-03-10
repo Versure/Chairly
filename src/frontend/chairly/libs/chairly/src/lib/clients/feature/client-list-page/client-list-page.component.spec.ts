@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { of, throwError } from 'rxjs';
 
@@ -40,6 +41,7 @@ describe('ClientListPageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [ClientListPageComponent],
       providers: [
+        provideRouter([]),
         ClientStore,
         { provide: ClientApiService, useValue: mockApi },
         { provide: API_BASE_URL, useValue: 'https://test' },

@@ -1,0 +1,350 @@
+import { expect, test } from './fixtures';
+
+const mockInvoiceSummary = {
+  id: 'inv-1',
+  invoiceNumber: '2026-0001',
+  invoiceDate: '2026-03-10',
+  bookingId: 'bk-1',
+  clientId: 'cl-1',
+  clientFullName: 'Jan de Vries',
+  totalAmount: 65,
+  status: 'Concept',
+  createdAtUtc: '2026-03-10T10:00:00Z',
+  sentAtUtc: null,
+  paidAtUtc: null,
+  voidedAtUtc: null,
+};
+
+const mockInvoiceDetail = {
+  ...mockInvoiceSummary,
+  lineItems: [
+    {
+      id: 'li-1',
+      description: 'Herenknippen',
+      quantity: 1,
+      unitPrice: 25,
+      totalPrice: 25,
+      sortOrder: 0,
+    },
+    {
+      id: 'li-2',
+      description: 'Baard trimmen',
+      quantity: 1,
+      unitPrice: 40,
+      totalPrice: 40,
+      sortOrder: 1,
+    },
+  ],
+};
+
+async function setupInvoiceListMocks(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+}
+
+async function setupInvoiceDetailMocks(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockInvoiceDetail });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+}
+
+test('invoice list page shows heading and empty state when no invoices', async ({ page }) => {
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen');
+
+  await expect(page.getByRole('heading', { name: 'Facturen', level: 1 })).toBeVisible();
+  await expect(page.getByText('Nog geen facturen beschikbaar')).toBeVisible();
+});
+
+test('invoice list page shows invoices in a table with status badge', async ({ page }) => {
+  await setupInvoiceListMocks(page);
+  await page.goto('/facturen');
+
+  await expect(page.getByRole('table')).toBeVisible();
+  await expect(page.getByText('2026-0001')).toBeVisible();
+  await expect(page.getByText('Jan de Vries')).toBeVisible();
+  await expect(page.getByText('Concept')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bekijken' })).toBeVisible();
+});
+
+test('clicking Bekijken navigates to invoice detail page', async ({ page }) => {
+  await setupInvoiceListMocks(page);
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen');
+
+  await page.getByRole('link', { name: 'Bekijken' }).click();
+
+  await expect(page).toHaveURL(/\/facturen\/inv-1/);
+  await expect(page.getByRole('heading', { name: /Factuur 2026-0001/ })).toBeVisible();
+});
+
+test('invoice detail page shows line items and status history', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByText('Baard trimmen')).toBeVisible();
+  await expect(page.getByText('Aangemaakt op')).toBeVisible();
+  await expect(page.getByText('Jan de Vries')).toBeVisible();
+});
+
+test('clicking Markeer als verzonden updates status badge to Verzonden', async ({ page }) => {
+  const sentInvoice = {
+    ...mockInvoiceDetail,
+    status: 'Verzonden',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+  };
+
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockInvoiceDetail });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices/inv-1/send', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: sentInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+  await expect(page.getByText('Concept')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Markeer als verzonden' }).click();
+
+  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+});
+
+test('clicking Markeer als betaald updates status badge to Betaald', async ({ page }) => {
+  const sentInvoice = {
+    ...mockInvoiceDetail,
+    status: 'Verzonden',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+  };
+  const paidInvoice = {
+    ...sentInvoice,
+    status: 'Betaald',
+    paidAtUtc: '2026-03-10T14:00:00Z',
+  };
+
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: sentInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices/inv-1/pay', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: paidInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Markeer als betaald' }).click();
+
+  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
+});
+
+test('Vervallen verklaren button is not shown on a paid invoice', async ({ page }) => {
+  const paidInvoice = {
+    ...mockInvoiceDetail,
+    status: 'Betaald',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+    paidAtUtc: '2026-03-10T14:00:00Z',
+  };
+
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: paidInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+  await expect(page.getByText('Betaald', { exact: true })).toBeVisible();
+
+  await expect(page.getByRole('button', { name: 'Vervallen verklaren' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Markeer als verzonden' })).toBeHidden();
+});
+
+test('back link navigates to invoice list', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await page.getByRole('link', { name: /Terug naar facturen/ }).click();
+
+  await expect(page).toHaveURL(/\/facturen$/);
+});
+
+// --- F4: Generate invoice from completed booking ---
+
+const mockCompletedBooking = {
+  id: 'booking-1',
+  clientId: 'cl-1',
+  staffMemberId: 'staff-1',
+  startTime: '2026-03-10T10:00:00Z',
+  endTime: '2026-03-10T10:30:00Z',
+  notes: null,
+  status: 'Completed',
+  services: [
+    {
+      serviceId: 'svc-1',
+      serviceName: 'Herenknippen',
+      duration: '00:30:00',
+      price: 25,
+      sortOrder: 0,
+    },
+  ],
+  createdAtUtc: '2026-03-08T08:00:00Z',
+  updatedAtUtc: null,
+  confirmedAtUtc: '2026-03-08T09:00:00Z',
+  startedAtUtc: '2026-03-10T10:00:00Z',
+  completedAtUtc: '2026-03-10T10:30:00Z',
+  cancelledAtUtc: null,
+  noShowAtUtc: null,
+};
+
+const mockGeneratedInvoice = {
+  id: 'inv-generated',
+  invoiceNumber: '2026-0002',
+  invoiceDate: '2026-03-10',
+  bookingId: 'booking-1',
+  clientId: 'cl-1',
+  clientFullName: 'Jan de Vries',
+  totalAmount: 25,
+  status: 'Concept',
+  createdAtUtc: '2026-03-10T10:35:00Z',
+  sentAtUtc: null,
+  paidAtUtc: null,
+  voidedAtUtc: null,
+};
+
+async function setupBookingPageMocks(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/bookings*', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockCompletedBooking] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: [{ id: 'cl-1', firstName: 'Jan', lastName: 'de Vries' }] });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: [{ id: 'staff-1', firstName: 'Anna', lastName: 'de Vries' }] });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({
+      json: [{ id: 'svc-1', name: 'Herenknippen', duration: '00:30:00', price: 25 }],
+    });
+  });
+}
+
+test('completed booking shows Factuur genereren button', async ({ page }) => {
+  await setupBookingPageMocks(page);
+  await page.goto('/boekingen');
+
+  await expect(page.getByRole('button', { name: 'Factuur genereren' })).toBeVisible();
+});
+
+test('clicking Factuur genereren shows success message and Factuur bekijken link', async ({
+  page,
+}) => {
+  await setupBookingPageMocks(page);
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: mockGeneratedInvoice, status: 201 });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/boekingen');
+  await page.getByRole('button', { name: 'Factuur genereren' }).click();
+
+  await expect(page.getByText('Factuur succesvol aangemaakt')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Factuur bekijken' })).toBeVisible();
+});
+
+test('clicking Factuur bekijken navigates to the generated invoice detail page', async ({
+  page,
+}) => {
+  await setupBookingPageMocks(page);
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: mockGeneratedInvoice, status: 201 });
+    }
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockGeneratedInvoice] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices/inv-generated', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: {
+          ...mockGeneratedInvoice,
+          lineItems: [
+            {
+              id: 'li-gen-1',
+              description: 'Herenknippen',
+              quantity: 1,
+              unitPrice: 25,
+              totalPrice: 25,
+              sortOrder: 0,
+            },
+          ],
+        },
+      });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/boekingen');
+  await page.getByRole('button', { name: 'Factuur genereren' }).click();
+  await expect(page.getByText('Factuur succesvol aangemaakt')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Factuur bekijken' }).click();
+
+  await expect(page).toHaveURL(/\/facturen\/inv-generated/);
+  await expect(page.getByRole('heading', { name: /Factuur 2026-0002/ })).toBeVisible();
+});
