@@ -55,9 +55,10 @@ esac
 # Run quick build check in the appropriate worktree
 # ---------------------------------------------------------------------------
 if [[ "$LAYER" == "backend" ]]; then
-  WORKTREE="${REPO_ROOT}/.worktrees/backend"
+  # Find the first active backend worktree under .worktrees/*/backend
+  WORKTREE=$(find "${REPO_ROOT}/.worktrees" -maxdepth 2 -name "backend" -type d 2>/dev/null | head -1)
 
-  if [[ ! -d "$WORKTREE" ]]; then
+  if [[ -z "$WORKTREE" || ! -d "$WORKTREE" ]]; then
     exit 0
   fi
 
@@ -74,9 +75,10 @@ if [[ "$LAYER" == "backend" ]]; then
   fi
 
 elif [[ "$LAYER" == "frontend" ]]; then
-  WORKTREE="${REPO_ROOT}/.worktrees/frontend"
+  # Find the first active frontend worktree under .worktrees/*/frontend
+  WORKTREE=$(find "${REPO_ROOT}/.worktrees" -maxdepth 2 -name "frontend" -type d 2>/dev/null | head -1)
 
-  if [[ ! -d "$WORKTREE" ]]; then
+  if [[ -z "$WORKTREE" || ! -d "$WORKTREE" ]]; then
     exit 0
   fi
 
