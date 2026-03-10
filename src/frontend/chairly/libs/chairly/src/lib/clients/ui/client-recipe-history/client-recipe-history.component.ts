@@ -9,13 +9,15 @@ import {
   signal,
 } from '@angular/core';
 
+import { LoadingIndicatorComponent } from '@org/shared-lib';
+
 import { ClientRecipeSummary } from '../../models';
 
 @Component({
   selector: 'chairly-client-recipe-history',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [DatePipe, LoadingIndicatorComponent],
   templateUrl: './client-recipe-history.component.html',
 })
 export class ClientRecipeHistoryComponent {

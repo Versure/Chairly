@@ -58,7 +58,7 @@
           Afgeronde boekingen
         </h2>
         @if (isLoadingBookings()) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">Laden...</p>
+          <chairly-loading-indicator message="Boekingen laden..." />
         } @else if (completedBookingsWithoutRecipe().length === 0) {
           <p class="text-sm text-gray-500 dark:text-gray-400">
             Geen afgeronde boekingen zonder recept.
