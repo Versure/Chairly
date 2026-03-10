@@ -67,7 +67,7 @@ test('navigates to /boekingen and shows the Boekingen heading and table with nam
 
   await expect(page.getByRole('heading', { name: 'Boekingen', level: 1 })).toBeVisible();
   await expect(page.getByRole('table')).toBeVisible();
-  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
   // Should display client and staff names instead of IDs
   await expect(page.getByRole('cell', { name: 'Jan Jansen' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Anna de Vries' })).toBeVisible();
@@ -147,7 +147,7 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   });
 
   await page.goto('/boekingen');
-  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
 
@@ -159,7 +159,7 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
-  await expect(page.getByText('Damesknippen')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Damesknippen' })).toBeVisible();
 });
 
 test('clicking Bevestigen on a Scheduled booking calls the confirm API', async ({ page }) => {
@@ -243,7 +243,7 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
   });
 
   await page.goto('/boekingen');
-  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
 
   // Click the booking row
   await page.locator('tbody tr').first().click();
@@ -267,7 +267,7 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
   expect(putCalled).toBe(true);
 
   // Verify the list refreshes — the table should still show Herenknippen from the refreshed GET
-  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
   // Dialog should be closed
   await expect(dialog).toBeHidden();
 });
@@ -312,8 +312,8 @@ test('clicking Rooster toggle switches to schedule view and back to Lijst', asyn
   // Table should no longer be visible, schedule content should appear
   await expect(page.getByRole('table')).toBeHidden();
   // Booking data should still be visible in schedule view
-  await expect(page.getByText('Herenknippen')).toBeVisible();
-  await expect(page.getByText('Jan Jansen')).toBeVisible();
+  await expect(page.getByText('Herenknippen').first()).toBeVisible();
+  await expect(page.getByText('Jan Jansen').first()).toBeVisible();
 
   // Switch back to list view
   await page.getByRole('button', { name: 'Lijst' }).click();
