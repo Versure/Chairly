@@ -20,6 +20,7 @@ import { ClientResponse } from '../../models';
 export class ClientTableComponent {
   readonly clients: InputSignal<ClientResponse[]> = input.required<ClientResponse[]>();
 
+  readonly rowClick: OutputEmitterRef<ClientResponse> = output<ClientResponse>();
   readonly edit: OutputEmitterRef<ClientResponse> = output<ClientResponse>();
   readonly delete: OutputEmitterRef<ClientResponse> = output<ClientResponse>();
 }

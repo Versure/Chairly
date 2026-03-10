@@ -23,6 +23,7 @@
     } @else {
       <chairly-client-table
         [clients]="clients()"
+        (rowClick)="onRowClick($event)"
         (edit)="onEdit($event)"
         (delete)="onDelete($event)" />
     }

@@ -10,13 +10,19 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { LoadingIndicatorComponent } from '@org/shared-lib';
 
 import { ClientApiService, RecipesApiService } from '../../data-access';
-import { ClientBookingSummary, ClientRecipeSummary, ClientResponse, Recipe } from '../../models';
-import { ClientRecipeHistoryComponent } from '../../ui';
+import {
+  ClientBookingSummary,
+  ClientRecipeSummary,
+  ClientResponse,
+  CreateClientRequest,
+  Recipe,
+} from '../../models';
+import { ClientFormDialogComponent, ClientRecipeHistoryComponent } from '../../ui';
 import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
 
 @Component({
@@ -27,6 +33,7 @@ import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
     DatePipe,
     RouterLink,
     LoadingIndicatorComponent,
+    ClientFormDialogComponent,
     ClientRecipeHistoryComponent,
     RecipeFormComponent,
   ],
@@ -34,11 +41,13 @@ import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
 })
 export class ClientDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly clientApi = inject(ClientApiService);
   private readonly recipesApi = inject(RecipesApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly recipeFormRef = viewChild<RecipeFormComponent>('recipeFormRef');
+  private readonly clientFormDialogRef = viewChild<ClientFormDialogComponent>('clientFormDialog');
 
   protected readonly client = signal<ClientResponse | null>(null);
   protected readonly clientRecipes = signal<ClientRecipeSummary[]>([]);
@@ -66,8 +75,14 @@ export class ClientDetailPageComponent implements OnInit {
       .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
   });
 
+  private readonly pendingBookingId = signal<string | null>(null);
+
   ngOnInit(): void {
     const clientId = this.route.snapshot.paramMap.get('clientId') ?? '';
+    const bookingIdParam = this.route.snapshot.queryParamMap.get('bookingId');
+    if (bookingIdParam) {
+      this.pendingBookingId.set(bookingIdParam);
+    }
     this.loadClient(clientId);
     this.loadRecipes(clientId);
     this.loadBookings(clientId);
@@ -103,6 +118,7 @@ export class ClientDetailPageComponent implements OnInit {
         next: (recipes) => {
           this.clientRecipes.set(recipes);
           this.isLoadingRecipes.set(false);
+          this.tryAutoOpenRecipeForm();
         },
         error: () => {
           this.isLoadingRecipes.set(false);
@@ -119,11 +135,32 @@ export class ClientDetailPageComponent implements OnInit {
         next: (bookings) => {
           this.clientBookings.set(bookings);
           this.isLoadingBookings.set(false);
+          this.tryAutoOpenRecipeForm();
         },
         error: () => {
           this.isLoadingBookings.set(false);
         },
       });
+  }
+
+  private tryAutoOpenRecipeForm(): void {
+    const bookingId = this.pendingBookingId();
+    if (!bookingId) {
+      return;
+    }
+    if (this.isLoadingBookings() || this.isLoadingRecipes()) {
+      return;
+    }
+    const eligibleBooking = this.completedBookingsWithoutRecipe().find((b) => b.id === bookingId);
+    if (eligibleBooking) {
+      this.pendingBookingId.set(null);
+      this.onAddRecipe(eligibleBooking);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true,
+      });
+    }
   }
 
   protected onAddRecipe(booking: ClientBookingSummary): void {
@@ -161,5 +198,30 @@ export class ClientDetailPageComponent implements OnInit {
   protected onRecipeCancelled(): void {
     this.selectedRecipeForEdit.set(null);
     this.activeBookingId.set('');
+  }
+
+  protected onEditClient(): void {
+    const clientData = this.client();
+    if (clientData) {
+      this.clientFormDialogRef()?.open(clientData);
+    }
+  }
+
+  protected onClientSaved(request: CreateClientRequest): void {
+    const clientData = this.client();
+    if (!clientData) {
+      return;
+    }
+    this.clientApi
+      .update(clientData.id, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.client.set(updated);
+        },
+        error: () => {
+          this.error.set('Er is een fout opgetreden bij het bijwerken van de klant.');
+        },
+      });
   }
 }

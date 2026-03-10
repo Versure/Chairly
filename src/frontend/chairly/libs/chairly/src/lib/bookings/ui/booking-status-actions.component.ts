@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, OutputEmitterRef } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { Booking } from '../models';
 
@@ -11,6 +12,7 @@ export interface BookingStatusAction {
   selector: 'chairly-booking-status-actions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink],
   templateUrl: './booking-status-actions.component.html',
 })
 export class BookingStatusActionsComponent {
