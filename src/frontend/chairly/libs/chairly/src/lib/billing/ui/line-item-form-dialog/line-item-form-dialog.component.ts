@@ -49,12 +49,16 @@ export class LineItemFormDialogComponent {
     return this.mode === 'surcharge' ? 'Toeslag toevoegen' : 'Korting toevoegen';
   }
 
+  protected get isDiscount(): boolean {
+    return this.mode === 'discount';
+  }
+
   open(mode: LineItemDialogMode): void {
     this.mode = mode;
     this.form.reset({
       description: '',
       amount: 0,
-      vatPercentage: 21,
+      vatPercentage: mode === 'discount' ? 0 : 21,
     });
     this.document.body.style.overflow = 'hidden';
     this.dialogRef().nativeElement.showModal();

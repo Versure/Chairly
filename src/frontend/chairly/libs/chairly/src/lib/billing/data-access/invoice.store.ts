@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { take } from 'rxjs';
 
-import { AddLineItemRequest, Invoice, InvoiceSummary } from '../models';
+import { AddLineItemRequest, Invoice, InvoiceFilterParams, InvoiceSummary } from '../models';
 import { InvoiceApiService } from './invoice-api.service';
 
 export interface InvoiceState {
@@ -53,10 +53,10 @@ export const InvoiceStore = signalStore(
     const invoiceApi = inject(InvoiceApiService);
 
     return {
-      loadInvoices(): void {
+      loadInvoices(filters?: InvoiceFilterParams): void {
         patchState(store, { isLoading: true, error: null });
         invoiceApi
-          .getInvoices()
+          .getInvoices(filters)
           .pipe(take(1))
           .subscribe({
             next: (invoices) => patchState(store, { invoices, isLoading: false }),

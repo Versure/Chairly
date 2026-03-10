@@ -4,12 +4,89 @@
     <h1 class="text-xl font-semibold text-gray-900">Facturen</h1>
   </div>
 
+  <!-- Filter bar -->
+  <div class="border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
+    <div class="flex flex-wrap items-end gap-4">
+      <!-- Klantnaam -->
+      <div class="flex flex-col">
+        <label
+          for="filter-client-name"
+          class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
+          >Klantnaam</label
+        >
+        <input
+          id="filter-client-name"
+          type="text"
+          placeholder="Zoek op klantnaam..."
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          [ngModel]="filterClientName()"
+          (ngModelChange)="filterClientName.set($event)" />
+      </div>
+
+      <!-- Datum van -->
+      <div class="flex flex-col">
+        <label
+          for="filter-from-date"
+          class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
+          >Datum van</label
+        >
+        <input
+          id="filter-from-date"
+          type="date"
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          [ngModel]="filterFromDate()"
+          (ngModelChange)="filterFromDate.set($event)" />
+      </div>
+
+      <!-- Datum tot -->
+      <div class="flex flex-col">
+        <label
+          for="filter-to-date"
+          class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
+          >Datum tot</label
+        >
+        <input
+          id="filter-to-date"
+          type="date"
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          [ngModel]="filterToDate()"
+          (ngModelChange)="filterToDate.set($event)" />
+      </div>
+
+      <!-- Status -->
+      <div class="flex flex-col">
+        <label for="filter-status" class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
+          >Status</label
+        >
+        <select
+          id="filter-status"
+          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)">
+          <option value="">Alle</option>
+          <option value="Concept">Concept</option>
+          <option value="Verzonden">Verzonden</option>
+          <option value="Betaald">Betaald</option>
+          <option value="Vervallen">Vervallen</option>
+        </select>
+      </div>
+
+      <!-- Filters wissen -->
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+        (click)="onClearFilters()">
+        Filters wissen
+      </button>
+    </div>
+  </div>
+
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {
       <chairly-loading-indicator message="Facturen laden..." />
     } @else if (invoices().length === 0) {
-      <p class="text-gray-500 dark:text-gray-400">Nog geen facturen beschikbaar</p>
+      <p class="text-gray-500 dark:text-gray-400">Geen facturen gevonden</p>
     } @else {
       <div
         class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -50,7 +127,9 @@
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
             @for (invoice of invoices(); track invoice.id) {
-              <tr class="hover:bg-gray-50 dark:hover:bg-slate-700">
+              <tr
+                class="cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700"
+                (click)="onRowClick(invoice)">
                 <td
                   class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                   {{ invoice.invoiceNumber }}

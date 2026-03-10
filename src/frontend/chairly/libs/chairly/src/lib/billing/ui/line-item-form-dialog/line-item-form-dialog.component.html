@@ -49,27 +49,29 @@
             }
           </div>
 
-          <!-- BTW-percentage -->
-          <div class="mb-6">
-            <label
-              for="lifd-vat"
-              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >BTW-percentage</label
-            >
-            <input
-              id="lifd-vat"
-              formControlName="vatPercentage"
-              type="number"
-              min="0"
-              max="100"
-              step="1"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
-            @if (form.controls.vatPercentage.invalid && form.controls.vatPercentage.touched) {
-              <p class="mt-1 text-xs text-red-600 dark:text-red-400">
-                BTW-percentage is verplicht (0-100%).
-              </p>
-            }
-          </div>
+          <!-- BTW-percentage (hidden for discounts — always 0%) -->
+          @if (!isDiscount) {
+            <div class="mb-6">
+              <label
+                for="lifd-vat"
+                class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >BTW-percentage</label
+              >
+              <input
+                id="lifd-vat"
+                formControlName="vatPercentage"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+              @if (form.controls.vatPercentage.invalid && form.controls.vatPercentage.touched) {
+                <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                  BTW-percentage is verplicht (0-100%).
+                </p>
+              }
+            </div>
+          }
 
           <!-- Actions -->
           <div class="flex justify-end gap-3">

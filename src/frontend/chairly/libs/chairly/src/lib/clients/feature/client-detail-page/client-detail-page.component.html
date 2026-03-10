@@ -107,6 +107,72 @@
         [isLoading]="isLoadingRecipes()"
         [canEdit]="true"
         (editRecipe)="onEditRecipe($event)" />
+
+      <!-- Client invoices -->
+      <div
+        class="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Facturen</h2>
+        @if (isLoadingInvoices()) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Laden...</p>
+        } @else if (clientInvoices().length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400">Nog geen facturen voor deze klant.</p>
+        } @else {
+          <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+              <thead class="bg-gray-50 dark:bg-slate-700">
+                <tr>
+                  <th
+                    scope="col"
+                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                    Factuurnummer
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                    Datum
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                    Totaal
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
+                @for (invoice of clientInvoices(); track invoice.id) {
+                  <tr>
+                    <td class="whitespace-nowrap px-4 py-3 text-sm">
+                      <a
+                        [routerLink]="['/facturen', invoice.id]"
+                        class="font-medium text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+                        {{ invoice.invoiceNumber }}
+                      </a>
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                      {{ invoice.invoiceDate | date: 'd MMM yyyy' }}
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500 dark:text-gray-300">
+                      {{ invoice.totalAmount | currency }}
+                    </td>
+                    <td
+                      class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
+                      {{ invoice.status }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
     }
   </div>
 </div>

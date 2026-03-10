@@ -1,4 +1,4 @@
-export type { GenerateInvoiceResponse } from './lib/data-access';
+export type { ClientInvoiceSummary, GenerateInvoiceResponse } from './lib/data-access';
 export { InvoiceGenerationService } from './lib/data-access';
 export {
   ConfirmationDialogComponent,

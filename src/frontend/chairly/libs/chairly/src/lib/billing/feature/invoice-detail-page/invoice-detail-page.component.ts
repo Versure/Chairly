@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,10 +29,12 @@ import { LineItemDialogMode, LineItemFormDialogComponent } from '../../ui';
     InvoiceStatusBadgePipe,
   ],
   templateUrl: './invoice-detail-page.component.html',
+  styleUrl: './invoice-detail-page.component.scss',
 })
 export class InvoiceDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly invoiceStore = inject(InvoiceStore);
+  private readonly document = inject(DOCUMENT);
 
   private readonly lineItemDialog = viewChild<LineItemFormDialogComponent>('lineItemDialog');
 
@@ -42,6 +44,16 @@ export class InvoiceDetailPageComponent implements OnInit {
   protected readonly isDraft = computed<boolean>(() => {
     const inv = this.invoice();
     return inv !== null && inv.status === 'Concept';
+  });
+
+  protected readonly isEditable = computed<boolean>(() => {
+    const inv = this.invoice();
+    return inv !== null && (inv.status === 'Concept' || inv.status === 'Verzonden');
+  });
+
+  protected readonly isSent = computed<boolean>(() => {
+    const inv = this.invoice();
+    return inv !== null && inv.status === 'Verzonden';
   });
 
   protected readonly canSend = computed<boolean>(() => {
@@ -109,5 +121,9 @@ export class InvoiceDetailPageComponent implements OnInit {
     if (inv) {
       this.invoiceStore.removeLineItem(inv.id, lineItemId);
     }
+  }
+
+  protected onPrint(): void {
+    this.document.defaultView?.print();
   }
 }
