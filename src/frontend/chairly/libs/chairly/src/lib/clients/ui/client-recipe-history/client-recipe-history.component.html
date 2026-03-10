@@ -2,7 +2,7 @@
   <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Behandelgeschiedenis</h2>
 
   @if (isLoading()) {
-    <p class="text-sm text-gray-500 dark:text-gray-400">Laden...</p>
+    <chairly-loading-indicator message="Behandelgeschiedenis laden..." />
   } @else if (recipes().length === 0) {
     <p class="text-sm text-gray-500 dark:text-gray-400">Nog geen behandelrecords voor deze klant</p>
   } @else {
