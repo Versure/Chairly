@@ -1,3 +1,4 @@
+using System.Globalization;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
@@ -19,9 +20,11 @@ internal sealed class GetInvoicesListHandler(ChairlyDbContext db) : IRequestHand
 
         if (!string.IsNullOrWhiteSpace(query?.ClientName))
         {
-            var clientName = query.ClientName.ToUpperInvariant();
+            var clientName = query.ClientName.ToUpper(CultureInfo.InvariantCulture);
 #pragma warning disable CA1862 // EF Core cannot translate Contains(string, StringComparison) to SQL
-            joinedQuery = joinedQuery.Where(x => x.ClientFullName.ToUpperInvariant().Contains(clientName));
+#pragma warning disable CA1304, CA1311, MA0011 // ToUpper() without culture is required for EF Core SQL translation (UPPER())
+            joinedQuery = joinedQuery.Where(x => x.ClientFullName.ToUpper().Contains(clientName));
+#pragma warning restore CA1304, CA1311, MA0011
 #pragma warning restore CA1862
         }
 
