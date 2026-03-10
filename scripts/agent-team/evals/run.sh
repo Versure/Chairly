@@ -34,6 +34,38 @@ require_exec() {
   fi
 }
 
+require_token() {
+  local file="$1"
+  local token="$2"
+  if ! grep -Fq "$token" "$file"; then
+    fail "$file: missing required token '$token'"
+  fi
+}
+
+extract_context_keys() {
+  local file="$1"
+  awk '
+    $0 == "## Inputs (from CONTEXT block)" { in_block=1; next }
+    in_block && /^## / { exit }
+    in_block && match($0, /`([^`]+)`/, m) { print m[1] }
+  ' "$file"
+}
+
+check_context_keys() {
+  local phase_file="$1"
+  local lead_file="$2"
+  mapfile -t keys < <(extract_context_keys "$phase_file")
+  if [[ ${#keys[@]} -eq 0 ]]; then
+    warn "$phase_file: no CONTEXT inputs found"
+    return 0
+  fi
+  for key in "${keys[@]}"; do
+    if ! grep -Fq "${key}:" "$lead_file"; then
+      fail "$phase_file: CONTEXT key '${key}' not found in ${lead_file}"
+    fi
+  done
+}
+
 if ! command -v jq >/dev/null 2>&1; then
   fail "jq is required for evals but is not installed."
   exit 1
@@ -83,6 +115,11 @@ else
     grep -q "^name:" "$skill" || fail "$skill: missing 'name' in front matter"
     grep -q "^description:" "$skill" || fail "$skill: missing 'description' in front matter"
     grep -q "^user-invocable:" "$skill" || fail "$skill: missing 'user-invocable' in front matter"
+    skill_name="$(awk -F': ' '/^name:/{print $2; exit}' "$skill")"
+    skill_dir="$(basename "$(dirname "$skill")")"
+    if [[ -n "$skill_name" && "$skill_name" != "$skill_dir" ]]; then
+      fail "$skill: front matter name '$skill_name' does not match folder '$skill_dir'"
+    fi
   done
 fi
 
@@ -99,6 +136,35 @@ require_file ".claude/skills/feature-team/phase-5-merge.md"
 require_file ".claude/skills/rework-team/SKILL.md"
 require_file ".claude/skills/rework-team/phase-rework-backend.md"
 require_file ".claude/skills/rework-team/phase-rework-frontend.md"
+
+# ---------------------------------------------------------------------------
+# Skill contract checks (inputs + outputs)
+# ---------------------------------------------------------------------------
+declare -a output_contracts=(
+  ".claude/skills/feature-team/phase-0-spec.md|SPEC-COMPLETE"
+  ".claude/skills/feature-team/phase-1-backend.md|BACKEND-IMPL-COMPLETE"
+  ".claude/skills/feature-team/phase-2-frontend.md|FRONTEND-IMPL-COMPLETE"
+  ".claude/skills/feature-team/phase-3-backend-review.md|BACKEND-REVIEW-RESULT"
+  ".claude/skills/feature-team/phase-3-frontend-review.md|FRONTEND-REVIEW-RESULT"
+  ".claude/agents/chairly-backend-qa.md|BACKEND-QA-RESULT"
+  ".claude/agents/chairly-frontend-qa.md|FRONTEND-QA-RESULT"
+  ".claude/skills/rework-team/phase-rework-backend.md|BACKEND-REWORK-COMPLETE"
+  ".claude/skills/rework-team/phase-rework-frontend.md|FRONTEND-REWORK-COMPLETE"
+)
+
+for contract in "${output_contracts[@]}"; do
+  file="${contract%%|*}"
+  token="${contract##*|}"
+  require_token "$file" "$token"
+done
+
+check_context_keys ".claude/skills/feature-team/phase-0-spec.md" ".claude/skills/feature-team/SKILL.md"
+check_context_keys ".claude/skills/feature-team/phase-1-backend.md" ".claude/skills/feature-team/SKILL.md"
+check_context_keys ".claude/skills/feature-team/phase-2-frontend.md" ".claude/skills/feature-team/SKILL.md"
+check_context_keys ".claude/skills/feature-team/phase-3-backend-review.md" ".claude/skills/feature-team/SKILL.md"
+check_context_keys ".claude/skills/feature-team/phase-3-frontend-review.md" ".claude/skills/feature-team/SKILL.md"
+check_context_keys ".claude/skills/rework-team/phase-rework-backend.md" ".claude/skills/rework-team/SKILL.md"
+check_context_keys ".claude/skills/rework-team/phase-rework-frontend.md" ".claude/skills/rework-team/SKILL.md"
 
 # ---------------------------------------------------------------------------
 # Docs alignment checks
