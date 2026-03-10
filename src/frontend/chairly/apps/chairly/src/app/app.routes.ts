@@ -9,6 +9,10 @@ export const appRoutes: Route[] = [
     component: ShellComponent,
     children: [
       {
+        path: 'boekingen',
+        loadChildren: () => import('@org/chairly-lib').then((m) => m.bookingsRoutes),
+      },
+      {
         path: 'diensten',
         loadChildren: () => import('@org/chairly-lib').then((m) => m.servicesRoutes),
       },

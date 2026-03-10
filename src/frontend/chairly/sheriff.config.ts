@@ -26,7 +26,13 @@ export const sheriffConfig: SheriffConfig = {
     root: ['chairly-lib', 'shared'],
 
     // chairly-lib barrel re-exports from domain layers
-    'chairly-lib': ['domain:clients', 'domain:services', 'domain:staff', 'shared'],
+    'chairly-lib': [
+      'domain:bookings',
+      'domain:clients',
+      'domain:services',
+      'domain:staff',
+      'shared',
+    ],
 
     // Domain isolation: domains cannot depend on each other
     'domain:*': [sameTag, 'shared'],
@@ -48,7 +54,7 @@ export const sheriffConfig: SheriffConfig = {
     ],
     'layer:ui': ['layer:models', 'layer:pipes', 'layer:util', 'shared'],
     'layer:data-access': ['layer:models', 'layer:util', 'shared'],
-    'layer:pipes': ['layer:util'],
+    'layer:pipes': ['layer:models', 'layer:util'],
     'layer:models': noDependencies,
     'layer:util': noDependencies,
 

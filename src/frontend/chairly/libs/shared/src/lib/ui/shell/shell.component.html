@@ -46,6 +46,15 @@
       <ul class="flex-1 px-2 py-4 space-y-1">
         <li>
           <a
+            routerLink="/boekingen"
+            routerLinkActive="bg-primary-600"
+            (click)="closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:bg-primary-600 transition-colors">
+            Boekingen
+          </a>
+        </li>
+        <li>
+          <a
             routerLink="/diensten"
             routerLinkActive="bg-primary-600"
             (click)="closeSidebar()"

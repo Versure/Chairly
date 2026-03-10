@@ -8,6 +8,9 @@
 # .NET
 **/bin/
 **/obj/
+# Catch Windows-style backslash paths (bin\Debug) committed from Windows/WSL
+**/bin\\*
+**/obj\\*
 *.nupkg
 *.snupkg
 
@@ -33,6 +36,7 @@ Thumbs.db
 
 # Test results
 **/TestResults/
+**/coverage.cobertura.xml
 coverage/
 playwright-report/
 test-results/

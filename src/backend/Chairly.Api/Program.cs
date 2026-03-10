@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Services;
 using Chairly.Api.Features.Staff;
@@ -52,6 +53,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapBookingEndpoints();
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
 app.MapStaffEndpoints();

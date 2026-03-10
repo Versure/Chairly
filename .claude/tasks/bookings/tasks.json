@@ -12,114 +12,93 @@
     {
       "id": "B2",
       "layer": "backend",
-      "title": "EF Core configuration and migration",
+      "title": "EF Core configuration and DbContext registration",
       "status": "pending",
       "dependsOn": ["B1"]
     },
     {
       "id": "B3",
       "layer": "backend",
-      "title": "GetBookingsList query and handler",
+      "title": "BookingResponse and BookingServiceResponse records",
       "status": "pending",
-      "dependsOn": ["B2"]
+      "dependsOn": ["B1"]
     },
     {
       "id": "B4",
       "layer": "backend",
-      "title": "GetBooking query and handler",
+      "title": "Create Booking endpoint",
       "status": "pending",
-      "dependsOn": ["B2"]
+      "dependsOn": ["B2", "B3"]
     },
     {
       "id": "B5",
       "layer": "backend",
-      "title": "CreateBooking command and handler",
+      "title": "Get Booking endpoint",
       "status": "pending",
-      "dependsOn": ["B2"]
+      "dependsOn": ["B2", "B3"]
     },
     {
       "id": "B6",
       "layer": "backend",
-      "title": "UpdateBooking command and handler",
+      "title": "Get Bookings List endpoint",
       "status": "pending",
-      "dependsOn": ["B2"]
+      "dependsOn": ["B2", "B3"]
     },
     {
       "id": "B7",
       "layer": "backend",
-      "title": "Booking action endpoints (cancel, confirm, start, complete, no-show)",
+      "title": "Update Booking endpoint",
       "status": "pending",
-      "dependsOn": ["B2"]
+      "dependsOn": ["B2", "B3"]
     },
     {
       "id": "B8",
       "layer": "backend",
-      "title": "Backend unit tests for booking handlers",
+      "title": "Cancel Booking endpoint",
       "status": "pending",
-      "dependsOn": ["B3", "B4", "B5", "B6", "B7"]
+      "dependsOn": ["B2"]
     },
     {
-      "id": "F1",
-      "layer": "frontend",
-      "title": "Booking models",
+      "id": "B9",
+      "layer": "backend",
+      "title": "Confirm Booking endpoint",
       "status": "pending",
-      "dependsOn": ["B3"]
+      "dependsOn": ["B2"]
     },
     {
-      "id": "F2",
-      "layer": "frontend",
-      "title": "BookingApiService",
+      "id": "B10",
+      "layer": "backend",
+      "title": "Start Booking endpoint",
       "status": "pending",
-      "dependsOn": ["F1", "B3", "B4", "B5", "B6", "B7"]
+      "dependsOn": ["B2"]
     },
     {
-      "id": "F3",
-      "layer": "frontend",
-      "title": "BookingStore",
+      "id": "B11",
+      "layer": "backend",
+      "title": "Complete Booking endpoint",
       "status": "pending",
-      "dependsOn": ["F2"]
+      "dependsOn": ["B2"]
     },
     {
-      "id": "F4",
-      "layer": "frontend",
-      "title": "Booking list page (smart component)",
+      "id": "B12",
+      "layer": "backend",
+      "title": "No-Show Booking endpoint",
       "status": "pending",
-      "dependsOn": ["F3", "F5", "F6", "F7"]
+      "dependsOn": ["B2"]
     },
     {
-      "id": "F5",
-      "layer": "frontend",
-      "title": "Booking table component (presentational)",
+      "id": "B13",
+      "layer": "backend",
+      "title": "Booking endpoint registration and wiring",
       "status": "pending",
-      "dependsOn": ["F1"]
+      "dependsOn": ["B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
     },
     {
-      "id": "F6",
-      "layer": "frontend",
-      "title": "Booking form dialog (presentational)",
+      "id": "B14",
+      "layer": "backend",
+      "title": "Unit tests for booking handlers",
       "status": "pending",
-      "dependsOn": ["F1"]
-    },
-    {
-      "id": "F7",
-      "layer": "frontend",
-      "title": "Booking status actions component (presentational)",
-      "status": "pending",
-      "dependsOn": ["F1"]
-    },
-    {
-      "id": "F8",
-      "layer": "frontend",
-      "title": "Route config and registration",
-      "status": "pending",
-      "dependsOn": ["F4"]
-    },
-    {
-      "id": "F9",
-      "layer": "frontend",
-      "title": "Playwright e2e tests",
-      "status": "pending",
-      "dependsOn": ["F8"]
+      "dependsOn": ["B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
     }
   ]
 }

@@ -1,37 +1,28 @@
 import { expect, test } from './fixtures';
 
-// Bookings feature is not yet implemented (no /boekingen route exists).
-// All tests are wrapped in test.describe.skip and should be enabled once the bookings feature is built.
-// Mock data shapes are based on the domain model and should be refined once the bookings API contract is defined.
+const mockClients = [
+  { id: 'client-1', firstName: 'Jan', lastName: 'Jansen' },
+  { id: 'client-2', firstName: 'Piet', lastName: 'Pietersen' },
+];
 
-const mockClient = {
-  id: 'client-1',
-  firstName: 'Anna',
-  lastName: 'Bakker',
-};
+const mockStaff = [
+  { id: 'staff-1', firstName: 'Anna', lastName: 'de Vries' },
+  { id: 'staff-2', firstName: 'Kees', lastName: 'Bakker' },
+];
 
-const mockStaffMember = {
-  id: 'staff-1',
-  firstName: 'Jan',
-  lastName: 'Jansen',
-};
-
-const mockService = {
-  id: 'svc-1',
-  name: 'Herenknippen',
-  duration: '00:30:00',
-  price: 25,
-};
+const mockServices = [
+  { id: 'svc-1', name: 'Herenknippen', duration: '00:30:00', price: 25 },
+  { id: 'svc-2', name: 'Damesknippen', duration: '00:45:00', price: 35 },
+];
 
 const mockBooking = {
   id: 'booking-1',
   clientId: 'client-1',
-  clientName: 'Anna Bakker',
   staffMemberId: 'staff-1',
-  staffMemberName: 'Jan Jansen',
   startTime: '2026-03-10T10:00:00Z',
   endTime: '2026-03-10T10:30:00Z',
   notes: null,
+  status: 'Scheduled',
   services: [
     {
       serviceId: 'svc-1',
@@ -41,249 +32,292 @@ const mockBooking = {
       sortOrder: 0,
     },
   ],
-  createdAtUtc: '2026-03-09T00:00:00Z',
-  createdBy: 'system',
+  createdAtUtc: '2026-03-08T08:00:00Z',
+  updatedAtUtc: null,
   confirmedAtUtc: null,
   startedAtUtc: null,
   completedAtUtc: null,
   cancelledAtUtc: null,
+  noShowAtUtc: null,
 };
 
-test.describe.skip('Boekingen (pending bookings feature)', () => {
-  test('bookings list page loads and shows Boekingen heading', async ({ page }) => {
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+async function setupApiMocks(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/bookings*', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockBooking] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
+  });
+}
 
-    await page.goto('/boekingen');
+test('navigates to /boekingen and shows the Boekingen heading and table with names', async ({
+  page,
+}) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
 
-    await expect(page.getByRole('heading', { name: 'Boekingen', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Boekingen', level: 1 })).toBeVisible();
+  await expect(page.getByRole('table')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
+  // Should display client and staff names instead of IDs
+  await expect(page.getByRole('cell', { name: 'Jan Jansen' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Anna de Vries' })).toBeVisible();
+});
+
+test('clicking Nieuwe boeking opens the booking form dialog with dropdowns', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
+
+  await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+
+  await expect(dialog.getByLabel('Klant')).toBeVisible();
+  await expect(dialog.getByLabel('Medewerker')).toBeVisible();
+  await expect(dialog.getByLabel('Datum & tijd')).toBeVisible();
+  await expect(dialog.getByText('Diensten')).toBeVisible();
+  await expect(dialog.getByLabel('Notities')).toBeVisible();
+
+  // Verify the dropdowns have options (option elements are hidden in collapsed selects, so use toHaveCount)
+  const clientSelect = dialog.getByLabel('Klant');
+  await expect(clientSelect.locator('option')).toHaveCount(3); // placeholder + 2 clients
+  await expect(clientSelect).toContainText('Jan Jansen');
+
+  const staffSelect = dialog.getByLabel('Medewerker');
+  await expect(staffSelect.locator('option')).toHaveCount(3); // placeholder + 2 staff
+  await expect(staffSelect).toContainText('Anna de Vries');
+
+  // Verify service checkboxes
+  await expect(dialog.getByLabel('Herenknippen')).toBeVisible();
+  await expect(dialog.getByLabel('Damesknippen')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+});
+
+test('creating a new booking calls the API and refreshes the list', async ({ page }) => {
+  const newBooking = {
+    ...mockBooking,
+    id: 'booking-2',
+    clientId: 'client-2',
+    staffMemberId: 'staff-2',
+    services: [
+      {
+        serviceId: 'svc-2',
+        serviceName: 'Damesknippen',
+        duration: '00:45:00',
+        price: 35,
+        sortOrder: 0,
+      },
+    ],
+  };
+
+  let postCalled = false;
+
+  await page.route('**/api/bookings*', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      postCalled = true;
+      return route.fulfill({ json: newBooking, status: 201 });
+    }
+    if (method === 'GET') {
+      return route.fulfill({
+        json: postCalled ? [mockBooking, newBooking] : [mockBooking],
+      });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
   });
 
-  test('clicking Nieuwe boeking opens the create dialog', async ({ page }) => {
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  await page.goto('/boekingen');
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
 
-    await page.goto('/boekingen');
+  await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
 
-    await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
+  const dialog = page.locator('dialog[open]');
+  await dialog.getByLabel('Klant').selectOption('client-2');
+  await dialog.getByLabel('Medewerker').selectOption('staff-2');
+  await dialog.getByLabel('Datum & tijd').fill('2026-03-10T11:00');
+  await dialog.getByLabel('Damesknippen').check();
 
-    const dialog = page.locator('dialog[open]');
-    await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
-    await page.keyboard.press('Escape');
+  await expect(page.getByRole('cell', { name: 'Damesknippen' })).toBeVisible();
+});
+
+test('clicking Bevestigen on a Scheduled booking calls the confirm API', async ({ page }) => {
+  const confirmedBooking = {
+    ...mockBooking,
+    status: 'Confirmed',
+    confirmedAtUtc: '2026-03-08T09:00:00Z',
+  };
+
+  let confirmCalled = false;
+
+  await page.route('**/api/bookings/booking-1/confirm', (route) => {
+    if (route.request().method() === 'POST') {
+      confirmCalled = true;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    return route.fulfill({ status: 404, body: '' });
   });
 
-  test('creating a booking shows it in the list', async ({ page }) => {
-    let postCalled = false;
-
-    await page.route('**/api/clients', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockClient] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.route('**/api/staff', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockStaffMember] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.route('**/api/services', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockService] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.route('**/api/bookings', (route) => {
-      const method = route.request().method();
-      if (method === 'POST') {
-        postCalled = true;
-        return route.fulfill({ json: mockBooking });
-      }
-      if (method === 'GET') {
-        return route.fulfill({ json: postCalled ? [mockBooking] : [] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.goto('/boekingen');
-
-    await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
-
-    // Fill in booking form fields (selectors to be refined once the UI is built)
-    const dialog = page.locator('dialog[open]');
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole('button', { name: 'Opslaan' }).click();
-
-    expect(postCalled).toBe(true);
-    await expect(page.getByText('Anna Bakker')).toBeVisible();
+  await page.route('**/api/bookings*', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: [confirmCalled ? confirmedBooking : mockBooking],
+      });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
   });
 
-  test('confirming a booking changes status badge to Bevestigd', async ({ page }) => {
-    const confirmedBooking = {
-      ...mockBooking,
-      confirmedAtUtc: '2026-03-09T12:00:00Z',
-    };
+  await page.goto('/boekingen');
+  await expect(page.getByText('Gepland')).toBeVisible();
 
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  await page.getByRole('button', { name: 'Bevestigen' }).click();
 
-    await page.route('**/api/bookings/booking-1/confirm', (route) => {
-      if (route.request().method() === 'PATCH') {
-        return route.fulfill({ json: confirmedBooking });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  await expect(page.getByText('Bevestigd')).toBeVisible();
+});
 
-    await page.goto('/boekingen');
+test('clicking a booking row opens the edit dialog pre-filled and saves changes', async ({
+  page,
+}) => {
+  const updatedBooking = {
+    ...mockBooking,
+    notes: 'Aangepaste notities',
+    updatedAtUtc: '2026-03-08T10:00:00Z',
+  };
 
-    await page.getByRole('button', { name: 'Bevestigen' }).first().click();
+  let putCalled = false;
 
-    await expect(page.getByText('Bevestigd')).toBeVisible();
+  await page.route('**/api/bookings/booking-1', (route) => {
+    if (route.request().method() === 'PUT') {
+      putCalled = true;
+      return route.fulfill({ json: updatedBooking });
+    }
+    return route.fulfill({ status: 404, body: '' });
   });
 
-  test('starting a booking changes status badge to Bezig', async ({ page }) => {
-    const confirmedBooking = {
-      ...mockBooking,
-      confirmedAtUtc: '2026-03-09T12:00:00Z',
-    };
-
-    const startedBooking = {
-      ...confirmedBooking,
-      startedAtUtc: '2026-03-10T10:00:00Z',
-    };
-
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [confirmedBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.route('**/api/bookings/booking-1/start', (route) => {
-      if (route.request().method() === 'PATCH') {
-        return route.fulfill({ json: startedBooking });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.goto('/boekingen');
-
-    await page.getByRole('button', { name: 'Starten' }).first().click();
-
-    await expect(page.getByText('Bezig')).toBeVisible();
+  await page.route('**/api/bookings*', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        json: [putCalled ? updatedBooking : mockBooking],
+      });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/clients', (route) => {
+    return route.fulfill({ json: mockClients });
+  });
+  await page.route('**/api/staff', (route) => {
+    return route.fulfill({ json: mockStaff });
+  });
+  await page.route('**/api/services', (route) => {
+    return route.fulfill({ json: mockServices });
   });
 
-  test('completing a booking changes status badge to Voltooid', async ({ page }) => {
-    const startedBooking = {
-      ...mockBooking,
-      confirmedAtUtc: '2026-03-09T12:00:00Z',
-      startedAtUtc: '2026-03-10T10:00:00Z',
-    };
+  await page.goto('/boekingen');
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
 
-    const completedBooking = {
-      ...startedBooking,
-      completedAtUtc: '2026-03-10T10:30:00Z',
-    };
+  // Click the booking row
+  await page.locator('tbody tr').first().click();
 
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [startedBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Klant')).toHaveValue('client-1');
+  await expect(dialog.getByLabel('Medewerker')).toHaveValue('staff-1');
 
-    await page.route('**/api/bookings/booking-1/complete', (route) => {
-      if (route.request().method() === 'PATCH') {
-        return route.fulfill({ json: completedBooking });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  // Change the notes field
+  await dialog.getByLabel('Notities').fill('Aangepaste notities');
 
-    await page.goto('/boekingen');
+  // Click Opslaan and wait for the PUT request
+  const putRequestPromise = page.waitForRequest(
+    (req) => req.url().includes('/api/bookings/booking-1') && req.method() === 'PUT',
+  );
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+  await putRequestPromise;
 
-    await page.getByRole('button', { name: 'Voltooien' }).first().click();
+  // Verify the PUT was called
+  expect(putCalled).toBe(true);
 
-    await expect(page.getByText('Voltooid')).toBeVisible();
-  });
+  // Verify the list refreshes — the table should still show Herenknippen from the refreshed GET
+  await expect(page.getByRole('cell', { name: 'Herenknippen' })).toBeVisible();
+  // Dialog should be closed
+  await expect(dialog).toBeHidden();
+});
 
-  test('cancelling a booking changes status badge to Geannuleerd', async ({ page }) => {
-    const cancelledBooking = {
-      ...mockBooking,
-      cancelledAtUtc: '2026-03-09T15:00:00Z',
-    };
+test('staff member filter dropdown shows staff names and filters bookings', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
 
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  const staffFilter = page.getByLabel('Medewerker', { exact: false }).first();
+  await expect(staffFilter).toBeVisible();
 
-    await page.route('**/api/bookings/booking-1/cancel', (route) => {
-      if (route.request().method() === 'PATCH') {
-        return route.fulfill({ json: cancelledBooking });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+  // Verify the dropdown options (option elements are hidden in collapsed selects, so use toContainText)
+  await expect(staffFilter).toContainText('Alle medewerkers');
+  await expect(staffFilter).toContainText('Anna de Vries');
+  await expect(staffFilter).toContainText('Kees Bakker');
+});
 
-    await page.goto('/boekingen');
+test('view toggle buttons are visible and default to Lijst view', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
 
-    await page.getByRole('button', { name: 'Annuleren' }).first().click();
+  // Both toggle buttons should be visible
+  const lijstButton = page.getByRole('button', { name: 'Lijst' });
+  const roosterButton = page.getByRole('button', { name: 'Rooster' });
+  await expect(lijstButton).toBeVisible();
+  await expect(roosterButton).toBeVisible();
 
-    await expect(page.getByText('Geannuleerd')).toBeVisible();
-  });
+  // Default view is list — table should be visible
+  await expect(page.getByRole('table')).toBeVisible();
+});
 
-  test('edit dialog opens with pre-filled booking details', async ({ page }) => {
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
+test('clicking Rooster toggle switches to schedule view and back to Lijst', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/boekingen');
 
-    await page.goto('/boekingen');
+  // Start in list view
+  await expect(page.getByRole('table')).toBeVisible();
 
-    // Click edit button on the booking row (selector to be refined once UI exists)
-    await page.locator('button[title="Boeking bewerken"]').first().click();
+  // Switch to schedule view
+  await page.getByRole('button', { name: 'Rooster' }).click();
 
-    const dialog = page.locator('dialog[open]');
-    await expect(dialog).toBeVisible();
+  // Table should no longer be visible, schedule content should appear
+  await expect(page.getByRole('table')).toBeHidden();
+  // Booking data should still be visible in schedule view
+  await expect(page.getByText('Herenknippen').first()).toBeVisible();
+  await expect(page.getByText('Jan Jansen').first()).toBeVisible();
 
-    // Verify pre-filled values (selectors to be refined)
-    await expect(dialog.getByText('Anna Bakker')).toBeVisible();
-    await expect(dialog.getByText('Jan Jansen')).toBeVisible();
-    await expect(dialog.getByText('Herenknippen')).toBeVisible();
+  // Switch back to list view
+  await page.getByRole('button', { name: 'Lijst' }).click();
 
-    await page.keyboard.press('Escape');
-  });
-
-  test('filtering by date or staff updates the booking list', async ({ page }) => {
-    await page.route('**/api/bookings', (route) => {
-      if (route.request().method() === 'GET') {
-        return route.fulfill({ json: [mockBooking] });
-      }
-      return route.fulfill({ status: 404, body: '' });
-    });
-
-    await page.goto('/boekingen');
-
-    // Filtering controls to be refined once the bookings UI is built
-    await expect(page.getByText('Anna Bakker')).toBeVisible();
-  });
+  // Table should be visible again
+  await expect(page.getByRole('table')).toBeVisible();
 });

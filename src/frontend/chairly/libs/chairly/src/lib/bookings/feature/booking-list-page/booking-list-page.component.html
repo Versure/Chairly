@@ -1,0 +1,110 @@
+<div class="flex min-h-screen flex-col bg-gray-50">
+  <!-- Page header -->
+  <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+    <h1 class="text-xl font-semibold text-gray-900">Boekingen</h1>
+    <button
+      type="button"
+      class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+      (click)="onAddBooking()">
+      Nieuwe boeking
+    </button>
+  </div>
+
+  <!-- Filter row -->
+  <div class="flex items-end gap-4 border-b border-gray-200 bg-white px-6 py-3">
+    <div>
+      <label
+        for="filter-date"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >Datum</label
+      >
+      <input
+        id="filter-date"
+        type="date"
+        class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+        [value]="filterDate()"
+        (input)="onDateChange($event)" />
+    </div>
+    <div>
+      <label
+        for="filter-staff"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >Medewerker</label
+      >
+      <select
+        id="filter-staff"
+        class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+        [value]="filterStaffMemberId()"
+        (change)="onStaffFilterChange($event)">
+        <option value="">Alle medewerkers</option>
+        @for (member of staffMembers(); track member.id) {
+          <option [value]="member.id">{{ member.firstName }} {{ member.lastName }}</option>
+        }
+      </select>
+    </div>
+    <button
+      type="button"
+      class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+      (click)="onFilter()">
+      Filteren
+    </button>
+
+    <!-- View toggle -->
+    <div
+      class="ml-auto flex overflow-hidden rounded-md border border-gray-300 dark:border-slate-600">
+      <button
+        type="button"
+        class="px-3 py-2 text-sm font-medium transition-colors"
+        [class]="
+          viewMode() === 'list'
+            ? 'bg-primary-600 text-white dark:bg-primary-500'
+            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600'
+        "
+        (click)="setViewMode('list')">
+        Lijst
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 text-sm font-medium transition-colors"
+        [class]="
+          viewMode() === 'schedule'
+            ? 'bg-primary-600 text-white dark:bg-primary-500'
+            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600'
+        "
+        (click)="setViewMode('schedule')">
+        Rooster
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-auto p-6">
+    @if (isLoading()) {
+      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+    } @else if (viewMode() === 'list') {
+      <chairly-booking-table
+        [bookings]="bookings()"
+        [clientNameMap]="clientNameMap()"
+        [staffMemberNameMap]="staffMemberNameMap()"
+        (bookingSelected)="onBookingSelected($event)"
+        (statusAction)="onStatusAction($event)" />
+    } @else {
+      <chairly-booking-schedule
+        [bookings]="bookings()"
+        [clientNameMap]="clientNameMap()"
+        [staffMemberNameMap]="staffMemberNameMap()"
+        [staffMembers]="staffMembers()"
+        (bookingSelected)="onBookingSelected($event)"
+        (statusAction)="onStatusAction($event)" />
+    }
+  </div>
+</div>
+
+<!-- Booking form dialog -->
+<chairly-booking-form-dialog
+  [booking]="editingBooking()"
+  [clients]="clients()"
+  [staffMembers]="staffMembers()"
+  [services]="services()"
+  (saved)="onFormSaved($event)"
+  (cancelled)="onFormCancelled()" />

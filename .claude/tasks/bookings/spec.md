@@ -1,15 +1,14 @@
-# Bookings
+# Bookings Backend
 
 ## Overview
 
-Bookings are the core of Chairly. A booking represents a scheduled visit by a client with a staff member, containing one or more services. This feature covers the full CRUD lifecycle plus state transitions (confirm, start, complete, cancel, no-show) for both the backend API and the Angular frontend.
+Bookings are the core of Chairly. A booking represents a scheduled visit by a client with a staff member, containing one or more services. This spec covers the full backend API for the Bookings bounded context: CRUD operations, state transitions (confirm, start, complete, cancel, no-show), overlap detection, and service snapshotting. The frontend will be a separate feature.
 
 ## Domain Context
 
 - Bounded context: **Bookings**
-- Key entities involved: `Booking` (aggregate root), `BookingService` (owned entity), `Client`, `StaffMember`, `Service`
-- Ubiquitous language: **Booking** (never "appointment"), **Client** (never "customer"), **Staff Member** (never "employee"), **Service** (catalog offering), **No-Show** (client did not arrive)
-- Status is derived from timestamp pairs per ADR-009 (no status column)
+- Key entities involved: **Booking** (aggregate root), **BookingService** (owned entity), **Client**, **StaffMember**, **Service**
+- Ubiquitous language: Booking (never "appointment"), Client (never "customer"), Staff Member (never "employee"), Service, No-Show, Terminal state
 
 ## Backend Tasks
 
@@ -17,19 +16,19 @@ Bookings are the core of Chairly. A booking represents a scheduled visit by a cl
 
 Create the `Booking` and `BookingService` domain entities in `Chairly.Domain/Entities/`.
 
-**Booking entity** (`Booking.cs`):
+**Booking entity** (`Chairly.Domain/Entities/Booking.cs`):
 
 | Field | Type | Notes |
 |---|---|---|
 | `Id` | `Guid` | PK |
-| `TenantId` | `Guid` | required |
+| `TenantId` | `Guid` | FK (cross-cutting) |
 | `ClientId` | `Guid` | FK to Clients |
 | `StaffMemberId` | `Guid` | FK to StaffMembers |
 | `StartTime` | `DateTimeOffset` | required |
-| `EndTime` | `DateTimeOffset` | calculated, required |
+| `EndTime` | `DateTimeOffset` | calculated: StartTime + sum of service durations |
 | `Notes` | `string?` | optional, max 1000 |
 | `CreatedAtUtc` | `DateTimeOffset` | required |
-| `CreatedBy` | `Guid` | required (`Guid.Empty` until auth) |
+| `CreatedBy` | `Guid` | required (Guid.Empty until auth) |
 | `UpdatedAtUtc` | `DateTimeOffset?` | set on update |
 | `UpdatedBy` | `Guid?` | set on update |
 | `ConfirmedAtUtc` | `DateTimeOffset?` | set on confirm |
@@ -44,96 +43,83 @@ Create the `Booking` and `BookingService` domain entities in `Chairly.Domain/Ent
 | `NoShowBy` | `Guid?` | set on no-show |
 | `BookingServices` | `List<BookingService>` | navigation property |
 
-Navigation properties: `Client? Client`, `StaffMember? StaffMember`.
+Include navigation properties for `Client` and `StaffMember` (for EF Core loading).
 
-**BookingService entity** (`BookingService.cs`):
+**BookingService entity** (`Chairly.Domain/Entities/BookingService.cs`):
 
 | Field | Type | Notes |
 |---|---|---|
 | `Id` | `Guid` | PK (auto-generated, EF key only) |
 | `BookingId` | `Guid` | FK to Booking |
-| `ServiceId` | `Guid` | reference (NO FK constraint) |
-| `ServiceName` | `string` | snapshot, max 200 |
-| `Duration` | `TimeSpan` | snapshot |
-| `Price` | `decimal` | snapshot |
-| `SortOrder` | `int` | order within booking |
+| `ServiceId` | `Guid` | reference only (NO FK constraint — preserves history if service deleted) |
+| `ServiceName` | `string` | snapshot of Service.Name, max 200 |
+| `Duration` | `TimeSpan` | snapshot of Service.Duration |
+| `Price` | `decimal` | snapshot of Service.Price |
+| `SortOrder` | `int` | order within the booking |
 
-Navigation property: `Booking? Booking`.
-
-**Derived Status helper** — add a `BookingStatus` enum in `Chairly.Domain/Enums/BookingStatus.cs`:
-```csharp
-public enum BookingStatus { Scheduled, Confirmed, InProgress, Completed, Cancelled, NoShow }
-```
-
-Add a static helper method or extension method to derive status from timestamps (priority order):
-1. `CancelledAtUtc != null` -> Cancelled
-2. `NoShowAtUtc != null` -> NoShow
-3. `CompletedAtUtc != null` -> Completed
-4. `StartedAtUtc != null` -> InProgress
-5. `ConfirmedAtUtc != null` -> Confirmed
-6. else -> Scheduled
-
-### B2 — EF Core configuration and migration
-
-Create EF Core configurations and add the new DbSets.
-
-**DbContext changes** (`ChairlyDbContext.cs`):
-- Add `DbSet<Booking> Bookings`
-- Add `DbSet<BookingService> BookingServices`
-
-**BookingConfiguration** (`Chairly.Infrastructure/Persistence/Configurations/BookingConfiguration.cs`):
-- `builder.ToTable("Bookings")`
-- PK on `Id`
-- `TenantId` required, index on `TenantId`
-- `ClientId` required, FK to `Clients` with `DeleteBehavior.Restrict`
-- `StaffMemberId` required, FK to `StaffMembers` with `DeleteBehavior.Restrict`
-- `StartTime` required
-- `EndTime` required
-- `Notes` optional, max 1000
-- `CreatedBy` required
-- All other `*By` fields optional
-- Index on `(TenantId, StaffMemberId, StartTime)` for overlap queries
-- `HasMany(b => b.BookingServices).WithOne(bs => bs.Booking).HasForeignKey(bs => bs.BookingId).OnDelete(DeleteBehavior.Cascade)`
-
-**BookingServiceConfiguration** (`Chairly.Infrastructure/Persistence/Configurations/BookingServiceConfiguration.cs`):
-- `builder.ToTable("BookingServices")`
-- PK on `Id`
-- `BookingId` required
-- `ServiceId` required but NO FK constraint (preserves history)
-- `ServiceName` required, max 200
-- `Price` with `HasPrecision(10, 2)`
-- `SortOrder` required
-
-**Migration:** Generate with `dotnet ef migrations add AddBooking --project src/backend/Chairly.Infrastructure --startup-project src/backend/Chairly.Api`
+Include a navigation property back to `Booking`.
 
 **Test cases:**
-- Entity can be saved and retrieved from in-memory DB
-- BookingService cascade delete works
+- No tests for this task (entities are plain POCOs)
 
-### B3 — GetBookingsList query and handler
+---
 
-Create `Chairly.Api/Features/Bookings/GetBookingsList/` slice.
+### B2 — EF Core configuration and DbContext registration
 
-**Route:** `GET /api/bookings`
+Create EF Core configurations and register the entities in `ChairlyDbContext`.
 
-**Query parameters (all optional):**
-- `date` — ISO 8601 date string. Filters `StartTime.Date == date`.
-- `staffMemberId` — Guid. Filters by staff member.
+**BookingConfiguration** (`Chairly.Infrastructure/Persistence/Configurations/BookingConfiguration.cs`):
+- Table name: `"Bookings"`
+- PK: `Id`
+- `TenantId`: required, indexed
+- `ClientId`: required, FK to `Clients` table, `DeleteBehavior.Restrict`
+- `StaffMemberId`: required, FK to `StaffMembers` table, `DeleteBehavior.Restrict`
+- `StartTime`: required
+- `EndTime`: required
+- `Notes`: optional, max 1000
+- `CreatedBy`: required
+- All other `*By` fields: optional
+- Navigation: `HasMany(b => b.BookingServices).WithOne(bs => bs.Booking).HasForeignKey(bs => bs.BookingId).OnDelete(DeleteBehavior.Cascade)`
+- Composite index on `(TenantId, StaffMemberId, StartTime)` for overlap query performance
+- Index on `(TenantId, StartTime)` for date-filtered list queries
 
-**GetBookingsListQuery:**
+**BookingServiceConfiguration** (`Chairly.Infrastructure/Persistence/Configurations/BookingServiceConfiguration.cs`):
+- Table name: `"BookingServices"`
+- PK: `Id`
+- `BookingId`: required (FK handled by Booking config)
+- `ServiceId`: required, NO FK constraint (intentionally — preserves booking history if service is later deleted)
+- `ServiceName`: required, max 200
+- `Price`: precision(10, 2)
+- `SortOrder`: required
+
+**DbContext changes** (`Chairly.Infrastructure/Persistence/ChairlyDbContext.cs`):
+- Add `DbSet<Booking> Bookings => Set<Booking>();`
+- Add `DbSet<BookingService> BookingServices => Set<BookingService>();`
+
+**EF Migration:**
+- Create migration after configurations are in place: `dotnet ef migrations add AddBookingEntities`
+- The migration should create the `Bookings` and `BookingServices` tables with appropriate indexes and FK constraints
+
+**Test cases:**
+- No dedicated tests (configuration correctness is validated by integration tests in later tasks)
+
+---
+
+### B3 — BookingResponse and BookingServiceResponse records
+
+Create shared response records used by all booking endpoints.
+
+**BookingServiceResponse** (in `Chairly.Api/Features/Bookings/BookingServiceResponse.cs`):
 ```csharp
-internal sealed record GetBookingsListQuery(DateOnly? Date, Guid? StaffMemberId) : IRequest<IReadOnlyList<BookingResponse>>;
+internal sealed record BookingServiceResponse(
+    Guid ServiceId,
+    string ServiceName,
+    TimeSpan Duration,
+    decimal Price,
+    int SortOrder);
 ```
 
-**Handler logic:**
-1. Query `db.Bookings` for `TenantId == DefaultTenantId`
-2. Include `BookingServices` (ordered by `SortOrder`)
-3. If `Date` provided, filter `b.StartTime.Date == date`
-4. If `StaffMemberId` provided, filter `b.StaffMemberId == staffMemberId`
-5. Order by `StartTime` ascending
-6. Map to `BookingResponse` (derive status from timestamps)
-
-**BookingResponse** — shared record in `Chairly.Api/Features/Bookings/BookingResponse.cs`:
+**BookingResponse** (in `Chairly.Api/Features/Bookings/BookingResponse.cs`):
 ```csharp
 internal sealed record BookingResponse(
     Guid Id,
@@ -151,539 +137,475 @@ internal sealed record BookingResponse(
     DateTimeOffset? CompletedAtUtc,
     DateTimeOffset? CancelledAtUtc,
     DateTimeOffset? NoShowAtUtc);
-
-internal sealed record BookingServiceResponse(
-    Guid ServiceId,
-    string ServiceName,
-    TimeSpan Duration,
-    decimal Price,
-    int SortOrder);
 ```
 
-**Endpoint:**
-```csharp
-group.MapGet("/", async ([AsParameters] GetBookingsListQuery query, IMediator mediator, CancellationToken ct) => ...);
-```
+**Status derivation helper** — Create a static method `DeriveStatus(Booking)` returning a string, either as a static helper on a shared class or in a utility file within the Bookings feature folder. The method must follow this priority order:
+1. `CancelledAtUtc != null` -> `"Cancelled"`
+2. `NoShowAtUtc != null` -> `"NoShow"`
+3. `CompletedAtUtc != null` -> `"Completed"`
+4. `StartedAtUtc != null` -> `"InProgress"`
+5. `ConfirmedAtUtc != null` -> `"Confirmed"`
+6. else -> `"Scheduled"`
 
-Bind `date` and `staffMemberId` as query parameters. Return `200 OK` with `BookingResponse[]`.
+**ToResponse mapper** — Create a static `ToResponse(Booking)` method that maps a `Booking` (with loaded `BookingServices`) to a `BookingResponse`. This will be reused across Create, Update, Get, and List handlers.
 
 **Test cases:**
-- Returns empty list when no bookings
-- Returns bookings ordered by StartTime
-- Filters by date correctly
-- Filters by staffMemberId correctly
-- Combined filter works
+- Unit test: `DeriveStatus` returns correct status for each combination of timestamps (6 cases)
+- Unit test: `DeriveStatus` priority — when both `CancelledAtUtc` and `CompletedAtUtc` are set, returns `"Cancelled"` (terminal state precedence)
 
-### B4 — GetBooking query and handler
+---
 
-Create `Chairly.Api/Features/Bookings/GetBooking/` slice.
+### B4 — Create Booking endpoint
 
-**Route:** `GET /api/bookings/{id}`
+Create the `POST /api/bookings` endpoint following the vertical slice pattern.
 
-**GetBookingQuery:**
+**Slice location:** `Chairly.Api/Features/Bookings/CreateBooking/`
+
+**CreateBookingCommand** (`CreateBookingCommand.cs`):
+```csharp
+internal sealed class CreateBookingCommand : IRequest<OneOf<BookingResponse, NotFound, Conflict>>
+{
+    [Required]
+    public Guid ClientId { get; set; }
+
+    [Required]
+    public Guid StaffMemberId { get; set; }
+
+    [Required]
+    public DateTimeOffset StartTime { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    public List<Guid> ServiceIds { get; set; } = [];
+
+    [MaxLength(1000)]
+    public string? Notes { get; set; }
+}
+```
+
+**CreateBookingHandler** (`CreateBookingHandler.cs`):
+
+Handler logic (in order):
+1. Validate `ServiceIds` has at least 1 item (Data Annotations covers this via `[MinLength(1)]`, but the ValidationBehavior will catch it)
+2. Query Client: must exist for tenant and `DeletedAtUtc == null` -> return `NotFound` if not found
+3. Query StaffMember: must exist for tenant and `DeactivatedAtUtc == null` -> return `NotFound` if not found
+4. Query Services: all `ServiceIds` must exist for tenant and `IsActive == true` -> return `NotFound` if any are missing
+5. Calculate `EndTime = StartTime + sum of all service durations`
+6. Overlap check: query for any booking for the same `StaffMemberId` where `CancelledAtUtc == null AND NoShowAtUtc == null AND StartTime < newEndTime AND EndTime > newStartTime` -> return `Conflict` if overlap found
+7. Create `Booking` entity with `Id = Guid.NewGuid()`, `TenantId = TenantConstants.DefaultTenantId`, `CreatedAtUtc = DateTimeOffset.UtcNow`, `CreatedBy = Guid.Empty`
+8. Create `BookingService` entries: snapshot `ServiceName`, `Duration`, `Price` from each `Service`, assign `SortOrder` based on position in `ServiceIds` list
+9. Save to database
+10. Return `BookingResponse`
+
+**CreateBookingEndpoint** (`CreateBookingEndpoint.cs`):
+- `POST /` on the bookings group
+- Returns `Results.Created($"/api/bookings/{result.Id}", result)` on success
+- Returns `Results.NotFound()` for not found
+- Returns `Results.Conflict()` for overlap
+
+**Test cases:**
+- Happy path: creates booking with correct fields, returns 201 with BookingResponse
+- Snapshots service data (name, duration, price) correctly
+- Calculates EndTime correctly (StartTime + sum of durations)
+- Returns NotFound when client does not exist
+- Returns NotFound when client is soft-deleted
+- Returns NotFound when staff member does not exist
+- Returns NotFound when staff member is deactivated
+- Returns NotFound when one or more services do not exist
+- Returns NotFound when a service is inactive
+- Returns Conflict when there is an overlapping booking for the staff member
+- Does not conflict with cancelled bookings (overlap check excludes cancelled)
+- Does not conflict with no-show bookings (overlap check excludes no-show)
+- Multiple services are saved with correct sort order
+
+---
+
+### B5 — Get Booking endpoint
+
+Create the `GET /api/bookings/{id}` endpoint.
+
+**Slice location:** `Chairly.Api/Features/Bookings/GetBooking/`
+
+**GetBookingQuery** (`GetBookingQuery.cs`):
 ```csharp
 internal sealed record GetBookingQuery(Guid Id) : IRequest<OneOf<BookingResponse, NotFound>>;
 ```
 
-**Handler logic:**
-1. Find booking by `Id` and `TenantId`, include `BookingServices`
-2. If not found, return `NotFound`
-3. Map to `BookingResponse`
+**GetBookingHandler** (`GetBookingHandler.cs`):
+- Query booking by `Id` and `TenantId`, include `BookingServices`
+- Return `NotFound` if not found
+- Return `BookingResponse` with derived status
 
-**Endpoint:** Return `200 OK` with response, or `404 Not Found`.
+**GetBookingEndpoint** (`GetBookingEndpoint.cs`):
+- `GET /{id:guid}` on the bookings group
+- Returns `Results.Ok(response)` or `Results.NotFound()`
 
 **Test cases:**
-- Happy path returns booking with services
-- Not found returns NotFound
+- Happy path: returns booking with services and correct derived status
+- Returns NotFound for non-existent booking
+- Returns NotFound for booking belonging to different tenant (when tenant scoping is active)
+- BookingServices are returned in SortOrder
 
-### B5 — CreateBooking command and handler
+---
 
-Create `Chairly.Api/Features/Bookings/CreateBooking/` slice.
+### B6 — Get Bookings List endpoint
 
-**Route:** `POST /api/bookings`
+Create the `GET /api/bookings` endpoint with optional filters.
 
-**CreateBookingCommand:**
+**Slice location:** `Chairly.Api/Features/Bookings/GetBookingsList/`
+
+**GetBookingsListQuery** (`GetBookingsListQuery.cs`):
 ```csharp
-internal sealed class CreateBookingCommand : IRequest<OneOf<BookingResponse, NotFound, Conflict>>
-{
-    [Required] public Guid ClientId { get; set; }
-    [Required] public Guid StaffMemberId { get; set; }
-    [Required] public DateTimeOffset StartTime { get; set; }
-    [Required] [MinLength(1)] public List<Guid> ServiceIds { get; set; } = [];
-    [MaxLength(1000)] public string? Notes { get; set; }
-}
+internal sealed record GetBookingsListQuery(DateOnly? Date, Guid? StaffMemberId) : IRequest<IEnumerable<BookingResponse>>;
 ```
 
-**Handler logic:**
-1. Validate `ServiceIds` has at least 1 item (Data Annotations handle this)
-2. Look up Client by `ClientId` + `TenantId`, check `DeletedAtUtc == null` -> 404 if not found or soft-deleted
-3. Look up StaffMember by `StaffMemberId` + `TenantId`, check `DeactivatedAtUtc == null` -> 404 if not found or deactivated
-4. Look up all Services by `ServiceIds` + `TenantId`, check `IsActive == true` for all -> 404 if any missing or inactive
-5. Calculate `EndTime = StartTime + sum of service durations`
-6. Overlap check: any booking for same staff member where `CancelledAtUtc == null AND NoShowAtUtc == null AND StartTime < newEndTime AND EndTime > newStartTime` -> 409 Conflict
-7. Create `Booking` entity with snapshot `BookingService` entries (copy name, duration, price, assign SortOrder)
-8. Set `CreatedAtUtc = DateTimeOffset.UtcNow`, `CreatedBy = Guid.Empty`
-9. Save and return `201 Created` with `BookingResponse`
+**GetBookingsListHandler** (`GetBookingsListHandler.cs`):
+- Query bookings for `TenantId`, include `BookingServices`
+- If `Date` is provided, filter where `StartTime.Date == date` (compare date portion only)
+- If `StaffMemberId` is provided, filter by staff member
+- Order by `StartTime` ascending
+- Map each to `BookingResponse` with derived status
 
-**Endpoint:** Return `Results.Created(...)`, `Results.NotFound()`, or `Results.Conflict()`.
+**GetBookingsListEndpoint** (`GetBookingsListEndpoint.cs`):
+- `GET /` on the bookings group
+- Bind query parameters: `date` (DateOnly?, optional), `staffMemberId` (Guid?, optional)
+- Returns `Results.Ok(result)`
 
 **Test cases:**
-- Happy path creates booking with snapshotted services
-- Returns 404 when client not found
-- Returns 404 when client is soft-deleted
-- Returns 404 when staff member not found
-- Returns 404 when staff member is deactivated
-- Returns 404 when any service not found
-- Returns 404 when any service is inactive
-- Returns 409 when staff overlap detected
-- EndTime calculated correctly from service durations
-- BookingServices have correct SortOrder
+- Happy path: returns all bookings ordered by StartTime
+- Filters by date correctly
+- Filters by staffMemberId correctly
+- Filters by both date and staffMemberId together
+- Returns empty array when no bookings match
+- Each booking includes its services with correct derived status
 
-### B6 — UpdateBooking command and handler
+---
 
-Create `Chairly.Api/Features/Bookings/UpdateBooking/` slice.
+### B7 — Update Booking endpoint
 
-**Route:** `PUT /api/bookings/{id}`
+Create the `PUT /api/bookings/{id}` endpoint.
 
-**UpdateBookingCommand:**
+**Slice location:** `Chairly.Api/Features/Bookings/UpdateBooking/`
+
+**UpdateBookingCommand** (`UpdateBookingCommand.cs`):
 ```csharp
 internal sealed class UpdateBookingCommand : IRequest<OneOf<BookingResponse, NotFound, Conflict>>
 {
     public Guid Id { get; set; }
-    [Required] public Guid ClientId { get; set; }
-    [Required] public Guid StaffMemberId { get; set; }
-    [Required] public DateTimeOffset StartTime { get; set; }
-    [Required] [MinLength(1)] public List<Guid> ServiceIds { get; set; } = [];
-    [MaxLength(1000)] public string? Notes { get; set; }
+
+    [Required]
+    public Guid ClientId { get; set; }
+
+    [Required]
+    public Guid StaffMemberId { get; set; }
+
+    [Required]
+    public DateTimeOffset StartTime { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    public List<Guid> ServiceIds { get; set; } = [];
+
+    [MaxLength(1000)]
+    public string? Notes { get; set; }
 }
 ```
 
-**Handler logic:**
-1. Find booking by `Id` + `TenantId`, include `BookingServices` -> 404 if not found
-2. Check not in terminal state (CompletedAtUtc, CancelledAtUtc, NoShowAtUtc all null) -> 409 if terminal
-3. Same validation as create (client exists, staff exists/active, services exist/active)
-4. Recalculate `EndTime`
-5. Overlap check **excluding self** (add `&& b.Id != command.Id`) -> 409 if overlap
-6. Replace `BookingServices` collection (remove old, add new snapshots)
-7. Set `UpdatedAtUtc = DateTimeOffset.UtcNow`, `UpdatedBy = Guid.Empty`
-8. Return `200 OK` with `BookingResponse`
+**UpdateBookingHandler** (`UpdateBookingHandler.cs`):
+
+Handler logic:
+1. Find booking by `Id` and `TenantId`, include `BookingServices` -> return `NotFound` if not found
+2. Check terminal state: if `CompletedAtUtc`, `CancelledAtUtc`, or `NoShowAtUtc` is set -> return `Conflict`
+3. Validate Client exists and is not soft-deleted -> return `NotFound`
+4. Validate StaffMember exists and is not deactivated -> return `NotFound`
+5. Validate all ServiceIds exist and are active -> return `NotFound`
+6. Calculate new `EndTime`
+7. Overlap check (exclude the booking being updated — `b.Id != command.Id`) -> return `Conflict`
+8. Update booking fields: `ClientId`, `StaffMemberId`, `StartTime`, `EndTime`, `Notes`
+9. Replace `BookingServices`: remove existing, add new snapshots
+10. Set `UpdatedAtUtc = DateTimeOffset.UtcNow`, `UpdatedBy = Guid.Empty`
+11. Save and return `BookingResponse`
+
+**UpdateBookingEndpoint** (`UpdateBookingEndpoint.cs`):
+- `PUT /{id:guid}` on the bookings group
+- Set `command.Id = id` from route
+- Returns `Results.Ok(response)`, `Results.NotFound()`, or `Results.Conflict()`
 
 **Test cases:**
-- Happy path updates booking fields and services
-- Returns 404 when booking not found
-- Returns 409 when booking is in terminal state
-- Returns 409 when update causes overlap
-- Overlap check excludes self (updating same time slot is fine)
-- UpdatedAtUtc is set
+- Happy path: updates booking and returns updated response
+- Returns NotFound when booking does not exist
+- Returns Conflict when booking is in terminal state (Completed)
+- Returns Conflict when booking is in terminal state (Cancelled)
+- Returns Conflict when booking is in terminal state (NoShow)
+- Returns NotFound when new client does not exist
+- Returns NotFound when new staff member is deactivated
+- Returns NotFound when a new service is inactive
+- Overlap check excludes the booking itself (updating time of same booking does not self-conflict)
+- Returns Conflict when new time overlaps with another booking
+- BookingServices are replaced (old removed, new added with fresh snapshots)
+- Sets UpdatedAtUtc and UpdatedBy
 
-### B7 — Booking action endpoints (cancel, confirm, start, complete, no-show)
+---
 
-Create five slices in `Chairly.Api/Features/Bookings/`:
-- `CancelBooking/`
-- `ConfirmBooking/`
-- `StartBooking/`
-- `CompleteBooking/`
-- `MarkBookingNoShow/`
+### B8 — Cancel Booking endpoint
 
-All follow the same pattern:
+Create the `POST /api/bookings/{id}/cancel` endpoint.
 
-**Command:** `internal sealed record {Action}BookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;`
+**Slice location:** `Chairly.Api/Features/Bookings/CancelBooking/`
 
-**Handler logic per action:**
+**CancelBookingCommand** (`CancelBookingCommand.cs`):
+```csharp
+internal sealed record CancelBookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;
+```
 
-| Action | Route | Sets timestamp | Allowed from states | Returns |
-|---|---|---|---|---|
-| Cancel | `POST /api/bookings/{id}/cancel` | `CancelledAtUtc`, `CancelledBy` | Scheduled, Confirmed, InProgress | 204 / 404 / 409 |
-| Confirm | `POST /api/bookings/{id}/confirm` | `ConfirmedAtUtc`, `ConfirmedBy` | Scheduled only | 204 / 404 / 409 |
-| Start | `POST /api/bookings/{id}/start` | `StartedAtUtc`, `StartedBy` | Scheduled, Confirmed | 204 / 404 / 409 |
-| Complete | `POST /api/bookings/{id}/complete` | `CompletedAtUtc`, `CompletedBy` | InProgress only | 204 / 404 / 409 |
-| NoShow | `POST /api/bookings/{id}/no-show` | `NoShowAtUtc`, `NoShowBy` | Scheduled, Confirmed | 204 / 404 / 409 |
+**CancelBookingHandler** (`CancelBookingHandler.cs`):
+- Find booking by `Id` and `TenantId` -> return `NotFound`
+- Check if already in terminal state (`CompletedAtUtc`, `CancelledAtUtc`, or `NoShowAtUtc` is set) -> return `Conflict`
+- Set `CancelledAtUtc = DateTimeOffset.UtcNow`, `CancelledBy = Guid.Empty`
+- Save and return `Success`
 
-Each handler:
-1. Find booking by `Id` + `TenantId` -> 404
-2. Derive current status from timestamps
-3. Check status is in allowed states -> 409 Conflict if not
-4. Set the appropriate timestamp pair to `DateTimeOffset.UtcNow` / `Guid.Empty`
-5. Save and return `Success`
+Note: Cancelling an InProgress booking IS allowed (client leaves mid-service).
 
-**Endpoints:** All return `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`.
+**CancelBookingEndpoint** (`CancelBookingEndpoint.cs`):
+- `POST /{id:guid}/cancel`
+- Returns `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`
+
+**Test cases:**
+- Happy path from Scheduled state: sets CancelledAtUtc, returns 204
+- Happy path from Confirmed state: sets CancelledAtUtc
+- Happy path from InProgress state: sets CancelledAtUtc (allowed)
+- Returns NotFound for non-existent booking
+- Returns Conflict when already Completed
+- Returns Conflict when already Cancelled
+- Returns Conflict when already NoShow
+
+---
+
+### B9 — Confirm Booking endpoint
+
+Create the `POST /api/bookings/{id}/confirm` endpoint.
+
+**Slice location:** `Chairly.Api/Features/Bookings/ConfirmBooking/`
+
+**ConfirmBookingCommand** (`ConfirmBookingCommand.cs`):
+```csharp
+internal sealed record ConfirmBookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;
+```
+
+**ConfirmBookingHandler** (`ConfirmBookingHandler.cs`):
+- Find booking by `Id` and `TenantId` -> return `NotFound`
+- Must be in Scheduled state: `ConfirmedAtUtc == null && StartedAtUtc == null && CompletedAtUtc == null && CancelledAtUtc == null && NoShowAtUtc == null` -> return `Conflict` otherwise
+- Set `ConfirmedAtUtc = DateTimeOffset.UtcNow`, `ConfirmedBy = Guid.Empty`
+- Save and return `Success`
+
+**ConfirmBookingEndpoint** (`ConfirmBookingEndpoint.cs`):
+- `POST /{id:guid}/confirm`
+- Returns `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`
+
+**Test cases:**
+- Happy path from Scheduled: sets ConfirmedAtUtc, returns 204
+- Returns Conflict when already Confirmed
+- Returns Conflict when InProgress
+- Returns Conflict when Completed
+- Returns Conflict when Cancelled
+- Returns Conflict when NoShow
+- Returns NotFound for non-existent booking
+
+---
+
+### B10 — Start Booking endpoint
+
+Create the `POST /api/bookings/{id}/start` endpoint.
+
+**Slice location:** `Chairly.Api/Features/Bookings/StartBooking/`
+
+**StartBookingCommand** (`StartBookingCommand.cs`):
+```csharp
+internal sealed record StartBookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;
+```
+
+**StartBookingHandler** (`StartBookingHandler.cs`):
+- Find booking by `Id` and `TenantId` -> return `NotFound`
+- Must be in Scheduled or Confirmed state: `StartedAtUtc == null && CompletedAtUtc == null && CancelledAtUtc == null && NoShowAtUtc == null` -> return `Conflict` otherwise
+- Set `StartedAtUtc = DateTimeOffset.UtcNow`, `StartedBy = Guid.Empty`
+- Save and return `Success`
+
+**StartBookingEndpoint** (`StartBookingEndpoint.cs`):
+- `POST /{id:guid}/start`
+- Returns `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`
+
+**Test cases:**
+- Happy path from Scheduled: sets StartedAtUtc, returns 204
+- Happy path from Confirmed: sets StartedAtUtc (skip confirm is allowed)
+- Returns Conflict when already InProgress
+- Returns Conflict when Completed
+- Returns Conflict when Cancelled
+- Returns Conflict when NoShow
+- Returns NotFound for non-existent booking
+
+---
+
+### B11 — Complete Booking endpoint
+
+Create the `POST /api/bookings/{id}/complete` endpoint.
+
+**Slice location:** `Chairly.Api/Features/Bookings/CompleteBooking/`
+
+**CompleteBookingCommand** (`CompleteBookingCommand.cs`):
+```csharp
+internal sealed record CompleteBookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;
+```
+
+**CompleteBookingHandler** (`CompleteBookingHandler.cs`):
+- Find booking by `Id` and `TenantId` -> return `NotFound`
+- Must be InProgress: `StartedAtUtc != null && CompletedAtUtc == null && CancelledAtUtc == null && NoShowAtUtc == null` -> return `Conflict` otherwise
+- Set `CompletedAtUtc = DateTimeOffset.UtcNow`, `CompletedBy = Guid.Empty`
+- Save and return `Success`
+
+**CompleteBookingEndpoint** (`CompleteBookingEndpoint.cs`):
+- `POST /{id:guid}/complete`
+- Returns `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`
+
+**Test cases:**
+- Happy path from InProgress: sets CompletedAtUtc, returns 204
+- Returns Conflict when Scheduled (not yet started)
+- Returns Conflict when Confirmed (not yet started)
+- Returns Conflict when already Completed
+- Returns Conflict when Cancelled
+- Returns Conflict when NoShow
+- Returns NotFound for non-existent booking
+
+---
+
+### B12 — No-Show Booking endpoint
+
+Create the `POST /api/bookings/{id}/no-show` endpoint.
+
+**Slice location:** `Chairly.Api/Features/Bookings/NoShowBooking/`
+
+**NoShowBookingCommand** (`NoShowBookingCommand.cs`):
+```csharp
+internal sealed record NoShowBookingCommand(Guid Id) : IRequest<OneOf<Success, NotFound, Conflict>>;
+```
+
+**NoShowBookingHandler** (`NoShowBookingHandler.cs`):
+- Find booking by `Id` and `TenantId` -> return `NotFound`
+- Must be in Scheduled or Confirmed state: `StartedAtUtc == null && CompletedAtUtc == null && CancelledAtUtc == null && NoShowAtUtc == null` -> return `Conflict` otherwise
+- Set `NoShowAtUtc = DateTimeOffset.UtcNow`, `NoShowBy = Guid.Empty`
+- Save and return `Success`
+
+**NoShowBookingEndpoint** (`NoShowBookingEndpoint.cs`):
+- `POST /{id:guid}/no-show`
+- Returns `Results.NoContent()`, `Results.NotFound()`, or `Results.Conflict()`
+
+**Test cases:**
+- Happy path from Scheduled: sets NoShowAtUtc, returns 204
+- Happy path from Confirmed: sets NoShowAtUtc
+- Returns Conflict when InProgress
+- Returns Conflict when Completed
+- Returns Conflict when Cancelled
+- Returns Conflict when already NoShow
+- Returns NotFound for non-existent booking
+
+---
+
+### B13 — Booking endpoint registration and wiring
+
+Create `BookingEndpoints.cs` to register all booking endpoints and wire them into `Program.cs`.
 
 **BookingEndpoints** (`Chairly.Api/Features/Bookings/BookingEndpoints.cs`):
-- Map all endpoints on group `/api/bookings`
-- Register in `Program.cs`
+```csharp
+internal static class BookingEndpoints
+{
+    public static IEndpointRouteBuilder MapBookingEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/bookings");
 
-**Test cases (per action):**
-- Happy path sets timestamp and returns Success
-- Returns 404 when booking not found
-- Returns 409 when in wrong state
-- Specific: Cancel from InProgress is allowed
-- Specific: Confirm from Confirmed returns 409
-- Specific: Complete from Scheduled returns 409
+        group.MapGetBookingsList();
+        group.MapGetBooking();
+        group.MapCreateBooking();
+        group.MapUpdateBooking();
+        group.MapCancelBooking();
+        group.MapConfirmBooking();
+        group.MapStartBooking();
+        group.MapCompleteBooking();
+        group.MapNoShowBooking();
 
-### B8 — Backend unit tests for booking handlers
-
-Create `Chairly.Tests/Features/Bookings/BookingHandlerTests.cs`.
-
-Follow the pattern from `ServiceHandlerTests.cs`:
-- `CreateDbContext()` helper with in-memory DB
-- Helper methods to create test Client, StaffMember, Service, and Booking entities
-- Test all handlers from B3-B7
-
-**Minimum test coverage:**
-- CreateBooking: happy path, client not found, client soft-deleted, staff not found, staff deactivated, service not found, service inactive, overlap detected, EndTime calculation, SortOrder assignment
-- UpdateBooking: happy path, not found, terminal state conflict, overlap conflict, self-overlap excluded
-- GetBookingsList: empty list, ordered by StartTime, date filter, staff filter
-- GetBooking: happy path, not found
-- CancelBooking: from Scheduled, from Confirmed, from InProgress, from Completed (conflict), not found
-- ConfirmBooking: from Scheduled, from Confirmed (conflict), not found
-- StartBooking: from Scheduled, from Confirmed, from InProgress (conflict), not found
-- CompleteBooking: from InProgress, from Scheduled (conflict), not found
-- MarkBookingNoShow: from Scheduled, from Confirmed, from InProgress (conflict), not found
-
-## Frontend Tasks
-
-### F1 — Booking models
-
-**Folder:** `libs/chairly/src/lib/bookings/models/`
-
-Create TypeScript interfaces in `booking.models.ts`:
-
-```typescript
-export type BookingStatus =
-  | 'Scheduled'
-  | 'Confirmed'
-  | 'InProgress'
-  | 'Completed'
-  | 'Cancelled'
-  | 'NoShow';
-
-export interface BookingServiceItem {
-  serviceId: string;
-  serviceName: string;
-  duration: string;       // "HH:MM:SS"
-  price: number;
-  sortOrder: number;
-}
-
-export interface Booking {
-  id: string;
-  clientId: string;
-  staffMemberId: string;
-  startTime: string;      // ISO 8601
-  endTime: string;
-  notes: string | null;
-  status: BookingStatus;
-  services: BookingServiceItem[];
-  createdAtUtc: string;
-  updatedAtUtc: string | null;
-  confirmedAtUtc: string | null;
-  startedAtUtc: string | null;
-  completedAtUtc: string | null;
-  cancelledAtUtc: string | null;
-  noShowAtUtc: string | null;
-}
-
-export interface CreateBookingRequest {
-  clientId: string;
-  staffMemberId: string;
-  startTime: string;
-  serviceIds: string[];
-  notes: string | null;
-}
-
-export type UpdateBookingRequest = CreateBookingRequest;
-
-export interface BookingFilter {
-  date?: string;          // YYYY-MM-DD
-  staffMemberId?: string;
+        return app;
+    }
 }
 ```
 
-Export everything from `models/index.ts`. Delete `models/.gitkeep` if it exists (no `.gitkeep` once real files are present).
+**Program.cs changes:**
+- Add `app.MapBookingEndpoints();` alongside existing endpoint registrations
 
-### F2 — BookingApiService
+**Test cases:**
+- No dedicated tests (covered by integration/endpoint tests)
 
-**Folder:** `libs/chairly/src/lib/bookings/data-access/`
+---
 
-Create `booking-api.service.ts` following the pattern of `ServiceApiService`:
+### B14 — Unit tests for booking handlers
 
-```typescript
-@Injectable({ providedIn: 'root' })
-export class BookingApiService {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = inject(API_BASE_URL);
+Create comprehensive unit tests in `Chairly.Tests/Features/Bookings/BookingHandlerTests.cs`.
 
-  getBookings(filter?: BookingFilter): Observable<Booking[]>
-  getBooking(id: string): Observable<Booking>
-  createBooking(request: CreateBookingRequest): Observable<Booking>
-  updateBooking(id: string, request: UpdateBookingRequest): Observable<Booking>
-  cancelBooking(id: string): Observable<void>
-  confirmBooking(id: string): Observable<void>
-  startBooking(id: string): Observable<void>
-  completeBooking(id: string): Observable<void>
-  markNoShow(id: string): Observable<void>
-}
-```
+Follow the existing test patterns (see `ClientHandlerTests.cs`, `ServiceHandlerTests.cs`):
+- Use `InMemoryDatabase` for DbContext
+- Create helper methods for test data setup (e.g. `CreateTestBooking`, `CreateTestClient`, `CreateTestStaffMember`, `CreateTestService`)
+- Each test method tests one scenario
+- Use `[Fact]` attribute
 
-- Base path: `${this.baseUrl}/bookings`
-- `getBookings`: use `HttpParams` to pass `date` and `staffMemberId` when present
-- Action endpoints (`cancel`, `confirm`, `start`, `complete`, `no-show`): `POST` with empty body (`null`)
-- Import `API_BASE_URL` from `@org/shared-lib`
+**Test file:** `Chairly.Tests/Features/Bookings/BookingHandlerTests.cs`
 
-Delete `data-access/.gitkeep` if it exists.
+Cover all test cases listed in B3 through B12. Key test scenarios:
 
-### F3 — BookingStore
+**Status derivation (B3):**
+- All 6 status values derived correctly
+- Terminal state precedence (Cancelled > NoShow > Completed > InProgress > Confirmed > Scheduled)
 
-**Folder:** `libs/chairly/src/lib/bookings/data-access/`
+**Create (B4):**
+- Happy path with service snapshotting
+- EndTime calculation
+- All validation failures (client not found, staff inactive, service inactive, overlap)
+- Overlap exclusions (cancelled and no-show bookings do not block)
 
-Create `booking.store.ts` following the pattern of `ServiceStore`:
+**Get (B5):**
+- Happy path, not found
 
-**State:**
-```typescript
-export interface BookingState {
-  bookings: Booking[];
-  selectedBooking: Booking | null;
-  loading: boolean;
-  error: string | null;
-  activeFilter: BookingFilter;
-}
-```
+**List (B6):**
+- No filter, date filter, staff filter, combined filter, empty result
 
-**Methods:**
-- `loadBookings(filter?: BookingFilter)` — sets `activeFilter` and `loading: true`, calls `getBookings`, updates `bookings`
-- `createBooking(request: CreateBookingRequest)` — calls API, then `loadBookings(activeFilter)` to refresh
-- `updateBooking(id, request: UpdateBookingRequest)` — calls API, then `loadBookings(activeFilter)`
-- `cancelBooking(id)` — calls API, then `loadBookings(activeFilter)`
-- `confirmBooking(id)` — calls API, then `loadBookings(activeFilter)`
-- `startBooking(id)` — calls API, then `loadBookings(activeFilter)`
-- `completeBooking(id)` — calls API, then `loadBookings(activeFilter)`
-- `markNoShow(id)` — calls API, then `loadBookings(activeFilter)`
-- `selectBooking(booking: Booking | null)` — sets `selectedBooking`
+**Update (B7):**
+- Happy path, terminal state blocked, self-overlap allowed, service replacement
 
-Use `take(1)` on all subscriptions. Use `toErrorMessage` helper like `ServiceStore`.
-
-Export store and service from `data-access/index.ts`.
-
-### F4 — Booking list page (smart component)
-
-**Folder:** `libs/chairly/src/lib/bookings/feature/booking-list-page/`
-
-Smart container component `BookingListPageComponent` (`selector: 'chairly-booking-list-page'`).
-
-- Standalone, `OnPush` change detection
-- `templateUrl: './booking-list-page.component.html'`
-- Inject `BookingStore`
-- On init: call `store.loadBookings()`
-
-**Template:**
-- Page heading: `<h1>Boekingen</h1>`
-- Filter row:
-  - Date input (`type="date"`, label "Datum")
-  - Staff member ID input (`type="text"`, placeholder "Medewerker ID")
-  - "Filteren" button that calls `store.loadBookings(filter)`
-- "Nieuwe boeking" button (primary) that opens the create dialog
-- `<chairly-booking-table [bookings]="store.bookings()" (bookingSelected)="..." (statusAction)="...">`
-- `<chairly-booking-form-dialog>` controlled by `dialogOpen` and `editingBooking` signals
-
-**Signals:**
-- `dialogOpen = signal(false)`
-- `editingBooking = signal<Booking | null>(null)`
-
-**Event handlers:**
-- `bookingSelected` -> set `editingBooking`, set `dialogOpen = true`
-- `statusAction` with `{ action, bookingId }` -> call appropriate store method (`confirmBooking`, `startBooking`, etc.)
-- Dialog `saved` event -> call `store.createBooking()` or `store.updateBooking()` depending on whether `editingBooking` is set
-- Dialog `cancelled` event -> set `dialogOpen = false`, set `editingBooking = null`
-
-Export from `feature/index.ts`. Delete `feature/.gitkeep`.
-
-### F5 — Booking table component (presentational)
-
-**Folder:** `libs/chairly/src/lib/bookings/ui/`
-
-Presentational component `BookingTableComponent` (`selector: 'chairly-booking-table'`).
-
-**Inputs (`input()`):**
-- `bookings: Booking[]`
-
-**Outputs (`OutputEmitterRef`):**
-- `bookingSelected` emits `Booking`
-- `statusAction` emits `{ action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow', bookingId: string }`
-
-**Template columns (Dutch headers):**
-
-| Kolomkop | Inhoud |
-|---|---|
-| Datum & tijd | `startTime` formatted `dd-MM-yyyy HH:mm` — `endTime` formatted `HH:mm` |
-| Klant | `clientId` (placeholder, client lookup out of scope) |
-| Medewerker | `staffMemberId` (placeholder) |
-| Diensten | comma-separated `serviceName` values |
-| Status | badge with Dutch label and color |
-| Acties | `<chairly-booking-status-actions>` |
-
-**Status badge mapping:**
-
-| Status | Dutch label | Color |
-|---|---|---|
-| Scheduled | Gepland | gray |
-| Confirmed | Bevestigd | blue |
-| InProgress | Bezig | yellow/amber |
-| Completed | Voltooid | green |
-| Cancelled | Geannuleerd | red |
-| NoShow | Niet-verschenen | orange |
-
-Clicking a row emits `bookingSelected` with that booking.
-
-Use a pipe (`BookingStatusPipe`) in `libs/chairly/src/lib/bookings/pipes/` to translate status to Dutch label. Create `pipes/index.ts` barrel.
-
-### F6 — Booking form dialog (presentational)
-
-**Folder:** `libs/chairly/src/lib/bookings/ui/`
-
-Presentational component `BookingFormDialogComponent` (`selector: 'chairly-booking-form-dialog'`).
-
-**Inputs:**
-- `open: boolean` — controls visibility via `showModal()` / `close()`
-- `booking: Booking | null` — when set, pre-fills form (edit mode)
-
-**Outputs:**
-- `saved` emits `{ id: string | null, request: CreateBookingRequest }` — `id` is null for create
-- `cancelled` emits void
-
-**Form fields (reactive form with typed FormGroup):**
-
-| Veld | Type | Validatie |
-|---|---|---|
-| Klant ID | text | required |
-| Medewerker ID | text | required |
-| Datum & tijd | datetime-local | required |
-| Dienst-IDs | text (comma-separated) | required, at least one value |
-| Notities | textarea | optional, max 1000 chars |
-
-**Dialog title:**
-- Create: "Nieuwe boeking"
-- Edit: "Boeking bewerken"
-
-**Buttons:** "Opslaan" (primary, submits form) / "Annuleren" (secondary, emits `cancelled`)
-
-Follow the native `<dialog>` pattern from CLAUDE.md:
-- Use `showModal()` / `close()`
-- Full-screen overlay with centered card
-- Inject `DOCUMENT`, set `document.body.style.overflow` on open/close
-- `[open]` CSS attribute selector to prevent pointer event capture when closed
-
-### F7 — Booking status actions component (presentational)
-
-**Folder:** `libs/chairly/src/lib/bookings/ui/`
-
-Presentational component `BookingStatusActionsComponent` (`selector: 'chairly-booking-status-actions'`).
-
-**Inputs:**
-- `booking: Booking`
-
-**Outputs:**
-- `action` emits `{ action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow', bookingId: string }`
-
-**Visible buttons by status:**
-
-| Status | Buttons (Dutch) |
-|---|---|
-| Scheduled | Bevestigen, Starten, Annuleren, Niet-verschenen |
-| Confirmed | Starten, Annuleren, Niet-verschenen |
-| InProgress | Voltooien, Annuleren |
-| Completed | _(none)_ |
-| Cancelled | _(none)_ |
-| NoShow | _(none)_ |
-
-Each button emits `action` with its key and `booking.id`. Use small Tailwind-styled buttons with appropriate colors.
-
-Export all UI components from `ui/index.ts`. Delete `ui/.gitkeep`.
-
-### F8 — Route config and registration
-
-**File:** `libs/chairly/src/lib/bookings/bookings.routes.ts` (at domain root)
-
-```typescript
-export const bookingsRoutes: Routes = [
-  {
-    path: '',
-    component: BookingListPageComponent,
-  },
-];
-```
-
-Register in the app shell under `/bookings` (lazy-loaded):
-```typescript
-{ path: 'bookings', loadChildren: () => import('@org/chairly-lib').then(m => m.bookingsRoutes) }
-```
-
-Add a "Boekingen" navigation link in the app shell sidebar/nav.
-
-Export `bookingsRoutes` from the chairly-lib barrel (`libs/chairly/src/lib/index.ts` or `libs/chairly/src/index.ts`).
-
-### F9 — Playwright e2e tests
-
-**File:** `apps/chairly-e2e/src/bookings.spec.ts`
-
-Follow the pattern from `services.spec.ts` (mock API routes, navigate, assert):
-
-**Mock data:**
-- `mockBooking` with status "Scheduled" (only `createdAtUtc` set)
-- Mock API routes for `GET /api/bookings`, `POST /api/bookings`, `POST /api/bookings/{id}/confirm`, etc.
-
-**Scenarios:**
-
-1. **Lijst laadt** — navigate to `/bookings`, verify heading "Boekingen" and table visible, mock booking row appears
-2. **Nieuwe boeking aanmaken** — click "Nieuwe boeking", fill in fields (clientId, staffMemberId, datetime, serviceIds), click "Opslaan", verify POST was called and row appears
-3. **Status actie: Bevestigen** — find Scheduled booking, click "Bevestigen", verify API called and status badge changes to "Bevestigd"
-4. **Boeking bewerken** — click a row, verify dialog opens in edit mode with pre-filled values, change notes, click "Opslaan"
-
-Use `page.route()` for API mocking. Use `page.keyboard.press('Escape')` to close dialogs (per CLAUDE.md convention for cross-browser Playwright reliability).
+**State transitions (B8-B12):**
+- Each valid transition succeeds
+- Each invalid transition returns Conflict
+- Not found returns NotFound
 
 ## Acceptance Criteria
 
-**Backend:**
-- [ ] GET /api/bookings returns bookings filtered by date and/or staffMemberId
+- [ ] GET /api/bookings returns all bookings for tenant, filterable by date and staffMemberId
 - [ ] GET /api/bookings/{id} returns a single booking with services
-- [ ] POST /api/bookings creates a booking with validation (client, staff, services, overlap)
+- [ ] POST /api/bookings creates a booking, validates client/staff/services, checks overlap, snapshots services
 - [ ] PUT /api/bookings/{id} updates a booking; blocked in terminal states
-- [ ] POST /api/bookings/{id}/cancel sets CancelledAtUtc; allowed from Scheduled, Confirmed, InProgress
+- [ ] POST /api/bookings/{id}/cancel sets CancelledAtUtc; blocked in terminal states
 - [ ] POST /api/bookings/{id}/confirm sets ConfirmedAtUtc; only from Scheduled
-- [ ] POST /api/bookings/{id}/start sets StartedAtUtc; from Scheduled or Confirmed
+- [ ] POST /api/bookings/{id}/start sets StartedAtUtc; only from Scheduled or Confirmed
 - [ ] POST /api/bookings/{id}/complete sets CompletedAtUtc; only from InProgress
-- [ ] POST /api/bookings/{id}/no-show sets NoShowAtUtc; from Scheduled or Confirmed
+- [ ] POST /api/bookings/{id}/no-show sets NoShowAtUtc; only from Scheduled or Confirmed
 - [ ] EndTime = StartTime + sum of service durations
-- [ ] Service data snapshotted at creation time
-- [ ] Overlap detection excludes cancelled/no-show bookings
-- [ ] Unit tests pass for all handlers
-
-**Frontend:**
-- [ ] Booking list page renders at /bookings with heading "Boekingen"
-- [ ] Table displays bookings with Dutch status badges
-- [ ] Date and staff member filters work
-- [ ] Create dialog opens, submits, and refreshes list
-- [ ] Edit dialog opens pre-filled, submits, and refreshes list
-- [ ] Status action buttons visible per state, trigger correct API calls
-- [ ] All UI text in Dutch
-- [ ] Playwright e2e tests pass
-
-**Quality gates:**
-- [ ] `dotnet build src/backend/Chairly.slnx` passes
-- [ ] `dotnet test src/backend/Chairly.slnx` passes
-- [ ] `dotnet format src/backend/Chairly.slnx --verify-no-changes` passes
-- [ ] `npx nx affected -t lint --base=main` passes
-- [ ] `npx nx format:check --base=main` passes
-- [ ] `npx nx affected -t test --base=main` passes
-- [ ] `npx nx affected -t build --base=main` passes
-- [ ] Playwright e2e tests pass
+- [ ] Service name, duration, price are snapshotted at booking creation
+- [ ] Overlap detection excludes cancelled and no-show bookings
+- [ ] Status is derived from timestamps (no status column) per ADR-009
+- [ ] All backend quality checks pass: `dotnet build`, `dotnet test`, `dotnet format --verify-no-changes`
 
 ## Out of Scope
 
 - Recurring bookings
-- Multi-staff bookings (one booking = one staff member)
+- Multi-staff bookings
 - Client self-service / online booking
-- Working hours validation (staff availability check against WorkingHoursEntry)
-- Payment / invoice creation on completion (Billing context, separate feature)
-- Notifications (BookingCreated, BookingCancelled events — future feature)
-- Client name lookup in frontend table (placeholder with clientId for now)
-- Staff member name lookup in frontend table (placeholder with staffMemberId for now)
+- Working hours validation (staff availability against WorkingHoursEntry)
+- Payment / invoice creation on completion (Billing context)
+- Notifications (separate feature)
+- Domain events (BookingCreated, BookingCancelled, etc. — future iteration)
+- Frontend (separate feature)
