@@ -1,0 +1,15 @@
+namespace Chairly.Api.Features.Billing;
+
+internal sealed record InvoiceSummaryResponse(
+    Guid Id,
+    string InvoiceNumber,
+    DateOnly InvoiceDate,
+    Guid BookingId,
+    Guid ClientId,
+    string ClientFullName,
+    decimal TotalAmount,
+    string Status,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? SentAtUtc,
+    DateTimeOffset? PaidAtUtc,
+    DateTimeOffset? VoidedAtUtc);

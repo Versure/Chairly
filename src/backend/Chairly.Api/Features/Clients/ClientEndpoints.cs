@@ -1,5 +1,6 @@
 using Chairly.Api.Features.Clients.CreateClient;
 using Chairly.Api.Features.Clients.DeleteClient;
+using Chairly.Api.Features.Clients.GetClientRecipes;
 using Chairly.Api.Features.Clients.GetClientsList;
 using Chairly.Api.Features.Clients.UpdateClient;
 
@@ -15,6 +16,7 @@ internal static class ClientEndpoints
         group.MapCreateClient();
         group.MapUpdateClient();
         group.MapDeleteClient();
+        group.MapGetClientRecipes();
 
         return app;
     }
