@@ -52,6 +52,12 @@ claude --dangerously-skip-permissions
 
 > The `--dangerously-skip-permissions` flag is required so Claude can create branches, worktrees, write files, and run quality checks without prompting at every step. Only use this in the Chairly project directory.
 
+Optional convenience:
+```bash
+./scripts/agent-team/start.sh "Add booking cancellation"
+```
+This starts a tmux session and invokes `/feature-team` automatically.
+
 ### 2. Run the feature-team skill
 
 Pass a short description or a path to a spec file:

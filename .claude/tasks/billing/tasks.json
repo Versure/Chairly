@@ -1,6 +1,6 @@
 {
   "feature": "billing",
-  "specPath": "docs/specs/billing.md",
+  "specPath": ".claude/tasks/billing/spec.md",
   "tasks": [
     {
       "id": "B1",

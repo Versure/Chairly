@@ -1,0 +1,42 @@
+name: Agent Workflow Evals
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.claude/**'
+      - 'scripts/agent-team/**'
+      - 'docs/agent-teams-*.md'
+      - 'docs/agent-workflow-optimization-plan.md'
+      - '.github/workflows/agent-workflow-evals.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.claude/**'
+      - 'scripts/agent-team/**'
+      - 'docs/agent-teams-*.md'
+      - 'docs/agent-workflow-optimization-plan.md'
+      - '.github/workflows/agent-workflow-evals.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure jq
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+
+      - name: Run agent workflow evals
+        run: ./scripts/agent-team/evals/run.sh

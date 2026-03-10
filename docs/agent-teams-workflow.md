@@ -25,18 +25,18 @@ You
  |-- Phase 1: Spec
  |    └── [Spec agent — pane 1]
  |         Uses: chairly-explorer subagent (Haiku) to research existing code
- |         Writes: docs/specs/{feature}.md
+ |         Writes: .claude/tasks/{feature}/spec.md
  |                 .claude/tasks/{feature}/tasks.json  (committed to branch)
  |
  |-- Phase 2: Implementation (parallel, each in own git worktree)
  |    ├── [Backend agent — pane 1]
- |    |    Worktree: .worktrees/backend  (branch: feat/{name}/backend)
+ |    |    Worktree: .worktrees/backend  (branch: impl/{name}-backend)
  |    |    All file ops prefixed: .worktrees/backend/
  |    |    Uses: chairly-explorer subagent for pattern lookups
  |    |    Implements: Domain, Infrastructure, Api slices, tests
  |    |
  |    └── [Frontend agent — pane 2]
- |         Worktree: .worktrees/frontend  (branch: feat/{name}/frontend)
+ |         Worktree: .worktrees/frontend  (branch: impl/{name}-frontend)
  |         All file ops prefixed: .worktrees/frontend/
  |         Uses: chairly-explorer subagent for pattern lookups
  |         Implements: service, store, components, routes, e2e tests
@@ -116,18 +116,16 @@ The spec agent commits `tasks.json` to the main feature branch (`feat/{name}`), 
   skills/
     feature-team/
       SKILL.md                         # Lead orchestration prompt (invoke: /feature-team)
-      phases/
-        spec.md                        # Spec agent spawn prompt
-        backend-impl.md                # Backend agent spawn prompt (enforces worktree paths)
-        frontend-impl.md               # Frontend agent spawn prompt (enforces worktree paths)
-        backend-review.md              # Backend reviewer spawn prompt
-        frontend-review.md             # Frontend reviewer spawn prompt
-        qa.md                          # QA agent spawn prompt
+      phase-0-spec.md                  # Spec agent spawn prompt
+      phase-1-backend.md               # Backend agent spawn prompt (enforces worktree paths)
+      phase-2-frontend.md              # Frontend agent spawn prompt (enforces worktree paths)
+      phase-3-backend-review.md        # Backend reviewer spawn prompt
+      phase-3-frontend-review.md       # Frontend reviewer spawn prompt
+      phase-5-merge.md                 # Merge + PR instructions
     rework-team/
       SKILL.md                         # Rework lead orchestration prompt (invoke: /rework-team)
-      phases/
-        backend-rework.md              # Backend rework agent spawn prompt
-        frontend-rework.md             # Frontend rework agent spawn prompt
+      phase-rework-backend.md          # Backend rework agent spawn prompt
+      phase-rework-frontend.md         # Frontend rework agent spawn prompt
     chairly-backend-slice/
       SKILL.md                         # Backend code patterns reference (user-invocable: false)
     chairly-frontend-domain/
@@ -297,35 +295,53 @@ Return PASS or FAIL, and on failure include only the relevant error output.
 
 ```bash
 git checkout -b feat/{feature-name} main
-git worktree add .worktrees/backend -b feat/{name}/backend
-git worktree add .worktrees/frontend -b feat/{name}/frontend
+git worktree add .worktrees/backend -b impl/{name}-backend
+git worktree add .worktrees/frontend -b impl/{name}-frontend
 ```
 
 ### Phase 1 — Spec (1 teammate)
 
 The spec agent:
 1. Spawns `chairly-explorer` to research existing domain entities and patterns relevant to the feature
-2. Produces two artifacts:
+2. Produces two artifacts in `.claude/tasks/{feature-name}/`:
 
-**`docs/specs/{feature-name}.md`** — human-readable spec committed to the branch.
+**`spec.md`** — human-readable spec committed to the branch.
 
-**`.claude/tasks/{feature-name}/tasks.json`** — machine-readable task list, also committed to the branch so all subsequent teammates can read it:
+**`tasks.json`** — machine-readable task list, also committed to the branch so all subsequent teammates can read it:
 
 ```json
 {
   "feature": "booking-cancellation",
-  "spec": "docs/specs/booking-cancellation.md",
-  "backend": [
-    { "id": "B1", "title": "Add CancellationRequestedAtUtc to Booking entity", "files": ["src/backend/Chairly.Domain/Entities/Booking.cs"] },
-    { "id": "B2", "title": "Create CancelBookingCommand and Handler", "files": ["src/backend/Chairly.Api/Features/Bookings/CancelBooking/"] },
-    { "id": "B3", "title": "Add CancelBookingEndpoint and register route", "files": ["src/backend/Chairly.Api/Features/Bookings/CancelBooking/CancelBookingEndpoint.cs"] },
-    { "id": "B4", "title": "Write unit tests", "files": ["src/backend/Chairly.Tests/Features/Bookings/CancelBookingHandlerTests.cs"] }
-  ],
-  "frontend": [
-    { "id": "F1", "title": "Add cancel method to BookingsApiService", "files": ["src/frontend/chairly/libs/chairly/src/lib/bookings/data-access/booking-api.service.ts"] },
-    { "id": "F2", "title": "Add cancelBooking action to BookingsStore", "files": ["src/frontend/chairly/libs/chairly/src/lib/bookings/data-access/bookings.store.ts"] },
-    { "id": "F3", "title": "Add cancel button to booking-detail component", "files": ["src/frontend/chairly/libs/chairly/src/lib/bookings/ui/booking-detail.component.ts"] },
-    { "id": "F4", "title": "Write Playwright e2e test for cancellation flow", "files": ["src/frontend/chairly/apps/chairly-e2e/src/bookings-cancel.spec.ts"] }
+  "specPath": ".claude/tasks/booking-cancellation/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Add cancellation fields to Booking entity",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Add CancelBooking endpoint and handler",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add cancel method to booking API service",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Add cancellation flow to booking list page",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    }
   ]
 }
 ```
@@ -353,52 +369,49 @@ Each agent uses `chairly-explorer` for pattern lookups and commits after each ta
 After both implementation agents are done, the lead spawns two reviewers in parallel.
 
 **Backend reviewer:**
-1. Reads `git -C .worktrees/backend diff main..HEAD` for changed files
-2. Reads each changed file and the spec
-3. Checks: slice structure, result pattern, validation, tests, naming, no logic in endpoints
-4. Writes a findings report to `.claude/tasks/{name}/review-backend.md`
-5. **Messages the lead** with the report path and whether issues were found
+1. Reads the spec and all changed files under `.worktrees/backend/`
+2. Checks: slice structure, result pattern, validation, tests, naming, no logic in endpoints
+3. Reports findings inline using the `BACKEND-REVIEW-RESULT` block (no files written)
 
 **Frontend reviewer:**
-1. Reads `git -C .worktrees/frontend diff main..HEAD` for changed files
-2. Reads each changed file and the spec
-3. Checks: signal APIs, OnPush, Dutch UI text, smart/dumb split, store usage, test coverage
-4. Writes a findings report to `.claude/tasks/{name}/review-frontend.md`
-5. **Messages the lead** with the report path and whether issues were found
+1. Reads the spec and all changed files under `.worktrees/frontend/`
+2. Checks: signal APIs, OnPush, Dutch UI text, smart/presentational split, store usage, test coverage
+3. Reports findings inline using the `FRONTEND-REVIEW-RESULT` block (no files written)
 
 **Lead's response to review findings:**
-- If no issues: marks the review task complete, proceeds to QA
-- If issues found: spawns a **fix agent** — a new teammate whose spawn prompt includes the worktree path, the findings report path, and the spec path. The fix agent reads the findings, makes the corrections in the worktree, commits, and messages the lead when done. The lead then re-spawns the reviewer to confirm. The fix agent spawn prompt is inline in the `feature-team/SKILL.md` orchestration logic (not a separate phase file), since the lead constructs it dynamically from the reviewer's report.
+- If no issues: proceeds to QA
+- If issues found: spawns a **fix agent** using the Phase 1/2 implementation prompt with a `--- FIX PASS ---` block appended. The fix agent applies corrections in the worktree, commits, and reports back. The lead re-runs one review pass to confirm.
 
 This routes all fix coordination through the lead rather than relying on reviewers directly messaging potentially-idle implementation agents.
 
-### Phase 4 — QA (1 teammate)
+### Phase 4 — QA (lead spawns both QA subagents)
 
-The QA agent spawns both QA subagents in parallel:
+The lead spawns both QA subagents in parallel:
 ```
 chairly-backend-qa  (worktree: .worktrees/backend)
 chairly-frontend-qa (worktree: .worktrees/frontend)
 ```
 
 If either fails:
-1. QA agent writes details to `.claude/tasks/{name}/qa-failures.md`
-2. Messages the **lead** with the failure report
-3. Lead spawns a fix agent for the affected layer
-4. After fix, QA agent re-spawns the failing subagent
-
-QA agent also reads test coverage reports and writes any missing tests directly (in the appropriate worktree).
+1. Lead spawns a fix agent for the affected layer using the implementation phase prompt
+2. After fix, the lead re-runs only the failing QA subagent
+3. Retry up to 2 more times per layer, then proceed with a known-issues note
 
 ### Phase 5 — Merge and PR (Lead)
 
 ```bash
 # On feat/{name} branch:
-git merge feat/{name}/backend --no-ff -m "feat({context}): implement {feature} backend"
-git merge feat/{name}/frontend --no-ff -m "feat({context}): implement {feature} frontend"
+git merge impl/{name}-backend --no-ff -m "chore: merge backend implementation"
+git merge impl/{name}-frontend --no-ff -m "chore: merge frontend implementation"
+
+# Commit spec + tasks
+git add .claude/tasks/{name}/
+git diff --cached --quiet || git commit -m "chore({name}): add feature spec and tasks"
 
 # Clean up worktrees:
 git worktree remove .worktrees/backend
 git worktree remove .worktrees/frontend
-git branch -d feat/{name}/backend feat/{name}/frontend
+git branch -d impl/{name}-backend impl/{name}-frontend
 
 # Push and open PR:
 git push -u origin feat/{name}
@@ -423,16 +436,12 @@ Or from inside Claude Code:
 /rework-team 42
 ```
 
-The rework lead:
-1. Gets repo identity: `gh repo view --json nameWithOwner -q '.nameWithOwner'`
-2. Reads general comments: `gh pr view 42 --comments`
-3. Reads inline diff comments: `gh api repos/{nameWithOwner}/pulls/42/comments`
-4. Categorises comments as backend, frontend, or both
-5. Checks out the PR branch: `gh pr checkout 42`
-6. Recreates worktrees from the PR branch
-7. Spawns only the affected layer agents (backend, frontend, or both)
-8. Re-runs reviewers and QA for those layers
-9. Pushes updated commits to the existing PR branch
+The rework flow:
+1. `rework.sh` fetches PR comments and writes `.claude/tasks/{feature}/pr-comments.md`
+2. `rework.sh` checks out the feature branch and recreates worktrees
+3. `/rework-team` reads `pr-comments.md`, categorizes comments by layer, and spawns fix agents
+4. QA subagents run in parallel; failing layers get a fix pass + re-run
+5. The lead merges fixes back into the feature branch and pushes
 
 ---
 
@@ -442,43 +451,38 @@ The rework lead:
 
 ```yaml
 name: feature-team
-disable-model-invocation: true
-argument-hint: "[description or path/to/brief.md]"
+description: >
+  Orchestrate a full feature implementation using the agent team workflow.
+  Runs spec -> backend -> frontend -> review -> QA -> merge/PR phases.
+user-invocable: true
 ```
 
 Lead orchestration steps:
 1. Parse `$ARGUMENTS`: if it resolves to an existing file path, read it; otherwise treat as free-form
 2. Derive kebab-case `{feature-name}`
-3. `git checkout -b feat/{feature-name} main`
-4. `git worktree add .worktrees/backend -b feat/{name}/backend`
-5. `git worktree add .worktrees/frontend -b feat/{name}/frontend`
-6. Read `phases/spec.md`; spawn spec agent with that prompt + raw input
-7. Wait for spec agent to message completion + tasks.json path
-8. Read `phases/backend-impl.md` and `phases/frontend-impl.md`; spawn both agents in parallel with their prompts + tasks.json path + worktree path
-9. Wait for both implementation agents to complete
-10. Read `phases/backend-review.md` and `phases/frontend-review.md`; spawn both reviewers in parallel
-11. Wait for both reviewers to message their findings; handle fix cycle if needed
-12. Read `phases/qa.md`; spawn QA agent
-13. Wait for QA agent to pass; handle fix cycle if needed
-14. Merge worktrees, push, open PR
-15. Clean up worktrees, branches, and team
+3. Verify `main` is checked out, create `feat/{feature-name}` if missing
+4. Create worktrees: `impl/{name}-backend` and `impl/{name}-frontend`
+5. Read `phase-0-spec.md`; spawn spec agent with that prompt + input
+6. Wait for spec + tasks, then read `phase-1-backend.md` and `phase-2-frontend.md`; spawn both in parallel
+7. Read `phase-3-backend-review.md` and `phase-3-frontend-review.md`; spawn both reviewers in parallel and run fix pass if needed
+8. Spawn QA subagents from `.claude/agents/chairly-backend-qa.md` and `.claude/agents/chairly-frontend-qa.md`; re-run failing layers after fixes
+9. Read `phase-5-merge.md` and follow merge + PR instructions
 
 ### `/rework-team`
 
 ```yaml
 name: rework-team
-disable-model-invocation: true
-argument-hint: "[pr-number]"
+description: >
+  Orchestrate a rework pass based on PR review comments.
+user-invocable: true
 ```
 
 Lead orchestration steps:
-1. `gh repo view --json nameWithOwner -q '.nameWithOwner'` → store as `{repo}`
-2. `gh pr view $ARGUMENTS --comments` + `gh api repos/{repo}/pulls/$ARGUMENTS/comments`
-3. Categorise comments by layer
-4. `gh pr checkout $ARGUMENTS`; recreate worktrees from PR branch
-5. Spawn affected layer agents with rework prompts + categorised comments
-6. Re-run reviewers + QA
-7. `git push`
+1. `gh pr view $ARGUMENTS --json headRefName,title` to resolve the feature branch
+2. Verify `.claude/tasks/{feature}/pr-comments.md` exists (written by `rework.sh`)
+3. Categorize comments by layer and spawn fix agents with the rework phase prompts
+4. Run QA subagents in parallel; re-run failing layers after fixes
+5. Merge worktree fixes into the feature branch, push, and comment on the PR
 
 ---
 
@@ -494,23 +498,20 @@ Lead orchestration steps:
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-FEATURE_INPUT="${*:-}"
+FEATURE_INPUT="$*"
 
 if [[ -z "$FEATURE_INPUT" ]]; then
-  echo "Usage: start.sh <description or path/to/brief.md>"
+  echo "Usage: start.sh <description or path/to/brief.md>" >&2
   exit 1
 fi
 
-# Kill any leftover session with the same name
-tmux kill-session -t feature-team 2>/dev/null || true
-
-# Start Claude in a new detached tmux session with agent teams enabled
-tmux new-session -d -s feature-team -c "$REPO_ROOT" \
-  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --teammate-mode tmux"
+tmux new-session -d -s feature-team -c "$REPO_ROOT"
+tmux send-keys -t feature-team \
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --dangerously-skip-permissions" Enter
 
 # Wait for Claude to finish starting up, then send the skill invocation
 # Increase to sleep 8 if the command isn't received (slow WSL or cold start)
-sleep 4
+sleep 6
 tmux send-keys -t feature-team "/feature-team $FEATURE_INPUT" Enter
 
 # Attach to the session so you can watch progress
@@ -525,21 +526,22 @@ tmux attach-session -t feature-team
 
 set -euo pipefail
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
 PR_NUMBER="${1:-}"
 
 if [[ -z "$PR_NUMBER" ]]; then
-  echo "Usage: rework.sh <pr-number>"
+  echo "Usage: rework.sh <pr-number>" >&2
   exit 1
 fi
 
-tmux kill-session -t rework-team 2>/dev/null || true
+# Fetch PR comments into .claude/tasks/{feature}/pr-comments.md
+# Checkout feature branch and recreate worktrees
 
-tmux new-session -d -s rework-team -c "$REPO_ROOT" \
-  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude --teammate-mode tmux"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+tmux new-session -d -s rework-team -c "$REPO_ROOT"
+tmux send-keys -t rework-team \
+  "claude --dangerously-skip-permissions" Enter
 
-# Increase to sleep 8 if the command isn't received (slow WSL or cold start)
-sleep 4
+sleep 6
 tmux send-keys -t rework-team "/rework-team $PR_NUMBER" Enter
 
 tmux attach-session -t rework-team
@@ -622,25 +624,39 @@ exit 0
 
 ---
 
+## Evals (Regression Checks)
+
+Run the lightweight evals script to validate agent and skill config, docs alignment,
+and `.claude/tasks/*/tasks.json` schema:
+
+```bash
+./scripts/agent-team/evals/run.sh
+```
+
+This script is intended to run locally before changes and in CI on PRs that touch
+`.claude/`, `scripts/agent-team/`, or `docs/agent-teams-*.md`.
+
+---
+
 ## Git Worktree Strategy
 
 ```bash
 # Phase 0 — Lead creates worktrees:
-git worktree add .worktrees/backend -b feat/{name}/backend
-git worktree add .worktrees/frontend -b feat/{name}/frontend
+git worktree add .worktrees/backend -b impl/{name}-backend
+git worktree add .worktrees/frontend -b impl/{name}-frontend
 
 # Phase 2 — agents commit inside their worktree:
 cd .worktrees/backend && git add ... && git commit -m "..."
 cd .worktrees/frontend && git add ... && git commit -m "..."
 
 # Phase 5 — Lead merges on feat/{name} branch:
-git merge feat/{name}/backend --no-ff -m "feat({context}): implement {feature} backend"
-git merge feat/{name}/frontend --no-ff -m "feat({context}): implement {feature} frontend"
+git merge impl/{name}-backend --no-ff -m "chore: merge backend implementation"
+git merge impl/{name}-frontend --no-ff -m "chore: merge frontend implementation"
 
 # Cleanup:
 git worktree remove .worktrees/backend
 git worktree remove .worktrees/frontend
-git branch -d feat/{name}/backend feat/{name}/frontend
+git branch -d impl/{name}-backend impl/{name}-frontend
 ```
 
 `.worktrees/` is listed in `.gitignore`. `.claude/tasks/` is **NOT** gitignored — tasks.json is committed to the feature branch so all teammates can read it.
@@ -655,7 +671,7 @@ git branch -d feat/{name}/backend feat/{name}/frontend
 | No session resumption after crash | Shell scripts use tmux — detach/reattach survives. For hard crashes: rerun the script. The lead detects existing branch/spec artifacts and skips completed phases. |
 | Task status can lag | Lead is instructed to poll task status after a teammate signals done. `TaskCompleted` hook acts as an additional gate. |
 | Reviewer cannot reliably message idle agents | Reviewers report to the lead, not to implementation agents. Lead spawns fresh fix agents if needed. |
-| QA subagents cannot spawn sub-subagents | QA agent is a teammate (full session), so it can spawn subagents. QA subagents themselves cannot spawn further agents — they are terminal workers. |
+| QA subagents cannot spawn sub-subagents | Lead spawns QA subagents directly; they are terminal workers and do not spawn further agents. Fix cycles are coordinated by the lead. |
 | Token cost | Max 2–3 teammates active simultaneously. Haiku for exploration. Total: 5 teammate contexts across the full run, never all at once. |
 | Split panes require tmux | Scripts enforce WSL + tmux. In-process mode (Shift+Down) works as fallback in any terminal. |
 
@@ -676,17 +692,17 @@ Create in this order — each group depends on the previous:
 6. `.claude/agents/chairly-frontend-qa.md`
 
 ### Group 3 — Feature team phase prompts
-7. `.claude/skills/feature-team/phases/spec.md`
-8. `.claude/skills/feature-team/phases/backend-impl.md`
-9. `.claude/skills/feature-team/phases/frontend-impl.md`
-10. `.claude/skills/feature-team/phases/backend-review.md`
-11. `.claude/skills/feature-team/phases/frontend-review.md`
-12. `.claude/skills/feature-team/phases/qa.md`
+7. `.claude/skills/feature-team/phase-0-spec.md`
+8. `.claude/skills/feature-team/phase-1-backend.md`
+9. `.claude/skills/feature-team/phase-2-frontend.md`
+10. `.claude/skills/feature-team/phase-3-backend-review.md`
+11. `.claude/skills/feature-team/phase-3-frontend-review.md`
+12. `.claude/skills/feature-team/phase-5-merge.md`
 13. `.claude/skills/feature-team/SKILL.md`
 
 ### Group 4 — Rework phase prompts
-14. `.claude/skills/rework-team/phases/backend-rework.md`
-15. `.claude/skills/rework-team/phases/frontend-rework.md`
+14. `.claude/skills/rework-team/phase-rework-backend.md`
+15. `.claude/skills/rework-team/phase-rework-frontend.md`
 16. `.claude/skills/rework-team/SKILL.md`
 
 ### Group 5 — Infrastructure

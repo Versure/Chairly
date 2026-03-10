@@ -1,6 +1,6 @@
 {
   "feature": "recipes",
-  "specPath": "docs/specs/recipes.md",
+  "specPath": ".claude/tasks/recipes/spec.md",
   "tasks": [
     {
       "id": "B1",

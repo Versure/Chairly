@@ -1,6 +1,6 @@
 {
   "feature": "ui-component-subfolders",
-  "specPath": "docs/specs/ui-component-subfolders.md",
+  "specPath": ".claude/tasks/ui-component-subfolders/spec.md",
   "tasks": [
     {
       "id": "F1",
@@ -26,7 +26,7 @@
     {
       "id": "F4",
       "layer": "frontend",
-      "title": "Move shared UI components into subfolders (if flat)",
+      "title": "Move shared UI components into subfolders",
       "status": "pending",
       "dependsOn": []
     },

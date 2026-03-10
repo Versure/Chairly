@@ -1,6 +1,6 @@
 {
   "feature": "e2e-coverage",
-  "specPath": "docs/specs/e2e-coverage.md",
+  "specPath": ".claude/tasks/e2e-coverage/spec.md",
   "tasks": [
     {
       "id": "F1",
