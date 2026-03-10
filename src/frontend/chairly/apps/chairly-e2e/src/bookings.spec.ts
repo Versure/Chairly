@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const mockClients = [
   { id: 'client-1', firstName: 'Jan', lastName: 'Jansen' },

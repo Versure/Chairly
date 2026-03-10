@@ -8,6 +8,11 @@ against the spec and Chairly conventions, and report concrete findings.
 - `SPEC_PATH` — path to the feature spec
 - `BACKEND_WT` — backend worktree root (`.worktrees/backend/`)
 
+## Read-only: spec and task files
+
+**Do NOT modify files in `.claude/tasks/`.** Only Phase 0 (spec agent) writes spec and tasks files.
+Read them for review reference only.
+
 ## What to read first
 
 1. Read `SPEC_PATH` — the authoritative definition of what should be built

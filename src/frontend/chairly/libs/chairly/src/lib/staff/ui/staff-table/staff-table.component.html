@@ -1,0 +1,89 @@
+<div class="overflow-x-auto">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Avatar
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Naam
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Rol
+        </th>
+        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+          Status
+        </th>
+        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+          Acties
+        </th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100 bg-white">
+      @for (member of staffMembers(); track member.id) {
+        <tr class="hover:bg-gray-50 transition-colors" [class.opacity-60]="!member.isActive">
+          <td class="px-4 py-3">
+            <chairly-staff-avatar
+              size="sm"
+              [color]="member.color"
+              [initials]="(member.firstName | slice: 0 : 1) + (member.lastName | slice: 0 : 1)"
+              [photoUrl]="member.photoUrl" />
+          </td>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">
+            {{ member.firstName }} {{ member.lastName }}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-600">
+            {{ member.role === 'manager' ? 'Manager' : 'Medewerker' }}
+          </td>
+          <td class="px-4 py-3">
+            @if (member.isActive) {
+              <span
+                class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                Actief
+              </span>
+            } @else {
+              <span
+                class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                Inactief
+              </span>
+            }
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                class="inline-flex items-center rounded border border-primary-200 bg-primary-50 px-2 py-1 text-xs font-medium text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-100 active:bg-primary-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1 dark:bg-primary-700 dark:border-primary-600 dark:text-white dark:hover:bg-primary-600 dark:hover:border-primary-500 dark:active:bg-primary-800"
+                title="Medewerker bewerken"
+                (click)="edit.emit(member)">
+                Bewerken
+              </button>
+              @if (member.isActive) {
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded border border-yellow-200 bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 transition-colors hover:border-yellow-300 hover:bg-yellow-100 active:bg-yellow-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-1 dark:bg-yellow-700 dark:border-yellow-600 dark:text-white dark:hover:bg-yellow-600 dark:hover:border-yellow-500 dark:active:bg-yellow-800"
+                  title="Medewerker deactiveren"
+                  (click)="deactivate.emit(member)">
+                  Deactiveren
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 transition-colors hover:border-green-300 hover:bg-green-100 active:bg-green-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-1 dark:bg-green-700 dark:border-green-600 dark:text-white dark:hover:bg-green-600 dark:hover:border-green-500 dark:active:bg-green-800"
+                  title="Medewerker activeren"
+                  (click)="reactivate.emit(member)">
+                  Activeren
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="px-4 py-12 text-center text-sm text-gray-400">
+            Geen medewerkers gevonden
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

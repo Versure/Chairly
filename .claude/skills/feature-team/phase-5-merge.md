@@ -47,6 +47,10 @@ git merge --no-ff impl/{FEATURE_NAME}-frontend -m "chore: merge frontend impleme
 If there are merge conflicts (unlikely since worktrees operate on separate directories),
 resolve them conservatively — keep both sides if in doubt, then commit.
 
+**Special case — `.claude/tasks/` conflicts:** If merge conflicts occur in spec or tasks files,
+always keep the original Phase 0 version (from the feature branch). Discard any changes made
+by implementation agents — these files should not have been modified after Phase 0.
+
 ## Step 4 — Commit the spec and tasks files
 
 The spec and tasks.json written during Phase 0 live in the main checkout.
@@ -100,7 +104,21 @@ EOF
 If any QA checks were still failing at the end of Phase 4, note them clearly in the
 PR body under a `## Known issues` section rather than hiding them.
 
-## Step 7 — Report
+## Step 7 — Wait for CI/CD checks
+
+After creating the PR, wait for CI/CD to complete:
+
+```bash
+gh run watch --exit-status
+```
+
+If CI fails:
+1. Read the failure details: `gh run view --log-failed`
+2. Fix the issue in the feature branch, commit, and push
+3. Run `gh run watch --exit-status` again
+4. Repeat up to 3 times. If still failing after 3 attempts, report the failure in the output.
+
+## Step 8 — Report
 
 Output the PR URL returned by `gh pr create` so the user can find it easily.
 
@@ -108,4 +126,5 @@ Output the PR URL returned by `gh pr create` so the user can find it easily.
 MERGE-COMPLETE
 pr_url: {url}
 feature_branch: feat/{FEATURE_NAME}
+ci_status: pass | fail
 ```

@@ -27,7 +27,12 @@ libs/chairly/src/lib/{domain}/
 ├── models/
 │   ├── {entity}.models.ts
 │   └── index.ts                   ← barrel: export type { ... }
-├── ui/                            ← presentational components
+├── ui/
+│   ├── {component-name}/
+│   │   ├── {component-name}.component.ts
+│   │   ├── {component-name}.component.html
+│   │   └── {component-name}.component.spec.ts
+│   └── index.ts                   ← barrel: export all presentational components
 ├── pipes/                         ← Angular pipes
 ├── util/                          ← pure utility functions
 └── {domain}.routes.ts             ← route config at domain root
@@ -119,6 +124,7 @@ export { {Entity}ApiService } from './{entity}-api.service';
 | Angular `@Pipe` classes | `pipes/` |
 | Pure TS utility functions | `util/` |
 | Smart (container) components | `feature/{feature-name}/` subfolder |
+| Presentational components | `ui/{component-name}/` subfolder |
 | Route configuration | `{domain}.routes.ts` at domain root |
 | `.gitkeep` | Delete immediately when real files are added |
 
@@ -130,6 +136,32 @@ export { {Entity}ApiService } from './{entity}-api.service';
 - All user-facing text must be **Dutch (Nederlands)** — write Dutch from the first keystroke
 - Common translations: Save→Opslaan, Cancel→Annuleren, Add→Toevoegen, Edit→Bewerken,
   Delete→Verwijderen, Active→Actief, Inactive→Inactief, Loading→Laden, Confirm→Bevestigen
+
+---
+
+## Entity Selection — No Raw ID Inputs
+
+User-facing forms must **NEVER** ask users to enter IDs (UUIDs/GUIDs). All entity references
+must use searchable dropdowns, autocomplete inputs, or selection lists that display the entity
+name/label and map the selected entity to its ID internally.
+
+**Wrong:**
+```html
+<input type="text" formControlName="clientId" placeholder="Voer klant-ID in" />
+```
+
+**Correct:**
+```html
+<select formControlName="clientId">
+  @for (client of clients(); track client.id) {
+    <option [value]="client.id">{{ client.lastName }}, {{ client.firstName }}</option>
+  }
+</select>
+```
+
+If a related entity needs to be selected (client, staff member, service), the smart component
+must load the list of available entities and pass them to the form component. The spec must
+define search/filter endpoints if the list is too large for a simple dropdown.
 
 ---
 

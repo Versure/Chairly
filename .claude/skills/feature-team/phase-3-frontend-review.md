@@ -8,6 +8,11 @@ against the spec and Chairly conventions, and report concrete findings.
 - `SPEC_PATH` — path to the feature spec
 - `FRONTEND_WT` — frontend worktree root (`.worktrees/frontend/`)
 
+## Read-only: spec and task files
+
+**Do NOT modify files in `.claude/tasks/`.** Only Phase 0 (spec agent) writes spec and tasks files.
+Read them for review reference only.
+
 ## What to read first
 
 1. Read `SPEC_PATH` — the authoritative definition of what should be built
@@ -75,6 +80,11 @@ To find the feature's files, look under:
 - [ ] No `any` types
 - [ ] No `console` statements
 - [ ] Explicit return types on all functions
+
+### UX patterns
+- [ ] All entity selection inputs use name-based selection (dropdowns, autocomplete), never raw ID input fields
+- [ ] Create/Update request bodies contain IDs but the UI maps names → IDs via selection components
+- [ ] Users never need to type or know a UUID
 
 ### E2e tests
 - [ ] Playwright tests exist for the feature page
