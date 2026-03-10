@@ -19,8 +19,10 @@ internal sealed class GetInvoicesListHandler(ChairlyDbContext db) : IRequestHand
 
         if (!string.IsNullOrWhiteSpace(query?.ClientName))
         {
-            var clientName = query.ClientName;
-            joinedQuery = joinedQuery.Where(x => x.ClientFullName.Contains(clientName));
+            var clientName = query.ClientName.ToUpperInvariant();
+#pragma warning disable CA1862 // EF Core cannot translate Contains(string, StringComparison) to SQL
+            joinedQuery = joinedQuery.Where(x => x.ClientFullName.ToUpperInvariant().Contains(clientName));
+#pragma warning restore CA1862
         }
 
         return await joinedQuery

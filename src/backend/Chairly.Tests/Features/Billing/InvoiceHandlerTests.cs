@@ -542,10 +542,15 @@ public class InvoiceHandlerTests
         await db.SaveChangesAsync();
         var handler = new GetInvoicesListHandler(db);
 
-        var result = (await handler.Handle(new GetInvoicesListQuery { ClientName = "Vries" })).ToList();
+        var result = (await handler.Handle(new GetInvoicesListQuery { ClientName = "vries" })).ToList();
 
         Assert.Single(result);
         Assert.Equal("Jan de Vries", result[0].ClientFullName);
+
+        var resultUpper = (await handler.Handle(new GetInvoicesListQuery { ClientName = "VRIES" })).ToList();
+
+        Assert.Single(resultUpper);
+        Assert.Equal("Jan de Vries", resultUpper[0].ClientFullName);
     }
 
     [Fact]
