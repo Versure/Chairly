@@ -14,6 +14,14 @@
         </h1>
       }
     </div>
+    @if (client()) {
+      <button
+        type="button"
+        class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+        (click)="onEditClient()">
+        Bewerken
+      </button>
+    }
   </div>
 
   <!-- Content -->
@@ -58,7 +66,7 @@
           Afgeronde boekingen
         </h2>
         @if (isLoadingBookings()) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">Laden...</p>
+          <chairly-loading-indicator message="Boekingen laden..." />
         } @else if (completedBookingsWithoutRecipe().length === 0) {
           <p class="text-sm text-gray-500 dark:text-gray-400">
             Geen afgeronde boekingen zonder recept.
@@ -110,6 +118,9 @@
     }
   </div>
 </div>
+
+<!-- Client form dialog (edit) -->
+<chairly-client-form-dialog #clientFormDialog [client]="client()" (saved)="onClientSaved($event)" />
 
 <!-- Recipe form dialog — always in DOM to avoid viewChild timing issues -->
 <chairly-recipe-form

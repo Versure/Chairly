@@ -264,87 +264,6 @@ namespace Chairly.Infrastructure.Migrations
                     b.ToTable("Invoices", (string)null);
                 });
 
-            modelBuilder.Entity("Chairly.Domain.Entities.Recipe", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BookingId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("StaffMemberId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantId", "BookingId")
-                        .IsUnique();
-
-                    b.HasIndex("TenantId", "ClientId");
-
-                    b.ToTable("Recipes", (string)null);
-                });
-
-            modelBuilder.Entity("Chairly.Domain.Entities.RecipeProduct", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Brand")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("Quantity")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<Guid>("RecipeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RecipeId");
-
-                    b.ToTable("RecipeProducts", (string)null);
-                });
-
             modelBuilder.Entity("Chairly.Domain.Entities.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -562,15 +481,6 @@ namespace Chairly.Infrastructure.Migrations
                     b.Navigation("LineItems");
                 });
 
-            modelBuilder.Entity("Chairly.Domain.Entities.RecipeProduct", b =>
-                {
-                    b.HasOne("Chairly.Domain.Entities.Recipe", null)
-                        .WithMany("Products")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Chairly.Domain.Entities.Service", b =>
                 {
                     b.HasOne("Chairly.Domain.Entities.ServiceCategory", "Category")
@@ -584,11 +494,6 @@ namespace Chairly.Infrastructure.Migrations
             modelBuilder.Entity("Chairly.Domain.Entities.Booking", b =>
                 {
                     b.Navigation("BookingServices");
-                });
-
-            modelBuilder.Entity("Chairly.Domain.Entities.Recipe", b =>
-                {
-                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }
