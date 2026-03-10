@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 
 import { ConfirmationDialogComponent, LoadingIndicatorComponent } from '@org/shared-lib';
 
@@ -30,6 +31,7 @@ import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
 export class ClientListPageComponent implements OnInit {
   private readonly store = inject(ClientStore);
   private readonly clientApi = inject(ClientApiService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly formDialogRef = viewChild.required(ClientFormDialogComponent);
@@ -108,6 +110,10 @@ export class ClientListPageComponent implements OnInit {
           },
         });
     }
+  }
+
+  protected onRowClick(client: ClientResponse): void {
+    this.router.navigate(['/klanten', client.id]);
   }
 
   protected onCancelled(): void {
