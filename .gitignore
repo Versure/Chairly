@@ -8,6 +8,9 @@
 # .NET
 **/bin/
 **/obj/
+# Catch Windows-style backslash paths (bin\Debug) committed from Windows/WSL
+**/bin\\*
+**/obj\\*
 *.nupkg
 *.snupkg
 
