@@ -6,4 +6,7 @@ internal sealed record InvoiceLineItemResponse(
     int Quantity,
     decimal UnitPrice,
     decimal TotalPrice,
-    int SortOrder);
+    decimal VatPercentage,
+    decimal VatAmount,
+    int SortOrder,
+    bool IsManual);

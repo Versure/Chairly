@@ -7,6 +7,8 @@ internal sealed record InvoiceResponse(
     Guid BookingId,
     Guid ClientId,
     string ClientFullName,
+    decimal SubTotalAmount,
+    decimal TotalVatAmount,
     decimal TotalAmount,
     string Status,
     IReadOnlyList<InvoiceLineItemResponse> LineItems,

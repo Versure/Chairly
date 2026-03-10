@@ -38,7 +38,10 @@ internal static class InvoiceMapper
                 li.Quantity,
                 li.UnitPrice,
                 li.TotalPrice,
-                li.SortOrder))
+                li.VatPercentage,
+                li.VatAmount,
+                li.SortOrder,
+                li.IsManual))
             .ToList();
 
         return new InvoiceResponse(
@@ -48,6 +51,8 @@ internal static class InvoiceMapper
             invoice.BookingId,
             invoice.ClientId,
             clientFullName,
+            invoice.SubTotalAmount,
+            invoice.TotalVatAmount,
             invoice.TotalAmount,
             DeriveStatus(invoice),
             lineItems,
@@ -68,11 +73,22 @@ internal static class InvoiceMapper
             invoice.BookingId,
             invoice.ClientId,
             clientFullName,
+            invoice.SubTotalAmount,
+            invoice.TotalVatAmount,
             invoice.TotalAmount,
             DeriveStatus(invoice),
             invoice.CreatedAtUtc,
             invoice.SentAtUtc,
             invoice.PaidAtUtc,
             invoice.VoidedAtUtc);
+    }
+
+    public static void RecalculateInvoiceTotals(Invoice invoice)
+    {
+        ArgumentNullException.ThrowIfNull(invoice);
+
+        invoice.SubTotalAmount = invoice.LineItems.Sum(li => li.TotalPrice);
+        invoice.TotalVatAmount = invoice.LineItems.Sum(li => li.VatAmount);
+        invoice.TotalAmount = invoice.SubTotalAmount + invoice.TotalVatAmount;
     }
 }
