@@ -3,6 +3,7 @@ using System;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Chairly.Infrastructure.Migrations
 {
     [DbContext(typeof(ChairlyDbContext))]
-    partial class ChairlyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310092852_AddInvoices")]
+    partial class AddInvoices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -310,6 +313,38 @@ namespace Chairly.Infrastructure.Migrations
                     b.ToTable("Recipes", (string)null);
                 });
 
+            modelBuilder.Entity("Chairly.Domain.Entities.RecipeProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Quantity")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeProducts", (string)null);
+                });
+
             modelBuilder.Entity("Chairly.Domain.Entities.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -527,44 +562,13 @@ namespace Chairly.Infrastructure.Migrations
                     b.Navigation("LineItems");
                 });
 
-            modelBuilder.Entity("Chairly.Domain.Entities.Recipe", b =>
+            modelBuilder.Entity("Chairly.Domain.Entities.RecipeProduct", b =>
                 {
-                    b.OwnsMany("Chairly.Domain.Entities.RecipeProduct", "Products", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Brand")
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)");
-
-                            b1.Property<string>("Quantity")
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
-
-                            b1.Property<Guid>("RecipeId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("SortOrder")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("RecipeId");
-
-                            b1.ToTable("RecipeProducts", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("RecipeId");
-                        });
-
-                    b.Navigation("Products");
+                    b.HasOne("Chairly.Domain.Entities.Recipe", null)
+                        .WithMany("Products")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Chairly.Domain.Entities.Service", b =>
@@ -580,6 +584,11 @@ namespace Chairly.Infrastructure.Migrations
             modelBuilder.Entity("Chairly.Domain.Entities.Booking", b =>
                 {
                     b.Navigation("BookingServices");
+                });
+
+            modelBuilder.Entity("Chairly.Domain.Entities.Recipe", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

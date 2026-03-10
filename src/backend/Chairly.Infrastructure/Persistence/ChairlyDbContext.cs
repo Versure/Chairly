@@ -11,6 +11,8 @@ public class ChairlyDbContext(DbContextOptions<ChairlyDbContext> options) : DbCo
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<StaffMember> StaffMembers => Set<StaffMember>();
     public DbSet<Client> Clients => Set<Client>();
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
