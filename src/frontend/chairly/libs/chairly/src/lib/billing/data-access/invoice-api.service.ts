@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import { Invoice, InvoiceSummary } from '../models';
+import { AddLineItemRequest, Invoice, InvoiceSummary } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class InvoiceApiService {
@@ -34,5 +34,15 @@ export class InvoiceApiService {
 
   voidInvoice(id: string): Observable<Invoice> {
     return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/void`, null);
+  }
+
+  addLineItem(invoiceId: string, lineItem: AddLineItemRequest): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${invoiceId}/line-items`, lineItem);
+  }
+
+  removeLineItem(invoiceId: string, lineItemId: string): Observable<Invoice> {
+    return this.http.delete<Invoice>(
+      `${this.baseUrl}/invoices/${invoiceId}/line-items/${lineItemId}`,
+    );
   }
 }
