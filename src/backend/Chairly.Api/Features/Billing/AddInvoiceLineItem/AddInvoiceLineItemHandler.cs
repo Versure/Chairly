@@ -26,48 +26,62 @@ internal sealed class AddInvoiceLineItemHandler(ChairlyDbContext db) : IRequestH
             return new NotFound();
         }
 
-        // Only allow modifications when invoice is in Draft state
-        if (invoice.SentAtUtc != null || invoice.PaidAtUtc != null || invoice.VoidedAtUtc != null)
+        // Allow modifications in Draft or Sent state (block if paid or voided)
+        if (invoice.PaidAtUtc != null || invoice.VoidedAtUtc != null)
         {
-            return new Unprocessable("Alleen conceptfacturen kunnen worden gewijzigd");
+            return new Unprocessable("Betaalde of vervallen facturen kunnen niet worden gewijzigd");
         }
 
+        var lineItem = CreateLineItem(command, invoice);
+        invoice.LineItems.Add(lineItem);
+        db.Entry(lineItem).State = EntityState.Added;
+
+        ResetSentStateIfNeeded(invoice);
+        InvoiceMapper.RecalculateInvoiceTotals(invoice);
+
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return InvoiceMapper.ToResponse(invoice, await GetClientFullNameAsync(invoice.ClientId, cancellationToken).ConfigureAwait(false));
+    }
+
+    private static InvoiceLineItem CreateLineItem(AddInvoiceLineItemCommand command, Invoice invoice)
+    {
         var totalPrice = command.Quantity * command.UnitPrice;
-        var vatAmount = Math.Round(totalPrice * command.VatPercentage / 100m, 2, MidpointRounding.AwayFromZero);
+        var isDiscount = command.UnitPrice < 0;
+        var vatPercentage = isDiscount ? 0m : command.VatPercentage;
+        var vatAmount = isDiscount ? 0m : Math.Round(totalPrice * command.VatPercentage / 100m, 2, MidpointRounding.AwayFromZero);
+        var maxSortOrder = invoice.LineItems.Count > 0 ? invoice.LineItems.Max(li => li.SortOrder) : -1;
 
-        var maxSortOrder = invoice.LineItems.Count > 0
-            ? invoice.LineItems.Max(li => li.SortOrder)
-            : -1;
-
-        var lineItem = new InvoiceLineItem
+        return new InvoiceLineItem
         {
             Id = Guid.NewGuid(),
             Description = command.Description,
             Quantity = command.Quantity,
             UnitPrice = command.UnitPrice,
             TotalPrice = totalPrice,
-            VatPercentage = command.VatPercentage,
+            VatPercentage = vatPercentage,
             VatAmount = vatAmount,
             SortOrder = maxSortOrder + 1,
             IsManual = true,
         };
+    }
 
-        invoice.LineItems.Add(lineItem);
+    private static void ResetSentStateIfNeeded(Invoice invoice)
+    {
+        if (invoice.SentAtUtc != null)
+        {
+            invoice.SentAtUtc = null;
+            invoice.SentBy = null;
+        }
+    }
 
-        // Explicitly mark the new owned entity as Added for change tracker compatibility
-        db.Entry(lineItem).State = EntityState.Added;
-
-        InvoiceMapper.RecalculateInvoiceTotals(invoice);
-
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        var clientFullName = await db.Clients
-            .Where(c => c.Id == invoice.ClientId)
+    private async Task<string> GetClientFullNameAsync(Guid clientId, CancellationToken cancellationToken)
+    {
+        return await db.Clients
+            .Where(c => c.Id == clientId)
             .Select(c => c.FirstName + " " + c.LastName)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false) ?? string.Empty;
-
-        return InvoiceMapper.ToResponse(invoice, clientFullName);
     }
 }
 #pragma warning restore CA1812

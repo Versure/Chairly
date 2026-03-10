@@ -25,10 +25,10 @@ internal sealed class RemoveInvoiceLineItemHandler(ChairlyDbContext db) : IReque
             return new NotFound();
         }
 
-        // Only allow modifications when invoice is in Draft state
-        if (invoice.SentAtUtc != null || invoice.PaidAtUtc != null || invoice.VoidedAtUtc != null)
+        // Allow modifications in Draft or Sent state (block if paid or voided)
+        if (invoice.PaidAtUtc != null || invoice.VoidedAtUtc != null)
         {
-            return new Unprocessable("Alleen conceptfacturen kunnen worden gewijzigd");
+            return new Unprocessable("Betaalde of vervallen facturen kunnen niet worden gewijzigd");
         }
 
         var lineItem = invoice.LineItems.FirstOrDefault(li => li.Id == command.LineItemId);
@@ -43,6 +43,14 @@ internal sealed class RemoveInvoiceLineItemHandler(ChairlyDbContext db) : IReque
         }
 
         invoice.LineItems.Remove(lineItem);
+
+        // If the invoice was already sent, reset to draft so it can be re-sent after editing
+        if (invoice.SentAtUtc != null)
+        {
+            invoice.SentAtUtc = null;
+            invoice.SentBy = null;
+        }
+
         InvoiceMapper.RecalculateInvoiceTotals(invoice);
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
