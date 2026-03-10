@@ -2,10 +2,12 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   inject,
   output,
   OutputEmitterRef,
+  signal,
   viewChild,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -28,7 +30,11 @@ export class LineItemFormDialogComponent {
   private readonly document = inject(DOCUMENT);
   private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
-  protected mode: LineItemDialogMode = 'surcharge';
+  protected readonly mode = signal<LineItemDialogMode>('surcharge');
+  protected readonly isDiscount = computed<boolean>(() => this.mode() === 'discount');
+  protected readonly dialogTitle = computed<string>(() =>
+    this.mode() === 'surcharge' ? 'Toeslag toevoegen' : 'Korting toevoegen',
+  );
 
   protected readonly form = new FormGroup({
     description: new FormControl('', {
@@ -45,16 +51,8 @@ export class LineItemFormDialogComponent {
     }),
   });
 
-  protected get dialogTitle(): string {
-    return this.mode === 'surcharge' ? 'Toeslag toevoegen' : 'Korting toevoegen';
-  }
-
-  protected get isDiscount(): boolean {
-    return this.mode === 'discount';
-  }
-
   open(mode: LineItemDialogMode): void {
-    this.mode = mode;
+    this.mode.set(mode);
     this.form.reset({
       description: '',
       amount: 0,
@@ -74,7 +72,7 @@ export class LineItemFormDialogComponent {
       return;
     }
     const { description, amount, vatPercentage } = this.form.getRawValue();
-    const unitPrice = this.mode === 'discount' ? -Math.abs(amount) : Math.abs(amount);
+    const unitPrice = this.mode() === 'discount' ? -Math.abs(amount) : Math.abs(amount);
     this.close();
     this.saved.emit({
       description,

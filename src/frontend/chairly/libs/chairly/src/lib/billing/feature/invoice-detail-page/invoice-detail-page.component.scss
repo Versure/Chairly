@@ -7,6 +7,14 @@
     display: none !important;
   }
 
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
+  .overflow-auto {
+    overflow: visible !important;
+  }
+
   .bg-gray-50,
   .bg-white,
   .dark\:bg-slate-900,
