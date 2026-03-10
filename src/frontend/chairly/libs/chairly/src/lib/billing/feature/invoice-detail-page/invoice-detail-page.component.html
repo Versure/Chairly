@@ -1,7 +1,7 @@
 <div class="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
   @if (isLoading()) {
     <div class="p-6">
-      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+      <chairly-loading-indicator message="Factuur laden..." />
     </div>
   } @else if (invoice(); as inv) {
     <!-- Page header -->
@@ -49,8 +49,20 @@
               <th
                 scope="col"
                 class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                BTW %
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                 Totaal
               </th>
+              @if (isDraft()) {
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                  Acties
+                </th>
+              }
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
@@ -68,20 +80,61 @@
                   {{ item.unitPrice | currency }}
                 </td>
                 <td
+                  class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
+                  {{ item.vatPercentage }}%
+                </td>
+                <td
                   class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
                   {{ item.totalPrice | currency }}
                 </td>
+                @if (isDraft()) {
+                  <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+                    @if (item.isManual) {
+                      <button
+                        type="button"
+                        class="font-medium text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        (click)="onRemoveLineItem(item.id)">
+                        Verwijderen
+                      </button>
+                    }
+                  </td>
+                }
               </tr>
             }
           </tbody>
           <tfoot>
+            <tr class="border-t border-gray-200 dark:border-slate-600">
+              <td
+                colspan="4"
+                class="whitespace-nowrap px-6 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+                Subtotaal
+              </td>
+              <td
+                [attr.colspan]="isDraft() ? 2 : 1"
+                class="whitespace-nowrap px-6 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+                {{ inv.subTotalAmount | currency }}
+              </td>
+            </tr>
+            <tr>
+              <td
+                colspan="4"
+                class="whitespace-nowrap px-6 py-2 text-right text-sm text-gray-600 dark:text-gray-400">
+                BTW
+              </td>
+              <td
+                [attr.colspan]="isDraft() ? 2 : 1"
+                class="whitespace-nowrap px-6 py-2 text-right text-sm text-gray-600 dark:text-gray-400">
+                {{ inv.totalVatAmount | currency }}
+              </td>
+            </tr>
             <tr class="bg-gray-50 dark:bg-slate-700">
               <td
-                colspan="3"
+                colspan="4"
                 class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
                 Totaal
               </td>
               <td
+                [attr.colspan]="isDraft() ? 2 : 1"
                 class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
                 {{ inv.totalAmount | currency }}
               </td>
@@ -89,6 +142,24 @@
           </tfoot>
         </table>
       </div>
+
+      <!-- Add surcharge/discount buttons (only in Concept state) -->
+      @if (isDraft()) {
+        <div class="mt-4 flex gap-3">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+            (click)="onOpenLineItemDialog('surcharge')">
+            Toeslag toevoegen
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+            (click)="onOpenLineItemDialog('discount')">
+            Korting toevoegen
+          </button>
+        </div>
+      }
 
       <!-- Status history -->
       <div
@@ -138,5 +209,8 @@
         </div>
       }
     </div>
+
+    <!-- Line item form dialog -->
+    <chairly-line-item-form-dialog #lineItemDialog (saved)="onLineItemSaved($event)" />
   }
 </div>
