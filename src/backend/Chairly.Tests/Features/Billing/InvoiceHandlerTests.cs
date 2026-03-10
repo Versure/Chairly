@@ -489,6 +489,237 @@ public class InvoiceHandlerTests
         Assert.Equal(12.10m, result[1].TotalAmount);
     }
 
+    [Fact]
+    public async Task GetInvoicesListHandler_FilterByClientName_ReturnsMatchingInvoices()
+    {
+        await using var db = CreateDbContext();
+        var client1 = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        var client2 = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Pieter",
+            LastName = "Bakker",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.AddRange(client1, client2);
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client1.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 10.00m,
+            TotalVatAmount = 2.10m,
+            TotalAmount = 12.10m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client2.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 20.00m,
+            TotalVatAmount = 4.20m,
+            TotalAmount = 24.20m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
+        var handler = new GetInvoicesListHandler(db);
+
+        var result = (await handler.Handle(new GetInvoicesListQuery { ClientName = "Vries" })).ToList();
+
+        Assert.Single(result);
+        Assert.Equal("Jan de Vries", result[0].ClientFullName);
+    }
+
+    [Fact]
+    public async Task GetInvoicesListHandler_FilterByDateRange_ReturnsMatchingInvoices()
+    {
+        await using var db = CreateDbContext();
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Test",
+            LastName = "User",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = new DateOnly(2026, 1, 15),
+            SubTotalAmount = 10.00m,
+            TotalVatAmount = 2.10m,
+            TotalAmount = 12.10m,
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-2),
+        });
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
+            InvoiceDate = new DateOnly(2026, 3, 10),
+            SubTotalAmount = 20.00m,
+            TotalVatAmount = 4.20m,
+            TotalAmount = 24.20m,
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-1),
+        });
+
+        await db.SaveChangesAsync();
+        var handler = new GetInvoicesListHandler(db);
+
+        var result = (await handler.Handle(new GetInvoicesListQuery
+        {
+            FromDate = new DateOnly(2026, 3, 1),
+            ToDate = new DateOnly(2026, 3, 31),
+        })).ToList();
+
+        Assert.Single(result);
+        Assert.Equal(new DateOnly(2026, 3, 10), result[0].InvoiceDate);
+    }
+
+    [Fact]
+    public async Task GetInvoicesListHandler_FilterByStatus_ReturnsMatchingInvoices()
+    {
+        await using var db = CreateDbContext();
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Test",
+            LastName = "User",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        // Draft invoice
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 10.00m,
+            TotalVatAmount = 2.10m,
+            TotalAmount = 12.10m,
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-2),
+        });
+
+        // Sent invoice
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 20.00m,
+            TotalVatAmount = 4.20m,
+            TotalAmount = 24.20m,
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-1),
+            SentAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
+        var handler = new GetInvoicesListHandler(db);
+
+        var draftResult = (await handler.Handle(new GetInvoicesListQuery { Status = "Concept" })).ToList();
+        Assert.Single(draftResult);
+        Assert.Equal("Concept", draftResult[0].Status);
+
+        var sentResult = (await handler.Handle(new GetInvoicesListQuery { Status = "Verzonden" })).ToList();
+        Assert.Single(sentResult);
+        Assert.Equal("Verzonden", sentResult[0].Status);
+    }
+
+    [Fact]
+    public async Task GetInvoicesListHandler_FilterByClientId_ReturnsMatchingInvoices()
+    {
+        await using var db = CreateDbContext();
+        var client1 = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        var client2 = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Pieter",
+            LastName = "Bakker",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.AddRange(client1, client2);
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client1.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 10.00m,
+            TotalVatAmount = 2.10m,
+            TotalAmount = 12.10m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        db.Invoices.Add(new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client2.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 20.00m,
+            TotalVatAmount = 4.20m,
+            TotalAmount = 24.20m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        await db.SaveChangesAsync();
+        var handler = new GetInvoicesListHandler(db);
+
+        var result = (await handler.Handle(new GetInvoicesListQuery { ClientId = client1.Id })).ToList();
+
+        Assert.Single(result);
+        Assert.Equal(client1.Id, result[0].ClientId);
+        Assert.Equal("Jan de Vries", result[0].ClientFullName);
+    }
+
     // ── GetInvoice ──────────────────────────────────────────────────
 
     [Fact]
@@ -580,6 +811,35 @@ public class InvoiceHandlerTests
 
         Assert.True(result.IsT2);
         Assert.Equal("Factuur kan niet als verzonden worden gemarkeerd", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task MarkInvoiceSentHandler_ResendAfterEdit_SetsSentTimestampAgain()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+
+        // First: send the invoice
+        var sentHandler = new MarkInvoiceSentHandler(db);
+        var sentResult = await sentHandler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        Assert.Equal("Verzonden", sentResult.AsT0.Status);
+
+        // Second: edit the sent invoice (adds line item, resets to draft)
+        var addHandler = new AddInvoiceLineItemHandler(db);
+        var addResult = await addHandler.Handle(new AddInvoiceLineItemCommand
+        {
+            InvoiceId = invoice.Id,
+            Description = "Extra toeslag",
+            Quantity = 1,
+            UnitPrice = 5.00m,
+        });
+        Assert.Equal("Concept", addResult.AsT0.Status);
+        Assert.Null(addResult.AsT0.SentAtUtc);
+
+        // Third: re-send the invoice
+        var resendResult = await sentHandler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        Assert.Equal("Verzonden", resendResult.AsT0.Status);
+        Assert.NotNull(resendResult.AsT0.SentAtUtc);
     }
 
     [Fact]
@@ -731,7 +991,7 @@ public class InvoiceHandlerTests
     }
 
     [Fact]
-    public async Task AddInvoiceLineItemHandler_HappyPath_AddsDiscount()
+    public async Task AddInvoiceLineItemHandler_HappyPath_AddsDiscount_WithZeroVat()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
@@ -743,7 +1003,7 @@ public class InvoiceHandlerTests
             Description = "Loyaliteitskorting",
             Quantity = 1,
             UnitPrice = -5.00m,
-            VatPercentage = 21.00m,
+            VatPercentage = 21.00m, // Should be forced to 0% for discounts
         };
 
         var result = await handler.Handle(command);
@@ -753,12 +1013,13 @@ public class InvoiceHandlerTests
         var manualItem = response.LineItems.First(li => li.IsManual);
         Assert.Equal("Loyaliteitskorting", manualItem.Description);
         Assert.Equal(-5.00m, manualItem.TotalPrice);
-        Assert.Equal(-1.05m, manualItem.VatAmount);
+        Assert.Equal(0m, manualItem.VatPercentage); // Discount = always 0% VAT
+        Assert.Equal(0m, manualItem.VatAmount); // Discount = always 0 VAT amount
 
-        // Totals: 40 - 5 = 35 subtotal, 8.40 - 1.05 = 7.35 VAT
+        // Totals: 40 - 5 = 35 subtotal, 8.40 + 0 = 8.40 VAT (discount has no VAT)
         Assert.Equal(35.00m, response.SubTotalAmount);
-        Assert.Equal(7.35m, response.TotalVatAmount);
-        Assert.Equal(42.35m, response.TotalAmount);
+        Assert.Equal(8.40m, response.TotalVatAmount);
+        Assert.Equal(43.40m, response.TotalAmount);
     }
 
     [Fact]
@@ -787,11 +1048,39 @@ public class InvoiceHandlerTests
     }
 
     [Fact]
-    public async Task AddInvoiceLineItemHandler_NotDraft_ReturnsUnprocessable()
+    public async Task AddInvoiceLineItemHandler_SentInvoice_AllowsEditAndResetsToDraft()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
         invoice.SentAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026
+        invoice.SentBy = Guid.Empty;
+#pragma warning restore MA0026
+        await db.SaveChangesAsync();
+        var handler = new AddInvoiceLineItemHandler(db);
+
+        var command = new AddInvoiceLineItemCommand
+        {
+            InvoiceId = invoice.Id,
+            Description = "Toeslag",
+            Quantity = 1,
+            UnitPrice = 5.00m,
+        };
+
+        var result = await handler.Handle(command);
+
+        var response = result.AsT0;
+        Assert.Equal(3, response.LineItems.Count);
+        Assert.Equal("Concept", response.Status); // Reset to draft after editing
+        Assert.Null(response.SentAtUtc); // SentAtUtc is cleared
+    }
+
+    [Fact]
+    public async Task AddInvoiceLineItemHandler_PaidInvoice_ReturnsUnprocessable()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
         var handler = new AddInvoiceLineItemHandler(db);
 
@@ -806,7 +1095,7 @@ public class InvoiceHandlerTests
         var result = await handler.Handle(command);
 
         Assert.True(result.IsT2);
-        Assert.Equal("Alleen conceptfacturen kunnen worden gewijzigd", result.AsT2.Message);
+        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden gewijzigd", result.AsT2.Message);
     }
 
     [Fact]
@@ -829,7 +1118,7 @@ public class InvoiceHandlerTests
         var result = await handler.Handle(command);
 
         Assert.True(result.IsT2);
-        Assert.Equal("Alleen conceptfacturen kunnen worden gewijzigd", result.AsT2.Message);
+        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden gewijzigd", result.AsT2.Message);
     }
 
     [Fact]
@@ -889,18 +1178,39 @@ public class InvoiceHandlerTests
     }
 
     [Fact]
-    public async Task RemoveInvoiceLineItemHandler_NotDraft_ReturnsUnprocessable()
+    public async Task RemoveInvoiceLineItemHandler_SentInvoice_AllowsRemoveAndResetsToDraft()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoiceWithManualItem(db);
+        invoice.SentAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026
+        invoice.SentBy = Guid.Empty;
+#pragma warning restore MA0026
+        await db.SaveChangesAsync();
+        var manualItem = invoice.LineItems.First(li => li.IsManual);
+        var handler = new RemoveInvoiceLineItemHandler(db);
+
+        var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, manualItem.Id));
+
+        var response = result.AsT0;
+        Assert.Equal(2, response.LineItems.Count);
+        Assert.Equal("Concept", response.Status); // Reset to draft after editing
+        Assert.Null(response.SentAtUtc); // SentAtUtc is cleared
+    }
+
+    [Fact]
+    public async Task RemoveInvoiceLineItemHandler_PaidInvoice_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        invoice.SentAtUtc = DateTimeOffset.UtcNow;
+        invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
         var handler = new RemoveInvoiceLineItemHandler(db);
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, invoice.LineItems.First().Id));
 
         Assert.True(result.IsT2);
-        Assert.Equal("Alleen conceptfacturen kunnen worden gewijzigd", result.AsT2.Message);
+        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden gewijzigd", result.AsT2.Message);
     }
 
     [Fact]
