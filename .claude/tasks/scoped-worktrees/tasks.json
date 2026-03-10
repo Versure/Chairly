@@ -1,0 +1,27 @@
+{
+  "feature": "scoped-worktrees",
+  "specPath": "docs/specs/scoped-worktrees.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Update feature-team SKILL.md to use scoped worktree paths",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Update rework.sh to use scoped worktree paths",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Update task-completed.sh hook to use scoped worktree paths",
+      "status": "pending",
+      "dependsOn": []
+    }
+  ]
+}
