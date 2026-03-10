@@ -58,8 +58,8 @@ FEATURE_NAME="${FEATURE_NAME%/frontend}"
 
 BACKEND_BRANCH="impl/${FEATURE_NAME}-backend"
 FRONTEND_BRANCH="impl/${FEATURE_NAME}-frontend"
-BACKEND_WT="${REPO_ROOT}/.worktrees/backend"
-FRONTEND_WT="${REPO_ROOT}/.worktrees/frontend"
+BACKEND_WT="${REPO_ROOT}/.worktrees/${FEATURE_NAME}/backend"
+FRONTEND_WT="${REPO_ROOT}/.worktrees/${FEATURE_NAME}/frontend"
 TASKS_DIR="${REPO_ROOT}/.claude/tasks/${FEATURE_NAME}"
 COMMENTS_PATH="${TASKS_DIR}/pr-comments.md"
 TMUX_SESSION="rework-team-${FEATURE_NAME}"
@@ -159,6 +159,8 @@ if [[ -d "$FRONTEND_WT" ]]; then
   echo "Removing stale frontend worktree..."
   git worktree remove --force "$FRONTEND_WT" 2>/dev/null || rm -rf "$FRONTEND_WT"
 fi
+
+mkdir -p "${REPO_ROOT}/.worktrees/${FEATURE_NAME}"
 
 # Fetch worktree branches (they were pushed during the original workflow)
 git fetch origin "$BACKEND_BRANCH" 2>/dev/null || true
