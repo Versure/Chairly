@@ -1,0 +1,38 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+
+import { Observable } from 'rxjs';
+
+import { API_BASE_URL } from '@org/shared-lib';
+
+import { Invoice, InvoiceSummary } from '../models';
+
+@Injectable({ providedIn: 'root' })
+export class InvoiceApiService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL);
+
+  getInvoices(): Observable<InvoiceSummary[]> {
+    return this.http.get<InvoiceSummary[]>(`${this.baseUrl}/invoices`);
+  }
+
+  getInvoice(id: string): Observable<Invoice> {
+    return this.http.get<Invoice>(`${this.baseUrl}/invoices/${id}`);
+  }
+
+  generateInvoice(bookingId: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices`, { bookingId });
+  }
+
+  markAsSent(id: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/send`, null);
+  }
+
+  markAsPaid(id: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/pay`, null);
+  }
+
+  voidInvoice(id: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/void`, null);
+  }
+}

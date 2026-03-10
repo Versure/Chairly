@@ -65,4 +65,14 @@
       </button>
     </div>
   }
+  @case ('Completed') {
+    <div class="flex items-center justify-end gap-1">
+      <button
+        type="button"
+        class="inline-flex items-center rounded border border-primary-200 bg-primary-50 px-2 py-1 text-xs font-medium text-primary-700 transition-colors hover:border-primary-300 hover:bg-primary-100 dark:border-primary-600 dark:bg-primary-700 dark:text-white dark:hover:border-primary-500 dark:hover:bg-primary-600"
+        (click)="emitAction('generateInvoice'); $event.stopPropagation()">
+        Factuur genereren
+      </button>
+    </div>
+  }
 }

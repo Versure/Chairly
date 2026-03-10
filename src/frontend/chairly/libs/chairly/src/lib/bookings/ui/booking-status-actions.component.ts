@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input, output, OutputEmitterRef } f
 import { Booking } from '../models';
 
 export interface BookingStatusAction {
-  action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow';
+  action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow' | 'generateInvoice';
   bookingId: string;
 }
 

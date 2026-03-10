@@ -2,11 +2,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   OnInit,
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
+
+import { take } from 'rxjs';
+
+import { InvoiceGenerationService } from '@org/shared-lib';
 
 import { BookingStore } from '../../data-access';
 import {
@@ -35,8 +42,15 @@ import {
 })
 export class BookingListPageComponent implements OnInit {
   private readonly bookingStore = inject(BookingStore);
+  private readonly invoiceGenerationService = inject(InvoiceGenerationService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly formDialogRef = viewChild.required(BookingFormDialogComponent);
+
+  protected readonly invoiceMessage = signal<string | null>(null);
+  protected readonly invoiceId = signal<string | null>(null);
+  protected readonly isGeneratingInvoice = signal(false);
 
   protected readonly viewMode = signal<'list' | 'schedule'>('list');
   protected readonly editingBooking = signal<Booking | null>(null);
@@ -103,7 +117,48 @@ export class BookingListPageComponent implements OnInit {
       case 'noShow':
         this.bookingStore.markNoShow(event.bookingId);
         break;
+      case 'generateInvoice':
+        this.onGenerateInvoice(event.bookingId);
+        break;
     }
+  }
+
+  protected onGenerateInvoice(bookingId: string): void {
+    this.isGeneratingInvoice.set(true);
+    this.invoiceMessage.set(null);
+    this.invoiceId.set(null);
+
+    this.invoiceGenerationService
+      .generateInvoice(bookingId)
+      .pipe(take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invoice) => {
+          this.isGeneratingInvoice.set(false);
+          this.invoiceMessage.set('Factuur succesvol aangemaakt');
+          this.invoiceId.set(invoice.id);
+        },
+        error: (err: unknown) => {
+          this.isGeneratingInvoice.set(false);
+          const httpErr = err as { status?: number };
+          if (httpErr.status === 409) {
+            this.invoiceMessage.set('Er bestaat al een factuur voor deze boeking');
+          } else {
+            this.invoiceMessage.set('Fout bij het genereren van de factuur');
+          }
+        },
+      });
+  }
+
+  protected onViewInvoice(): void {
+    const id = this.invoiceId();
+    if (id) {
+      this.router.navigate(['/facturen', id]);
+    }
+  }
+
+  protected dismissInvoiceMessage(): void {
+    this.invoiceMessage.set(null);
+    this.invoiceId.set(null);
   }
 
   protected onFormSaved(event: BookingFormSaveEvent): void {
