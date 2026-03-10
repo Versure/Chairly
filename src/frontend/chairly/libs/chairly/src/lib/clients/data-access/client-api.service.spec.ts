@@ -4,7 +4,12 @@ import { TestBed } from '@angular/core/testing';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import { ClientResponse, CreateClientRequest, UpdateClientRequest } from '../models';
+import {
+  ClientBookingSummary,
+  ClientResponse,
+  CreateClientRequest,
+  UpdateClientRequest,
+} from '../models';
 import { ClientApiService } from './client-api.service';
 
 describe('ClientApiService', () => {
@@ -115,6 +120,36 @@ describe('ClientApiService', () => {
       req.flush(null);
 
       expect(completed).toBe(true);
+    });
+  });
+
+  describe('getClientBookings()', () => {
+    it('should GET /api/bookings and filter by clientId', () => {
+      const allBookings: (ClientBookingSummary & { clientId: string })[] = [
+        {
+          id: 'booking-1',
+          clientId: 'client-1',
+          startTime: '2026-02-15T10:00:00Z',
+          completedAtUtc: '2026-02-15T11:00:00Z',
+          services: [{ serviceName: 'Knippen' }],
+        },
+        {
+          id: 'booking-2',
+          clientId: 'client-2',
+          startTime: '2026-02-16T10:00:00Z',
+          completedAtUtc: null,
+          services: [],
+        },
+      ];
+
+      service.getClientBookings('client-1').subscribe((bookings) => {
+        expect(bookings).toHaveLength(1);
+        expect(bookings[0].id).toBe('booking-1');
+      });
+
+      const req = httpTesting.expectOne('/api/bookings');
+      expect(req.request.method).toBe('GET');
+      req.flush(allBookings);
     });
   });
 });

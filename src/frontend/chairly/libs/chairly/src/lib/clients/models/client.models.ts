@@ -18,3 +18,11 @@ export interface CreateClientRequest {
 }
 
 export type UpdateClientRequest = CreateClientRequest;
+
+/** Lightweight booking summary used on the client detail page. */
+export interface ClientBookingSummary {
+  id: string;
+  startTime: string;
+  completedAtUtc: string | null;
+  services: { serviceName: string }[];
+}

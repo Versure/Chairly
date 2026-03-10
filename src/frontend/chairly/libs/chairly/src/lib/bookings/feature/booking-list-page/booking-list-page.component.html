@@ -77,6 +77,34 @@
     </div>
   </div>
 
+  <!-- Invoice generation message -->
+  @if (invoiceMessage()) {
+    <div
+      class="mx-6 mt-4 flex items-center justify-between rounded-md border px-4 py-3 text-sm"
+      [class]="
+        invoiceId()
+          ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-900 dark:text-green-200'
+          : 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-200'
+      ">
+      <span>
+        {{ invoiceMessage() }}
+        @if (invoiceId()) {
+          &mdash;
+          <button type="button" class="font-medium underline" (click)="onViewInvoice()">
+            Factuur bekijken
+          </button>
+        }
+      </span>
+      <button
+        type="button"
+        class="ml-4 text-lg leading-none opacity-70 hover:opacity-100"
+        (click)="dismissInvoiceMessage()"
+        aria-label="Sluiten">
+        &times;
+      </button>
+    </div>
+  }
+
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {
