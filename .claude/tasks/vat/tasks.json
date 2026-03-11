@@ -1,0 +1,55 @@
+{
+  "feature": "vat",
+  "specPath": ".claude/tasks/vat/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "VatSettings entity, EF configuration, and migration",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Add VatRate to Service entity and migration",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Update GenerateInvoice to resolve VAT from VatSettings and Service",
+      "status": "pending",
+      "dependsOn": ["B1", "B2"]
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "VAT settings endpoints",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Update service models and form with VatRate",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Settings domain setup and VAT settings page",
+      "status": "pending",
+      "dependsOn": ["B4"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Update service API service and store for VatRate",
+      "status": "pending",
+      "dependsOn": ["B2", "F1"]
+    }
+  ]
+}
