@@ -84,14 +84,14 @@ test('clicking Nieuwe boeking opens the booking form dialog with searchable drop
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
 
-  await expect(dialog.getByPlaceholder('Klant zoeken...')).toBeVisible();
-  await expect(dialog.getByPlaceholder('Medewerker zoeken...')).toBeVisible();
+  await expect(dialog.getByLabel('Klant')).toBeVisible();
+  await expect(dialog.getByLabel('Medewerker')).toBeVisible();
   await expect(dialog.getByLabel('Datum & tijd')).toBeVisible();
   await expect(dialog.getByText('Diensten')).toBeVisible();
   await expect(dialog.getByLabel('Notities')).toBeVisible();
 
   // Verify the searchable dropdown shows filtered results when typing
-  const clientInput = dialog.getByPlaceholder('Klant zoeken...');
+  const clientInput = dialog.getByLabel('Klant');
   await clientInput.click();
   await clientInput.fill('Jan');
   await expect(dialog.locator('ul li').filter({ hasText: 'Jan Jansen' })).toBeVisible();
@@ -157,13 +157,13 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   const dialog = page.locator('dialog[open]');
 
   // Select client via searchable dropdown
-  const clientInput = dialog.getByPlaceholder('Klant zoeken...');
+  const clientInput = dialog.getByLabel('Klant');
   await clientInput.click();
   await clientInput.fill('Piet');
   await dialog.locator('ul li').filter({ hasText: 'Piet Pietersen' }).click();
 
   // Select staff member via searchable dropdown
-  const staffInput = dialog.getByPlaceholder('Medewerker zoeken...');
+  const staffInput = dialog.getByLabel('Medewerker');
   await staffInput.click();
   await staffInput.fill('Kees');
   await dialog.locator('ul li').filter({ hasText: 'Kees Bakker' }).click();
@@ -264,8 +264,8 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
 
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByPlaceholder('Klant zoeken...')).toHaveValue('Jan Jansen');
-  await expect(dialog.getByPlaceholder('Medewerker zoeken...')).toHaveValue('Anna de Vries');
+  await expect(dialog.getByLabel('Klant')).toHaveValue('Jan Jansen');
+  await expect(dialog.getByLabel('Medewerker')).toHaveValue('Anna de Vries');
 
   // Change the notes field
   await dialog.getByLabel('Notities').fill('Aangepaste notities');
