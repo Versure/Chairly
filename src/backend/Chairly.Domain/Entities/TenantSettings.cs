@@ -6,7 +6,10 @@ public class TenantSettings
     public Guid TenantId { get; set; }
     public string? CompanyName { get; set; }
     public string? CompanyEmail { get; set; }
-    public string? CompanyAddress { get; set; }
+    public string? Street { get; set; }
+    public string? HouseNumber { get; set; }
+    public string? PostalCode { get; set; }
+    public string? City { get; set; }
     public string? CompanyPhone { get; set; }
     public string? IbanNumber { get; set; }
     public string? VatNumber { get; set; }

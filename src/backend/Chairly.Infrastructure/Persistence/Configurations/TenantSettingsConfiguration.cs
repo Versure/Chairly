@@ -23,9 +23,21 @@ internal sealed class TenantSettingsConfiguration : IEntityTypeConfiguration<Ten
             .IsRequired(false)
             .HasMaxLength(200);
 
-        builder.Property(x => x.CompanyAddress)
+        builder.Property(x => x.Street)
             .IsRequired(false)
-            .HasMaxLength(500);
+            .HasMaxLength(200);
+
+        builder.Property(x => x.HouseNumber)
+            .IsRequired(false)
+            .HasMaxLength(20);
+
+        builder.Property(x => x.PostalCode)
+            .IsRequired(false)
+            .HasMaxLength(20);
+
+        builder.Property(x => x.City)
+            .IsRequired(false)
+            .HasMaxLength(100);
 
         builder.Property(x => x.CompanyPhone)
             .IsRequired(false)
