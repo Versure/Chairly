@@ -1,18 +1,17 @@
 import { Route } from '@angular/router';
 
 import { SettingsApiService } from './data-access';
-import { VatSettingsPageComponent } from './feature';
+import { CompanyInfoPageComponent, VatSettingsPageComponent } from './feature';
 
 export const settingsRoutes: Route[] = [
   {
     path: '',
-    children: [
-      {
-        path: 'btw',
-        component: VatSettingsPageComponent,
-        providers: [SettingsApiService],
-      },
-      { path: '', redirectTo: 'btw', pathMatch: 'full' },
-    ],
+    component: CompanyInfoPageComponent,
+    providers: [SettingsApiService],
+  },
+  {
+    path: 'btw',
+    component: VatSettingsPageComponent,
+    providers: [SettingsApiService],
   },
 ];
