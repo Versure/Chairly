@@ -1624,24 +1624,25 @@ public class InvoiceHandlerTests
         db.Invoices.Add(invoice);
         await db.SaveChangesAsync();
 
-        // Regenerate — should replace all 3 old line items with 2 items from current booking
+        // Regenerate — should replace the 2 auto-generated line items but PRESERVE the manual "Toeslag"
         var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT0);
         var response = result.AsT0;
-        Assert.Equal(2, response.LineItems.Count);
+        Assert.Equal(3, response.LineItems.Count);
         Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Herenknippen", StringComparison.Ordinal));
         Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Baard trimmen", StringComparison.Ordinal));
-        Assert.DoesNotContain(response.LineItems, li => string.Equals(li.Description, "Toeslag", StringComparison.Ordinal));
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Toeslag", StringComparison.Ordinal) && li.IsManual);
 
-        // Verify totals: Herenknippen 30.00 + Baard trimmen 15.00 = 45.00 total price
+        // Verify totals: Herenknippen 30.00 + Baard trimmen 15.00 + Toeslag 10.00 = 55.00 total price
         var expectedVatHerenknippen = Math.Round(30.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 6.30
         var expectedVatBaard = Math.Round(15.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 3.15
-        var expectedTotalVat = expectedVatHerenknippen + expectedVatBaard; // 9.45
+        var expectedVatToeslag = Math.Round(10.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 2.10
+        var expectedTotalVat = expectedVatHerenknippen + expectedVatBaard + expectedVatToeslag; // 11.55
         Assert.Equal(expectedTotalVat, response.TotalVatAmount);
-        Assert.Equal(45.00m - expectedTotalVat, response.SubTotalAmount);
-        Assert.Equal(45.00m, response.TotalAmount);
+        Assert.Equal(55.00m - expectedTotalVat, response.SubTotalAmount);
+        Assert.Equal(55.00m, response.TotalAmount);
     }
 
     [Fact]
@@ -1876,5 +1877,137 @@ public class InvoiceHandlerTests
         Assert.Equal(originalInvoiceNumber, response.InvoiceNumber);
         Assert.Equal(originalInvoiceDate, response.InvoiceDate);
         Assert.Equal(originalCreatedAtUtc, response.CreatedAtUtc);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_PreservesManualDiscountAndSurchargeLineItems()
+    {
+        await using var db = CreateDbContext();
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        // Booking with a single service
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = Guid.NewGuid(),
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 25.00m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+
+        // Invoice with 1 auto-generated item + 1 manual discount + 1 manual surcharge
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = booking.Id,
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 20.00m,
+            TotalVatAmount = 5.00m,
+            TotalAmount = 25.00m,
+            LineItems =
+            [
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Herenknippen (oud tarief)",
+                    Quantity = 1,
+                    UnitPrice = 20.00m,
+                    TotalPrice = 20.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 4.20m,
+                    SortOrder = 0,
+                    IsManual = false,
+                },
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Korting vaste klant",
+                    Quantity = 1,
+                    UnitPrice = -5.00m,
+                    TotalPrice = -5.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = -1.05m,
+                    SortOrder = 1,
+                    IsManual = true,
+                },
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Toeslag speciaal product",
+                    Quantity = 1,
+                    UnitPrice = 8.00m,
+                    TotalPrice = 8.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 1.68m,
+                    SortOrder = 2,
+                    IsManual = true,
+                },
+            ],
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Invoices.Add(invoice);
+        await db.SaveChangesAsync();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+
+        // Should have 3 items: 1 regenerated from booking + 2 manual preserved
+        Assert.Equal(3, response.LineItems.Count);
+
+        // Auto-generated item should be updated to current booking service price (25.00)
+        var autoItem = Assert.Single(response.LineItems, li => !li.IsManual);
+        Assert.Equal("Herenknippen", autoItem.Description);
+        Assert.Equal(25.00m, autoItem.UnitPrice);
+
+        // Manual discount should be preserved
+        Assert.Contains(response.LineItems, li =>
+            string.Equals(li.Description, "Korting vaste klant", StringComparison.Ordinal) && li.IsManual);
+
+        // Manual surcharge should be preserved
+        Assert.Contains(response.LineItems, li =>
+            string.Equals(li.Description, "Toeslag speciaal product", StringComparison.Ordinal) && li.IsManual);
+
+        // Verify totals include manual items: 25.00 + (-5.00) + 8.00 = 28.00 total price
+        var expectedVatHerenknippen = Math.Round(25.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 5.25
+        var expectedVatKorting = -1.05m; // preserved from manual item
+        var expectedVatToeslag = 1.68m; // preserved from manual item
+        var expectedTotalVat = expectedVatHerenknippen + expectedVatKorting + expectedVatToeslag; // 5.88
+        Assert.Equal(expectedTotalVat, response.TotalVatAmount);
+        Assert.Equal(28.00m - expectedTotalVat, response.SubTotalAmount);
+        Assert.Equal(28.00m, response.TotalAmount);
     }
 }
