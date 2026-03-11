@@ -4,6 +4,7 @@ export type { DropdownOption } from './lib/ui';
 export {
   ConfirmationDialogComponent,
   LoadingIndicatorComponent,
+  PageHeaderComponent,
   SearchableDropdownComponent,
   ShellComponent,
   ThemeService,

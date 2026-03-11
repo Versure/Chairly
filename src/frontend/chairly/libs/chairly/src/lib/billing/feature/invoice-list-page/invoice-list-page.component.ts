@@ -14,7 +14,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { LoadingIndicatorComponent } from '@org/shared-lib';
+import { LoadingIndicatorComponent, PageHeaderComponent } from '@org/shared-lib';
 
 import { InvoiceStore } from '../../data-access';
 import { InvoiceFilterParams, InvoiceStatus, InvoiceSummary } from '../../models';
@@ -29,6 +29,7 @@ import { InvoiceStatusBadgePipe } from '../../pipes';
     DatePipe,
     FormsModule,
     LoadingIndicatorComponent,
+    PageHeaderComponent,
     RouterLink,
     InvoiceStatusBadgePipe,
   ],
