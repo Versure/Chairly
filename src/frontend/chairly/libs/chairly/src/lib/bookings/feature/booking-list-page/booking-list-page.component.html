@@ -108,7 +108,7 @@
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
     @if (isLoading()) {
-      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+      <chairly-loading-indicator message="Boekingen laden..." />
     } @else if (viewMode() === 'list') {
       <chairly-booking-table
         [bookings]="bookings()"
