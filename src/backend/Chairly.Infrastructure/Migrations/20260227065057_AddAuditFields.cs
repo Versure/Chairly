@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,32 +10,53 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<Guid>(
-                name: "CreatedBy",
-                table: "Services",
-                type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Services' AND column_name = 'CreatedBy'
+                    ) THEN
+                        ALTER TABLE "Services" ADD COLUMN "CreatedBy" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<Guid>(
-                name: "UpdatedBy",
-                table: "Services",
-                type: "uuid",
-                nullable: true);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Services' AND column_name = 'UpdatedBy'
+                    ) THEN
+                        ALTER TABLE "Services" ADD COLUMN "UpdatedBy" uuid;
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "CreatedAtUtc",
-                table: "ServiceCategories",
-                type: "timestamp with time zone",
-                nullable: false,
-                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'ServiceCategories' AND column_name = 'CreatedAtUtc'
+                    ) THEN
+                        ALTER TABLE "ServiceCategories" ADD COLUMN "CreatedAtUtc" timestamp with time zone NOT NULL DEFAULT '0001-01-01 00:00:00+00';
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<Guid>(
-                name: "CreatedBy",
-                table: "ServiceCategories",
-                type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'ServiceCategories' AND column_name = 'CreatedBy'
+                    ) THEN
+                        ALTER TABLE "ServiceCategories" ADD COLUMN "CreatedBy" uuid NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+                    END IF;
+                END $$;
+                """);
         }
 
         /// <inheritdoc />

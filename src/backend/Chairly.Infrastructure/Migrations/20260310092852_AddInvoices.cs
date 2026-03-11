@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,82 +10,61 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Invoices",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    BookingId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ClientId = table.Column<Guid>(type: "uuid", nullable: false),
-                    InvoiceNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    InvoiceDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    SentAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    SentBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    PaidAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    PaidBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    VoidedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    VoidedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Invoices", x => x.Id);
-                });
+            migrationBuilder.Sql("""
+                CREATE TABLE IF NOT EXISTS "Invoices" (
+                    "Id" uuid NOT NULL,
+                    "TenantId" uuid NOT NULL,
+                    "BookingId" uuid NOT NULL,
+                    "ClientId" uuid NOT NULL,
+                    "InvoiceNumber" character varying(20) NOT NULL,
+                    "InvoiceDate" date NOT NULL,
+                    "TotalAmount" numeric(18,2) NOT NULL,
+                    "CreatedAtUtc" timestamp with time zone NOT NULL,
+                    "CreatedBy" uuid NOT NULL,
+                    "SentAtUtc" timestamp with time zone,
+                    "SentBy" uuid,
+                    "PaidAtUtc" timestamp with time zone,
+                    "PaidBy" uuid,
+                    "VoidedAtUtc" timestamp with time zone,
+                    "VoidedBy" uuid,
+                    CONSTRAINT "PK_Invoices" PRIMARY KEY ("Id")
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "InvoiceLineItems",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    InvoiceId = table.Column<Guid>(type: "uuid", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_InvoiceLineItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_InvoiceLineItems_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            migrationBuilder.Sql("""
+                CREATE TABLE IF NOT EXISTS "InvoiceLineItems" (
+                    "Id" uuid NOT NULL,
+                    "Description" character varying(200) NOT NULL,
+                    "Quantity" integer NOT NULL,
+                    "UnitPrice" numeric(18,2) NOT NULL,
+                    "TotalPrice" numeric(18,2) NOT NULL,
+                    "SortOrder" integer NOT NULL,
+                    "InvoiceId" uuid NOT NULL,
+                    CONSTRAINT "PK_InvoiceLineItems" PRIMARY KEY ("Id"),
+                    CONSTRAINT "FK_InvoiceLineItems_Invoices_InvoiceId" FOREIGN KEY ("InvoiceId")
+                        REFERENCES "Invoices" ("Id") ON DELETE CASCADE
+                );
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_InvoiceLineItems_InvoiceId",
-                table: "InvoiceLineItems",
-                column: "InvoiceId");
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_InvoiceLineItems_InvoiceId" ON "InvoiceLineItems" ("InvoiceId");
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId_BookingId",
-                table: "Invoices",
-                columns: new[] { "TenantId", "BookingId" },
-                unique: true);
+            migrationBuilder.Sql("""
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_Invoices_TenantId_BookingId" ON "Invoices" ("TenantId", "BookingId");
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId_ClientId",
-                table: "Invoices",
-                columns: new[] { "TenantId", "ClientId" });
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_Invoices_TenantId_ClientId" ON "Invoices" ("TenantId", "ClientId");
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId_CreatedAtUtc",
-                table: "Invoices",
-                columns: new[] { "TenantId", "CreatedAtUtc" },
-                descending: new[] { false, true });
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_Invoices_TenantId_CreatedAtUtc" ON "Invoices" ("TenantId", "CreatedAtUtc" DESC);
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId_InvoiceNumber",
-                table: "Invoices",
-                columns: new[] { "TenantId", "InvoiceNumber" },
-                unique: true);
-
+            migrationBuilder.Sql("""
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_Invoices_TenantId_InvoiceNumber" ON "Invoices" ("TenantId", "InvoiceNumber");
+                """);
         }
 
         /// <inheritdoc />

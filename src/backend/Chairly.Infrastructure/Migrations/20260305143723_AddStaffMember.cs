@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,34 +10,29 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "StaffMembers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Role = table.Column<int>(type: "integer", nullable: false),
-                    Color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    PhotoUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    ScheduleJson = table.Column<string>(type: "text", nullable: false),
-                    DeactivatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    DeactivatedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_StaffMembers", x => x.Id);
-                });
+            migrationBuilder.Sql("""
+                CREATE TABLE IF NOT EXISTS "StaffMembers" (
+                    "Id" uuid NOT NULL,
+                    "TenantId" uuid NOT NULL,
+                    "FirstName" character varying(100) NOT NULL,
+                    "LastName" character varying(100) NOT NULL,
+                    "Role" integer NOT NULL,
+                    "Color" character varying(20) NOT NULL,
+                    "PhotoUrl" character varying(500),
+                    "ScheduleJson" text NOT NULL,
+                    "DeactivatedAtUtc" timestamp with time zone,
+                    "DeactivatedBy" uuid,
+                    "CreatedAtUtc" timestamp with time zone NOT NULL,
+                    "CreatedBy" uuid NOT NULL,
+                    "UpdatedAtUtc" timestamp with time zone,
+                    "UpdatedBy" uuid,
+                    CONSTRAINT "PK_StaffMembers" PRIMARY KEY ("Id")
+                );
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_StaffMembers_FirstName_LastName_TenantId",
-                table: "StaffMembers",
-                columns: new[] { "FirstName", "LastName", "TenantId" });
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_StaffMembers_FirstName_LastName_TenantId" ON "StaffMembers" ("FirstName", "LastName", "TenantId");
+                """);
         }
 
         /// <inheritdoc />

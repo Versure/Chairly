@@ -10,10 +10,9 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateIndex(
-                name: "IX_Bookings_TenantId",
-                table: "Bookings",
-                column: "TenantId");
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_Bookings_TenantId" ON "Bookings" ("TenantId");
+                """);
         }
 
         /// <inheritdoc />

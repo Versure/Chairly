@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -11,57 +10,42 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ServiceCategories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ServiceCategories", x => x.Id);
-                });
+            migrationBuilder.Sql("""
+                CREATE TABLE IF NOT EXISTS "ServiceCategories" (
+                    "Id" uuid NOT NULL,
+                    "TenantId" uuid NOT NULL,
+                    "Name" character varying(100) NOT NULL,
+                    "SortOrder" integer NOT NULL,
+                    CONSTRAINT "PK_ServiceCategories" PRIMARY KEY ("Id")
+                );
+                """);
 
-            migrationBuilder.CreateTable(
-                name: "Services",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    Duration = table.Column<TimeSpan>(type: "interval", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: false),
-                    CategoryId = table.Column<Guid>(type: "uuid", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
-                    SortOrder = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Services", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Services_ServiceCategories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "ServiceCategories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                });
+            migrationBuilder.Sql("""
+                CREATE TABLE IF NOT EXISTS "Services" (
+                    "Id" uuid NOT NULL,
+                    "TenantId" uuid NOT NULL,
+                    "Name" character varying(150) NOT NULL,
+                    "Description" text,
+                    "Duration" interval NOT NULL,
+                    "Price" numeric(10,2) NOT NULL,
+                    "CategoryId" uuid,
+                    "IsActive" boolean NOT NULL,
+                    "SortOrder" integer NOT NULL,
+                    "CreatedAtUtc" timestamp with time zone NOT NULL,
+                    "UpdatedAtUtc" timestamp with time zone,
+                    CONSTRAINT "PK_Services" PRIMARY KEY ("Id"),
+                    CONSTRAINT "FK_Services_ServiceCategories_CategoryId" FOREIGN KEY ("CategoryId")
+                        REFERENCES "ServiceCategories" ("Id") ON DELETE SET NULL
+                );
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Services_CategoryId",
-                table: "Services",
-                column: "CategoryId");
+            migrationBuilder.Sql("""
+                CREATE INDEX IF NOT EXISTS "IX_Services_CategoryId" ON "Services" ("CategoryId");
+                """);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Services_Name_TenantId",
-                table: "Services",
-                columns: new[] { "Name", "TenantId" },
-                unique: true);
+            migrationBuilder.Sql("""
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_Services_Name_TenantId" ON "Services" ("Name", "TenantId");
+                """);
         }
 
         /// <inheritdoc />
