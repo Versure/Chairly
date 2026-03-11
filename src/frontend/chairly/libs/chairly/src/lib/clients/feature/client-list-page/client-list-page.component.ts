@@ -10,7 +10,11 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 
-import { ConfirmationDialogComponent, LoadingIndicatorComponent } from '@org/shared-lib';
+import {
+  ConfirmationDialogComponent,
+  LoadingIndicatorComponent,
+  PageHeaderComponent,
+} from '@org/shared-lib';
 
 import { ClientApiService, ClientStore } from '../../data-access';
 import { ClientResponse, CreateClientRequest } from '../../models';
@@ -22,6 +26,7 @@ import { ClientFormDialogComponent, ClientTableComponent } from '../../ui';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ConfirmationDialogComponent,
+    PageHeaderComponent,
     ClientFormDialogComponent,
     ClientTableComponent,
     LoadingIndicatorComponent,

@@ -1,15 +1,14 @@
 <div class="flex min-h-screen flex-col bg-gray-50">
   <!-- Page header -->
-  <div class="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-    <h1 class="text-xl font-semibold text-gray-900">Diensten</h1>
+  <chairly-page-header title="Diensten">
     <button
+      actions
       type="button"
-      class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-      (click)="openAddService()"
-    >
+      class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+      (click)="openAddService()">
       Dienst toevoegen
     </button>
-  </div>
+  </chairly-page-header>
 
   <!-- Main layout: table + sidebar -->
   <div class="flex flex-1 overflow-hidden">
@@ -21,8 +20,7 @@
         (editClicked)="onEditService($event)"
         (deleteClicked)="onDeleteService($event)"
         (toggleActiveClicked)="onToggleActive($event)"
-        (servicesReordered)="onServicesReordered($event)"
-      />
+        (servicesReordered)="onServicesReordered($event)" />
     </div>
 
     <!-- Category sidebar -->
@@ -33,8 +31,7 @@
         (categoryCreated)="onCategoryCreated($event)"
         (categoryUpdated)="onCategoryUpdated($event)"
         (categoryDeleted)="onCategoryDeleted($event)"
-        (categoriesReordered)="onCategoriesReordered($event)"
-      />
+        (categoriesReordered)="onCategoriesReordered($event)" />
     </div>
   </div>
 </div>
@@ -44,8 +41,7 @@
   [categories]="categories()"
   [service]="selectedService()"
   (saved)="onServiceSaved($event)"
-  (cancelled)="onServiceFormCancelled()"
-/>
+  (cancelled)="onServiceFormCancelled()" />
 
 <!-- Delete service confirmation dialog -->
 <chairly-confirmation-dialog
@@ -54,8 +50,7 @@
   message="Weet je zeker dat je deze dienst wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
   confirmLabel="Verwijderen"
   [isDestructive]="true"
-  (confirmed)="onConfirmDeleteService()"
-/>
+  (confirmed)="onConfirmDeleteService()" />
 
 <!-- Delete category confirmation dialog -->
 <chairly-confirmation-dialog
@@ -64,5 +59,4 @@
   message="Weet je zeker dat je deze categorie wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
   confirmLabel="Verwijderen"
   [isDestructive]="true"
-  (confirmed)="onConfirmDeleteCategory()"
-/>
+  (confirmed)="onConfirmDeleteCategory()" />

@@ -11,7 +11,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { forkJoin } from 'rxjs';
 
-import { LoadingIndicatorComponent } from '@org/shared-lib';
+import { LoadingIndicatorComponent, PageHeaderComponent } from '@org/shared-lib';
 
 import { SettingsApiService } from '../../data-access';
 import { CompanyInfo, UpdateCompanyInfoRequest, VatSettings } from '../../models';
@@ -20,7 +20,7 @@ import { CompanyInfo, UpdateCompanyInfoRequest, VatSettings } from '../../models
   selector: 'chairly-settings-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, LoadingIndicatorComponent],
+  imports: [ReactiveFormsModule, LoadingIndicatorComponent, PageHeaderComponent],
   templateUrl: './settings-page.component.html',
 })
 export class SettingsPageComponent implements OnInit {
