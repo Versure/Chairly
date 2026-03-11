@@ -38,6 +38,7 @@ internal sealed class ToggleServiceActiveHandler(ChairlyDbContext db) : IRequest
             service.Description,
             service.Duration,
             service.Price,
+            service.VatRate,
             service.CategoryId,
             service.Category?.Name,
             service.IsActive,

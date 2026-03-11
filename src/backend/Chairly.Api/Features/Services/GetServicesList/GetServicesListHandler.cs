@@ -20,6 +20,7 @@ internal sealed class GetServicesListHandler(ChairlyDbContext db) : IRequestHand
                 s.Description,
                 s.Duration,
                 s.Price,
+                s.VatRate,
                 s.CategoryId,
                 s.Category != null ? s.Category.Name : null,
                 s.IsActive,

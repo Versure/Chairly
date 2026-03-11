@@ -10,6 +10,7 @@ using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf.Types;
+using ValidationException = Chairly.Api.Shared.Mediator.ValidationException;
 
 namespace Chairly.Tests.Features.Services;
 
@@ -294,5 +295,109 @@ public class ServiceHandlerTests
         Assert.Equal(2, list.Count);
         Assert.Equal("A", list[0].Name);
         Assert.Equal("B", list[1].Name);
+    }
+
+    [Fact]
+    public async Task CreateServiceHandler_WithVatRate21_StoresVatRate()
+    {
+        await using var db = CreateDbContext();
+        var handler = new CreateServiceHandler(db);
+        var command = new CreateServiceCommand
+        {
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 25.00m,
+            VatRate = 21m,
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.Equal(21m, result.VatRate);
+        var entity = await db.Services.SingleAsync();
+        Assert.Equal(21m, entity.VatRate);
+    }
+
+    [Fact]
+    public async Task CreateServiceHandler_WithNullVatRate_StoresNull()
+    {
+        await using var db = CreateDbContext();
+        var handler = new CreateServiceHandler(db);
+        var command = new CreateServiceCommand
+        {
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 25.00m,
+            VatRate = null,
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.Null(result.VatRate);
+        var entity = await db.Services.SingleAsync();
+        Assert.Null(entity.VatRate);
+    }
+
+    [Fact]
+    public async Task CreateServiceHandler_WithInvalidVatRate15_ThrowsValidationException()
+    {
+        await using var db = CreateDbContext();
+        var handler = new CreateServiceHandler(db);
+        var command = new CreateServiceCommand
+        {
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 25.00m,
+            VatRate = 15m,
+        };
+
+        await Assert.ThrowsAsync<ValidationException>(() => handler.Handle(command));
+    }
+
+    [Fact]
+    public async Task UpdateServiceHandler_WithVatRate9_UpdatesVatRate()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestService(db);
+        var handler = new UpdateServiceHandler(db);
+        var command = new UpdateServiceCommand
+        {
+            Id = existing.Id,
+            Name = "Updated Service",
+            Duration = TimeSpan.FromMinutes(45),
+            Price = 30.00m,
+            VatRate = 9m,
+            SortOrder = 2,
+        };
+
+        var result = await handler.Handle(command);
+
+        var response = result.AsT0;
+        Assert.Equal(9m, response.VatRate);
+    }
+
+    [Fact]
+    public async Task GetServiceHandler_ReturnsVatRateInResponse()
+    {
+        await using var db = CreateDbContext();
+        var service = new Service
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 25.00m,
+            VatRate = 9m,
+            IsActive = true,
+            SortOrder = 0,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Services.Add(service);
+        await db.SaveChangesAsync();
+        var handler = new GetServiceHandler(db);
+
+        var result = await handler.Handle(new GetServiceQuery(service.Id));
+
+        var response = result.AsT0;
+        Assert.Equal(9m, response.VatRate);
     }
 }

@@ -1,5 +1,6 @@
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
+using Chairly.Api.Shared.Validation;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -13,6 +14,8 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
     public async Task<OneOf<ServiceResponse, NotFound>> Handle(UpdateServiceCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
+
+        VatRateValidator.Validate(command.VatRate);
 
         var service = await db.Services
             .Include(s => s.Category)
@@ -28,6 +31,7 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
         service.Description = command.Description;
         service.Duration = command.Duration;
         service.Price = command.Price;
+        service.VatRate = command.VatRate;
         service.CategoryId = command.CategoryId;
         service.SortOrder = command.SortOrder;
         service.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -53,6 +57,7 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
             service.Description,
             service.Duration,
             service.Price,
+            service.VatRate,
             service.CategoryId,
             categoryName,
             service.IsActive,
