@@ -62,13 +62,21 @@ async function setupApiMocks(
   });
 }
 
-// --- Company Information Tests ---
+// --- Combined Settings Page Tests ---
 
-test('navigating to /instellingen shows h1 Bedrijfsinformatie', async ({ page }) => {
+test('navigating to /instellingen shows h1 Instellingen', async ({ page }) => {
   await setupApiMocks(page);
   await page.goto('/instellingen');
 
-  await expect(page.getByRole('heading', { name: 'Bedrijfsinformatie', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Instellingen', level: 1 })).toBeVisible();
+});
+
+test('page shows both Bedrijfsinformatie and BTW-instellingen sections', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/instellingen');
+
+  await expect(page.getByRole('heading', { name: 'Bedrijfsinformatie', level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'BTW-instellingen', level: 2 })).toBeVisible();
 });
 
 test('page shows description text about invoices', async ({ page }) => {
@@ -76,6 +84,15 @@ test('page shows description text about invoices', async ({ page }) => {
   await page.goto('/instellingen');
 
   await expect(page.getByText('Deze gegevens worden gebruikt op uw facturen.')).toBeVisible();
+});
+
+test('page shows BTW description text', async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto('/instellingen');
+
+  await expect(
+    page.getByText('Het standaard BTW-tarief wordt automatisch toegepast'),
+  ).toBeVisible();
 });
 
 test('fill in company name and email, click Opslaan, and verify success banner appears', async ({
@@ -86,9 +103,12 @@ test('fill in company name and email, click Opslaan, and verify success banner a
 
   await page.getByLabel('Bedrijfsnaam').fill('Salon Mooi');
   await page.getByLabel('E-mailadres').fill('info@salonmooi.nl');
-  await page.getByRole('button', { name: 'Opslaan' }).click();
 
-  await expect(page.getByText('Instellingen opgeslagen')).toBeVisible();
+  // Click the first Opslaan button (company section)
+  const companyForm = page.locator('form');
+  await companyForm.getByRole('button', { name: 'Opslaan' }).click();
+
+  await expect(page.getByText('Bedrijfsinformatie opgeslagen')).toBeVisible();
 });
 
 test('sidebar contains Instellingen link', async ({ page }) => {
@@ -127,38 +147,30 @@ test('clicking Instellingen in sidebar navigates to /instellingen', async ({ pag
 
   await navLink.click();
   await expect(page).toHaveURL(/\/instellingen/);
-  await expect(page.getByRole('heading', { name: 'Bedrijfsinformatie', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Instellingen', level: 1 })).toBeVisible();
 });
 
-test('success banner disappears after a few seconds', async ({ page }) => {
+test('company success banner disappears after a few seconds', async ({ page }) => {
   await setupApiMocks(page);
   await page.goto('/instellingen');
 
   await page.getByLabel('Bedrijfsnaam').fill('Test Salon');
-  await page.getByRole('button', { name: 'Opslaan' }).click();
 
-  const banner = page.getByText('Instellingen opgeslagen');
+  const companyForm = page.locator('form');
+  await companyForm.getByRole('button', { name: 'Opslaan' }).click();
+
+  const banner = page.getByText('Bedrijfsinformatie opgeslagen');
   await expect(banner).toBeVisible();
 
   // Wait for auto-dismiss (3 seconds + buffer)
   await expect(banner).toBeHidden({ timeout: 5000 });
 });
 
-// --- VAT Settings Tests ---
-
-test('navigates to /instellingen/btw and shows the BTW-instellingen heading', async ({ page }) => {
-  await setupApiMocks(page);
-  await page.goto('/instellingen/btw');
-
-  await expect(page.getByRole('heading', { name: 'BTW-instellingen', level: 1 })).toBeVisible();
-  await expect(
-    page.getByText('Het standaard BTW-tarief wordt automatisch toegepast'),
-  ).toBeVisible();
-});
+// --- VAT Settings Tests (on same page) ---
 
 test('displays the default VAT rate select with 21% selected', async ({ page }) => {
   await setupApiMocks(page);
-  await page.goto('/instellingen/btw');
+  await page.goto('/instellingen');
 
   const select = page.getByLabel('Standaard BTW-tarief');
   await expect(select).toBeVisible();
@@ -168,13 +180,16 @@ test('displays the default VAT rate select with 21% selected', async ({ page }) 
 
 test('changing default VAT to 9% and clicking Opslaan shows success banner', async ({ page }) => {
   await setupApiMocks(page);
-  await page.goto('/instellingen/btw');
+  await page.goto('/instellingen');
 
   const select = page.getByLabel('Standaard BTW-tarief');
   await expect(select).toBeVisible();
 
   await select.selectOption({ label: '9%' });
-  await page.getByRole('button', { name: 'Opslaan' }).click();
 
-  await expect(page.getByText('Instellingen opgeslagen')).toBeVisible();
+  // Click the VAT section's Opslaan button (not inside the form element)
+  const vatSection = page.locator('section').filter({ hasText: 'BTW-instellingen' });
+  await vatSection.getByRole('button', { name: 'Opslaan' }).click();
+
+  await expect(page.getByText('BTW-instellingen opgeslagen')).toBeVisible();
 });
