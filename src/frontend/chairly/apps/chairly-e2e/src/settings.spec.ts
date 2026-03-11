@@ -81,7 +81,7 @@ test('form fields retain values after page reload', async ({ page }) => {
 
   await expect(page.getByLabel('Bedrijfsnaam')).toHaveValue('Salon Mooi');
   await expect(page.getByLabel('E-mailadres')).toHaveValue('info@salonmooi.nl');
-  await expect(page.getByLabel('Adres')).toHaveValue('Kerkstraat 1, 1234 AB Amsterdam');
+  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Kerkstraat 1, 1234 AB Amsterdam');
   await expect(page.getByLabel('Telefoonnummer')).toHaveValue('020-1234567');
   await expect(page.getByLabel('IBAN-nummer')).toHaveValue('NL91ABNA0417164300');
   await expect(page.getByLabel('BTW-nummer')).toHaveValue('NL123456789B01');
