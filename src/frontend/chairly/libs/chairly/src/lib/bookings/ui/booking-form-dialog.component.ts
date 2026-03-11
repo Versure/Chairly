@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   inject,
   input,
@@ -11,6 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { DropdownOption, SearchableDropdownComponent } from '@org/shared-lib';
 
 import {
   Booking,
@@ -30,7 +33,7 @@ export interface BookingFormSaveEvent {
   selector: 'chairly-booking-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, SetHasPipe],
+  imports: [ReactiveFormsModule, SearchableDropdownComponent, SetHasPipe],
   templateUrl: './booking-form-dialog.component.html',
 })
 export class BookingFormDialogComponent {
@@ -38,6 +41,14 @@ export class BookingFormDialogComponent {
   readonly clients = input<ClientOption[]>([]);
   readonly staffMembers = input<StaffMemberOption[]>([]);
   readonly services = input<ServiceOption[]>([]);
+
+  protected readonly clientOptions = computed<DropdownOption[]>(() =>
+    this.clients().map((c) => ({ id: c.id, label: `${c.firstName} ${c.lastName}` })),
+  );
+
+  protected readonly staffMemberOptions = computed<DropdownOption[]>(() =>
+    this.staffMembers().map((m) => ({ id: m.id, label: `${m.firstName} ${m.lastName}` })),
+  );
 
   readonly saved: OutputEmitterRef<BookingFormSaveEvent> = output<BookingFormSaveEvent>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();

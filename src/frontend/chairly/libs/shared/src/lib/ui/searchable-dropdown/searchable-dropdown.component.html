@@ -1,0 +1,33 @@
+<div class="relative">
+  <input
+    type="text"
+    [id]="inputId()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [value]="displayValue()"
+    (focus)="onInputFocus()"
+    (input)="onInputChange($event)"
+    (keydown)="onKeydown($event)"
+    class="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+  @if (isOpen()) {
+    <ul
+      class="absolute z-10 mt-1 w-full max-h-60 overflow-y-auto bg-white border border-gray-200 rounded shadow-lg text-sm dark:bg-slate-700 dark:border-slate-600">
+      @for (option of filteredOptions(); track option.id; let i = $index) {
+        <li
+          tabindex="0"
+          role="option"
+          [attr.aria-selected]="i === highlightedIndex()"
+          class="px-3 py-2 cursor-pointer hover:bg-primary-50 dark:hover:bg-slate-600"
+          [class.bg-primary-100]="i === highlightedIndex()"
+          [class.dark:bg-slate-600]="i === highlightedIndex()"
+          (click)="selectOption(option)"
+          (keydown.enter)="selectOption(option)">
+          {{ option.label }}
+        </li>
+      }
+      @if (filteredOptions().length === 0) {
+        <li class="px-3 py-2 text-gray-400 dark:text-slate-400">Geen resultaten gevonden</li>
+      }
+    </ul>
+  }
+</div>
