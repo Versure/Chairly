@@ -61,4 +61,8 @@ export class InvoiceApiService {
       `${this.baseUrl}/invoices/${invoiceId}/line-items/${lineItemId}`,
     );
   }
+
+  regenerateInvoice(id: string): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/regenerate`, null);
+  }
 }

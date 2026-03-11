@@ -152,6 +152,26 @@ export const InvoiceStore = signalStore(
             error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
+
+      regenerateInvoice(id: string): void {
+        patchState(store, { isLoading: true, error: null });
+        invoiceApi
+          .regenerateInvoice(id)
+          .pipe(take(1))
+          .subscribe({
+            next: (updated) =>
+              patchState(store, (state) => ({
+                selectedInvoice: updated,
+                invoices: replaceInvoiceSummary(state.invoices, updated),
+                isLoading: false,
+              })),
+            error: (err: unknown) =>
+              patchState(store, {
+                error: toErrorMessage(err),
+                isLoading: false,
+              }),
+          });
+      },
     };
   }),
 );
