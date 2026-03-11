@@ -92,7 +92,6 @@
   background-color: #1e293b; /* slate-800 */
   color: #f1f5f9; /* slate-100 */
   border-color: #475569; /* slate-600 */
-  padding-right: 2rem;
 }
 
 [data-theme='dark'] input::placeholder,
