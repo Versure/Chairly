@@ -61,6 +61,43 @@ After writing the configuration:
     --startup-project src/backend/Chairly.Api
   ```
 
+**CRITICAL: After generating the migration, open the generated `.cs` file (not the `.Designer.cs`) and make it idempotent:**
+
+Replace every `migrationBuilder.CreateTable(...)` with:
+```csharp
+migrationBuilder.Sql("""
+    CREATE TABLE IF NOT EXISTS "TableName" (
+        "Id" uuid NOT NULL,
+        ...column definitions...
+        CONSTRAINT "PK_TableName" PRIMARY KEY ("Id")
+    );
+    """);
+```
+
+Replace every `migrationBuilder.CreateIndex(...)` with:
+```csharp
+migrationBuilder.Sql("""
+    CREATE [UNIQUE] INDEX IF NOT EXISTS "IX_..." ON "TableName" (...);
+    """);
+```
+
+Replace every `migrationBuilder.AddColumn(...)` with:
+```csharp
+migrationBuilder.Sql("""
+    DO $$
+    BEGIN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'TableName' AND column_name = 'ColumnName'
+        ) THEN
+            ALTER TABLE "TableName" ADD COLUMN "ColumnName" sql_type [NOT NULL DEFAULT value];
+        END IF;
+    END $$;
+    """);
+```
+
+**Do NOT edit the `*.Designer.cs` snapshot file** — only the plain `.cs` migration file is modified.
+
 ### 3. VSA slices (one folder per use case)
 
 Location: `{BACKEND_WT}src/backend/Chairly.Api/Features/{Context}/{UseCase}/`

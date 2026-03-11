@@ -69,6 +69,7 @@ Interfaces: `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>`, `IMed
   - `{Action}AtUtc` + `{Action}By` pairs (e.g. `ConfirmedAtUtc`, `ConfirmedBy`)
   - Status is derived from timestamps, never stored
   - `CreatedAtUtc`/`CreatedBy` required on all entities
+- **EF Core migrations must be idempotent**: All `CreateTable` calls must use raw SQL with `CREATE TABLE IF NOT EXISTS`. All `CreateIndex` calls must use `CREATE INDEX IF NOT EXISTS`. `AddColumn` calls must use `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'T' AND column_name = 'C') THEN ALTER TABLE "T" ADD COLUMN "C" ...; END IF; END $$;` blocks. Never use bare `migrationBuilder.CreateTable()`, `migrationBuilder.CreateIndex()`, or `migrationBuilder.AddColumn()` in new migrations.
 - Database-per-tenant: all entities carry `TenantId`, tenant resolution via middleware
 - Test coverage: unit tests for handlers, integration tests for API endpoints
 
