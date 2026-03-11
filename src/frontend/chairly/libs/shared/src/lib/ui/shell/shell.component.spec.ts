@@ -44,4 +44,15 @@ describe('ShellComponent', () => {
     component.closeSidebar();
     expect(component.sidebarOpen()).toBe(false);
   });
+
+  it('all nav items render an SVG icon', () => {
+    const navItems = fixture.nativeElement.querySelectorAll('nav ul li a');
+    expect(navItems.length).toBe(6);
+
+    navItems.forEach((link: HTMLElement) => {
+      const svg = link.querySelector('svg');
+      expect(svg).toBeTruthy();
+      expect(svg?.getAttribute('aria-hidden')).toBe('true');
+    });
+  });
 });
