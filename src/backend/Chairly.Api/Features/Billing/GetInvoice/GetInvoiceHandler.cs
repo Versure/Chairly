@@ -24,13 +24,11 @@ internal sealed class GetInvoiceHandler(ChairlyDbContext db) : IRequestHandler<G
             return new NotFound();
         }
 
-        var clientFullName = await db.Clients
-            .Where(c => c.Id == invoice.ClientId)
-            .Select(c => c.FirstName + " " + c.LastName)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false) ?? string.Empty;
+        var (clientFullName, clientSnapshot, staffMemberName) = await InvoiceMapper
+            .LoadInvoiceContextAsync(db, invoice, cancellationToken)
+            .ConfigureAwait(false);
 
-        return InvoiceMapper.ToResponse(invoice, clientFullName);
+        return InvoiceMapper.ToResponse(invoice, clientFullName, clientSnapshot, staffMemberName);
     }
 }
 #pragma warning restore CA1812

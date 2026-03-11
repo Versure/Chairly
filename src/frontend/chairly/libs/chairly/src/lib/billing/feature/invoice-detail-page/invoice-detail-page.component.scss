@@ -32,8 +32,25 @@
     width: 100% !important;
   }
 
+  .shadow,
   .shadow-sm,
   .shadow-xl {
     box-shadow: none !important;
+  }
+
+  .rounded-lg {
+    border-radius: 0 !important;
+  }
+
+  .invoice-document {
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  @page {
+    margin: 15mm;
+    size: A4;
   }
 }

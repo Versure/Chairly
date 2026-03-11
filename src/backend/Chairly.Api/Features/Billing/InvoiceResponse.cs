@@ -7,6 +7,8 @@ internal sealed record InvoiceResponse(
     Guid BookingId,
     Guid ClientId,
     string ClientFullName,
+    ClientSnapshotResponse ClientSnapshot,
+    string StaffMemberName,
     decimal SubTotalAmount,
     decimal TotalVatAmount,
     decimal TotalAmount,
