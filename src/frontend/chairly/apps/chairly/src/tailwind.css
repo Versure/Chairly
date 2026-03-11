@@ -92,6 +92,7 @@
   background-color: #1e293b; /* slate-800 */
   color: #f1f5f9; /* slate-100 */
   border-color: #475569; /* slate-600 */
+  padding-right: 2rem;
 }
 
 [data-theme='dark'] input::placeholder,
@@ -103,4 +104,9 @@
    does not apply to it. Override explicitly so table row hover stays readable. */
 [data-theme='dark'] .hover\:bg-gray-50:hover {
   background-color: #334155; /* slate-700 */
+}
+
+/* Give native select dropdowns breathing room on the right for the browser chevron */
+select {
+  padding-right: 2rem;
 }
