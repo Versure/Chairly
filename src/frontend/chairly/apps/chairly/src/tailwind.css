@@ -104,3 +104,8 @@
 [data-theme='dark'] .hover\:bg-gray-50:hover {
   background-color: #334155; /* slate-700 */
 }
+
+/* Give native select dropdowns breathing room on the right for the browser chevron */
+select {
+  padding-right: 2rem;
+}
