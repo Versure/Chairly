@@ -2,11 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { of, throwError } from 'rxjs';
 
-import {
-  CreateServiceRequest,
-  ServiceResponse,
-  UpdateServiceRequest,
-} from '../models';
+import { CreateServiceRequest, ServiceResponse, UpdateServiceRequest } from '../models';
 import { ServiceStore } from './service.store';
 import { ServiceApiService } from './service-api.service';
 
@@ -17,6 +13,7 @@ describe('ServiceStore', () => {
     description: null,
     duration: '00:30:00',
     price: 25,
+    vatRate: 21,
     categoryId: 'cat-001',
     categoryName: 'Haircuts',
     isActive: true,
@@ -59,10 +56,7 @@ describe('ServiceStore', () => {
     vi.clearAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [
-        ServiceStore,
-        { provide: ServiceApiService, useValue: mockApiService },
-      ],
+      providers: [ServiceStore, { provide: ServiceApiService, useValue: mockApiService }],
     });
 
     store = TestBed.inject(ServiceStore);
@@ -76,9 +70,7 @@ describe('ServiceStore', () => {
 
   describe('activeServices computed', () => {
     it('should return only active services', () => {
-      mockApiService.getAll.mockReturnValue(
-        of([mockService, mockInactiveService])
-      );
+      mockApiService.getAll.mockReturnValue(of([mockService, mockInactiveService]));
       store.loadServices();
 
       expect(store.activeServices()).toEqual([mockService]);
@@ -94,9 +86,7 @@ describe('ServiceStore', () => {
 
   describe('servicesByCategory computed', () => {
     it('should group services by categoryId', () => {
-      mockApiService.getAll.mockReturnValue(
-        of([mockService, mockInactiveService])
-      );
+      mockApiService.getAll.mockReturnValue(of([mockService, mockInactiveService]));
       store.loadServices();
 
       const grouped = store.servicesByCategory();
@@ -147,6 +137,7 @@ describe('ServiceStore', () => {
         description: null,
         duration: '00:30:00',
         price: 25,
+        vatRate: 21,
         categoryId: 'cat-001',
         sortOrder: 1,
       };
@@ -163,6 +154,7 @@ describe('ServiceStore', () => {
         description: null,
         duration: '00:30:00',
         price: 25,
+        vatRate: null,
         categoryId: null,
         sortOrder: 1,
       };
@@ -189,6 +181,7 @@ describe('ServiceStore', () => {
         description: null,
         duration: '00:30:00',
         price: 25,
+        vatRate: 21,
         categoryId: 'cat-001',
         sortOrder: 1,
       };
@@ -205,6 +198,7 @@ describe('ServiceStore', () => {
         description: null,
         duration: '00:30:00',
         price: 25,
+        vatRate: null,
         categoryId: null,
         sortOrder: 1,
       };
@@ -285,8 +279,14 @@ describe('ServiceStore', () => {
 
       store.reorderServices([svc2, svc1]);
 
-      expect(mockApiService.update).toHaveBeenCalledWith('b', expect.objectContaining({ name: 'Beta', sortOrder: 0 }));
-      expect(mockApiService.update).toHaveBeenCalledWith('a', expect.objectContaining({ name: 'Alpha', sortOrder: 1 }));
+      expect(mockApiService.update).toHaveBeenCalledWith(
+        'b',
+        expect.objectContaining({ name: 'Beta', sortOrder: 0 }),
+      );
+      expect(mockApiService.update).toHaveBeenCalledWith(
+        'a',
+        expect.objectContaining({ name: 'Alpha', sortOrder: 1 }),
+      );
     });
   });
 });

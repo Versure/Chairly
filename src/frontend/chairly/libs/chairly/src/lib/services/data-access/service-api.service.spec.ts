@@ -4,11 +4,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import {
-  CreateServiceRequest,
-  ServiceResponse,
-  UpdateServiceRequest,
-} from '../models';
+import { CreateServiceRequest, ServiceResponse, UpdateServiceRequest } from '../models';
 import { ServiceApiService } from './service-api.service';
 
 describe('ServiceApiService', () => {
@@ -21,6 +17,7 @@ describe('ServiceApiService', () => {
     description: null,
     duration: '00:30:00',
     price: 25,
+    vatRate: 21,
     categoryId: null,
     categoryName: null,
     isActive: true,
@@ -87,6 +84,7 @@ describe('ServiceApiService', () => {
         description: null,
         duration: '00:30:00',
         price: 25,
+        vatRate: 21,
         categoryId: null,
         sortOrder: 1,
       };
@@ -110,6 +108,7 @@ describe('ServiceApiService', () => {
         description: 'A classic cut',
         duration: '00:45:00',
         price: 30,
+        vatRate: 21,
         categoryId: null,
         sortOrder: 2,
       };

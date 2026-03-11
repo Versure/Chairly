@@ -19,6 +19,7 @@ const mockService: ServiceResponse = {
   description: 'A classic cut',
   duration: '01:30:00',
   price: 25,
+  vatRate: 21,
   categoryId: 'cat-1',
   categoryName: 'Hair',
   isActive: true,
@@ -182,10 +183,90 @@ describe('ServiceFormDialogComponent', () => {
     component.open();
     fixture.detectChanges();
 
-    const options = fixture.nativeElement.querySelectorAll(
-      'select option',
-    ) as NodeListOf<HTMLOptionElement>;
+    const categorySelect = fixture.nativeElement.querySelector(
+      'select[formControlName="categoryId"]',
+    ) as HTMLSelectElement;
+    const options = categorySelect.querySelectorAll('option') as NodeListOf<HTMLOptionElement>;
     expect(options.length).toBe(2);
     expect(options[1].textContent?.trim()).toBe('Hair');
+  });
+
+  it('should display BTW-tarief select with 0%, 9%, 21% options', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const vatSelect = fixture.nativeElement.querySelector(
+      'select[formControlName="vatRate"]',
+    ) as HTMLSelectElement;
+    expect(vatSelect).toBeTruthy();
+
+    const options = vatSelect.querySelectorAll('option') as NodeListOf<HTMLOptionElement>;
+    expect(options.length).toBe(3);
+    expect(options[0].textContent?.trim()).toBe('0%');
+    expect(options[1].textContent?.trim()).toBe('9%');
+    expect(options[2].textContent?.trim()).toBe('21%');
+  });
+
+  it('should default vatRate to 21 when opening in create mode', () => {
+    component.open();
+    fixture.detectChanges();
+
+    expect(component['form'].controls.vatRate.value).toBe(21);
+  });
+
+  it('should set vatRate from service when opening in edit mode', () => {
+    const serviceWith9Pct: ServiceResponse = { ...mockService, vatRate: 9 };
+    fixture.componentRef.setInput('service', serviceWith9Pct);
+    fixture.detectChanges();
+    component.open();
+    fixture.detectChanges();
+
+    expect(component['form'].controls.vatRate.value).toBe(9);
+  });
+
+  it('should default vatRate to 21 when service has null vatRate', () => {
+    const serviceNullVat: ServiceResponse = { ...mockService, vatRate: null };
+    fixture.componentRef.setInput('service', serviceNullVat);
+    fixture.detectChanges();
+    component.open();
+    fixture.detectChanges();
+
+    expect(component['form'].controls.vatRate.value).toBe(21);
+  });
+
+  it('should include vatRate in emitted saved event', () => {
+    let emitted: CreateServiceRequest | undefined;
+    component.saved.subscribe((req) => {
+      emitted = req as CreateServiceRequest;
+    });
+
+    component.open();
+
+    const nameInput = fixture.nativeElement.querySelector(
+      'input[formControlName="name"]',
+    ) as HTMLInputElement;
+    nameInput.value = 'Test Service';
+    nameInput.dispatchEvent(new Event('input'));
+
+    const durationInput = fixture.nativeElement.querySelector(
+      'input[formControlName="duration"]',
+    ) as HTMLInputElement;
+    durationInput.value = '60';
+    durationInput.dispatchEvent(new Event('input'));
+
+    const priceInput = fixture.nativeElement.querySelector(
+      'input[formControlName="price"]',
+    ) as HTMLInputElement;
+    priceInput.value = '20';
+    priceInput.dispatchEvent(new Event('input'));
+
+    fixture.detectChanges();
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+
+    expect(emitted).toBeDefined();
+    expect(emitted?.vatRate).toBe(21);
   });
 });
