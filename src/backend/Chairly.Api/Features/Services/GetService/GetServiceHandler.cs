@@ -30,6 +30,7 @@ internal sealed class GetServiceHandler(ChairlyDbContext db) : IRequestHandler<G
             service.Description,
             service.Duration,
             service.Price,
+            service.VatRate,
             service.CategoryId,
             service.Category?.Name,
             service.IsActive,

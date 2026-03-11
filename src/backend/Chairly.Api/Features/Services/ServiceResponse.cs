@@ -6,6 +6,7 @@ internal sealed record ServiceResponse(
     string? Description,
     TimeSpan Duration,
     decimal Price,
+    decimal? VatRate,
     Guid? CategoryId,
     string? CategoryName,
     bool IsActive,
