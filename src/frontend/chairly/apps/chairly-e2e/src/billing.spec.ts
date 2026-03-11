@@ -296,7 +296,7 @@ test('invoice detail page shows invoice metadata', async ({ page }) => {
   await page.goto('/facturen/inv-1');
 
   await expect(page.getByText('Factuurnummer:')).toBeVisible();
-  await expect(page.getByText('2026-0001')).toBeVisible();
+  await expect(page.locator('.invoice-document').getByText('2026-0001')).toBeVisible();
   await expect(page.getByText('Factuurdatum:')).toBeVisible();
   await expect(page.getByText('Medewerker:')).toBeVisible();
   await expect(page.getByText('Anna de Vries')).toBeVisible();
