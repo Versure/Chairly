@@ -3,6 +3,7 @@ export { InvoiceGenerationService } from './lib/data-access';
 export {
   ConfirmationDialogComponent,
   LoadingIndicatorComponent,
+  PageHeaderComponent,
   ShellComponent,
   ThemeService,
 } from './lib/ui';

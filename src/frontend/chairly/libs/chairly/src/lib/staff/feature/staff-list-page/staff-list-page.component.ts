@@ -9,7 +9,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { ConfirmationDialogComponent, LoadingIndicatorComponent } from '@org/shared-lib';
+import {
+  ConfirmationDialogComponent,
+  LoadingIndicatorComponent,
+  PageHeaderComponent,
+} from '@org/shared-lib';
 
 import { StaffApiService, StaffStore } from '../../data-access';
 import { CreateStaffMemberRequest, StaffMemberResponse } from '../../models';
@@ -22,6 +26,7 @@ import { StaffFormDialogComponent, StaffTableComponent } from '../../ui';
   imports: [
     ConfirmationDialogComponent,
     LoadingIndicatorComponent,
+    PageHeaderComponent,
     StaffFormDialogComponent,
     StaffTableComponent,
   ],
