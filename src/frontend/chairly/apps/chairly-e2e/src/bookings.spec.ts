@@ -73,7 +73,9 @@ test('navigates to /boekingen and shows the Boekingen heading and table with nam
   await expect(page.getByRole('cell', { name: 'Anna de Vries' })).toBeVisible();
 });
 
-test('clicking Nieuwe boeking opens the booking form dialog with dropdowns', async ({ page }) => {
+test('clicking Nieuwe boeking opens the booking form dialog with searchable dropdowns', async ({
+  page,
+}) => {
   await setupApiMocks(page);
   await page.goto('/boekingen');
 
@@ -88,14 +90,15 @@ test('clicking Nieuwe boeking opens the booking form dialog with dropdowns', asy
   await expect(dialog.getByText('Diensten')).toBeVisible();
   await expect(dialog.getByLabel('Notities')).toBeVisible();
 
-  // Verify the dropdowns have options (option elements are hidden in collapsed selects, so use toHaveCount)
-  const clientSelect = dialog.getByLabel('Klant');
-  await expect(clientSelect.locator('option')).toHaveCount(3); // placeholder + 2 clients
-  await expect(clientSelect).toContainText('Jan Jansen');
+  // Verify the searchable dropdown shows filtered results when typing
+  const clientInput = dialog.getByLabel('Klant');
+  await clientInput.click();
+  await clientInput.fill('Jan');
+  await expect(dialog.locator('ul li').filter({ hasText: 'Jan Jansen' })).toBeVisible();
 
-  const staffSelect = dialog.getByLabel('Medewerker');
-  await expect(staffSelect.locator('option')).toHaveCount(3); // placeholder + 2 staff
-  await expect(staffSelect).toContainText('Anna de Vries');
+  // Verify empty state when typing non-matching text
+  await clientInput.fill('xyz');
+  await expect(dialog.getByText('Geen resultaten gevonden')).toBeVisible();
 
   // Verify service checkboxes
   await expect(dialog.getByLabel('Herenknippen')).toBeVisible();
@@ -152,8 +155,19 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   await page.getByRole('button', { name: 'Nieuwe boeking' }).click();
 
   const dialog = page.locator('dialog[open]');
-  await dialog.getByLabel('Klant').selectOption('client-2');
-  await dialog.getByLabel('Medewerker').selectOption('staff-2');
+
+  // Select client via searchable dropdown
+  const clientInput = dialog.getByLabel('Klant');
+  await clientInput.click();
+  await clientInput.fill('Piet');
+  await dialog.locator('ul li').filter({ hasText: 'Piet Pietersen' }).click();
+
+  // Select staff member via searchable dropdown
+  const staffInput = dialog.getByLabel('Medewerker');
+  await staffInput.click();
+  await staffInput.fill('Kees');
+  await dialog.locator('ul li').filter({ hasText: 'Kees Bakker' }).click();
+
   await dialog.getByLabel('Datum & tijd').fill('2026-03-10T11:00');
   await dialog.getByLabel('Damesknippen').check();
 
@@ -250,8 +264,8 @@ test('clicking a booking row opens the edit dialog pre-filled and saves changes'
 
   const dialog = page.locator('dialog[open]');
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('Klant')).toHaveValue('client-1');
-  await expect(dialog.getByLabel('Medewerker')).toHaveValue('staff-1');
+  await expect(dialog.getByLabel('Klant')).toHaveValue('Jan Jansen');
+  await expect(dialog.getByLabel('Medewerker')).toHaveValue('Anna de Vries');
 
   // Change the notes field
   await dialog.getByLabel('Notities').fill('Aangepaste notities');
