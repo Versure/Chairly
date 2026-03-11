@@ -44,13 +44,11 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
         db.Invoices.Add(invoice);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var clientFullName = await db.Clients
-            .Where(c => c.Id == invoice.ClientId)
-            .Select(c => c.FirstName + " " + c.LastName)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false) ?? string.Empty;
+        var (clientFullName, clientSnapshot, staffMemberName) = await InvoiceMapper
+            .LoadInvoiceContextAsync(db, invoice, cancellationToken)
+            .ConfigureAwait(false);
 
-        return InvoiceMapper.ToResponse(invoice, clientFullName);
+        return InvoiceMapper.ToResponse(invoice, clientFullName, clientSnapshot, staffMemberName);
     }
 
     private async Task<VatSettings> ResolveVatSettingsAsync(CancellationToken cancellationToken)

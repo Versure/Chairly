@@ -1,4 +1,6 @@
 using Chairly.Domain.Entities;
+using Chairly.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chairly.Api.Features.Billing;
 
@@ -26,7 +28,36 @@ internal static class InvoiceMapper
         return "Concept";
     }
 
-    public static InvoiceResponse ToResponse(Invoice invoice, string clientFullName)
+    public static async Task<(string ClientFullName, ClientSnapshotResponse ClientSnapshot, string StaffMemberName)>
+        LoadInvoiceContextAsync(ChairlyDbContext db, Invoice invoice, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(db);
+        ArgumentNullException.ThrowIfNull(invoice);
+
+        var client = await db.Clients
+            .FirstOrDefaultAsync(c => c.Id == invoice.ClientId, cancellationToken)
+            .ConfigureAwait(false);
+
+        var clientFullName = client is not null
+            ? client.FirstName + " " + client.LastName
+            : string.Empty;
+
+        var clientSnapshot = new ClientSnapshotResponse(
+            clientFullName,
+            client?.Email,
+            client?.PhoneNumber,
+            null); // Client entity has no address fields yet
+
+        var staffMemberName = await db.Bookings
+            .Where(b => b.Id == invoice.BookingId)
+            .Join(db.StaffMembers, b => b.StaffMemberId, s => s.Id, (b, s) => s.FirstName + " " + s.LastName)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false) ?? string.Empty;
+
+        return (clientFullName, clientSnapshot, staffMemberName);
+    }
+
+    public static InvoiceResponse ToResponse(Invoice invoice, string clientFullName, ClientSnapshotResponse clientSnapshot, string staffMemberName)
     {
         ArgumentNullException.ThrowIfNull(invoice);
 
@@ -51,6 +82,8 @@ internal static class InvoiceMapper
             invoice.BookingId,
             invoice.ClientId,
             clientFullName,
+            clientSnapshot,
+            staffMemberName,
             invoice.SubTotalAmount,
             invoice.TotalVatAmount,
             invoice.TotalAmount,
