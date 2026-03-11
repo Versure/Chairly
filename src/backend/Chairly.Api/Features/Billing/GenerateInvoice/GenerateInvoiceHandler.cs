@@ -94,7 +94,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
                 }
 
                 var unitPrice = bs.Price;
-                var vatAmount = Math.Round(unitPrice * effectiveVatPercentage / (100m + effectiveVatPercentage), 2, MidpointRounding.AwayFromZero);
+                var vatAmount = Math.Round(unitPrice * effectiveVatPercentage / 100m, 2, MidpointRounding.AwayFromZero);
                 return new InvoiceLineItem
                 {
                     Id = Guid.NewGuid(),
@@ -123,8 +123,8 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
             .ConfigureAwait(false);
 
         var lineItems = BuildLineItems(booking.BookingServices, services, vatSettings.DefaultVatRate);
-        var subTotalAmount = lineItems.Sum(li => li.TotalPrice);
         var totalVatAmount = lineItems.Sum(li => li.VatAmount);
+        var subTotalAmount = lineItems.Sum(li => li.TotalPrice) - totalVatAmount;
 
         return new Invoice
         {
