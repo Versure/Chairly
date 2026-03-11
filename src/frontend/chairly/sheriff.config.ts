@@ -10,6 +10,7 @@ export const sheriffConfig: SheriffConfig = {
       'clients/<layer>': ['domain:clients', 'layer:<layer>'],
       'staff/<layer>': ['domain:staff', 'layer:<layer>'],
       'services/<layer>': ['domain:services', 'layer:<layer>'],
+      'settings/<layer>': ['domain:settings', 'layer:<layer>'],
       'billing/<layer>': ['domain:billing', 'layer:<layer>'],
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
       'settings/<layer>': ['domain:settings', 'layer:<layer>'],

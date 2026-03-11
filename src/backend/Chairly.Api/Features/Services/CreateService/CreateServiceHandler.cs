@@ -1,5 +1,6 @@
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
+using Chairly.Api.Shared.Validation;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,8 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        VatRateValidator.Validate(command.VatRate);
+
         var service = new Service
         {
             Id = Guid.NewGuid(),
@@ -21,6 +24,7 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
             Description = command.Description,
             Duration = command.Duration,
             Price = command.Price,
+            VatRate = command.VatRate,
             CategoryId = command.CategoryId,
             IsActive = true,
             SortOrder = command.SortOrder,
@@ -53,6 +57,7 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
             service.Description,
             service.Duration,
             service.Price,
+            service.VatRate,
             service.CategoryId,
             categoryName,
             service.IsActive,

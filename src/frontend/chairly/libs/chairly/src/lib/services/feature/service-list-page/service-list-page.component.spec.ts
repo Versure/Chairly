@@ -13,6 +13,7 @@ function makeService(overrides: Partial<ServiceResponse> = {}): ServiceResponse 
     description: null,
     duration: '00:30:00',
     price: 25,
+    vatRate: 21,
     categoryId: null,
     categoryName: null,
     isActive: true,
@@ -24,7 +25,6 @@ function makeService(overrides: Partial<ServiceResponse> = {}): ServiceResponse 
     ...overrides,
   };
 }
-
 
 function mockDialogs(fixture: ComponentFixture<ServiceListPageComponent>): void {
   fixture.debugElement.queryAll(By.css('dialog')).forEach((de) => {
@@ -108,9 +108,7 @@ describe('ServiceListPageComponent', () => {
 
   it('should open service form dialog in edit mode when editClicked emits', () => {
     const svc = makeService();
-    const tableEl = fixture.debugElement.query(
-      By.css('chairly-service-table'),
-    );
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
     tableEl.triggerEventHandler('editClicked', svc);
     fixture.detectChanges();
 
@@ -126,12 +124,11 @@ describe('ServiceListPageComponent', () => {
       description: null,
       duration: '00:30:00',
       price: 20,
+      vatRate: 21,
       categoryId: null,
       sortOrder: 0,
     };
-    const formDialogEl = fixture.debugElement.query(
-      By.css('chairly-service-form-dialog'),
-    );
+    const formDialogEl = fixture.debugElement.query(By.css('chairly-service-form-dialog'));
     formDialogEl.triggerEventHandler('saved', savedPayload);
     expect(mockServiceStore.createService).toHaveBeenCalledWith(savedPayload);
     expect(mockServiceStore.updateService).not.toHaveBeenCalled();
@@ -139,9 +136,7 @@ describe('ServiceListPageComponent', () => {
 
   it('should call updateService when saved is emitted in edit mode', () => {
     const svc = makeService();
-    const tableEl = fixture.debugElement.query(
-      By.css('chairly-service-table'),
-    );
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
     // Set edit mode
     tableEl.triggerEventHandler('editClicked', svc);
     fixture.detectChanges();
@@ -151,12 +146,11 @@ describe('ServiceListPageComponent', () => {
       description: null,
       duration: '00:45:00',
       price: 30,
+      vatRate: 21,
       categoryId: null,
       sortOrder: 0,
     };
-    const formDialogEl = fixture.debugElement.query(
-      By.css('chairly-service-form-dialog'),
-    );
+    const formDialogEl = fixture.debugElement.query(By.css('chairly-service-form-dialog'));
     formDialogEl.triggerEventHandler('saved', updatedPayload);
     expect(mockServiceStore.updateService).toHaveBeenCalledWith(svc.id, updatedPayload);
     expect(mockServiceStore.createService).not.toHaveBeenCalled();
@@ -164,9 +158,7 @@ describe('ServiceListPageComponent', () => {
 
   it('should open delete service dialog when deleteClicked emits', () => {
     const svc = makeService();
-    const tableEl = fixture.debugElement.query(
-      By.css('chairly-service-table'),
-    );
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
     tableEl.triggerEventHandler('deleteClicked', svc);
     fixture.detectChanges();
 
@@ -178,14 +170,10 @@ describe('ServiceListPageComponent', () => {
 
   it('should call deleteService when delete is confirmed', () => {
     const svc = makeService();
-    const tableEl = fixture.debugElement.query(
-      By.css('chairly-service-table'),
-    );
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
     tableEl.triggerEventHandler('deleteClicked', svc);
 
-    const deleteDialogEl = fixture.debugElement.queryAll(
-      By.css('chairly-confirmation-dialog'),
-    )[0];
+    const deleteDialogEl = fixture.debugElement.queryAll(By.css('chairly-confirmation-dialog'))[0];
     deleteDialogEl.triggerEventHandler('confirmed', null);
 
     expect(mockServiceStore.deleteService).toHaveBeenCalledWith(svc.id);
@@ -193,38 +181,27 @@ describe('ServiceListPageComponent', () => {
 
   it('should call toggleActive when toggleActiveClicked emits', () => {
     const svc = makeService();
-    const tableEl = fixture.debugElement.query(
-      By.css('chairly-service-table'),
-    );
+    const tableEl = fixture.debugElement.query(By.css('chairly-service-table'));
     tableEl.triggerEventHandler('toggleActiveClicked', svc);
     expect(mockServiceStore.toggleActive).toHaveBeenCalledWith(svc.id);
   });
 
   it('should call createCategory when categoryCreated emits', () => {
     const request = { name: 'New Cat', sortOrder: 0 };
-    const panelEl = fixture.debugElement.query(
-      By.css('chairly-category-panel'),
-    );
+    const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
     panelEl.triggerEventHandler('categoryCreated', request);
     expect(mockCategoryStore.createCategory).toHaveBeenCalledWith(request);
   });
 
   it('should call updateCategory when categoryUpdated emits', () => {
     const event = { id: 'cat-1', request: { name: 'Updated Cat', sortOrder: 1 } };
-    const panelEl = fixture.debugElement.query(
-      By.css('chairly-category-panel'),
-    );
+    const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
     panelEl.triggerEventHandler('categoryUpdated', event);
-    expect(mockCategoryStore.updateCategory).toHaveBeenCalledWith(
-      event.id,
-      event.request,
-    );
+    expect(mockCategoryStore.updateCategory).toHaveBeenCalledWith(event.id, event.request);
   });
 
   it('should open delete category dialog when categoryDeleted emits', () => {
-    const panelEl = fixture.debugElement.query(
-      By.css('chairly-category-panel'),
-    );
+    const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
     panelEl.triggerEventHandler('categoryDeleted', 'cat-1');
     fixture.detectChanges();
 
@@ -235,14 +212,10 @@ describe('ServiceListPageComponent', () => {
   });
 
   it('should call deleteCategory when category delete is confirmed', () => {
-    const panelEl = fixture.debugElement.query(
-      By.css('chairly-category-panel'),
-    );
+    const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
     panelEl.triggerEventHandler('categoryDeleted', 'cat-1');
 
-    const confirmDialogs = fixture.debugElement.queryAll(
-      By.css('chairly-confirmation-dialog'),
-    );
+    const confirmDialogs = fixture.debugElement.queryAll(By.css('chairly-confirmation-dialog'));
     // Second confirmation dialog is for category delete
     confirmDialogs[1].triggerEventHandler('confirmed', null);
 
@@ -251,7 +224,13 @@ describe('ServiceListPageComponent', () => {
 
   it('should call reorderCategories when categoriesReordered emits', () => {
     const ordered: ServiceCategoryResponse[] = [
-      { id: 'cat-1', name: 'Hair', sortOrder: 0, createdAtUtc: '2026-01-01T00:00:00Z', createdBy: 'user' },
+      {
+        id: 'cat-1',
+        name: 'Hair',
+        sortOrder: 0,
+        createdAtUtc: '2026-01-01T00:00:00Z',
+        createdBy: 'user',
+      },
     ];
     const panelEl = fixture.debugElement.query(By.css('chairly-category-panel'));
     panelEl.triggerEventHandler('categoriesReordered', ordered);

@@ -101,9 +101,9 @@ public class InvoiceHandlerTests
             ClientId = resolvedClientId,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
             InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            SubTotalAmount = 40.00m,
+            SubTotalAmount = 31.60m,
             TotalVatAmount = 8.40m,
-            TotalAmount = 48.40m,
+            TotalAmount = 40.00m,
             LineItems =
             [
                 new InvoiceLineItem
@@ -158,9 +158,9 @@ public class InvoiceHandlerTests
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
             InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            SubTotalAmount = 50.00m,
+            SubTotalAmount = 39.50m,
             TotalVatAmount = 10.50m,
-            TotalAmount = 60.50m,
+            TotalAmount = 50.00m,
             LineItems =
             [
                 new InvoiceLineItem
@@ -220,9 +220,11 @@ public class InvoiceHandlerTests
 
         var response = result.AsT0;
         Assert.NotEqual(Guid.Empty, response.Id);
-        Assert.Equal(40.00m, response.SubTotalAmount);
+        // New formula: vatAmount = price * rate / 100. SubTotal = sum(TotalPrice) - TotalVat
+        // 25*21/100 = 5.25, 15*21/100 = 3.15, totalVat = 8.40, subTotal = 40 - 8.40 = 31.60
+        Assert.Equal(31.60m, response.SubTotalAmount);
         Assert.Equal(8.40m, response.TotalVatAmount);
-        Assert.Equal(48.40m, response.TotalAmount);
+        Assert.Equal(40.00m, response.TotalAmount);
         Assert.Equal(2, response.LineItems.Count);
         Assert.Equal("Herenknippen", response.LineItems[0].Description);
         Assert.Equal("Baard trimmen", response.LineItems[1].Description);
@@ -246,9 +248,9 @@ public class InvoiceHandlerTests
             Assert.Equal(21.00m, li.VatPercentage);
             Assert.False(li.IsManual);
         });
-        // 25.00 * 21% = 5.25
+        // Formula: price * rate / 100. 25.00 * 21 / 100 = 5.25
         Assert.Equal(5.25m, response.LineItems[0].VatAmount);
-        // 15.00 * 21% = 3.15
+        // 15.00 * 21 / 100 = 3.15
         Assert.Equal(3.15m, response.LineItems[1].VatAmount);
     }
 
@@ -740,9 +742,9 @@ public class InvoiceHandlerTests
         Assert.Equal(invoice.Id, response.Id);
         Assert.Equal(2, response.LineItems.Count);
         Assert.Equal("Pieter Bakker", response.ClientFullName);
-        Assert.Equal(40.00m, response.SubTotalAmount);
+        Assert.Equal(31.60m, response.SubTotalAmount);
         Assert.Equal(8.40m, response.TotalVatAmount);
-        Assert.Equal(48.40m, response.TotalAmount);
+        Assert.Equal(40.00m, response.TotalAmount);
     }
 
     [Fact]
@@ -989,10 +991,10 @@ public class InvoiceHandlerTests
         Assert.Equal(2.10m, manualItem.VatAmount);
         Assert.True(manualItem.IsManual);
 
-        // Totals should be recalculated: 40 + 10 = 50 subtotal, 8.40 + 2.10 = 10.50 VAT
-        Assert.Equal(50.00m, response.SubTotalAmount);
+        // Totals recalculated: sum(TotalPrice)=50, totalVat=10.50, subTotal=50-10.50=39.50
+        Assert.Equal(39.50m, response.SubTotalAmount);
         Assert.Equal(10.50m, response.TotalVatAmount);
-        Assert.Equal(60.50m, response.TotalAmount);
+        Assert.Equal(50.00m, response.TotalAmount);
     }
 
     [Fact]
@@ -1021,10 +1023,10 @@ public class InvoiceHandlerTests
         Assert.Equal(0m, manualItem.VatPercentage); // Discount = always 0% VAT
         Assert.Equal(0m, manualItem.VatAmount); // Discount = always 0 VAT amount
 
-        // Totals: 40 - 5 = 35 subtotal, 8.40 + 0 = 8.40 VAT (discount has no VAT)
-        Assert.Equal(35.00m, response.SubTotalAmount);
+        // Totals: sum(TotalPrice)=35, totalVat=8.40, subTotal=35-8.40=26.60
+        Assert.Equal(26.60m, response.SubTotalAmount);
         Assert.Equal(8.40m, response.TotalVatAmount);
-        Assert.Equal(43.40m, response.TotalAmount);
+        Assert.Equal(35.00m, response.TotalAmount);
     }
 
     [Fact]
@@ -1162,10 +1164,10 @@ public class InvoiceHandlerTests
         Assert.Equal(2, response.LineItems.Count);
         Assert.DoesNotContain(response.LineItems, li => li.Id == manualItem.Id);
 
-        // Totals recalculated back to original
-        Assert.Equal(40.00m, response.SubTotalAmount);
+        // Totals recalculated: sum(TotalPrice)=40, totalVat=8.40, subTotal=40-8.40=31.60
+        Assert.Equal(31.60m, response.SubTotalAmount);
         Assert.Equal(8.40m, response.TotalVatAmount);
-        Assert.Equal(48.40m, response.TotalAmount);
+        Assert.Equal(40.00m, response.TotalAmount);
     }
 
     [Fact]
@@ -1280,8 +1282,232 @@ public class InvoiceHandlerTests
 
         InvoiceMapper.RecalculateInvoiceTotals(invoice);
 
-        Assert.Equal(35.00m, invoice.SubTotalAmount);
+        // SubTotal = sum(TotalPrice) - TotalVat = 35 - 7.35 = 27.65
+        Assert.Equal(27.65m, invoice.SubTotalAmount);
         Assert.Equal(7.35m, invoice.TotalVatAmount);
-        Assert.Equal(42.35m, invoice.TotalAmount);
+        Assert.Equal(35.00m, invoice.TotalAmount);
+    }
+
+    [Fact]
+    public async Task GenerateInvoiceHandler_ServiceWithVatRate_UsesServiceVatRate()
+    {
+        await using var db = CreateDbContext();
+        var serviceId = Guid.NewGuid();
+        var service = new Service
+        {
+            Id = serviceId,
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 25.00m,
+            VatRate = 9m,
+            IsActive = true,
+            SortOrder = 0,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Services.Add(service);
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = serviceId,
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 25.00m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+        await db.SaveChangesAsync();
+
+        var handler = new GenerateInvoiceHandler(db);
+        var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
+
+        var response = result.AsT0;
+        Assert.Equal(9m, response.LineItems[0].VatPercentage);
+        // Formula: 25.00 * 9 / 100 = 2.25
+        Assert.Equal(2.25m, response.LineItems[0].VatAmount);
+    }
+
+    [Fact]
+    public async Task GenerateInvoiceHandler_ServiceWithNullVatRate_FallsBackToDefaultVatRate()
+    {
+        await using var db = CreateDbContext();
+        var serviceId = Guid.NewGuid();
+        var service = new Service
+        {
+            Id = serviceId,
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 39.99m,
+            VatRate = null,
+            IsActive = true,
+            SortOrder = 0,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Services.Add(service);
+
+        db.VatSettings.Add(new VatSettings
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            DefaultVatRate = 21m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Pieter",
+            LastName = "Bakker",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = serviceId,
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 39.99m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+        await db.SaveChangesAsync();
+
+        var handler = new GenerateInvoiceHandler(db);
+        var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
+
+        var response = result.AsT0;
+        Assert.Equal(21m, response.LineItems[0].VatPercentage);
+        // Formula: 39.99 * 21 / 100 = 8.3979 -> 8.40
+        Assert.Equal(8.40m, response.LineItems[0].VatAmount);
+    }
+
+    [Fact]
+    public async Task GenerateInvoiceHandler_NoVatSettings_AutoCreatesVatSettings()
+    {
+        await using var db = CreateDbContext();
+        var booking = CreateCompletedBooking(db);
+        var handler = new GenerateInvoiceHandler(db);
+
+        await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
+
+        var vatSettings = await db.VatSettings.SingleOrDefaultAsync();
+        Assert.NotNull(vatSettings);
+        Assert.Equal(21m, vatSettings.DefaultVatRate);
+        Assert.Equal(TenantConstants.DefaultTenantId, vatSettings.TenantId);
+    }
+
+    [Fact]
+    public async Task GenerateInvoiceHandler_InclVatFormula_CorrectCalculation()
+    {
+        await using var db = CreateDbContext();
+        var serviceId = Guid.NewGuid();
+        db.Services.Add(new Service
+        {
+            Id = serviceId,
+            TenantId = TenantConstants.DefaultTenantId,
+            Name = "Herenknippen",
+            Duration = TimeSpan.FromMinutes(30),
+            Price = 39.99m,
+            VatRate = 21m,
+            IsActive = true,
+            SortOrder = 0,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        });
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = serviceId,
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 39.99m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+        await db.SaveChangesAsync();
+
+        var handler = new GenerateInvoiceHandler(db);
+        var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
+
+        var response = result.AsT0;
+        // price 39.99, rate 21 -> vatAmount = round(39.99 * 21 / 100, 2) = 8.40
+        Assert.Equal(8.40m, response.LineItems[0].VatAmount);
+        Assert.Equal(21m, response.LineItems[0].VatPercentage);
     }
 }

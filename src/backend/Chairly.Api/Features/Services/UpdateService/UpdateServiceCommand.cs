@@ -23,6 +23,8 @@ internal sealed class UpdateServiceCommand : IRequest<OneOf<ServiceResponse, Not
     [Range(0, double.MaxValue)]
     public decimal Price { get; set; }
 
+    public decimal? VatRate { get; set; }
+
     public Guid? CategoryId { get; set; }
 
     public int SortOrder { get; set; }

@@ -4,6 +4,7 @@ export interface ServiceResponse {
   description: string | null;
   duration: string;
   price: number;
+  vatRate: number | null;
   categoryId: string | null;
   categoryName: string | null;
   isActive: boolean;
@@ -19,6 +20,7 @@ export interface CreateServiceRequest {
   description: string | null;
   duration: string;
   price: number;
+  vatRate: number | null;
   categoryId: string | null;
   sortOrder: number;
 }
@@ -28,6 +30,7 @@ export interface UpdateServiceRequest {
   description: string | null;
   duration: string;
   price: number;
+  vatRate: number | null;
   categoryId: string | null;
   sortOrder: number;
 }

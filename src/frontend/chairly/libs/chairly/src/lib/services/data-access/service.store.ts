@@ -3,11 +3,7 @@ import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { take } from 'rxjs';
 
-import {
-  CreateServiceRequest,
-  ServiceResponse,
-  UpdateServiceRequest,
-} from '../models';
+import { CreateServiceRequest, ServiceResponse, UpdateServiceRequest } from '../models';
 import { ServiceApiService } from './service-api.service';
 
 export interface ServiceState {
@@ -29,21 +25,16 @@ function toErrorMessage(err: unknown): string {
 function replaceService(
   services: ServiceResponse[],
   id: string,
-  updated: ServiceResponse
+  updated: ServiceResponse,
 ): ServiceResponse[] {
   return services.map((s) => (s.id === id ? updated : s));
 }
 
-function removeService(
-  services: ServiceResponse[],
-  id: string
-): ServiceResponse[] {
+function removeService(services: ServiceResponse[], id: string): ServiceResponse[] {
   return services.filter((s) => s.id !== id);
 }
 
-function groupByCategory(
-  services: ServiceResponse[]
-): Record<string, ServiceResponse[]> {
+function groupByCategory(services: ServiceResponse[]): Record<string, ServiceResponse[]> {
   const result: Record<string, ServiceResponse[]> = {};
   for (const service of services) {
     const key = service.categoryId ?? 'uncategorized';
@@ -71,8 +62,7 @@ export const ServiceStore = signalStore(
           .getAll()
           .pipe(take(1))
           .subscribe({
-            next: (services) =>
-              patchState(store, { services, isLoading: false }),
+            next: (services) => patchState(store, { services, isLoading: false }),
             error: (err: unknown) =>
               patchState(store, {
                 error: toErrorMessage(err),
@@ -90,8 +80,7 @@ export const ServiceStore = signalStore(
               patchState(store, (state) => ({
                 services: [...state.services, service],
               })),
-            error: (err: unknown) =>
-              patchState(store, { error: toErrorMessage(err) }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
 
@@ -104,8 +93,7 @@ export const ServiceStore = signalStore(
               patchState(store, (state) => ({
                 services: replaceService(state.services, id, updated),
               })),
-            error: (err: unknown) =>
-              patchState(store, { error: toErrorMessage(err) }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
 
@@ -118,8 +106,7 @@ export const ServiceStore = signalStore(
               patchState(store, (state) => ({
                 services: removeService(state.services, id),
               })),
-            error: (err: unknown) =>
-              patchState(store, { error: toErrorMessage(err) }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
 
@@ -132,8 +119,7 @@ export const ServiceStore = signalStore(
               patchState(store, (state) => ({
                 services: replaceService(state.services, id, updated),
               })),
-            error: (err: unknown) =>
-              patchState(store, { error: toErrorMessage(err) }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
 
@@ -148,16 +134,16 @@ export const ServiceStore = signalStore(
               description: svc.description,
               duration: svc.duration,
               price: svc.price,
+              vatRate: svc.vatRate,
               categoryId: svc.categoryId,
               sortOrder: i,
             })
             .pipe(take(1))
             .subscribe({
-              error: (err: unknown) =>
-                patchState(store, { error: toErrorMessage(err) }),
+              error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
             });
         }
       },
     };
-  })
+  }),
 );

@@ -8,6 +8,7 @@ public class Service
     public string? Description { get; set; }
     public TimeSpan Duration { get; set; }
     public decimal Price { get; set; }
+    public decimal? VatRate { get; set; }
     public Guid? CategoryId { get; set; }
     public bool IsActive { get; set; }
     public int SortOrder { get; set; }

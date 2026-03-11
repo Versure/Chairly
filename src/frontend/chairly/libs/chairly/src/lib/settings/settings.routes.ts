@@ -1,10 +1,12 @@
 import { Route } from '@angular/router';
 
-import { CompanyInfoPageComponent } from './feature';
+import { SettingsApiService } from './data-access';
+import { SettingsPageComponent } from './feature';
 
 export const settingsRoutes: Route[] = [
   {
     path: '',
-    component: CompanyInfoPageComponent,
+    component: SettingsPageComponent,
+    providers: [SettingsApiService],
   },
 ];
