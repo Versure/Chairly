@@ -1,0 +1,20 @@
+{
+  "feature": "idempotent-migrations",
+  "specPath": "docs/specs/idempotent-migrations.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Make all existing CreateTable migrations idempotent",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Add idempotency convention to CLAUDE.md and phase-1-backend.md",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    }
+  ]
+}
