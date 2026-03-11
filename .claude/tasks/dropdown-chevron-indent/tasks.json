@@ -1,0 +1,13 @@
+{
+  "feature": "dropdown-chevron-indent",
+  "specPath": "docs/specs/dropdown-chevron-indent.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add right padding to select elements globally",
+      "status": "pending",
+      "dependsOn": []
+    }
+  ]
+}
