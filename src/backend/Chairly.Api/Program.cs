@@ -16,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddMediator();
+builder.Services.AddScoped<InvoiceLineItemBuilder>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 

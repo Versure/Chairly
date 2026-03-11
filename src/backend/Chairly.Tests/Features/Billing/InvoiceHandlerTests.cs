@@ -5,6 +5,7 @@ using Chairly.Api.Features.Billing.GetInvoice;
 using Chairly.Api.Features.Billing.GetInvoicesList;
 using Chairly.Api.Features.Billing.MarkInvoicePaid;
 using Chairly.Api.Features.Billing.MarkInvoiceSent;
+using Chairly.Api.Features.Billing.RegenerateInvoice;
 using Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
 using Chairly.Api.Features.Billing.VoidInvoice;
 using Chairly.Api.Shared.Tenancy;
@@ -214,7 +215,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -238,7 +239,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -259,7 +260,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking1 = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         var result1 = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking1.Id });
         var response1 = result1.AsT0;
@@ -279,7 +280,7 @@ public class InvoiceHandlerTests
     public async Task GenerateInvoiceHandler_BookingNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = Guid.NewGuid() });
 
@@ -312,7 +313,7 @@ public class InvoiceHandlerTests
         };
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -325,7 +326,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         // Generate first invoice
         await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
@@ -1346,7 +1347,7 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
@@ -1421,7 +1422,7 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
@@ -1435,7 +1436,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
 
         await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -1502,12 +1503,378 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db);
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
         // price 39.99, rate 21 -> vatAmount = round(39.99 * 21 / 100, 2) = 8.40
         Assert.Equal(8.40m, response.LineItems[0].VatAmount);
         Assert.Equal(21m, response.LineItems[0].VatPercentage);
+    }
+
+    // ── RegenerateInvoice ─────────────────────────────────────────
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns200WithUpdatedLineItems_WhenBookingServicesChanged()
+    {
+        await using var db = CreateDbContext();
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        // Booking has 2 services: Herenknippen (30) + Baard trimmen (15)
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = Guid.NewGuid(),
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 30.00m,
+                    SortOrder = 0,
+                },
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = Guid.NewGuid(),
+                    ServiceName = "Baard trimmen",
+                    Duration = TimeSpan.FromMinutes(15),
+                    Price = 15.00m,
+                    SortOrder = 1,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+
+        // Invoice was originally generated with DIFFERENT prices (old prices before booking was updated)
+        // and has an extra manual line item that should be removed by regeneration
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = booking.Id,
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 50.00m,
+            TotalVatAmount = 13.00m,
+            TotalAmount = 63.00m,
+            LineItems =
+            [
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Herenknippen (oud tarief)",
+                    Quantity = 1,
+                    UnitPrice = 25.00m,
+                    TotalPrice = 25.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 5.25m,
+                    SortOrder = 0,
+                    IsManual = false,
+                },
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Baard trimmen (oud tarief)",
+                    Quantity = 1,
+                    UnitPrice = 12.00m,
+                    TotalPrice = 12.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 2.52m,
+                    SortOrder = 1,
+                    IsManual = false,
+                },
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Toeslag",
+                    Quantity = 1,
+                    UnitPrice = 10.00m,
+                    TotalPrice = 10.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 2.10m,
+                    SortOrder = 2,
+                    IsManual = true,
+                },
+            ],
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Invoices.Add(invoice);
+        await db.SaveChangesAsync();
+
+        // Regenerate — should replace all 3 old line items with 2 items from current booking
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+        Assert.Equal(2, response.LineItems.Count);
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Herenknippen", StringComparison.Ordinal));
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Baard trimmen", StringComparison.Ordinal));
+        Assert.DoesNotContain(response.LineItems, li => string.Equals(li.Description, "Toeslag", StringComparison.Ordinal));
+
+        // Verify totals: Herenknippen 30.00 + Baard trimmen 15.00 = 45.00 total price
+        var expectedVatHerenknippen = Math.Round(30.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 6.30
+        var expectedVatBaard = Math.Round(15.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 3.15
+        var expectedTotalVat = expectedVatHerenknippen + expectedVatBaard; // 9.45
+        Assert.Equal(expectedTotalVat, response.TotalVatAmount);
+        Assert.Equal(45.00m - expectedTotalVat, response.SubTotalAmount);
+        Assert.Equal(45.00m, response.TotalAmount);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns422_WhenInvoiceIsVerzonden()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        invoice.SentAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026
+        invoice.SentBy = Guid.Empty;
+#pragma warning restore MA0026
+        await db.SaveChangesAsync();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT2);
+        Assert.Equal("Alleen concept-facturen kunnen opnieuw worden gegenereerd", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns422_WhenInvoiceIsBetaald()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        invoice.PaidAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026
+        invoice.PaidBy = Guid.Empty;
+#pragma warning restore MA0026
+        await db.SaveChangesAsync();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT2);
+        Assert.Equal("Alleen concept-facturen kunnen opnieuw worden gegenereerd", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns422_WhenInvoiceIsVervallen()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
+#pragma warning disable MA0026
+        invoice.VoidedBy = Guid.Empty;
+#pragma warning restore MA0026
+        await db.SaveChangesAsync();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT2);
+        Assert.Equal("Alleen concept-facturen kunnen opnieuw worden gegenereerd", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns404_WhenInvoiceNotFound()
+    {
+        await using var db = CreateDbContext();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(Guid.NewGuid()));
+
+        Assert.True(result.IsT1);
+        Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_Returns422_WhenBookingIsNotCompleted()
+    {
+        await using var db = CreateDbContext();
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        // Create booking WITHOUT CompletedAtUtc
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = Guid.NewGuid(),
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 25.00m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+
+        // Create a concept invoice linked to this booking
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = booking.Id,
+            ClientId = client.Id,
+            InvoiceNumber = $"{DateTime.UtcNow.Year}-0099",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 20.66m,
+            TotalVatAmount = 5.25m,
+            TotalAmount = 25.00m,
+            LineItems =
+            [
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Herenknippen",
+                    Quantity = 1,
+                    UnitPrice = 25.00m,
+                    TotalPrice = 25.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 5.25m,
+                    SortOrder = 0,
+                    IsManual = false,
+                },
+            ],
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Invoices.Add(invoice);
+        await db.SaveChangesAsync();
+
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT2);
+        Assert.Equal("Boeking is niet afgerond", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task RegenerateInvoiceHandler_PreservesInvoiceNumberDateCreatedAtCreatedBy()
+    {
+        await using var db = CreateDbContext();
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Jan",
+            LastName = "de Vries",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.Clients.Add(client);
+
+        var booking = new Booking
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = Guid.NewGuid(),
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+            BookingServices =
+            [
+                new BookingService
+                {
+                    Id = Guid.NewGuid(),
+                    ServiceId = Guid.NewGuid(),
+                    ServiceName = "Herenknippen",
+                    Duration = TimeSpan.FromMinutes(30),
+                    Price = 25.00m,
+                    SortOrder = 0,
+                },
+            ],
+        };
+        db.Bookings.Add(booking);
+
+        var originalCreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-5);
+        var originalInvoiceNumber = $"{DateTime.UtcNow.Year}-0042";
+        var originalInvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5));
+
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            BookingId = booking.Id,
+            ClientId = client.Id,
+            InvoiceNumber = originalInvoiceNumber,
+            InvoiceDate = originalInvoiceDate,
+            SubTotalAmount = 20.66m,
+            TotalVatAmount = 5.25m,
+            TotalAmount = 25.00m,
+            LineItems =
+            [
+                new InvoiceLineItem
+                {
+                    Id = Guid.NewGuid(),
+                    Description = "Herenknippen",
+                    Quantity = 1,
+                    UnitPrice = 25.00m,
+                    TotalPrice = 25.00m,
+                    VatPercentage = 21.00m,
+                    VatAmount = 5.25m,
+                    SortOrder = 0,
+                    IsManual = false,
+                },
+            ],
+            CreatedAtUtc = originalCreatedAtUtc,
+        };
+        db.Invoices.Add(invoice);
+        await db.SaveChangesAsync();
+
+        // Regenerate
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+        Assert.Equal(originalInvoiceNumber, response.InvoiceNumber);
+        Assert.Equal(originalInvoiceDate, response.InvoiceDate);
+        Assert.Equal(originalCreatedAtUtc, response.CreatedAtUtc);
     }
 }
