@@ -75,19 +75,60 @@
             [attr.disabled]="isSaving() ? '' : null" />
         </div>
 
-        <!-- Adres -->
-        <div class="sm:col-span-2">
-          <label
-            for="companyAddress"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Adres
+        <!-- Straat -->
+        <div>
+          <label for="street" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Straat
           </label>
-          <textarea
-            id="companyAddress"
-            formControlName="companyAddress"
-            rows="3"
+          <input
+            type="text"
+            id="street"
+            formControlName="street"
             class="mt-1 block w-full rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
-            [attr.disabled]="isSaving() ? '' : null"></textarea>
+            [attr.disabled]="isSaving() ? '' : null" />
+        </div>
+
+        <!-- Huisnummer -->
+        <div>
+          <label
+            for="houseNumber"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Huisnummer
+          </label>
+          <input
+            type="text"
+            id="houseNumber"
+            formControlName="houseNumber"
+            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+            [attr.disabled]="isSaving() ? '' : null" />
+        </div>
+
+        <!-- Postcode -->
+        <div>
+          <label
+            for="postalCode"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Postcode
+          </label>
+          <input
+            type="text"
+            id="postalCode"
+            formControlName="postalCode"
+            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+            [attr.disabled]="isSaving() ? '' : null" />
+        </div>
+
+        <!-- Plaats -->
+        <div>
+          <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Plaats
+          </label>
+          <input
+            type="text"
+            id="city"
+            formControlName="city"
+            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+            [attr.disabled]="isSaving() ? '' : null" />
         </div>
 
         <!-- IBAN-nummer -->

@@ -3,7 +3,10 @@ import { expect, test } from './fixtures';
 const emptyCompanyInfo = {
   companyName: null,
   companyEmail: null,
-  companyAddress: null,
+  street: null,
+  houseNumber: null,
+  postalCode: null,
+  city: null,
   companyPhone: null,
   ibanNumber: null,
   vatNumber: null,
@@ -13,7 +16,10 @@ const emptyCompanyInfo = {
 const filledCompanyInfo = {
   companyName: 'Salon Mooi',
   companyEmail: 'info@salonmooi.nl',
-  companyAddress: 'Kerkstraat 1, 1234 AB Amsterdam',
+  street: 'Kerkstraat',
+  houseNumber: '1',
+  postalCode: '1234 AB',
+  city: 'Amsterdam',
   companyPhone: '020-1234567',
   ibanNumber: 'NL91ABNA0417164300',
   vatNumber: 'NL123456789B01',
@@ -81,7 +87,10 @@ test('form fields retain values after page reload', async ({ page }) => {
 
   await expect(page.getByLabel('Bedrijfsnaam')).toHaveValue('Salon Mooi');
   await expect(page.getByLabel('E-mailadres')).toHaveValue('info@salonmooi.nl');
-  await expect(page.getByLabel('Adres', { exact: true })).toHaveValue('Kerkstraat 1, 1234 AB Amsterdam');
+  await expect(page.getByLabel('Straat')).toHaveValue('Kerkstraat');
+  await expect(page.getByLabel('Huisnummer')).toHaveValue('1');
+  await expect(page.getByLabel('Postcode')).toHaveValue('1234 AB');
+  await expect(page.getByLabel('Plaats')).toHaveValue('Amsterdam');
   await expect(page.getByLabel('Telefoonnummer')).toHaveValue('020-1234567');
   await expect(page.getByLabel('IBAN-nummer')).toHaveValue('NL91ABNA0417164300');
   await expect(page.getByLabel('BTW-nummer')).toHaveValue('NL123456789B01');

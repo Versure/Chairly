@@ -9,7 +9,10 @@ import { CompanyInfoPageComponent } from './company-info-page.component';
 const emptyCompanyInfo: CompanyInfo = {
   companyName: null,
   companyEmail: null,
-  companyAddress: null,
+  street: null,
+  houseNumber: null,
+  postalCode: null,
+  city: null,
   companyPhone: null,
   ibanNumber: null,
   vatNumber: null,
@@ -19,7 +22,10 @@ const emptyCompanyInfo: CompanyInfo = {
 const filledCompanyInfo: CompanyInfo = {
   companyName: 'Salon Mooi',
   companyEmail: 'info@salonmooi.nl',
-  companyAddress: 'Kerkstraat 1, 1234 AB Amsterdam',
+  street: 'Kerkstraat',
+  houseNumber: '1',
+  postalCode: '1234 AB',
+  city: 'Amsterdam',
   companyPhone: '020-1234567',
   ibanNumber: 'NL91ABNA0417164300',
   vatNumber: 'NL123456789B01',
@@ -65,7 +71,10 @@ describe('CompanyInfoPageComponent', () => {
     const form = component['form'];
     expect(form.value.companyName).toBe('Salon Mooi');
     expect(form.value.companyEmail).toBe('info@salonmooi.nl');
-    expect(form.value.companyAddress).toBe('Kerkstraat 1, 1234 AB Amsterdam');
+    expect(form.value.street).toBe('Kerkstraat');
+    expect(form.value.houseNumber).toBe('1');
+    expect(form.value.postalCode).toBe('1234 AB');
+    expect(form.value.city).toBe('Amsterdam');
     expect(form.value.companyPhone).toBe('020-1234567');
     expect(form.value.ibanNumber).toBe('NL91ABNA0417164300');
     expect(form.value.vatNumber).toBe('NL123456789B01');
