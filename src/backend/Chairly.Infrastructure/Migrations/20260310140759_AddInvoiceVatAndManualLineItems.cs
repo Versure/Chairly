@@ -10,48 +10,65 @@ namespace Chairly.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<decimal>(
-                name: "SubTotalAmount",
-                table: "Invoices",
-                type: "numeric(18,2)",
-                precision: 18,
-                scale: 2,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Invoices' AND column_name = 'SubTotalAmount'
+                    ) THEN
+                        ALTER TABLE "Invoices" ADD COLUMN "SubTotalAmount" numeric(18,2) NOT NULL DEFAULT 0;
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "TotalVatAmount",
-                table: "Invoices",
-                type: "numeric(18,2)",
-                precision: 18,
-                scale: 2,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Invoices' AND column_name = 'TotalVatAmount'
+                    ) THEN
+                        ALTER TABLE "Invoices" ADD COLUMN "TotalVatAmount" numeric(18,2) NOT NULL DEFAULT 0;
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<bool>(
-                name: "IsManual",
-                table: "InvoiceLineItems",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'InvoiceLineItems' AND column_name = 'IsManual'
+                    ) THEN
+                        ALTER TABLE "InvoiceLineItems" ADD COLUMN "IsManual" boolean NOT NULL DEFAULT false;
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "VatAmount",
-                table: "InvoiceLineItems",
-                type: "numeric(18,2)",
-                precision: 18,
-                scale: 2,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'InvoiceLineItems' AND column_name = 'VatAmount'
+                    ) THEN
+                        ALTER TABLE "InvoiceLineItems" ADD COLUMN "VatAmount" numeric(18,2) NOT NULL DEFAULT 0;
+                    END IF;
+                END $$;
+                """);
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "VatPercentage",
-                table: "InvoiceLineItems",
-                type: "numeric(5,2)",
-                precision: 5,
-                scale: 2,
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'InvoiceLineItems' AND column_name = 'VatPercentage'
+                    ) THEN
+                        ALTER TABLE "InvoiceLineItems" ADD COLUMN "VatPercentage" numeric(5,2) NOT NULL DEFAULT 0;
+                    END IF;
+                END $$;
+                """);
         }
 
         /// <inheritdoc />
