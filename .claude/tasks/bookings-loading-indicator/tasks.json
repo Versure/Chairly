@@ -1,0 +1,13 @@
+{
+  "feature": "bookings-loading-indicator",
+  "specPath": "docs/specs/bookings-loading-indicator.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Replace loading indicator in bookings list page",
+      "status": "pending",
+      "dependsOn": []
+    }
+  ]
+}
