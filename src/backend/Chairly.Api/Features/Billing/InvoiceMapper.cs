@@ -87,8 +87,8 @@ internal static class InvoiceMapper
     {
         ArgumentNullException.ThrowIfNull(invoice);
 
-        invoice.SubTotalAmount = invoice.LineItems.Sum(li => li.TotalPrice);
         invoice.TotalVatAmount = invoice.LineItems.Sum(li => li.VatAmount);
+        invoice.SubTotalAmount = invoice.LineItems.Sum(li => li.TotalPrice) - invoice.TotalVatAmount;
         invoice.TotalAmount = invoice.SubTotalAmount + invoice.TotalVatAmount;
     }
 }
