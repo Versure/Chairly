@@ -12,6 +12,7 @@ export const sheriffConfig: SheriffConfig = {
       'services/<layer>': ['domain:services', 'layer:<layer>'],
       'billing/<layer>': ['domain:billing', 'layer:<layer>'],
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
+      'settings/<layer>': ['domain:settings', 'layer:<layer>'],
     },
     'libs/shared/src': ['shared'],
     'libs/shared/src/lib': {
@@ -31,6 +32,7 @@ export const sheriffConfig: SheriffConfig = {
       'domain:bookings',
       'domain:clients',
       'domain:services',
+      'domain:settings',
       'domain:staff',
       'shared',
     ],
