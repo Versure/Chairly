@@ -15,6 +15,7 @@ const mockActiveService: ServiceResponse = {
   description: 'A classic haircut',
   duration: '00:30:00',
   price: 25,
+  vatRate: 21,
   categoryId: 'cat1',
   categoryName: 'Hair',
   isActive: true,
@@ -31,6 +32,7 @@ const mockInactiveService: ServiceResponse = {
   description: null,
   duration: '01:00:00',
   price: 15,
+  vatRate: null,
   categoryId: null,
   categoryName: null,
   isActive: false,
@@ -135,7 +137,7 @@ describe('ServiceTableComponent', () => {
     fixture.detectChanges();
 
     const emptyCell = fixture.nativeElement.querySelector(
-      'td[colspan="6"]',
+      'td[colspan="7"]',
     ) as HTMLTableCellElement | null;
     expect(emptyCell).toBeTruthy();
     expect(emptyCell?.textContent).toContain('Nog geen diensten.');

@@ -14,6 +14,7 @@ const mockService = {
   description: null,
   duration: '00:30:00',
   price: 25,
+  vatRate: 21,
   categoryId: 'cat-1',
   categoryName: 'Knippen',
   isActive: true,

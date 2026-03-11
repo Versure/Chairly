@@ -54,6 +54,10 @@ export class ServiceFormDialogComponent {
       nonNullable: true,
       validators: [Validators.required, Validators.min(0)],
     }),
+    vatRate: new FormControl<number>(21, {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     categoryId: new FormControl<string | null>(null),
   });
 
@@ -65,6 +69,7 @@ export class ServiceFormDialogComponent {
         description: svc.description,
         duration: parseDuration(svc.duration),
         price: svc.price,
+        vatRate: svc.vatRate ?? 21,
         categoryId: svc.categoryId,
       });
     } else {
@@ -73,6 +78,7 @@ export class ServiceFormDialogComponent {
         description: null,
         duration: 30,
         price: 0,
+        vatRate: 21,
         categoryId: null,
       });
     }
@@ -89,13 +95,14 @@ export class ServiceFormDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    const { name, description, duration, price, categoryId } = this.form.getRawValue();
+    const { name, description, duration, price, vatRate, categoryId } = this.form.getRawValue();
     this.close();
     this.saved.emit({
       name,
       description,
       duration: formatDurationToTimeSpan(duration),
       price,
+      vatRate,
       categoryId,
       sortOrder: 0,
     });
