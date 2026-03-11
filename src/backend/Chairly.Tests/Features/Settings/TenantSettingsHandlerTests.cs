@@ -26,7 +26,10 @@ public class TenantSettingsHandlerTests
             TenantId = TenantConstants.DefaultTenantId,
             CompanyName = "Test Salon",
             CompanyEmail = "info@testsalon.nl",
-            CompanyAddress = "Teststraat 1, 1234 AB Amsterdam",
+            Street = "Teststraat",
+            HouseNumber = "1",
+            PostalCode = "1234 AB",
+            City = "Amsterdam",
             CompanyPhone = "0612345678",
             IbanNumber = "NL91ABNA0417164300",
             VatNumber = "NL123456789B01",
@@ -48,7 +51,10 @@ public class TenantSettingsHandlerTests
 
         Assert.Null(result.CompanyName);
         Assert.Null(result.CompanyEmail);
-        Assert.Null(result.CompanyAddress);
+        Assert.Null(result.Street);
+        Assert.Null(result.HouseNumber);
+        Assert.Null(result.PostalCode);
+        Assert.Null(result.City);
         Assert.Null(result.CompanyPhone);
         Assert.Null(result.IbanNumber);
         Assert.Null(result.VatNumber);
@@ -67,7 +73,10 @@ public class TenantSettingsHandlerTests
 
         Assert.Equal("Test Salon", result.CompanyName);
         Assert.Equal("info@testsalon.nl", result.CompanyEmail);
-        Assert.Equal("Teststraat 1, 1234 AB Amsterdam", result.CompanyAddress);
+        Assert.Equal("Teststraat", result.Street);
+        Assert.Equal("1", result.HouseNumber);
+        Assert.Equal("1234 AB", result.PostalCode);
+        Assert.Equal("Amsterdam", result.City);
         Assert.Equal("0612345678", result.CompanyPhone);
         Assert.Equal("NL91ABNA0417164300", result.IbanNumber);
         Assert.Equal("NL123456789B01", result.VatNumber);
@@ -84,7 +93,10 @@ public class TenantSettingsHandlerTests
         {
             CompanyName = "Updated Salon",
             CompanyEmail = "updated@salon.nl",
-            CompanyAddress = "Nieuwstraat 2, 5678 CD Rotterdam",
+            Street = "Nieuwstraat",
+            HouseNumber = "2",
+            PostalCode = "5678 CD",
+            City = "Rotterdam",
             CompanyPhone = "0687654321",
             IbanNumber = "NL20INGB0001234567",
             VatNumber = "NL987654321B01",
@@ -96,7 +108,10 @@ public class TenantSettingsHandlerTests
         var response = result.AsT0;
         Assert.Equal("Updated Salon", response.CompanyName);
         Assert.Equal("updated@salon.nl", response.CompanyEmail);
-        Assert.Equal("Nieuwstraat 2, 5678 CD Rotterdam", response.CompanyAddress);
+        Assert.Equal("Nieuwstraat", response.Street);
+        Assert.Equal("2", response.HouseNumber);
+        Assert.Equal("5678 CD", response.PostalCode);
+        Assert.Equal("Rotterdam", response.City);
         Assert.Equal("0687654321", response.CompanyPhone);
         Assert.Equal("NL20INGB0001234567", response.IbanNumber);
         Assert.Equal("NL987654321B01", response.VatNumber);
@@ -113,7 +128,10 @@ public class TenantSettingsHandlerTests
         {
             CompanyName = null,
             CompanyEmail = null,
-            CompanyAddress = null,
+            Street = null,
+            HouseNumber = null,
+            PostalCode = null,
+            City = null,
             CompanyPhone = null,
             IbanNumber = null,
             VatNumber = null,
@@ -125,7 +143,10 @@ public class TenantSettingsHandlerTests
         var response = result.AsT0;
         Assert.Null(response.CompanyName);
         Assert.Null(response.CompanyEmail);
-        Assert.Null(response.CompanyAddress);
+        Assert.Null(response.Street);
+        Assert.Null(response.HouseNumber);
+        Assert.Null(response.PostalCode);
+        Assert.Null(response.City);
         Assert.Null(response.CompanyPhone);
         Assert.Null(response.IbanNumber);
         Assert.Null(response.VatNumber);

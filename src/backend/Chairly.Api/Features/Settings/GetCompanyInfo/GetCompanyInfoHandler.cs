@@ -38,7 +38,10 @@ internal sealed class GetCompanyInfoHandler(ChairlyDbContext db) : IRequestHandl
         new(
             settings.CompanyName,
             settings.CompanyEmail,
-            settings.CompanyAddress,
+            settings.Street,
+            settings.HouseNumber,
+            settings.PostalCode,
+            settings.City,
             settings.CompanyPhone,
             settings.IbanNumber,
             settings.VatNumber,

@@ -36,7 +36,10 @@ internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db) : IRequestHa
 
         settings.CompanyName = command.CompanyName;
         settings.CompanyEmail = command.CompanyEmail;
-        settings.CompanyAddress = command.CompanyAddress;
+        settings.Street = command.Street;
+        settings.HouseNumber = command.HouseNumber;
+        settings.PostalCode = command.PostalCode;
+        settings.City = command.City;
         settings.CompanyPhone = command.CompanyPhone;
         settings.IbanNumber = command.IbanNumber;
         settings.VatNumber = command.VatNumber;
@@ -55,7 +58,10 @@ internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db) : IRequestHa
         new(
             settings.CompanyName,
             settings.CompanyEmail,
-            settings.CompanyAddress,
+            settings.Street,
+            settings.HouseNumber,
+            settings.PostalCode,
+            settings.City,
             settings.CompanyPhone,
             settings.IbanNumber,
             settings.VatNumber,
