@@ -1,5 +1,25 @@
 export type InvoiceStatus = 'Concept' | 'Verzonden' | 'Betaald' | 'Vervallen';
 
+export interface ClientSnapshot {
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+export interface CompanyInfo {
+  companyName: string | null;
+  companyEmail: string | null;
+  street: string | null;
+  houseNumber: string | null;
+  postalCode: string | null;
+  city: string | null;
+  companyPhone: string | null;
+  ibanNumber: string | null;
+  vatNumber: string | null;
+  paymentPeriodDays: number | null;
+}
+
 export interface InvoiceLineItem {
   id: string;
   description: string;
@@ -19,6 +39,8 @@ export interface Invoice {
   bookingId: string;
   clientId: string;
   clientFullName: string;
+  clientSnapshot: ClientSnapshot;
+  staffMemberName: string;
   subTotalAmount: number;
   totalVatAmount: number;
   totalAmount: number;

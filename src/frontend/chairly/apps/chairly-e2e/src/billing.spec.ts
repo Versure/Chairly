@@ -17,6 +17,15 @@ const mockInvoiceSummary = {
 
 const mockInvoiceDetail = {
   ...mockInvoiceSummary,
+  clientSnapshot: {
+    fullName: 'Jan de Vries',
+    email: 'jan@example.com',
+    phone: '0612345678',
+    address: null,
+  },
+  staffMemberName: 'Anna de Vries',
+  subTotalAmount: 53.72,
+  totalVatAmount: 11.28,
   lineItems: [
     {
       id: 'li-1',
@@ -24,6 +33,9 @@ const mockInvoiceDetail = {
       quantity: 1,
       unitPrice: 25,
       totalPrice: 25,
+      vatPercentage: 21,
+      vatAmount: 5.25,
+      isManual: false,
       sortOrder: 0,
     },
     {
@@ -32,9 +44,25 @@ const mockInvoiceDetail = {
       quantity: 1,
       unitPrice: 40,
       totalPrice: 40,
+      vatPercentage: 21,
+      vatAmount: 8.4,
+      isManual: false,
       sortOrder: 1,
     },
   ],
+};
+
+const mockCompanyInfo = {
+  companyName: 'Salon Chairly',
+  companyEmail: 'info@chairly.nl',
+  street: 'Keizersgracht',
+  houseNumber: '42',
+  postalCode: '1015 CR',
+  city: 'Amsterdam',
+  companyPhone: '020-1234567',
+  ibanNumber: 'NL91ABNA0417164300',
+  vatNumber: 'NL123456789B01',
+  paymentPeriodDays: 30,
 };
 
 async function setupInvoiceListMocks(page: import('@playwright/test').Page): Promise<void> {
@@ -46,7 +74,17 @@ async function setupInvoiceListMocks(page: import('@playwright/test').Page): Pro
   });
 }
 
+async function setupCompanyInfoMock(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/settings/company', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockCompanyInfo });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+}
+
 async function setupInvoiceDetailMocks(page: import('@playwright/test').Page): Promise<void> {
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: mockInvoiceDetail });
@@ -114,6 +152,7 @@ test('clicking Markeer als verzonden updates status badge to Verzonden', async (
     sentAtUtc: '2026-03-10T12:00:00Z',
   };
 
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: mockInvoiceDetail });
@@ -157,6 +196,7 @@ test('clicking Markeer als betaald updates status badge to Betaald', async ({ pa
     paidAtUtc: '2026-03-10T14:00:00Z',
   };
 
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: sentInvoice });
@@ -196,6 +236,7 @@ test('Vervallen verklaren button is not shown on a paid invoice', async ({ page 
     paidAtUtc: '2026-03-10T14:00:00Z',
   };
 
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: paidInvoice });
@@ -225,6 +266,49 @@ test('back link navigates to invoice list', async ({ page }) => {
   await page.getByRole('link', { name: /Terug naar facturen/ }).click();
 
   await expect(page).toHaveURL(/\/facturen$/);
+});
+
+// --- Invoice document layout tests ---
+
+test('invoice detail page shows company information in header', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByText('Salon Chairly')).toBeVisible();
+  await expect(page.getByText('info@chairly.nl')).toBeVisible();
+  await expect(page.getByText('Keizersgracht 42')).toBeVisible();
+  await expect(page.getByText('1015 CR Amsterdam')).toBeVisible();
+});
+
+test('invoice detail page shows client information in header', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await expect(
+    page.locator('.invoice-document').getByText('Jan de Vries', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('jan@example.com')).toBeVisible();
+  await expect(page.getByText('0612345678')).toBeVisible();
+});
+
+test('invoice detail page shows invoice metadata', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByText('Factuurnummer:')).toBeVisible();
+  await expect(page.getByText('2026-0001')).toBeVisible();
+  await expect(page.getByText('Factuurdatum:')).toBeVisible();
+  await expect(page.getByText('Medewerker:')).toBeVisible();
+  await expect(page.getByText('Anna de Vries')).toBeVisible();
+});
+
+test('invoice detail page shows footer with IBAN and BTW-nummer', async ({ page }) => {
+  await setupInvoiceDetailMocks(page);
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByText('NL91ABNA0417164300')).toBeVisible();
+  await expect(page.getByText('NL123456789B01')).toBeVisible();
+  await expect(page.getByText('30 dagen')).toBeVisible();
 });
 
 // --- F4: Generate invoice from completed booking ---
@@ -262,6 +346,15 @@ const mockGeneratedInvoice = {
   bookingId: 'booking-1',
   clientId: 'cl-1',
   clientFullName: 'Jan de Vries',
+  clientSnapshot: {
+    fullName: 'Jan de Vries',
+    email: 'jan@example.com',
+    phone: '0612345678',
+    address: null,
+  },
+  staffMemberName: 'Anna de Vries',
+  subTotalAmount: 20.66,
+  totalVatAmount: 4.34,
   totalAmount: 25,
   status: 'Concept',
   createdAtUtc: '2026-03-10T10:35:00Z',
@@ -319,6 +412,7 @@ test('clicking Factuur bekijken navigates to the generated invoice detail page',
   page,
 }) => {
   await setupBookingPageMocks(page);
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices', (route) => {
     if (route.request().method() === 'POST') {
       return route.fulfill({ json: mockGeneratedInvoice, status: 201 });
@@ -340,6 +434,9 @@ test('clicking Factuur bekijken navigates to the generated invoice detail page',
               quantity: 1,
               unitPrice: 25,
               totalPrice: 25,
+              vatPercentage: 21,
+              vatAmount: 5.25,
+              isManual: false,
               sortOrder: 0,
             },
           ],
