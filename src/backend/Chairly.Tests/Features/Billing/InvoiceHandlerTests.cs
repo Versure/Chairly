@@ -2087,6 +2087,170 @@ public class InvoiceHandlerTests
         Assert.Equal(28.00m, response.TotalAmount);
     }
 
+    [Fact]
+    public async Task RegenerateInvoiceHandler_PicksUpNewlyAddedBookingService()
+    {
+        // Use a shared database name so we can create separate DbContexts that see the same data
+        var dbName = Guid.NewGuid().ToString();
+        var options = new DbContextOptionsBuilder<ChairlyDbContext>()
+            .UseInMemoryDatabase(databaseName: dbName)
+            .Options;
+
+        var clientId = Guid.NewGuid();
+        var staffMemberId = Guid.NewGuid();
+        var bookingId = Guid.NewGuid();
+        var invoiceId = Guid.NewGuid();
+
+        // Step 1 & 2: Set up completed booking with 2 services and invoice (separate context)
+        await using (var setupDb = new ChairlyDbContext(options))
+        {
+            var client = new Client
+            {
+                Id = clientId,
+                TenantId = TenantConstants.DefaultTenantId,
+                FirstName = "Jan",
+                LastName = "de Vries",
+                Email = "jan@example.com",
+                PhoneNumber = "0612345678",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            };
+            setupDb.Clients.Add(client);
+
+            var staffMember = new StaffMember
+            {
+                Id = staffMemberId,
+                TenantId = TenantConstants.DefaultTenantId,
+                FirstName = "Anna",
+                LastName = "Jansen",
+                Role = Chairly.Domain.Enums.StaffRole.StaffMember,
+                Color = "#000000",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            };
+            setupDb.StaffMembers.Add(staffMember);
+
+            var booking = new Booking
+            {
+                Id = bookingId,
+                TenantId = TenantConstants.DefaultTenantId,
+                ClientId = clientId,
+                StaffMemberId = staffMemberId,
+                StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+                EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+                CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+                CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+                CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+                BookingServices =
+                [
+                    new BookingService
+                    {
+                        Id = Guid.NewGuid(),
+                        ServiceId = Guid.NewGuid(),
+                        ServiceName = "Herenknippen",
+                        Duration = TimeSpan.FromMinutes(30),
+                        Price = 25.00m,
+                        SortOrder = 0,
+                    },
+                    new BookingService
+                    {
+                        Id = Guid.NewGuid(),
+                        ServiceId = Guid.NewGuid(),
+                        ServiceName = "Baard trimmen",
+                        Duration = TimeSpan.FromMinutes(15),
+                        Price = 15.00m,
+                        SortOrder = 1,
+                    },
+                ],
+            };
+            setupDb.Bookings.Add(booking);
+
+            var invoice = new Invoice
+            {
+                Id = invoiceId,
+                TenantId = TenantConstants.DefaultTenantId,
+                BookingId = bookingId,
+                ClientId = clientId,
+                InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
+                InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                SubTotalAmount = 31.60m,
+                TotalVatAmount = 8.40m,
+                TotalAmount = 40.00m,
+                LineItems =
+                [
+                    new InvoiceLineItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Description = "Herenknippen",
+                        Quantity = 1,
+                        UnitPrice = 25.00m,
+                        TotalPrice = 25.00m,
+                        VatPercentage = 21.00m,
+                        VatAmount = 5.25m,
+                        SortOrder = 0,
+                        IsManual = false,
+                    },
+                    new InvoiceLineItem
+                    {
+                        Id = Guid.NewGuid(),
+                        Description = "Baard trimmen",
+                        Quantity = 1,
+                        UnitPrice = 15.00m,
+                        TotalPrice = 15.00m,
+                        VatPercentage = 21.00m,
+                        VatAmount = 3.15m,
+                        SortOrder = 1,
+                        IsManual = false,
+                    },
+                ],
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            };
+            setupDb.Invoices.Add(invoice);
+            await setupDb.SaveChangesAsync();
+        }
+
+        // Step 3: Add a 3rd service to the booking (separate context, simulating a different HTTP request)
+        await using (var addServiceDb = new ChairlyDbContext(options))
+        {
+            addServiceDb.BookingServices.Add(new BookingService
+            {
+                Id = Guid.NewGuid(),
+                BookingId = bookingId,
+                ServiceId = Guid.NewGuid(),
+                ServiceName = "Wenkbrauwen",
+                Duration = TimeSpan.FromMinutes(10),
+                Price = 10.00m,
+                SortOrder = 2,
+            });
+            await addServiceDb.SaveChangesAsync();
+        }
+
+        // Step 4: Regenerate invoice (separate context, simulating a different HTTP request)
+        await using var db = new ChairlyDbContext(options);
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var result = await handler.Handle(new RegenerateInvoiceCommand(invoiceId));
+
+        // Step 5: Assertions
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+        Assert.Equal(3, response.LineItems.Count);
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Herenknippen", StringComparison.Ordinal));
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Baard trimmen", StringComparison.Ordinal));
+        Assert.Contains(response.LineItems, li => string.Equals(li.Description, "Wenkbrauwen", StringComparison.Ordinal));
+
+        // All items should be auto-generated
+        Assert.All(response.LineItems, li => Assert.False(li.IsManual));
+
+        // Verify totals: 25.00 + 15.00 + 10.00 = 50.00 total price
+        var expectedVatHerenknippen = Math.Round(25.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 5.25
+        var expectedVatBaard = Math.Round(15.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 3.15
+        var expectedVatWenkbrauwen = Math.Round(10.00m * 21m / 100m, 2, MidpointRounding.AwayFromZero); // 2.10
+        var expectedTotalVat = expectedVatHerenknippen + expectedVatBaard + expectedVatWenkbrauwen; // 10.50
+        Assert.Equal(expectedTotalVat, response.TotalVatAmount);
+        Assert.Equal(50.00m - expectedTotalVat, response.SubTotalAmount);
+        Assert.Equal(50.00m, response.TotalAmount);
+    }
+
     // ── ClientSnapshot & StaffMemberName (B1/B2) ────────────────────
 
     [Fact]
