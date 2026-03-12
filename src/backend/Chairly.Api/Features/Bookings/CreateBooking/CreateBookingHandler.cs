@@ -2,6 +2,8 @@ using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
+using Chairly.Domain.Events;
+using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -10,7 +12,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.CreateBooking;
 
 #pragma warning disable CA1812
-internal sealed class CreateBookingHandler(ChairlyDbContext db) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
+internal sealed class CreateBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
 {
     public async Task<OneOf<BookingResponse, NotFound, Conflict>> Handle(CreateBookingCommand command, CancellationToken cancellationToken = default)
     {
@@ -45,6 +47,10 @@ internal sealed class CreateBookingHandler(ChairlyDbContext db) : IRequestHandle
 
         db.Bookings.Add(booking);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await eventPublisher.PublishCreatedAsync(
+            new BookingCreatedEvent(booking.TenantId, booking.Id, booking.ClientId, booking.StartTime),
+            cancellationToken).ConfigureAwait(false);
 
         return BookingMapper.ToResponse(booking);
     }

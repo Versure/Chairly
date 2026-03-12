@@ -8,9 +8,15 @@ var db = builder.AddPostgres("postgres")
     .WithDataVolume()
     .AddDatabase("ChairlyDb");
 
+var rabbitmq = builder.AddRabbitMQ("messaging")
+    .WithDataVolume()
+    .WithManagementPlugin();
+
 builder.AddProject<Projects.Chairly_Api>("api")
     .WithReference(db)
     .WaitFor(db)
+    .WithReference(rabbitmq)
+    .WaitFor(rabbitmq)
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
 builder.Build().Run();
