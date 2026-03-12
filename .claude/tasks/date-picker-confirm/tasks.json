@@ -1,0 +1,55 @@
+{
+  "feature": "date-picker-confirm",
+  "specPath": "docs/specs/date-picker-confirm.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Create shared `<chairly-date-input>` component",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Update booking list page (date filter)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Update booking form dialog (datetime-local input)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Update invoice list page (date range filters)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Update shift schedule editor (time inputs)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Unit tests for DateInputComponent",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F7",
+      "layer": "frontend",
+      "title": "Update existing e2e tests",
+      "status": "pending",
+      "dependsOn": ["F2", "F3", "F4", "F5"]
+    }
+  ]
+}
