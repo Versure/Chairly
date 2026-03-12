@@ -168,7 +168,10 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   await staffInput.fill('Kees');
   await dialog.locator('ul li').filter({ hasText: 'Kees Bakker' }).click();
 
-  await dialog.getByLabel('Datum & tijd').fill('2026-03-10T11:00');
+  // Open the date-input popover for Datum & tijd
+  await dialog.getByLabel('Datum & tijd').click();
+  await dialog.locator('chairly-date-input input[type="datetime-local"]').fill('2026-03-10T11:00');
+  await dialog.getByRole('button', { name: 'Bevestigen' }).click();
   await dialog.getByLabel('Damesknippen').check();
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();

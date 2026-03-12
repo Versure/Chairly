@@ -9,11 +9,13 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { take } from 'rxjs';
 
 import {
+  DateInputComponent,
   InvoiceGenerationService,
   LoadingIndicatorComponent,
   PageHeaderComponent,
@@ -45,6 +47,8 @@ import {
     BookingFormDialogComponent,
     BookingScheduleComponent,
     BookingTableComponent,
+    DateInputComponent,
+    FormsModule,
     LoadingIndicatorComponent,
     PageHeaderComponent,
   ],
@@ -194,8 +198,8 @@ export class BookingListPageComponent implements OnInit {
     this.editingBooking.set(null);
   }
 
-  protected onDateChange(event: Event): void {
-    this.filterDate.set((event.target as HTMLInputElement).value);
+  protected onDateFilterChange(value: string): void {
+    this.filterDate.set(value);
   }
 
   protected onStaffFilterChange(event: Event): void {

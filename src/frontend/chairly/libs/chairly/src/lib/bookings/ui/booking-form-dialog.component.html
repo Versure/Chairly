@@ -50,11 +50,10 @@
               class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >Datum & tijd</label
             >
-            <input
-              id="bfd-startTime"
-              formControlName="startTime"
+            <chairly-date-input
               type="datetime-local"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+              inputId="bfd-startTime"
+              formControlName="startTime" />
             @if (form.controls.startTime.invalid && form.controls.startTime.touched) {
               <p class="mt-1 text-xs text-red-600">Datum & tijd is verplicht.</p>
             }

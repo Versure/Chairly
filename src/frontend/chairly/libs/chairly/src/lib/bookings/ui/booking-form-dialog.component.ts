@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { DropdownOption, SearchableDropdownComponent } from '@org/shared-lib';
+import { DateInputComponent, DropdownOption, SearchableDropdownComponent } from '@org/shared-lib';
 
 import {
   Booking,
@@ -33,7 +33,7 @@ export interface BookingFormSaveEvent {
   selector: 'chairly-booking-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, SearchableDropdownComponent, SetHasPipe],
+  imports: [DateInputComponent, ReactiveFormsModule, SearchableDropdownComponent, SetHasPipe],
   templateUrl: './booking-form-dialog.component.html',
 })
 export class BookingFormDialogComponent {

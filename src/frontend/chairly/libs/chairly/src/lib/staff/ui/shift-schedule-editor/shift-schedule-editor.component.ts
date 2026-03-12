@@ -1,4 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, model, ModelSignal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+
+import { DateInputComponent } from '@org/shared-lib';
 
 import { DayOfWeek, ShiftBlock, WeeklySchedule } from '../../models';
 
@@ -13,6 +16,7 @@ interface DayRow {
   selector: 'chairly-shift-schedule-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DateInputComponent, FormsModule],
   templateUrl: './shift-schedule-editor.component.html',
 })
 export class ShiftScheduleEditorComponent {
@@ -68,13 +72,11 @@ export class ShiftScheduleEditorComponent {
     this.schedule.set(current);
   }
 
-  protected updateStartTime(dayKey: DayOfWeek, blockIndex: number, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  protected onStartTimeChange(dayKey: DayOfWeek, blockIndex: number, value: string): void {
     this.updateBlockTime(dayKey, blockIndex, 'startTime', value);
   }
 
-  protected updateEndTime(dayKey: DayOfWeek, blockIndex: number, event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  protected onEndTimeChange(dayKey: DayOfWeek, blockIndex: number, value: string): void {
     this.updateBlockTime(dayKey, blockIndex, 'endTime', value);
   }
 
