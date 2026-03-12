@@ -4,15 +4,14 @@
       <chairly-loading-indicator message="Factuur laden..." />
     </div>
   } @else if (invoice(); as inv) {
-    <!-- Page header -->
-    <div
-      class="border-b border-gray-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-800">
+    <!-- Back link and status badge (print-hidden) -->
+    <div class="print-hidden px-6 pt-4">
       <a
         routerLink="/facturen"
-        class="print-hidden mb-2 inline-block text-sm text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
+        class="mb-2 inline-block text-sm text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
         &larr; Terug naar facturen
       </a>
-      <div class="flex items-center justify-between">
+      <div class="mb-4 flex items-center gap-3">
         <h1 class="text-xl font-semibold text-gray-900 dark:text-white">
           Factuur {{ inv.invoiceNumber }}
         </h1>
@@ -20,225 +19,296 @@
           {{ inv.status }}
         </span>
       </div>
-      <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        <span>{{ inv.clientFullName }}</span>
-        <span class="mx-2">&middot;</span>
-        <span>{{ inv.invoiceDate | date: 'd MMM yyyy' }}</span>
-      </div>
     </div>
 
-    <!-- Line items table -->
-    <div class="flex-1 overflow-auto p-6">
-      <div
-        class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-          <thead class="bg-gray-50 dark:bg-slate-700">
-            <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                Omschrijving
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                Aantal
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                Stukprijs
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                BTW %
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                Totaal
-              </th>
-              @if (isEditable()) {
-                <th
-                  scope="col"
-                  class="print-hidden px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                  Acties
-                </th>
-              }
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
-            @for (item of inv.lineItems; track item.id) {
-              <tr>
-                <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-white">
-                  {{ item.description }}
-                </td>
-                <td
-                  class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
-                  {{ item.quantity }}
-                </td>
-                <td
-                  class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
-                  {{ item.unitPrice | currency }}
-                </td>
-                <td
-                  class="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
-                  {{ item.vatPercentage }}%
-                </td>
-                <td
-                  class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900 dark:text-white">
-                  {{ item.totalPrice | currency }}
-                </td>
-                @if (isEditable()) {
-                  <td class="print-hidden whitespace-nowrap px-6 py-4 text-right text-sm">
-                    @if (item.isManual) {
-                      <button
-                        type="button"
-                        class="font-medium text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        (click)="onRemoveLineItem(item.id)">
-                        Verwijderen
-                      </button>
-                    }
-                  </td>
-                }
-              </tr>
+    <!-- Document block -->
+    <div class="invoice-document mx-6 rounded-lg bg-white p-8 shadow dark:bg-slate-800">
+      <!-- Header: company info (left) + client info (right) -->
+      <div class="grid grid-cols-2 gap-8">
+        <!-- Company info -->
+        <div>
+          @if (company(); as c) {
+            @if (c.companyName) {
+              <p class="text-lg font-bold text-gray-900 dark:text-white">{{ c.companyName }}</p>
             }
-          </tbody>
-          <tfoot>
-            <tr class="border-t border-gray-200 dark:border-slate-600">
-              <td
-                colspan="4"
-                class="whitespace-nowrap px-6 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
-                Subtotaal
-              </td>
-              <td
-                class="whitespace-nowrap px-6 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
-                {{ inv.subTotalAmount | currency }}
-              </td>
-              @if (isEditable()) {
-                <td class="print-hidden"></td>
-              }
-            </tr>
-            <tr>
-              <td
-                colspan="4"
-                class="whitespace-nowrap px-6 py-2 text-right text-sm text-gray-600 dark:text-gray-400">
-                BTW
-              </td>
-              <td
-                class="whitespace-nowrap px-6 py-2 text-right text-sm text-gray-600 dark:text-gray-400">
-                {{ inv.totalVatAmount | currency }}
-              </td>
-              @if (isEditable()) {
-                <td class="print-hidden"></td>
-              }
-            </tr>
-            <tr class="bg-gray-50 dark:bg-slate-700">
-              <td
-                colspan="4"
-                class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                Totaal
-              </td>
-              <td
-                class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
-                {{ inv.totalAmount | currency }}
-              </td>
-              @if (isEditable()) {
-                <td class="print-hidden"></td>
-              }
-            </tr>
-          </tfoot>
-        </table>
+            @if (c.street || c.houseNumber) {
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                {{ c.street }} {{ c.houseNumber }}
+              </p>
+            }
+            @if (c.postalCode || c.city) {
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                {{ c.postalCode }} {{ c.city }}
+              </p>
+            }
+            @if (c.companyEmail) {
+              <p class="text-sm text-gray-600 dark:text-gray-300">{{ c.companyEmail }}</p>
+            }
+            @if (c.companyPhone) {
+              <p class="text-sm text-gray-600 dark:text-gray-300">{{ c.companyPhone }}</p>
+            }
+          }
+        </div>
+
+        <!-- Client info -->
+        <div class="text-right">
+          <p class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ inv.clientSnapshot.fullName }}
+          </p>
+          @if (inv.clientSnapshot.address) {
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              {{ inv.clientSnapshot.address }}
+            </p>
+          }
+          @if (inv.clientSnapshot.email) {
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              {{ inv.clientSnapshot.email }}
+            </p>
+          }
+          @if (inv.clientSnapshot.phone) {
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              {{ inv.clientSnapshot.phone }}
+            </p>
+          }
+        </div>
       </div>
 
-      <!-- Add surcharge/discount buttons (editable: Concept or Verzonden) -->
-      @if (isEditable()) {
-        <div class="print-hidden">
-          @if (isSent()) {
-            <div
-              class="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
-              Let op: wijzigingen zetten de factuur terug naar concept.
-            </div>
+      <!-- Divider -->
+      <hr class="my-6 border-gray-200 dark:border-slate-600" />
+
+      <!-- Invoice metadata -->
+      <div class="grid grid-cols-2 gap-8">
+        <div class="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+          <p>
+            <span class="font-medium text-gray-900 dark:text-white">Factuurnummer:</span>
+            {{ inv.invoiceNumber }}
+          </p>
+          <p>
+            <span class="font-medium text-gray-900 dark:text-white">Factuurdatum:</span>
+            {{ inv.invoiceDate | date: 'dd-MM-yyyy' }}
+          </p>
+          <p>
+            <span class="font-medium text-gray-900 dark:text-white">Medewerker:</span>
+            {{ inv.staffMemberName }}
+          </p>
+        </div>
+        <div></div>
+      </div>
+
+      <!-- Divider -->
+      <hr class="my-6 border-gray-200 dark:border-slate-600" />
+
+      <!-- Line items table -->
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 dark:border-slate-600">
+            <th
+              scope="col"
+              class="px-4 py-3 text-left font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Omschrijving
+            </th>
+            <th
+              scope="col"
+              class="px-4 py-3 text-right font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Aantal
+            </th>
+            <th
+              scope="col"
+              class="px-4 py-3 text-right font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Stukprijs
+            </th>
+            <th
+              scope="col"
+              class="px-4 py-3 text-right font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              BTW %
+            </th>
+            <th
+              scope="col"
+              class="px-4 py-3 text-right font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Totaal
+            </th>
+            @if (isEditable()) {
+              <th
+                scope="col"
+                class="print-hidden px-4 py-3 text-right font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Acties
+              </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of inv.lineItems; track item.id) {
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+              <td class="px-4 py-3 text-gray-900 dark:text-white">
+                {{ item.description }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-300">
+                {{ item.quantity }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-300">
+                {{ item.unitPrice | currency }}
+              </td>
+              <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-300">
+                {{ item.vatPercentage }}%
+              </td>
+              <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-white">
+                {{ item.totalPrice | currency }}
+              </td>
+              @if (isEditable()) {
+                <td class="print-hidden px-4 py-3 text-right">
+                  @if (item.isManual) {
+                    <button
+                      type="button"
+                      class="font-medium text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      (click)="onRemoveLineItem(item.id)">
+                      Verwijderen
+                    </button>
+                  }
+                </td>
+              }
+            </tr>
           }
-          <div class="mt-4 flex gap-3">
-            <button
-              type="button"
-              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
-              (click)="onOpenLineItemDialog('surcharge')">
-              Toeslag toevoegen
-            </button>
-            <button
-              type="button"
-              class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
-              (click)="onOpenLineItemDialog('discount')">
-              Korting toevoegen
-            </button>
-          </div>
+        </tbody>
+        <tfoot>
+          <tr class="border-t border-gray-200 dark:border-slate-600">
+            <td colspan="4" class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
+              Subtotaal
+            </td>
+            <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
+              {{ inv.subTotalAmount | currency }}
+            </td>
+            @if (isEditable()) {
+              <td class="print-hidden"></td>
+            }
+          </tr>
+          <tr>
+            <td colspan="4" class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">BTW</td>
+            <td class="px-4 py-2 text-right text-gray-600 dark:text-gray-400">
+              {{ inv.totalVatAmount | currency }}
+            </td>
+            @if (isEditable()) {
+              <td class="print-hidden"></td>
+            }
+          </tr>
+          <tr class="bg-gray-50 dark:bg-slate-700">
+            <td
+              colspan="4"
+              class="px-4 py-4 text-right font-semibold text-gray-900 dark:text-white">
+              Totaal
+            </td>
+            <td class="px-4 py-4 text-right font-semibold text-gray-900 dark:text-white">
+              {{ inv.totalAmount | currency }}
+            </td>
+            @if (isEditable()) {
+              <td class="print-hidden"></td>
+            }
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Footer -->
+      @if (company(); as c) {
+        <div
+          class="mt-6 border-t border-gray-200 pt-6 text-center text-sm text-gray-500 dark:border-slate-600 dark:text-gray-400">
+          @if (c.ibanNumber) {
+            <p>IBAN: {{ c.ibanNumber }}</p>
+          }
+          @if (c.vatNumber) {
+            <p>BTW-nummer: {{ c.vatNumber }}</p>
+          }
+          @if (c.paymentPeriodDays) {
+            <p>Betaaltermijn: {{ c.paymentPeriodDays }} dagen</p>
+          }
         </div>
       }
+    </div>
 
-      <!-- Status history -->
-      <div
-        class="print-hidden mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Statusgeschiedenis</h2>
-        <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-          <li>Aangemaakt op {{ inv.createdAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
-          @if (inv.sentAtUtc) {
-            <li>Verzonden op {{ inv.sentAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
-          }
-          @if (inv.paidAtUtc) {
-            <li>Betaald op {{ inv.paidAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
-          }
-          @if (inv.voidedAtUtc) {
-            <li>Vervallen verklaard op {{ inv.voidedAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
-          }
-        </ul>
-      </div>
-
-      <!-- Action buttons -->
-      <div class="print-hidden mt-6 flex gap-3">
-        <!-- Print button — always visible -->
-        <button
-          type="button"
-          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
-          (click)="onPrint()">
-          Afdrukken
-        </button>
-        @if (isDraft()) {
+    <!-- Add surcharge/discount buttons (editable: Concept or Verzonden) -->
+    @if (isEditable()) {
+      <div class="print-hidden px-6">
+        @if (isSent()) {
+          <div
+            class="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-600 dark:bg-amber-900/30 dark:text-amber-300">
+            Let op: wijzigingen zetten de factuur terug naar concept.
+          </div>
+        }
+        <div class="mt-4 flex gap-3">
           <button
             type="button"
             class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
-            [disabled]="isLoading()"
-            (click)="onRegenerate()">
-            Factuur opnieuw genereren
+            (click)="onOpenLineItemDialog('surcharge')">
+            Toeslag toevoegen
           </button>
-        }
-        @if (canSend()) {
           <button
             type="button"
-            class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
-            (click)="onMarkAsSent()">
-            Markeer als verzonden
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+            (click)="onOpenLineItemDialog('discount')">
+            Korting toevoegen
           </button>
-        }
-        @if (canPay()) {
-          <button
-            type="button"
-            class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
-            (click)="onMarkAsPaid()">
-            Markeer als betaald
-          </button>
-        }
-        @if (canVoid()) {
-          <button
-            type="button"
-            class="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:border-red-700 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-slate-700"
-            (click)="onVoid()">
-            Vervallen verklaren
-          </button>
-        }
+        </div>
       </div>
+    }
+
+    <!-- Status history -->
+    <div
+      class="print-hidden mx-6 mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Statusgeschiedenis</h2>
+      <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+        <li>Aangemaakt op {{ inv.createdAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
+        @if (inv.sentAtUtc) {
+          <li>Verzonden op {{ inv.sentAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
+        }
+        @if (inv.paidAtUtc) {
+          <li>Betaald op {{ inv.paidAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
+        }
+        @if (inv.voidedAtUtc) {
+          <li>Vervallen verklaard op {{ inv.voidedAtUtc | date: 'd MMM yyyy, HH:mm' }}</li>
+        }
+      </ul>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="print-hidden mx-6 mt-6 mb-6 flex gap-3">
+      <!-- Print button — always visible -->
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+        (click)="onPrint()">
+        Afdrukken
+      </button>
+      @if (canSend()) {
+        <button
+          type="button"
+          class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+          (click)="onMarkAsSent()">
+          Markeer als verzonden
+        </button>
+      }
+      @if (isDraft()) {
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600"
+          [disabled]="isLoading()"
+          (click)="onRegenerate()">
+          Factuur opnieuw genereren
+        </button>
+      }
+      @if (canPay()) {
+        <button
+          type="button"
+          class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+          (click)="onMarkAsPaid()">
+          Markeer als betaald
+        </button>
+      }
+      @if (canVoid()) {
+        <button
+          type="button"
+          class="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:border-red-700 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-slate-700"
+          (click)="onVoid()">
+          Vervallen verklaren
+        </button>
+      }
     </div>
 
     <!-- Line item form dialog -->

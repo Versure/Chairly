@@ -1,0 +1,55 @@
+{
+  "feature": "invoice-layout",
+  "specPath": "docs/specs/invoice-layout.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Extend GetInvoice response with ClientSnapshot and StaffMemberName",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Extend InvoiceMapper and other invoice-returning handlers",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Update Invoice model with ClientSnapshot and StaffMemberName",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Load company information on invoice detail page",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Redesign invoice detail template with document layout",
+      "status": "pending",
+      "dependsOn": ["F1", "F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Update print styles for document layout",
+      "status": "pending",
+      "dependsOn": ["F3"]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Playwright e2e tests for invoice layout",
+      "status": "pending",
+      "dependsOn": ["F3"]
+    }
+  ]
+}

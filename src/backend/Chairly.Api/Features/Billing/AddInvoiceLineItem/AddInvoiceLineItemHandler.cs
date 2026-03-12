@@ -41,7 +41,11 @@ internal sealed class AddInvoiceLineItemHandler(ChairlyDbContext db) : IRequestH
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return InvoiceMapper.ToResponse(invoice, await GetClientFullNameAsync(invoice.ClientId, cancellationToken).ConfigureAwait(false));
+        var (clientFullName, clientSnapshot, staffMemberName) = await InvoiceMapper
+            .LoadInvoiceContextAsync(db, invoice, cancellationToken)
+            .ConfigureAwait(false);
+
+        return InvoiceMapper.ToResponse(invoice, clientFullName, clientSnapshot, staffMemberName);
     }
 
     private static InvoiceLineItem CreateLineItem(AddInvoiceLineItemCommand command, Invoice invoice)
@@ -73,15 +77,6 @@ internal sealed class AddInvoiceLineItemHandler(ChairlyDbContext db) : IRequestH
             invoice.SentAtUtc = null;
             invoice.SentBy = null;
         }
-    }
-
-    private async Task<string> GetClientFullNameAsync(Guid clientId, CancellationToken cancellationToken)
-    {
-        return await db.Clients
-            .Where(c => c.Id == clientId)
-            .Select(c => c.FirstName + " " + c.LastName)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false) ?? string.Empty;
     }
 }
 #pragma warning restore CA1812

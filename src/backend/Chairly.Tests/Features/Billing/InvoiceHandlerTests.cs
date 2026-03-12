@@ -34,16 +34,30 @@ public class InvoiceHandlerTests
             TenantId = TenantConstants.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
+            Email = "jan@example.com",
+            PhoneNumber = "0612345678",
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         db.Clients.Add(client);
+
+        var staffMember = new StaffMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Anna",
+            LastName = "Jansen",
+            Role = Chairly.Domain.Enums.StaffRole.StaffMember,
+            Color = "#000000",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.StaffMembers.Add(staffMember);
 
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
             TenantId = TenantConstants.DefaultTenantId,
             ClientId = client.Id,
-            StaffMemberId = Guid.NewGuid(),
+            StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
             EndTime = DateTimeOffset.UtcNow.AddHours(-1),
             CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
@@ -89,16 +103,47 @@ public class InvoiceHandlerTests
                 TenantId = TenantConstants.DefaultTenantId,
                 FirstName = "Pieter",
                 LastName = "Bakker",
+                Email = "pieter@example.com",
+                PhoneNumber = "0698765432",
                 CreatedAtUtc = DateTimeOffset.UtcNow,
             };
             db.Clients.Add(client);
         }
 
+        var staffMember = new StaffMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Sophie",
+            LastName = "de Boer",
+            Role = Chairly.Domain.Enums.StaffRole.StaffMember,
+            Color = "#FF0000",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.StaffMembers.Add(staffMember);
+
+        var bookingId = Guid.NewGuid();
+        var booking = new Booking
+        {
+            Id = bookingId,
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = resolvedClientId,
+            StaffMemberId = staffMember.Id,
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+        db.Bookings.Add(booking);
+
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
             TenantId = TenantConstants.DefaultTenantId,
-            BookingId = Guid.NewGuid(),
+            BookingId = bookingId,
             ClientId = resolvedClientId,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
             InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -147,15 +192,46 @@ public class InvoiceHandlerTests
             TenantId = TenantConstants.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "Bakker",
+            Email = "pieter@example.com",
+            PhoneNumber = "0698765432",
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         db.Clients.Add(client);
+
+        var staffMember = new StaffMember
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            FirstName = "Sophie",
+            LastName = "de Boer",
+            Role = Chairly.Domain.Enums.StaffRole.StaffMember,
+            Color = "#FF0000",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.StaffMembers.Add(staffMember);
+
+        var bookingId = Guid.NewGuid();
+        var booking = new Booking
+        {
+            Id = bookingId,
+            TenantId = TenantConstants.DefaultTenantId,
+            ClientId = client.Id,
+            StaffMemberId = staffMember.Id,
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(-1),
+            CompletedAtUtc = DateTimeOffset.UtcNow.AddMinutes(-30),
+#pragma warning disable MA0026
+            CompletedBy = Guid.Empty,
+#pragma warning restore MA0026
+            CreatedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+        db.Bookings.Add(booking);
 
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
             TenantId = TenantConstants.DefaultTenantId,
-            BookingId = Guid.NewGuid(),
+            BookingId = bookingId,
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
             InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
@@ -2009,5 +2085,102 @@ public class InvoiceHandlerTests
         Assert.Equal(expectedTotalVat, response.TotalVatAmount);
         Assert.Equal(28.00m - expectedTotalVat, response.SubTotalAmount);
         Assert.Equal(28.00m, response.TotalAmount);
+    }
+
+    // ── ClientSnapshot & StaffMemberName (B1/B2) ────────────────────
+
+    [Fact]
+    public async Task GetInvoiceHandler_ReturnsClientSnapshotWithCorrectFields()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new GetInvoiceHandler(db);
+
+        var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
+
+        var response = result.AsT0;
+        Assert.NotNull(response.ClientSnapshot);
+        Assert.Equal("Pieter Bakker", response.ClientSnapshot.FullName);
+        Assert.Equal("pieter@example.com", response.ClientSnapshot.Email);
+        Assert.Equal("0698765432", response.ClientSnapshot.Phone);
+    }
+
+    [Fact]
+    public async Task GetInvoiceHandler_ReturnsStaffMemberNameFromBooking()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new GetInvoiceHandler(db);
+
+        var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
+
+        var response = result.AsT0;
+        Assert.Equal("Sophie de Boer", response.StaffMemberName);
+    }
+
+    [Fact]
+    public async Task GetInvoiceHandler_ReturnsClientSnapshotAddressAsNull()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new GetInvoiceHandler(db);
+
+        var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
+
+        var response = result.AsT0;
+        Assert.Null(response.ClientSnapshot.Address);
+    }
+
+    [Fact]
+    public async Task GetInvoiceHandler_BackwardCompatible_ClientFullNameStillPresent()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new GetInvoiceHandler(db);
+
+        var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
+
+        var response = result.AsT0;
+        Assert.Equal("Pieter Bakker", response.ClientFullName);
+        Assert.Equal(response.ClientFullName, response.ClientSnapshot.FullName);
+    }
+
+    [Fact]
+    public async Task MarkInvoiceSentHandler_ResponseIncludesClientSnapshotAndStaffMemberName()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new MarkInvoiceSentHandler(db);
+
+        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+
+        var response = result.AsT0;
+        Assert.NotNull(response.ClientSnapshot);
+        Assert.Equal("Pieter Bakker", response.ClientSnapshot.FullName);
+        Assert.Equal("pieter@example.com", response.ClientSnapshot.Email);
+        Assert.Equal("Sophie de Boer", response.StaffMemberName);
+    }
+
+    [Fact]
+    public async Task AddInvoiceLineItemHandler_ResponseIncludesClientSnapshotAndStaffMemberName()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new AddInvoiceLineItemHandler(db);
+
+        var command = new AddInvoiceLineItemCommand
+        {
+            InvoiceId = invoice.Id,
+            Description = "Extra toeslag",
+            Quantity = 1,
+            UnitPrice = 5.00m,
+        };
+
+        var result = await handler.Handle(command);
+
+        var response = result.AsT0;
+        Assert.NotNull(response.ClientSnapshot);
+        Assert.Equal("Pieter Bakker", response.ClientSnapshot.FullName);
+        Assert.Equal("Sophie de Boer", response.StaffMemberName);
     }
 }

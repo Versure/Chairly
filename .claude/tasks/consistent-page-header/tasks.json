@@ -1,0 +1,27 @@
+{
+  "feature": "consistent-page-header",
+  "specPath": "docs/specs/consistent-page-header.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Create shared page header component",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Replace inline headers with the shared component",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Unit test for page header component",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    }
+  ]
+}

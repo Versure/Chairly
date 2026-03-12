@@ -3,12 +3,19 @@ import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { take } from 'rxjs';
 
-import { AddLineItemRequest, Invoice, InvoiceFilterParams, InvoiceSummary } from '../models';
+import {
+  AddLineItemRequest,
+  CompanyInfo,
+  Invoice,
+  InvoiceFilterParams,
+  InvoiceSummary,
+} from '../models';
 import { InvoiceApiService } from './invoice-api.service';
 
 export interface InvoiceState {
   invoices: InvoiceSummary[];
   selectedInvoice: Invoice | null;
+  companyInfo: CompanyInfo | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -16,6 +23,7 @@ export interface InvoiceState {
 const initialState: InvoiceState = {
   invoices: [],
   selectedInvoice: null,
+  companyInfo: null,
   isLoading: false,
   error: null,
 };
@@ -170,6 +178,16 @@ export const InvoiceStore = signalStore(
                 error: toErrorMessage(err),
                 isLoading: false,
               }),
+          });
+      },
+
+      loadCompanyInfo(): void {
+        invoiceApi
+          .getCompanyInfo()
+          .pipe(take(1))
+          .subscribe({
+            next: (companyInfo) => patchState(store, { companyInfo }),
+            error: (err: unknown) => patchState(store, { error: toErrorMessage(err) }),
           });
       },
     };

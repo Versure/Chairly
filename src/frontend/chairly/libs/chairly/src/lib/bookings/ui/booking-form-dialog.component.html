@@ -16,15 +16,11 @@
               class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >Klant</label
             >
-            <select
-              id="bfd-clientId"
+            <chairly-searchable-dropdown
               formControlName="clientId"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-              <option value="" disabled>Selecteer een klant</option>
-              @for (client of clients(); track client.id) {
-                <option [value]="client.id">{{ client.firstName }} {{ client.lastName }}</option>
-              }
-            </select>
+              [options]="clientOptions()"
+              placeholder="Klant zoeken..."
+              inputId="bfd-clientId" />
             @if (form.controls.clientId.invalid && form.controls.clientId.touched) {
               <p class="mt-1 text-xs text-red-600">Klant is verplicht.</p>
             }
@@ -37,15 +33,11 @@
               class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
               >Medewerker</label
             >
-            <select
-              id="bfd-staffMemberId"
+            <chairly-searchable-dropdown
               formControlName="staffMemberId"
-              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
-              <option value="" disabled>Selecteer een medewerker</option>
-              @for (member of staffMembers(); track member.id) {
-                <option [value]="member.id">{{ member.firstName }} {{ member.lastName }}</option>
-              }
-            </select>
+              [options]="staffMemberOptions()"
+              placeholder="Medewerker zoeken..."
+              inputId="bfd-staffMemberId" />
             @if (form.controls.staffMemberId.invalid && form.controls.staffMemberId.touched) {
               <p class="mt-1 text-xs text-red-600">Medewerker is verplicht.</p>
             }

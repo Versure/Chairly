@@ -81,6 +81,29 @@ test.describe('Collapsible sidebar navigation', () => {
   });
 });
 
+test.describe('Navigation icons', () => {
+  test('all nav items have an icon', async ({ page }) => {
+    await page.goto('/');
+
+    const navItems = [
+      'Boekingen',
+      'Diensten',
+      'Facturen',
+      'Klanten',
+      'Medewerkers',
+      'Instellingen',
+    ];
+
+    for (const name of navItems) {
+      const link = page.getByRole('link', { name });
+      await expect(link).toBeVisible();
+      const svg = link.locator('svg');
+      await expect(svg).toBeVisible();
+      await expect(svg).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+});
+
 test.describe('Cross-cutting navigation and theme', () => {
   test('navigating to / redirects to /diensten', async ({ page }) => {
     await setupAllApiMocks(page);

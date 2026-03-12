@@ -12,7 +12,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LoadingIndicatorComponent } from '@org/shared-lib';
 
 import { InvoiceStore } from '../../data-access';
-import { AddLineItemRequest, Invoice } from '../../models';
+import { AddLineItemRequest, CompanyInfo, Invoice } from '../../models';
 import { InvoiceStatusBadgePipe } from '../../pipes';
 import { LineItemDialogMode, LineItemFormDialogComponent } from '../../ui';
 
@@ -39,6 +39,7 @@ export class InvoiceDetailPageComponent implements OnInit {
   private readonly lineItemDialog = viewChild<LineItemFormDialogComponent>('lineItemDialog');
 
   protected readonly invoice = computed<Invoice | null>(() => this.invoiceStore.selectedInvoice());
+  protected readonly company = computed<CompanyInfo | null>(() => this.invoiceStore.companyInfo());
   protected readonly isLoading = computed<boolean>(() => this.invoiceStore.isLoading());
 
   protected readonly isDraft = computed<boolean>(() => {
@@ -82,6 +83,7 @@ export class InvoiceDetailPageComponent implements OnInit {
     if (id) {
       this.invoiceStore.loadInvoice(id);
     }
+    this.invoiceStore.loadCompanyInfo();
   }
 
   protected onMarkAsSent(): void {

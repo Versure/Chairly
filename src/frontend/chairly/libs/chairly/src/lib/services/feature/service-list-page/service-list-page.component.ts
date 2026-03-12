@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import { ConfirmationDialogComponent } from '@org/shared-lib';
+import { ConfirmationDialogComponent, PageHeaderComponent } from '@org/shared-lib';
 
 import { ServiceCategoryStore, ServiceStore } from '../../data-access';
 import {
@@ -19,7 +19,11 @@ import {
   UpdateServiceCategoryRequest,
   UpdateServiceRequest,
 } from '../../models';
-import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableComponent } from '../../ui';
+import {
+  CategoryPanelComponent,
+  ServiceFormDialogComponent,
+  ServiceTableComponent,
+} from '../../ui';
 
 @Component({
   selector: 'chairly-service-list-page',
@@ -28,6 +32,7 @@ import { CategoryPanelComponent, ServiceFormDialogComponent, ServiceTableCompone
   imports: [
     CategoryPanelComponent,
     ConfirmationDialogComponent,
+    PageHeaderComponent,
     ServiceFormDialogComponent,
     ServiceTableComponent,
   ],
@@ -46,18 +51,12 @@ export class ServiceListPageComponent implements OnInit {
   protected readonly selectedService = signal<ServiceResponse | null>(null);
   private readonly selectedCategoryIdForDelete = signal<string | null>(null);
 
-  protected readonly services = computed<ServiceResponse[]>(() =>
-    this.serviceStore.services(),
-  );
-  protected readonly servicesLoading = computed<boolean>(() =>
-    this.serviceStore.isLoading(),
-  );
+  protected readonly services = computed<ServiceResponse[]>(() => this.serviceStore.services());
+  protected readonly servicesLoading = computed<boolean>(() => this.serviceStore.isLoading());
   protected readonly categories = computed<ServiceCategoryResponse[]>(() =>
     this.categoryStore.categories(),
   );
-  protected readonly categoriesLoading = computed<boolean>(() =>
-    this.categoryStore.isLoading(),
-  );
+  protected readonly categoriesLoading = computed<boolean>(() => this.categoryStore.isLoading());
 
   ngOnInit(): void {
     this.serviceStore.loadServices();
@@ -77,9 +76,15 @@ export class ServiceListPageComponent implements OnInit {
   protected onServiceSaved(request: CreateServiceRequest | UpdateServiceRequest): void {
     const svc = this.selectedService();
     if (svc) {
-      this.serviceStore.updateService(svc.id, { ...request, sortOrder: svc.sortOrder } as UpdateServiceRequest);
+      this.serviceStore.updateService(svc.id, {
+        ...request,
+        sortOrder: svc.sortOrder,
+      } as UpdateServiceRequest);
     } else {
-      this.serviceStore.createService({ ...request, sortOrder: this.services().length } as CreateServiceRequest);
+      this.serviceStore.createService({
+        ...request,
+        sortOrder: this.services().length,
+      } as CreateServiceRequest);
     }
     this.selectedService.set(null);
   }
@@ -109,10 +114,7 @@ export class ServiceListPageComponent implements OnInit {
     this.categoryStore.createCategory(request);
   }
 
-  protected onCategoryUpdated(event: {
-    id: string;
-    request: UpdateServiceCategoryRequest;
-  }): void {
+  protected onCategoryUpdated(event: { id: string; request: UpdateServiceCategoryRequest }): void {
     this.categoryStore.updateCategory(event.id, event.request);
   }
 

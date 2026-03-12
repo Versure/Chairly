@@ -13,7 +13,11 @@ import { Router } from '@angular/router';
 
 import { take } from 'rxjs';
 
-import { InvoiceGenerationService, LoadingIndicatorComponent } from '@org/shared-lib';
+import {
+  InvoiceGenerationService,
+  LoadingIndicatorComponent,
+  PageHeaderComponent,
+} from '@org/shared-lib';
 
 import { BookingStore } from '../../data-access';
 import {
@@ -42,6 +46,7 @@ import {
     BookingScheduleComponent,
     BookingTableComponent,
     LoadingIndicatorComponent,
+    PageHeaderComponent,
   ],
   templateUrl: './booking-list-page.component.html',
 })
