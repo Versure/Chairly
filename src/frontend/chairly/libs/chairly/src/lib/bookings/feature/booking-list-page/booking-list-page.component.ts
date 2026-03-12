@@ -130,6 +130,16 @@ export class BookingListPageComponent implements OnInit {
       case 'generateInvoice':
         this.onGenerateInvoice(event.bookingId);
         break;
+      case 'edit':
+        this.onEditBooking(event.bookingId);
+        break;
+    }
+  }
+
+  protected onEditBooking(bookingId: string): void {
+    const booking = this.bookings().find((b) => b.id === bookingId) ?? null;
+    if (booking) {
+      this.onBookingSelected(booking);
     }
   }
 

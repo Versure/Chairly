@@ -26,7 +26,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
             return new NotFound();
         }
 
-        if (booking.CompletedAtUtc != null || booking.CancelledAtUtc != null || booking.NoShowAtUtc != null)
+        if (booking.CancelledAtUtc != null || booking.NoShowAtUtc != null)
         {
             return new Conflict();
         }

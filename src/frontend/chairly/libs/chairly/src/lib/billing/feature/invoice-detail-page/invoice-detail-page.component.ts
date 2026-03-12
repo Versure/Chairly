@@ -125,6 +125,13 @@ export class InvoiceDetailPageComponent implements OnInit {
     }
   }
 
+  protected onRegenerate(): void {
+    const inv = this.invoice();
+    if (inv) {
+      this.invoiceStore.regenerateInvoice(inv.id);
+    }
+  }
+
   protected onPrint(): void {
     this.document.defaultView?.print();
   }

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Booking } from '../models';
 
 export interface BookingStatusAction {
-  action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow' | 'generateInvoice';
+  action: 'confirm' | 'start' | 'complete' | 'cancel' | 'noShow' | 'generateInvoice' | 'edit';
   bookingId: string;
 }
 

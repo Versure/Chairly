@@ -1,0 +1,48 @@
+{
+  "feature": "invoice-regenerate",
+  "specPath": ".claude/tasks/invoice-regenerate/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Regenerate invoice endpoint",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Extract shared line-item building logic",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add `regenerateInvoice` method to `InvoiceApiService`",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Add `regenerateInvoice` method to `InvoiceStore`",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Add regenerate button to invoice detail page",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Playwright e2e tests for invoice regenerate",
+      "status": "pending",
+      "dependsOn": ["F3"]
+    }
+  ]
+}

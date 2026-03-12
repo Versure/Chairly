@@ -680,7 +680,7 @@ public class BookingHandlerTests
     }
 
     [Fact]
-    public async Task UpdateBookingHandler_CompletedBooking_ReturnsConflict()
+    public async Task UpdateBookingHandler_CompletedBooking_AllowsUpdate()
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
@@ -703,8 +703,10 @@ public class BookingHandlerTests
 
         var result = await handler.Handle(command);
 
-        Assert.True(result.IsT2);
-        Assert.IsType<Conflict>(result.AsT2);
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+        Assert.Equal(booking.Id, response.Id);
+        Assert.Single(response.Services);
     }
 
     [Fact]

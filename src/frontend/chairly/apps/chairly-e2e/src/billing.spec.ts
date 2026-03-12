@@ -455,3 +455,160 @@ test('clicking Factuur bekijken navigates to the generated invoice detail page',
   await expect(page).toHaveURL(/\/facturen\/inv-generated/);
   await expect(page.getByRole('heading', { name: /Factuur 2026-0002/ })).toBeVisible();
 });
+
+// --- F4: Invoice regenerate e2e tests ---
+
+const mockConceptInvoiceForRegenerate = {
+  ...mockInvoiceDetail,
+  subTotalAmount: 53.72,
+  totalVatAmount: 11.28,
+  totalAmount: 65,
+  lineItems: [
+    {
+      id: 'li-1',
+      description: 'Herenknippen',
+      quantity: 1,
+      unitPrice: 25,
+      totalPrice: 25,
+      vatPercentage: 21,
+      vatAmount: 5.25,
+      isManual: false,
+      sortOrder: 0,
+    },
+    {
+      id: 'li-2',
+      description: 'Baard trimmen',
+      quantity: 1,
+      unitPrice: 40,
+      totalPrice: 40,
+      vatPercentage: 21,
+      vatAmount: 8.4,
+      isManual: false,
+      sortOrder: 1,
+    },
+  ],
+};
+
+const mockRegeneratedInvoice = {
+  ...mockConceptInvoiceForRegenerate,
+  lineItems: [
+    ...mockConceptInvoiceForRegenerate.lineItems,
+    {
+      id: 'li-3',
+      description: 'Haarkleuring',
+      quantity: 1,
+      unitPrice: 50,
+      totalPrice: 50,
+      vatPercentage: 21,
+      vatAmount: 10.5,
+      isManual: false,
+      sortOrder: 2,
+    },
+  ],
+  subTotalAmount: 94.21,
+  totalVatAmount: 20.79,
+  totalAmount: 115,
+};
+
+test('Factuur opnieuw genereren button is visible on Concept invoice', async ({ page }) => {
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockConceptInvoiceForRegenerate });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByRole('button', { name: 'Factuur opnieuw genereren' })).toBeVisible();
+});
+
+test('Factuur opnieuw genereren button is hidden on Verzonden invoice', async ({ page }) => {
+  const sentInvoice = {
+    ...mockConceptInvoiceForRegenerate,
+    status: 'Verzonden',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+  };
+
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: sentInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByRole('button', { name: 'Factuur opnieuw genereren' })).toBeHidden();
+});
+
+test('Factuur opnieuw genereren button is hidden on Betaald invoice', async ({ page }) => {
+  const paidInvoice = {
+    ...mockConceptInvoiceForRegenerate,
+    status: 'Betaald',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+    paidAtUtc: '2026-03-10T14:00:00Z',
+  };
+
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: paidInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByRole('button', { name: 'Factuur opnieuw genereren' })).toBeHidden();
+});
+
+test('clicking Factuur opnieuw genereren updates line items', async ({ page }) => {
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockConceptInvoiceForRegenerate });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices/inv-1/regenerate', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: mockRegeneratedInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+  await expect(page.getByText('Herenknippen')).toBeVisible();
+  await expect(page.getByText('Baard trimmen')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Factuur opnieuw genereren' }).click();
+
+  await expect(page.getByText('Haarkleuring')).toBeVisible();
+});

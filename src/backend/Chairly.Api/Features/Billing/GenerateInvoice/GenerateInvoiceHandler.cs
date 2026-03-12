@@ -10,7 +10,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.GenerateInvoice;
 
-internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHandler<GenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>>
+internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineItemBuilder lineItemBuilder) : IRequestHandler<GenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>> Handle(GenerateInvoiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -51,76 +51,10 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db) : IRequestHand
         return InvoiceMapper.ToResponse(invoice, clientFullName, clientSnapshot, staffMemberName);
     }
 
-    private async Task<VatSettings> ResolveVatSettingsAsync(CancellationToken cancellationToken)
-    {
-        var vatSettings = await db.VatSettings
-            .FirstOrDefaultAsync(v => v.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (vatSettings is not null)
-        {
-            return vatSettings;
-        }
-
-        vatSettings = new VatSettings
-        {
-            Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
-            DefaultVatRate = 21m,
-            CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
-        };
-        db.VatSettings.Add(vatSettings);
-        return vatSettings;
-    }
-
-    private static List<InvoiceLineItem> BuildLineItems(
-        IEnumerable<BookingService> bookingServices,
-        Dictionary<Guid, Service> services,
-        decimal defaultVatRate)
-    {
-        return bookingServices
-            .OrderBy(bs => bs.SortOrder)
-            .Select(bs =>
-            {
-                var effectiveVatPercentage = defaultVatRate;
-                if (services.TryGetValue(bs.ServiceId, out var service) && service.VatRate.HasValue)
-                {
-                    effectiveVatPercentage = service.VatRate.Value;
-                }
-
-                var unitPrice = bs.Price;
-                var vatAmount = Math.Round(unitPrice * effectiveVatPercentage / 100m, 2, MidpointRounding.AwayFromZero);
-                return new InvoiceLineItem
-                {
-                    Id = Guid.NewGuid(),
-                    Description = bs.ServiceName,
-                    Quantity = 1,
-                    UnitPrice = unitPrice,
-                    TotalPrice = unitPrice,
-                    VatPercentage = effectiveVatPercentage,
-                    VatAmount = vatAmount,
-                    SortOrder = bs.SortOrder,
-                    IsManual = false,
-                };
-            })
-            .ToList();
-    }
-
     private async Task<Invoice> BuildInvoiceAsync(Booking booking, CancellationToken cancellationToken)
     {
         var invoiceNumber = await GenerateInvoiceNumberAsync(cancellationToken).ConfigureAwait(false);
-        var vatSettings = await ResolveVatSettingsAsync(cancellationToken).ConfigureAwait(false);
-
-        var serviceIds = booking.BookingServices.Select(bs => bs.ServiceId).Distinct().ToList();
-        var services = await db.Services
-            .Where(s => serviceIds.Contains(s.Id))
-            .ToDictionaryAsync(s => s.Id, cancellationToken)
-            .ConfigureAwait(false);
-
-        var lineItems = BuildLineItems(booking.BookingServices, services, vatSettings.DefaultVatRate);
+        var lineItems = await lineItemBuilder.BuildFromBookingAsync(booking.BookingServices, cancellationToken).ConfigureAwait(false);
         var totalVatAmount = lineItems.Sum(li => li.VatAmount);
         var subTotalAmount = lineItems.Sum(li => li.TotalPrice) - totalVatAmount;
 
