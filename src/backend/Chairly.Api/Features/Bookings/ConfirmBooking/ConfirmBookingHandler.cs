@@ -1,6 +1,8 @@
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
+using Chairly.Domain.Events;
+using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -9,7 +11,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.ConfirmBooking;
 
 #pragma warning disable CA1812
-internal sealed class ConfirmBookingHandler(ChairlyDbContext db) : IRequestHandler<ConfirmBookingCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed class ConfirmBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher) : IRequestHandler<ConfirmBookingCommand, OneOf<Success, NotFound, Conflict>>
 {
     public async Task<OneOf<Success, NotFound, Conflict>> Handle(ConfirmBookingCommand command, CancellationToken cancellationToken = default)
     {
@@ -35,6 +37,10 @@ internal sealed class ConfirmBookingHandler(ChairlyDbContext db) : IRequestHandl
 #pragma warning restore MA0026
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await eventPublisher.PublishConfirmedAsync(
+            new BookingConfirmedEvent(booking.TenantId, booking.Id, booking.ClientId, booking.StartTime),
+            cancellationToken).ConfigureAwait(false);
 
         return new Success();
     }
