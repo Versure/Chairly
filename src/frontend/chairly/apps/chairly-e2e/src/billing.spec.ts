@@ -459,7 +459,7 @@ test('clicking Factuur bekijken navigates to the generated invoice detail page',
 // --- F4: Invoice regenerate e2e tests ---
 
 const mockConceptInvoiceForRegenerate = {
-  ...mockInvoiceSummary,
+  ...mockInvoiceDetail,
   subTotalAmount: 53.72,
   totalVatAmount: 11.28,
   totalAmount: 65,
@@ -511,6 +511,7 @@ const mockRegeneratedInvoice = {
 };
 
 test('Factuur opnieuw genereren button is visible on Concept invoice', async ({ page }) => {
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: mockConceptInvoiceForRegenerate });
@@ -536,6 +537,7 @@ test('Factuur opnieuw genereren button is hidden on Verzonden invoice', async ({
     sentAtUtc: '2026-03-10T12:00:00Z',
   };
 
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: sentInvoice });
@@ -562,6 +564,7 @@ test('Factuur opnieuw genereren button is hidden on Betaald invoice', async ({ p
     paidAtUtc: '2026-03-10T14:00:00Z',
   };
 
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: paidInvoice });
@@ -581,6 +584,7 @@ test('Factuur opnieuw genereren button is hidden on Betaald invoice', async ({ p
 });
 
 test('clicking Factuur opnieuw genereren updates line items', async ({ page }) => {
+  await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: mockConceptInvoiceForRegenerate });
