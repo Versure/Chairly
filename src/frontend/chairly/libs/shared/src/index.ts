@@ -3,6 +3,7 @@ export { InvoiceGenerationService } from './lib/data-access';
 export type { DropdownOption } from './lib/ui';
 export {
   ConfirmationDialogComponent,
+  DateInputComponent,
   LoadingIndicatorComponent,
   PageHeaderComponent,
   SearchableDropdownComponent,

@@ -28,10 +28,10 @@
           class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
           >Datum van</label
         >
-        <input
-          id="filter-from-date"
+        <chairly-date-input
           type="date"
-          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          inputId="filter-from-date"
+          placeholder="Datum van"
           [ngModel]="filterFromDate()"
           (ngModelChange)="filterFromDate.set($event)" />
       </div>
@@ -43,10 +43,10 @@
           class="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400"
           >Datum tot</label
         >
-        <input
-          id="filter-to-date"
+        <chairly-date-input
           type="date"
-          class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+          inputId="filter-to-date"
+          placeholder="Datum tot"
           [ngModel]="filterToDate()"
           (ngModelChange)="filterToDate.set($event)" />
       </div>

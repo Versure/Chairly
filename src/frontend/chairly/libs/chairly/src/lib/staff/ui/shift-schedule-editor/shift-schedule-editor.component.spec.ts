@@ -33,9 +33,9 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', initialSchedule);
     fixture.detectChanges();
 
-    // Initially 1 block = 2 time inputs
-    let timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
-    expect(timeInputs.length).toBe(2);
+    // Initially 1 block = 2 date-input components (start + end)
+    let dateInputs = fixture.nativeElement.querySelectorAll('chairly-date-input');
+    expect(dateInputs.length).toBe(2);
 
     // Click "+ Dienst toevoegen"
     const addButton = Array.from(
@@ -47,9 +47,9 @@ describe('ShiftScheduleEditorComponent', () => {
     addButton.click();
     fixture.detectChanges();
 
-    // Now 2 blocks = 4 time inputs
-    timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
-    expect(timeInputs.length).toBe(4);
+    // Now 2 blocks = 4 date-input components
+    dateInputs = fixture.nativeElement.querySelectorAll('chairly-date-input');
+    expect(dateInputs.length).toBe(4);
   });
 
   it('should remove a block and decrease block count for that day', () => {
@@ -62,11 +62,11 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', initialSchedule);
     fixture.detectChanges();
 
-    // Initially 2 blocks = 4 time inputs
-    let timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
-    expect(timeInputs.length).toBe(4);
+    // Initially 2 blocks = 4 date-input components
+    let dateInputs = fixture.nativeElement.querySelectorAll('chairly-date-input');
+    expect(dateInputs.length).toBe(4);
 
-    // Click first remove button (×)
+    // Click first remove button (x)
     const removeButton = fixture.nativeElement.querySelector(
       'button[aria-label="Dienst 1 verwijderen"]',
     ) as HTMLButtonElement;
@@ -74,9 +74,9 @@ describe('ShiftScheduleEditorComponent', () => {
     removeButton.click();
     fixture.detectChanges();
 
-    // Now 1 block = 2 time inputs
-    timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
-    expect(timeInputs.length).toBe(2);
+    // Now 1 block = 2 date-input components
+    dateInputs = fixture.nativeElement.querySelectorAll('chairly-date-input');
+    expect(dateInputs.length).toBe(2);
   });
 
   it('should emit updated schedule when toggling a day on', () => {
