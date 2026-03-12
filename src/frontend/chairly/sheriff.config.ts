@@ -32,6 +32,7 @@ export const sheriffConfig: SheriffConfig = {
       'domain:billing',
       'domain:bookings',
       'domain:clients',
+      'domain:notifications',
       'domain:services',
       'domain:settings',
       'domain:staff',
