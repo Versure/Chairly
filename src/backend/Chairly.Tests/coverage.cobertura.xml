@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.624" branch-rate="0.5687" version="1.9" timestamp="1773334087" lines-covered="2296" lines-valid="3679" branches-covered="339" branches-valid="596">
+<coverage line-rate="0.624" branch-rate="0.5687" version="1.9" timestamp="1773389925" lines-covered="2296" lines-valid="3679" branches-covered="339" branches-valid="596">
   <sources>
     <source>/home/jreuvers/projects/Chairly/.worktrees/notifications/backend/src/backend/</source>
   </sources>

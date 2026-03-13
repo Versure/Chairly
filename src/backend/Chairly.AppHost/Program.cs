@@ -8,15 +8,32 @@ var db = builder.AddPostgres("postgres")
     .WithDataVolume()
     .AddDatabase("ChairlyDb");
 
-var rabbitmq = builder.AddRabbitMQ("messaging")
+// Explicit credentials so developers can log into the RabbitMQ management UI (http://localhost:15672).
+var rabbitmqUser = builder.AddParameter("rabbitmq-user");
+var rabbitmqPassword = builder.AddParameter("rabbitmq-password", secret: true);
+
+var rabbitmq = builder.AddRabbitMQ("messaging", rabbitmqUser, rabbitmqPassword)
     .WithDataVolume()
     .WithManagementPlugin();
+
+// MailDev provides a local SMTP server and a web UI for inspecting captured emails.
+// Web UI: http://localhost:1080 — SMTP: localhost:1025
+var maildev = builder.AddContainer("maildev", "maildev/maildev", "2.2.1")
+    .WithHttpEndpoint(targetPort: 1080, name: "http")
+    .WithEndpoint(targetPort: 1025, name: "smtp");
+
+var smtpEndpoint = maildev.GetEndpoint("smtp");
 
 builder.AddProject<Projects.Chairly_Api>("api")
     .WithReference(db)
     .WaitFor(db)
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq)
+    .WaitFor(maildev)
+    .WithEnvironment("Smtp__Host", smtpEndpoint.Property(EndpointProperty.Host))
+    .WithEnvironment("Smtp__Port", smtpEndpoint.Property(EndpointProperty.Port))
+    .WithEnvironment("Smtp__FromAddress", "noreply@chairly.local")
+    .WithEnvironment("Smtp__FromName", "Chairly")
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
 builder.Build().Run();
