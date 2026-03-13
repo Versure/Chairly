@@ -11,7 +11,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { interval } from 'rxjs';
 
-import { PageHeaderComponent } from '@org/shared-lib';
+import { LoadingIndicatorComponent, PageHeaderComponent } from '@org/shared-lib';
 
 import { NotificationStore } from '../../data-access';
 import { NotificationSummary } from '../../models';
@@ -21,7 +21,7 @@ import { NotificationTypeLabelPipe } from '../../pipes';
   selector: 'chairly-notification-log-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, NotificationTypeLabelPipe, PageHeaderComponent],
+  imports: [DatePipe, LoadingIndicatorComponent, NotificationTypeLabelPipe, PageHeaderComponent],
   templateUrl: './notification-log-page.component.html',
 })
 export class NotificationLogPageComponent implements OnInit {
