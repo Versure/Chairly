@@ -40,6 +40,21 @@ internal static class EmailTemplates
         return (subject, htmlBody);
     }
 
+    public static (string Subject, string HtmlBody) BookingReceived(string clientName, DateTimeOffset startTime, string serviceSummary, string salonName)
+    {
+        var subject = $"Nieuwe boeking bij {salonName}";
+        var formattedDate = FormatDutchDate(startTime);
+        var htmlBody = BuildTemplate(
+            salonName,
+            clientName,
+            "Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.",
+            formattedDate,
+            serviceSummary,
+            "Wij nemen zo snel mogelijk contact met u op.");
+
+        return (subject, htmlBody);
+    }
+
     public static (string Subject, string HtmlBody) BookingCancellation(string clientName, DateTimeOffset startTime, string salonName)
     {
         var subject = "Uw afspraak is geannuleerd";

@@ -40,7 +40,7 @@ public class BookingEventConsumerTests
     }
 
     [Fact]
-    public async Task HandleMessage_BookingCreated_CreatesConfirmationAndReminder()
+    public async Task HandleMessage_BookingCreated_CreatesReceivedAndReminder()
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingCreatedEvent(
@@ -55,12 +55,12 @@ public class BookingEventConsumerTests
         await using var db = CreateDbContext(dbName);
         var notifications = await db.Notifications.ToListAsync();
         Assert.Equal(2, notifications.Count);
-        Assert.Contains(notifications, n => n.Type == NotificationType.BookingConfirmation);
+        Assert.Contains(notifications, n => n.Type == NotificationType.BookingReceived);
         Assert.Contains(notifications, n => n.Type == NotificationType.BookingReminder);
     }
 
     [Fact]
-    public async Task HandleMessage_BookingConfirmed_CreatesConfirmationAndReminder()
+    public async Task HandleMessage_BookingConfirmed_CreatesConfirmationOnly()
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingConfirmedEvent(
@@ -74,9 +74,8 @@ public class BookingEventConsumerTests
 
         await using var db = CreateDbContext(dbName);
         var notifications = await db.Notifications.ToListAsync();
-        Assert.Equal(2, notifications.Count);
-        Assert.Contains(notifications, n => n.Type == NotificationType.BookingConfirmation);
-        Assert.Contains(notifications, n => n.Type == NotificationType.BookingReminder);
+        Assert.Single(notifications);
+        Assert.Equal(NotificationType.BookingConfirmation, notifications[0].Type);
     }
 
     [Fact]
@@ -167,5 +166,24 @@ public class BookingEventConsumerTests
         Assert.NotNull(reminder);
         var expectedSchedule = startTime.AddHours(-24);
         Assert.Equal(expectedSchedule.DateTime, reminder.ScheduledAtUtc.DateTime, TimeSpan.FromSeconds(1));
+    }
+
+    [Fact]
+    public async Task HandleMessage_BookingCreated_SameDayBooking_DoesNotCreateReminder()
+    {
+        var (consumer, dbName) = CreateConsumer();
+        var bookingEvent = new BookingCreatedEvent(
+            TenantConstants.DefaultTenantId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddHours(2));
+
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(bookingEvent));
+        await consumer.HandleMessageAsync("booking.created", body, CancellationToken.None);
+
+        await using var db = CreateDbContext(dbName);
+        var notifications = await db.Notifications.ToListAsync();
+        Assert.Single(notifications);
+        Assert.Equal(NotificationType.BookingReceived, notifications[0].Type);
     }
 }
