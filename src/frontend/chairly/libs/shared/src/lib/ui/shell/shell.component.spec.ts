@@ -47,7 +47,7 @@ describe('ShellComponent', () => {
 
   it('all nav items render an SVG icon', () => {
     const navItems = fixture.nativeElement.querySelectorAll('nav ul li a');
-    expect(navItems.length).toBe(6);
+    expect(navItems.length).toBe(7);
 
     navItems.forEach((link: HTMLElement) => {
       const svg = link.querySelector('svg');

@@ -1,10 +1,12 @@
 using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
+using Chairly.Api.Features.Notifications;
 using Chairly.Api.Features.Services;
 using Chairly.Api.Features.Settings;
 using Chairly.Api.Features.Staff;
 using Chairly.Api.Shared.Mediator;
+using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +24,13 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ChairlyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ChairlyDb")));
+
+builder.AddRabbitMQClient("messaging");
+builder.Services.AddScoped<IBookingEventPublisher, BookingEventPublisher>();
+builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.BookingEventConsumer>();
+builder.Services.Configure<Chairly.Api.Features.Notifications.Infrastructure.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddScoped<Chairly.Api.Features.Notifications.Infrastructure.IEmailSender, Chairly.Api.Features.Notifications.Infrastructure.SmtpEmailSender>();
+builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.NotificationDispatcher>();
 
 var app = builder.Build();
 
@@ -64,6 +73,7 @@ app.MapStaffEndpoints();
 app.MapClientEndpoints();
 app.MapRecipeEndpoints();
 app.MapSettingsEndpoints();
+app.MapNotificationEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts
