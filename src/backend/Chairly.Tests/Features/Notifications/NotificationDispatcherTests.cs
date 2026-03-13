@@ -61,6 +61,15 @@ public class NotificationDispatcherTests
     {
         using var db = CreateDbContext(dbName);
 
+        var tenantSettings = new TenantSettings
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TenantConstants.DefaultTenantId,
+            CompanyName = "Testsalon",
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        db.TenantSettings.Add(tenantSettings);
+
         var client = new Client
         {
             Id = Guid.NewGuid(),
