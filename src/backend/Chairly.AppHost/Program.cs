@@ -9,6 +9,7 @@ var db = builder.AddPostgres("postgres")
     .AddDatabase("ChairlyDb");
 
 // Explicit credentials so developers can log into the RabbitMQ management UI (http://localhost:15672).
+// Default credentials: chairly / chairly (see appsettings.json > Parameters).
 var rabbitmqUser = builder.AddParameter("rabbitmq-user");
 var rabbitmqPassword = builder.AddParameter("rabbitmq-password", secret: true);
 

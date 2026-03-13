@@ -6,13 +6,14 @@ using Chairly.Domain.Events;
 using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OneOf;
 using OneOf.Types;
 
 namespace Chairly.Api.Features.Bookings.CreateBooking;
 
 #pragma warning disable CA1812
-internal sealed class CreateBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
+internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher, ILogger<CreateBookingHandler> logger) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
 {
     public async Task<OneOf<BookingResponse, NotFound, Conflict>> Handle(CreateBookingCommand command, CancellationToken cancellationToken = default)
     {
@@ -48,9 +49,18 @@ internal sealed class CreateBookingHandler(ChairlyDbContext db, IBookingEventPub
         db.Bookings.Add(booking);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        await eventPublisher.PublishCreatedAsync(
-            new BookingCreatedEvent(booking.TenantId, booking.Id, booking.ClientId, booking.StartTime),
-            cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await eventPublisher.PublishCreatedAsync(
+                new BookingCreatedEvent(booking.TenantId, booking.Id, booking.ClientId, booking.StartTime),
+                cancellationToken).ConfigureAwait(false);
+        }
+#pragma warning disable CA1031 // Best-effort event publishing; booking is already persisted
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogEventPublishFailed(logger, booking.Id, ex);
+        }
 
         return BookingMapper.ToResponse(booking);
     }
@@ -127,5 +137,8 @@ internal sealed class CreateBookingHandler(ChairlyDbContext db, IBookingEventPub
             });
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to publish event for booking {BookingId}; notification may be delayed")]
+    private static partial void LogEventPublishFailed(ILogger logger, Guid bookingId, Exception exception);
 }
 #pragma warning restore CA1812
