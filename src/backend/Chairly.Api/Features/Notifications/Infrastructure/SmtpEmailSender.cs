@@ -23,7 +23,7 @@ internal sealed class SmtpEmailSender(IOptions<SmtpSettings> options) : IEmailSe
         message.Body = bodyBuilder.ToMessageBody();
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(settings.Host, settings.Port, MailKit.Security.SecureSocketOptions.Auto, cancellationToken).ConfigureAwait(false);
+        await client.ConnectAsync(settings.Host, settings.Port, MailKit.Security.SecureSocketOptions.None, cancellationToken).ConfigureAwait(false);
 
         if (!string.IsNullOrEmpty(settings.Username))
         {
