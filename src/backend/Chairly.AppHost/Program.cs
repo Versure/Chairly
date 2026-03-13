@@ -13,6 +13,9 @@ var db = builder.AddPostgres("postgres")
 var rabbitmqUser = builder.AddParameter("rabbitmq-user");
 var rabbitmqPassword = builder.AddParameter("rabbitmq-password", secret: true);
 
+// WithDataVolume() persists RabbitMQ data (including credentials) across restarts.
+// If credentials change and login fails, delete the stale volume:
+//   docker volume rm $(docker volume ls -q --filter name=messaging)
 var rabbitmq = builder.AddRabbitMQ("messaging", rabbitmqUser, rabbitmqPassword)
     .WithDataVolume()
     .WithManagementPlugin();

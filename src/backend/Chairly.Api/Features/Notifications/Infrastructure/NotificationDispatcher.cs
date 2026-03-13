@@ -141,11 +141,16 @@ internal sealed partial class NotificationDispatcher(
 
         var startTime = booking?.StartTime ?? notification.ScheduledAtUtc;
 
+        var settings = await db.TenantSettings
+            .FirstOrDefaultAsync(s => s.TenantId == notification.TenantId, cancellationToken)
+            .ConfigureAwait(false);
+        var salonName = settings?.CompanyName ?? "Uw salon";
+
         return notification.Type switch
         {
-            NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary),
-            NotificationType.BookingReminder => EmailTemplates.BookingReminder(clientName, startTime, serviceSummary),
-            NotificationType.BookingCancellation => EmailTemplates.BookingCancellation(clientName, startTime),
+            NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary, salonName),
+            NotificationType.BookingReminder => EmailTemplates.BookingReminder(clientName, startTime, serviceSummary, salonName),
+            NotificationType.BookingCancellation => EmailTemplates.BookingCancellation(clientName, startTime, salonName),
             _ => (string.Empty, string.Empty),
         };
     }
