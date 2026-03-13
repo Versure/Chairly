@@ -79,6 +79,31 @@ public class EmailTemplateTests
     }
 
     [Fact]
+    public void BookingReceived_ReturnsNonEmptySubjectAndBody()
+    {
+        var (subject, body) = EmailTemplates.BookingReceived("Jan Smit", DateTimeOffset.UtcNow, "Herenknippen", "Kapsalon De Knip");
+
+        Assert.False(string.IsNullOrEmpty(subject));
+        Assert.False(string.IsNullOrEmpty(body));
+    }
+
+    [Fact]
+    public void BookingReceived_SubjectContainsNieuweBoeking()
+    {
+        var (subject, _) = EmailTemplates.BookingReceived("Jan Smit", DateTimeOffset.UtcNow, "Herenknippen", "Kapsalon De Knip");
+
+        Assert.Contains("Nieuwe boeking", subject, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BookingReceived_BodyContainsClientName()
+    {
+        var (_, body) = EmailTemplates.BookingReceived("Jan Smit", DateTimeOffset.UtcNow, "Herenknippen", "Kapsalon De Knip");
+
+        Assert.Contains("Jan Smit", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void BookingCancellation_ReturnsNonEmptySubjectAndBody()
     {
         var (subject, body) = EmailTemplates.BookingCancellation("Jan Smit", DateTimeOffset.UtcNow, "Kapsalon De Knip");

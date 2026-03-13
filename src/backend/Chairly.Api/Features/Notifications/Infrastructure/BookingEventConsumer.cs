@@ -94,7 +94,7 @@ internal sealed partial class BookingEventConsumer(
                     var created = JsonSerializer.Deserialize<BookingCreatedEvent>(json);
                     if (created is not null)
                     {
-                        await HandleBookingCreatedOrConfirmedAsync(db, created.TenantId, created.BookingId, created.ClientId, created.StartTime, cancellationToken).ConfigureAwait(false);
+                        await HandleBookingCreatedAsync(db, created.TenantId, created.BookingId, created.ClientId, created.StartTime, cancellationToken).ConfigureAwait(false);
                     }
 
                     break;
@@ -103,7 +103,7 @@ internal sealed partial class BookingEventConsumer(
                     var confirmed = JsonSerializer.Deserialize<BookingConfirmedEvent>(json);
                     if (confirmed is not null)
                     {
-                        await HandleBookingCreatedOrConfirmedAsync(db, confirmed.TenantId, confirmed.BookingId, confirmed.ClientId, confirmed.StartTime, cancellationToken).ConfigureAwait(false);
+                        await HandleBookingConfirmedAsync(db, confirmed.TenantId, confirmed.BookingId, confirmed.ClientId, confirmed.StartTime, cancellationToken).ConfigureAwait(false);
                     }
 
                     break;
@@ -128,7 +128,59 @@ internal sealed partial class BookingEventConsumer(
         }
     }
 
-    private static async Task HandleBookingCreatedOrConfirmedAsync(
+    private static async Task HandleBookingCreatedAsync(
+        ChairlyDbContext db,
+        Guid tenantId,
+        Guid bookingId,
+        Guid clientId,
+        DateTimeOffset startTime,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var received = new Notification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            RecipientId = clientId,
+            RecipientType = RecipientType.Client,
+            Channel = NotificationChannel.Email,
+            Type = NotificationType.BookingReceived,
+            ReferenceId = bookingId,
+            ScheduledAtUtc = now,
+            CreatedAtUtc = now,
+#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
+            CreatedBy = Guid.Empty,
+#pragma warning restore MA0026
+        };
+
+        db.Notifications.Add(received);
+
+        if (startTime.AddHours(-24) > now)
+        {
+            var reminder = new Notification
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                RecipientId = clientId,
+                RecipientType = RecipientType.Client,
+                Channel = NotificationChannel.Email,
+                Type = NotificationType.BookingReminder,
+                ReferenceId = bookingId,
+                ScheduledAtUtc = startTime.AddHours(-24),
+                CreatedAtUtc = now,
+#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
+                CreatedBy = Guid.Empty,
+#pragma warning restore MA0026
+            };
+
+            db.Notifications.Add(reminder);
+        }
+
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task HandleBookingConfirmedAsync(
         ChairlyDbContext db,
         Guid tenantId,
         Guid bookingId,
@@ -154,24 +206,7 @@ internal sealed partial class BookingEventConsumer(
 #pragma warning restore MA0026
         };
 
-        var reminder = new Notification
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            RecipientId = clientId,
-            RecipientType = RecipientType.Client,
-            Channel = NotificationChannel.Email,
-            Type = NotificationType.BookingReminder,
-            ReferenceId = bookingId,
-            ScheduledAtUtc = startTime.AddHours(-24),
-            CreatedAtUtc = now,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
-        };
-
         db.Notifications.Add(confirmation);
-        db.Notifications.Add(reminder);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 

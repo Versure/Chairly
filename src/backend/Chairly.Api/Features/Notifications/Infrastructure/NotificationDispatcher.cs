@@ -151,6 +151,7 @@ internal sealed partial class NotificationDispatcher(
             NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary, salonName),
             NotificationType.BookingReminder => EmailTemplates.BookingReminder(clientName, startTime, serviceSummary, salonName),
             NotificationType.BookingCancellation => EmailTemplates.BookingCancellation(clientName, startTime, salonName),
+            NotificationType.BookingReceived => EmailTemplates.BookingReceived(clientName, startTime, serviceSummary, salonName),
             _ => (string.Empty, string.Empty),
         };
     }
