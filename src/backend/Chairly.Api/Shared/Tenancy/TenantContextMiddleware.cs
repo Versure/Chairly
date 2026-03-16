@@ -19,8 +19,9 @@ internal sealed class TenantContextMiddleware(RequestDelegate next)
         }
 
         var tenantContext = httpContext.RequestServices.GetRequiredService<TenantContext>();
+        var configuration = httpContext.RequestServices.GetRequiredService<IConfiguration>();
 
-        if (!TryPopulateTenantContext(httpContext.User, tenantContext))
+        if (!TryPopulateTenantContext(httpContext.User, tenantContext, configuration))
         {
             httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
@@ -29,9 +30,9 @@ internal sealed class TenantContextMiddleware(RequestDelegate next)
         await next(httpContext).ConfigureAwait(false);
     }
 
-    internal static bool TryPopulateTenantContext(ClaimsPrincipal user, TenantContext tenantContext)
+    internal static bool TryPopulateTenantContext(ClaimsPrincipal user, TenantContext tenantContext, IConfiguration? configuration = null)
     {
-        if (!TryExtractTenantId(user, out var tenantId))
+        if (!TryExtractTenantId(user, configuration, out var tenantId))
         {
             return false;
         }
@@ -49,7 +50,7 @@ internal sealed class TenantContextMiddleware(RequestDelegate next)
         return true;
     }
 
-    private static bool TryExtractTenantId(ClaimsPrincipal user, out Guid tenantId)
+    private static bool TryExtractTenantId(ClaimsPrincipal user, IConfiguration? configuration, out Guid tenantId)
     {
         tenantId = Guid.Empty;
         var issuer = user.FindFirst("iss")?.Value;
@@ -66,7 +67,16 @@ internal sealed class TenantContextMiddleware(RequestDelegate next)
         }
 
         var realmName = issuer[(realmIndex + realmsSegment.Length)..];
-        return Guid.TryParse(realmName, out tenantId);
+
+        // Production path: realm name is the tenant GUID itself.
+        if (Guid.TryParse(realmName, out tenantId))
+        {
+            return true;
+        }
+
+        // Dev path: realm name is human-readable; resolve tenant ID from configuration.
+        var configuredTenantId = configuration?["Keycloak:TenantId"];
+        return configuredTenantId is not null && Guid.TryParse(configuredTenantId, out tenantId);
     }
 
     private static string ExtractRole(ClaimsPrincipal user)
