@@ -540,7 +540,8 @@ namespace Chairly.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId", "Email")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("\"Email\" != ''");
 
                     b.HasIndex("FirstName", "LastName", "TenantId");
 
