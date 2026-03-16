@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.6047" branch-rate="0.5574" version="1.9" timestamp="1773653572" lines-covered="2571" lines-valid="4251" branches-covered="383" branches-valid="687">
+<coverage line-rate="0.6047" branch-rate="0.5574" version="1.9" timestamp="1773659021" lines-covered="2571" lines-valid="4251" branches-covered="383" branches-valid="687">
   <sources>
     <source>/home/jreuvers/projects/Chairly/.worktrees/authentication/backend/src/backend/</source>
   </sources>

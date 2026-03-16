@@ -34,7 +34,8 @@ namespace Chairly.Infrastructure.Migrations
 
             migrationBuilder.Sql("""
                 CREATE UNIQUE INDEX IF NOT EXISTS "IX_StaffMembers_TenantId_Email"
-                    ON "StaffMembers" ("TenantId", "Email");
+                    ON "StaffMembers" ("TenantId", "Email")
+                    WHERE "Email" != '';
                 """);
         }
 

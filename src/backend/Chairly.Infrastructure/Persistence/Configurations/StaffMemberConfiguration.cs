@@ -57,7 +57,7 @@ internal sealed class StaffMemberConfiguration : IEntityTypeConfiguration<StaffM
             .HasConversion<string>();
 
         builder.HasIndex(s => new { s.FirstName, s.LastName, s.TenantId });
-        builder.HasIndex(s => new { s.TenantId, s.Email }).IsUnique();
+        builder.HasIndex(s => new { s.TenantId, s.Email }).IsUnique().HasFilter("\"Email\" != ''");
     }
 }
 #pragma warning restore CA1812
