@@ -3,18 +3,21 @@ import { test as base } from '@playwright/test';
 export const test = base.extend({
   page: async ({ page }, use) => {
     // Mock /api/config so the app can bootstrap without a real backend.
-    // Keycloak init will fail (no server) but the app handles this gracefully.
+    // keycloakUrl points to a local path so Playwright intercepts it instantly.
     await page.route('**/api/config', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          keycloakUrl: 'http://localhost:0',
+          keycloakUrl: 'http://localhost:4200/keycloak-mock',
           keycloakRealm: 'test',
           keycloakClientId: 'test',
         }),
       }),
     );
+
+    // Abort Keycloak OIDC discovery requests so keycloak.init() fails instantly.
+    await page.route('**/keycloak-mock/**', (route) => route.abort());
 
     await page.route('**/api/**', (route) => {
       const url = route.request().url();
