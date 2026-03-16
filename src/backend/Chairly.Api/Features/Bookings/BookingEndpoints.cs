@@ -14,7 +14,8 @@ internal static class BookingEndpoints
 {
     public static IEndpointRouteBuilder MapBookingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/bookings");
+        var group = app.MapGroup("/api/bookings")
+            .RequireAuthorization("RequireStaff");
 
         group.MapGetBookingsList();
         group.MapGetBooking();

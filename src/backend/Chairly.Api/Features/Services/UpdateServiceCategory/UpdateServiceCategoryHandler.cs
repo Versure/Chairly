@@ -8,14 +8,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Services.UpdateServiceCategory;
 
 #pragma warning disable CA1812
-internal sealed class UpdateServiceCategoryHandler(ChairlyDbContext db) : IRequestHandler<UpdateServiceCategoryCommand, OneOf<ServiceCategoryResponse, NotFound>>
+internal sealed class UpdateServiceCategoryHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateServiceCategoryCommand, OneOf<ServiceCategoryResponse, NotFound>>
 {
     public async Task<OneOf<ServiceCategoryResponse, NotFound>> Handle(UpdateServiceCategoryCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var category = await db.ServiceCategories
-            .FirstOrDefaultAsync(sc => sc.Id == command.Id && sc.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(sc => sc.Id == command.Id && sc.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (category is null)

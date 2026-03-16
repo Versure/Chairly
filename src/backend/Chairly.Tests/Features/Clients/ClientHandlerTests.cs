@@ -4,7 +4,6 @@ using Chairly.Api.Features.Clients.DeleteClient;
 using Chairly.Api.Features.Clients.GetClientsList;
 using Chairly.Api.Features.Clients.UpdateClient;
 using Chairly.Api.Shared.Results;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public class ClientHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = firstName,
             LastName = lastName,
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -48,7 +47,7 @@ public class ClientHandlerTests
         CreateTestClient(db, firstName: "Active", lastName: "Client");
         CreateTestClient(db, firstName: "Deleted", lastName: "Client", deleted: true);
 
-        var handler = new GetClientsListHandler(db);
+        var handler = new GetClientsListHandler(db, TestTenantContext.Create());
         var result = (await handler.Handle(new GetClientsListQuery())).ToList();
 
         Assert.Single(result);
@@ -60,7 +59,7 @@ public class ClientHandlerTests
     public async Task CreateClientHandler_HappyPath_CreatesAndReturnsClient()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateClientHandler(db);
+        var handler = new CreateClientHandler(db, TestTenantContext.Create());
         var command = new CreateClientCommand
         {
             FirstName = "Pieter",
@@ -75,7 +74,7 @@ public class ClientHandlerTests
         Assert.Equal("de Vries", result.LastName);
         Assert.Equal("pieter@example.com", result.Email);
         var saved = await db.Clients.FirstAsync();
-        Assert.Equal(TenantConstants.DefaultTenantId, saved.TenantId);
+        Assert.Equal(TestTenantContext.DefaultTenantId, saved.TenantId);
     }
 
     [Fact]
@@ -101,7 +100,7 @@ public class ClientHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestClient(db, firstName: "Oud", lastName: "Naam");
-        var handler = new UpdateClientHandler(db);
+        var handler = new UpdateClientHandler(db, TestTenantContext.Create());
         var command = new UpdateClientCommand
         {
             Id = existing.Id,
@@ -122,7 +121,7 @@ public class ClientHandlerTests
     public async Task UpdateClientHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateClientHandler(db);
+        var handler = new UpdateClientHandler(db, TestTenantContext.Create());
         var command = new UpdateClientCommand
         {
             Id = Guid.NewGuid(),
@@ -145,7 +144,7 @@ public class ClientHandlerTests
         CreateTestClient(db, firstName: "Piet", lastName: "Bakker");
         CreateTestClient(db, firstName: "Anna", lastName: "Bakker");
 
-        var handler = new GetClientsListHandler(db);
+        var handler = new GetClientsListHandler(db, TestTenantContext.Create());
         var result = (await handler.Handle(new GetClientsListQuery())).ToList();
 
         Assert.Equal(3, result.Count);
@@ -163,7 +162,7 @@ public class ClientHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestClient(db);
-        var handler = new DeleteClientHandler(db);
+        var handler = new DeleteClientHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeleteClientCommand(existing.Id));
 
@@ -176,7 +175,7 @@ public class ClientHandlerTests
     public async Task DeleteClientHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new DeleteClientHandler(db);
+        var handler = new DeleteClientHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeleteClientCommand(Guid.NewGuid()));
 
@@ -193,7 +192,7 @@ public class ClientHandlerTests
         existing.DeletedBy = Guid.Empty;
         await db.SaveChangesAsync();
 
-        var handler = new DeleteClientHandler(db);
+        var handler = new DeleteClientHandler(db, TestTenantContext.Create());
         var result = await handler.Handle(new DeleteClientCommand(existing.Id));
 
         Assert.IsType<Conflict>(result.AsT2);

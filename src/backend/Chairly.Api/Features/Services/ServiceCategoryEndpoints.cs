@@ -9,12 +9,17 @@ internal static class ServiceCategoryEndpoints
 {
     public static IEndpointRouteBuilder MapServiceCategoryEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/service-categories");
+        var readGroup = app.MapGroup("/api/service-categories")
+            .RequireAuthorization("RequireStaff");
 
-        group.MapCreateServiceCategory();
-        group.MapGetServiceCategoriesList();
-        group.MapUpdateServiceCategory();
-        group.MapDeleteServiceCategory();
+        readGroup.MapGetServiceCategoriesList();
+
+        var writeGroup = app.MapGroup("/api/service-categories")
+            .RequireAuthorization("RequireManager");
+
+        writeGroup.MapCreateServiceCategory();
+        writeGroup.MapUpdateServiceCategory();
+        writeGroup.MapDeleteServiceCategory();
 
         return app;
     }

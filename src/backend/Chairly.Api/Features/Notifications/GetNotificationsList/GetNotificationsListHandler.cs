@@ -8,14 +8,14 @@ using Microsoft.EntityFrameworkCore;
 #pragma warning disable CA1812 // Instantiated via DI
 namespace Chairly.Api.Features.Notifications.GetNotificationsList;
 
-internal sealed class GetNotificationsListHandler(ChairlyDbContext db) : IRequestHandler<GetNotificationsListQuery, IReadOnlyList<NotificationResponse>>
+internal sealed class GetNotificationsListHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetNotificationsListQuery, IReadOnlyList<NotificationResponse>>
 {
     public async Task<IReadOnlyList<NotificationResponse>> Handle(GetNotificationsListQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         var notifications = await db.Notifications
-            .Where(n => n.TenantId == TenantConstants.DefaultTenantId)
+            .Where(n => n.TenantId == tenantContext.TenantId)
             .OrderByDescending(n => n.CreatedAtUtc)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);

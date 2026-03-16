@@ -14,7 +14,8 @@ internal static class BillingEndpoints
 {
     public static IEndpointRouteBuilder MapBillingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/invoices");
+        var group = app.MapGroup("/api/invoices")
+            .RequireAuthorization("RequireManager");
 
         group.MapGenerateInvoice();
         group.MapGetInvoicesList();

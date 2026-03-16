@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing;
 
-internal sealed class InvoiceLineItemBuilder(ChairlyDbContext db)
+internal sealed class InvoiceLineItemBuilder(ChairlyDbContext db, ITenantContext tenantContext)
 {
     public async Task<List<InvoiceLineItem>> BuildFromBookingAsync(
         IEnumerable<BookingService> bookingServices,
@@ -26,7 +26,7 @@ internal sealed class InvoiceLineItemBuilder(ChairlyDbContext db)
     internal async Task<VatSettings> ResolveVatSettingsAsync(CancellationToken cancellationToken)
     {
         var vatSettings = await db.VatSettings
-            .FirstOrDefaultAsync(v => v.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(v => v.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (vatSettings is not null)
@@ -37,12 +37,10 @@ internal sealed class InvoiceLineItemBuilder(ChairlyDbContext db)
         vatSettings = new VatSettings
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             DefaultVatRate = 21m,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
         db.VatSettings.Add(vatSettings);
         return vatSettings;

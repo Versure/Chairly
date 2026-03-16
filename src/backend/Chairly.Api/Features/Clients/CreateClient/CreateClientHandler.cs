@@ -6,7 +6,7 @@ using Chairly.Infrastructure.Persistence;
 namespace Chairly.Api.Features.Clients.CreateClient;
 
 #pragma warning disable CA1812
-internal sealed class CreateClientHandler(ChairlyDbContext db) : IRequestHandler<CreateClientCommand, ClientResponse>
+internal sealed class CreateClientHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<CreateClientCommand, ClientResponse>
 {
     public async Task<ClientResponse> Handle(CreateClientCommand command, CancellationToken cancellationToken = default)
     {
@@ -15,16 +15,14 @@ internal sealed class CreateClientHandler(ChairlyDbContext db) : IRequestHandler
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             FirstName = command.FirstName,
             LastName = command.LastName,
             Email = command.Email,
             PhoneNumber = command.PhoneNumber,
             Notes = command.Notes,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
 
         db.Clients.Add(client);

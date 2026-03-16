@@ -28,16 +28,44 @@ var maildev = builder.AddContainer("maildev", "maildev/maildev", "2.2.1")
 
 var smtpEndpoint = maildev.GetEndpoint("smtp");
 
+// Keycloak identity provider — realm-per-tenant (ADR-008).
+// Admin UI: http://localhost:8080/admin (admin / <keycloakAdminPassword>)
+// WithDataVolume() persists realm configuration across restarts.
+// After first run, manually create the realm and clients — see docs/keycloak-setup.md.
+var keycloakAdminPassword = builder.AddParameter("keycloak-admin-password", secret: true);
+
+var keycloak = builder.AddContainer("keycloak", "quay.io/keycloak/keycloak", "26.2")
+    .WithHttpEndpoint(targetPort: 8080, name: "http")
+    .WithEnvironment("KEYCLOAK_ADMIN", "admin")
+    .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
+    .WithArgs("start-dev")
+    .WithVolume("keycloak-data", "/opt/keycloak/data")
+    .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/admin", DisplayText = "Keycloak Admin" });
+
+var keycloakEndpoint = keycloak.GetEndpoint("http");
+
+// Default realm for local development — matches the default tenant ID used in tests.
+var defaultRealm = "00000000-0000-0000-0000-000000000001";
+
+// Keycloak Admin API service account credentials.
+var keycloakAdminClientSecret = builder.AddParameter("keycloak-admin-client-secret", secret: true);
+
 builder.AddProject<Projects.Chairly_Api>("api")
     .WithReference(db)
     .WaitFor(db)
     .WithReference(rabbitmq)
     .WaitFor(rabbitmq)
     .WaitFor(maildev)
+    .WaitFor(keycloak)
     .WithEnvironment("Smtp__Host", smtpEndpoint.Property(EndpointProperty.Host))
     .WithEnvironment("Smtp__Port", smtpEndpoint.Property(EndpointProperty.Port))
     .WithEnvironment("Smtp__FromAddress", "noreply@chairly.local")
     .WithEnvironment("Smtp__FromName", "Chairly")
+    .WithEnvironment("Keycloak__Url", keycloakEndpoint)
+    .WithEnvironment("Keycloak__Realm", defaultRealm)
+    .WithEnvironment("Keycloak__ClientId", "chairly-frontend")
+    .WithEnvironment("Keycloak__AdminClientId", "chairly-admin")
+    .WithEnvironment("Keycloak__AdminClientSecret", keycloakAdminClientSecret)
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
 builder.Build().Run();

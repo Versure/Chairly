@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Services.CreateService;
 
 #pragma warning disable CA1812
-internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandler<CreateServiceCommand, ServiceResponse>
+internal sealed class CreateServiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<CreateServiceCommand, ServiceResponse>
 {
     public async Task<ServiceResponse> Handle(CreateServiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -19,7 +19,7 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             Name = command.Name,
             Description = command.Description,
             Duration = command.Duration,
@@ -29,9 +29,7 @@ internal sealed class CreateServiceHandler(ChairlyDbContext db) : IRequestHandle
             IsActive = true,
             SortOrder = command.SortOrder,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
 
         db.Services.Add(service);

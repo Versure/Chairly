@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Settings.GetVatSettings;
 
-internal sealed class GetVatSettingsHandler(ChairlyDbContext db) : IRequestHandler<GetVatSettingsQuery, VatSettingsResponse>
+internal sealed class GetVatSettingsHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetVatSettingsQuery, VatSettingsResponse>
 {
     public async Task<VatSettingsResponse> Handle(GetVatSettingsQuery query, CancellationToken cancellationToken = default)
     {
         var vatSettings = await db.VatSettings
-            .FirstOrDefaultAsync(v => v.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(v => v.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (vatSettings is null)
@@ -20,12 +20,10 @@ internal sealed class GetVatSettingsHandler(ChairlyDbContext db) : IRequestHandl
             vatSettings = new VatSettings
             {
                 Id = Guid.NewGuid(),
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = tenantContext.TenantId,
                 DefaultVatRate = 21m,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-                CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+                CreatedBy = tenantContext.UserId,
             };
             db.VatSettings.Add(vatSettings);
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

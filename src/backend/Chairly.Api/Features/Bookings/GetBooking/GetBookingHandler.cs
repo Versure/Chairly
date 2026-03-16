@@ -8,7 +8,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.GetBooking;
 
 #pragma warning disable CA1812
-internal sealed class GetBookingHandler(ChairlyDbContext db) : IRequestHandler<GetBookingQuery, OneOf<BookingResponse, NotFound>>
+internal sealed class GetBookingHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetBookingQuery, OneOf<BookingResponse, NotFound>>
 {
     public async Task<OneOf<BookingResponse, NotFound>> Handle(GetBookingQuery query, CancellationToken cancellationToken = default)
     {
@@ -16,7 +16,7 @@ internal sealed class GetBookingHandler(ChairlyDbContext db) : IRequestHandler<G
 
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
-            .FirstOrDefaultAsync(b => b.Id == query.Id && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == query.Id && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)

@@ -1,16 +1,23 @@
 using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
+using Chairly.Api.Features.Config;
 using Chairly.Api.Features.Notifications;
 using Chairly.Api.Features.Services;
 using Chairly.Api.Features.Settings;
 using Chairly.Api.Features.Staff;
+using Chairly.Api.Features.Tenants;
 using Chairly.Api.Shared.Mediator;
+using Chairly.Api.Shared.Tenancy;
+using Chairly.Infrastructure.Keycloak;
 using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +38,54 @@ builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastruct
 builder.Services.Configure<Chairly.Api.Features.Notifications.Infrastructure.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<Chairly.Api.Features.Notifications.Infrastructure.IEmailSender, Chairly.Api.Features.Notifications.Infrastructure.SmtpEmailSender>();
 builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.NotificationDispatcher>();
+
+// Tenant context: scoped TenantContext resolved via ITenantContext interface.
+builder.Services.AddScoped<TenantContext>();
+builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+
+var jwksCache = new KeycloakJwksCache();
+builder.Services.AddSingleton(jwksCache);
+
+// JWT Bearer authentication — dynamic multi-issuer validation for realm-per-tenant.
+var keycloakUrl = builder.Configuration["Keycloak:Url"]!;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidAudience = "account",
+            IssuerValidator = (issuer, _, _) =>
+            {
+                if (issuer.StartsWith(keycloakUrl + "/realms/", StringComparison.Ordinal))
+                {
+                    return issuer;
+                }
+
+                throw new SecurityTokenInvalidIssuerException("Untrusted issuer");
+            },
+            IssuerSigningKeyResolver = (_, securityToken, _, _) =>
+            {
+                return jwksCache.GetSigningKeys(securityToken.Issuer);
+            },
+        };
+    });
+
+// Authorization policies — role-based access control via Keycloak realm roles.
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireOwner", p => p.RequireRole("owner"));
+    options.AddPolicy("RequireManager", p => p.RequireRole("owner", "manager"));
+    options.AddPolicy("RequireStaff", p => p.RequireRole("owner", "manager", "staff_member"));
+});
+
+// Claims transformation: map Keycloak realm_access roles to ClaimTypes.Role.
+builder.Services.AddScoped<IClaimsTransformation, KeycloakRoleClaimTransformer>();
+
+// Keycloak Admin API service.
+builder.Services.AddKeycloakAdmin();
 
 var app = builder.Build();
 
@@ -65,6 +120,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<TenantContextMiddleware>();
+
 app.MapBillingEndpoints();
 app.MapBookingEndpoints();
 app.MapServiceCategoryEndpoints();
@@ -74,6 +133,8 @@ app.MapClientEndpoints();
 app.MapRecipeEndpoints();
 app.MapSettingsEndpoints();
 app.MapNotificationEndpoints();
+app.MapConfigEndpoints();
+app.MapTenantEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts

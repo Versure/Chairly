@@ -9,6 +9,8 @@ public class StaffMember
     public Guid TenantId { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? KeycloakUserId { get; set; }
     public StaffRole Role { get; set; }
     public string Color { get; set; } = string.Empty;
     public string? PhotoUrl { get; set; } // Stored as string for EF Core compatibility

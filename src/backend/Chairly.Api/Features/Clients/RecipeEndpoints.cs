@@ -8,7 +8,8 @@ internal static class RecipeEndpoints
 {
     public static IEndpointRouteBuilder MapRecipeEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/recipes");
+        var group = app.MapGroup("/api/recipes")
+            .RequireAuthorization("RequireStaff");
 
         group.MapCreateRecipe();
         group.MapGetRecipeByBooking();

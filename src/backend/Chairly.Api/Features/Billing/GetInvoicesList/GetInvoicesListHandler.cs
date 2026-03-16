@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Billing.GetInvoicesList;
 
 #pragma warning disable CA1812
-internal sealed class GetInvoicesListHandler(ChairlyDbContext db) : IRequestHandler<GetInvoicesListQuery, IEnumerable<InvoiceSummaryResponse>>
+internal sealed class GetInvoicesListHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetInvoicesListQuery, IEnumerable<InvoiceSummaryResponse>>
 {
     public async Task<IEnumerable<InvoiceSummaryResponse>> Handle(GetInvoicesListQuery query, CancellationToken cancellationToken = default)
     {
-        var invoiceQuery = ApplyInvoiceFilters(db.Invoices.Where(i => i.TenantId == TenantConstants.DefaultTenantId), query);
+        var invoiceQuery = ApplyInvoiceFilters(db.Invoices.Where(i => i.TenantId == tenantContext.TenantId), query);
 
         var joinedQuery = invoiceQuery.Join(
             db.Clients, i => i.ClientId, c => c.Id,

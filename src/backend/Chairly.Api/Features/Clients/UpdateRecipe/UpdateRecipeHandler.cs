@@ -10,7 +10,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Clients.UpdateRecipe;
 
-internal sealed class UpdateRecipeHandler(ChairlyDbContext db) : IRequestHandler<UpdateRecipeCommand, OneOf<RecipeResponse, NotFound, Forbidden>>
+internal sealed class UpdateRecipeHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateRecipeCommand, OneOf<RecipeResponse, NotFound, Forbidden>>
 {
     public async Task<OneOf<RecipeResponse, NotFound, Forbidden>> Handle(UpdateRecipeCommand command, CancellationToken cancellationToken = default)
     {
@@ -18,7 +18,7 @@ internal sealed class UpdateRecipeHandler(ChairlyDbContext db) : IRequestHandler
 
         var recipe = await db.Recipes
             .Include(r => r.Products)
-            .FirstOrDefaultAsync(r => r.Id == command.Id && r.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(r => r.Id == command.Id && r.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (recipe is null)
@@ -32,9 +32,7 @@ internal sealed class UpdateRecipeHandler(ChairlyDbContext db) : IRequestHandler
         recipe.Title = command.Title;
         recipe.Notes = command.Notes;
         recipe.UpdatedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // Replace with authenticated user ID from Keycloak
-        recipe.UpdatedBy = Guid.Empty;
-#pragma warning restore MA0026
+        recipe.UpdatedBy = tenantContext.UserId;
 
         // Full replace of owned products collection
         recipe.Products.Clear();

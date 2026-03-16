@@ -1,5 +1,4 @@
 using Chairly.Api.Features.Notifications.Infrastructure;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
@@ -64,7 +63,7 @@ public class NotificationDispatcherTests
         var tenantSettings = new TenantSettings
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             CompanyName = "Testsalon",
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
@@ -73,7 +72,7 @@ public class NotificationDispatcherTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "Client",
             Email = "test@example.com",
@@ -84,7 +83,7 @@ public class NotificationDispatcherTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(1),
@@ -106,7 +105,7 @@ public class NotificationDispatcherTests
         var notification = new Notification
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             RecipientId = client.Id,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,
@@ -175,7 +174,7 @@ public class NotificationDispatcherTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "No",
             LastName = "Email",
             Email = null,
@@ -186,7 +185,7 @@ public class NotificationDispatcherTests
         var notification = new Notification
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             RecipientId = client.Id,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,

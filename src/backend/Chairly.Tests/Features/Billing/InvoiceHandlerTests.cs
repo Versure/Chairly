@@ -8,7 +8,6 @@ using Chairly.Api.Features.Billing.MarkInvoiceSent;
 using Chairly.Api.Features.Billing.RegenerateInvoice;
 using Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
 using Chairly.Api.Features.Billing.VoidInvoice;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +30,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             Email = "jan@example.com",
@@ -43,7 +42,7 @@ public class InvoiceHandlerTests
         var staffMember = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Anna",
             LastName = "Jansen",
             Role = Chairly.Domain.Enums.StaffRole.StaffMember,
@@ -55,7 +54,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -100,7 +99,7 @@ public class InvoiceHandlerTests
             var client = new Client
             {
                 Id = resolvedClientId,
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = TestTenantContext.DefaultTenantId,
                 FirstName = "Pieter",
                 LastName = "Bakker",
                 Email = "pieter@example.com",
@@ -113,7 +112,7 @@ public class InvoiceHandlerTests
         var staffMember = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Sophie",
             LastName = "de Boer",
             Role = Chairly.Domain.Enums.StaffRole.StaffMember,
@@ -126,7 +125,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = bookingId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = resolvedClientId,
             StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -142,7 +141,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = bookingId,
             ClientId = resolvedClientId,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -189,7 +188,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "Bakker",
             Email = "pieter@example.com",
@@ -201,7 +200,7 @@ public class InvoiceHandlerTests
         var staffMember = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Sophie",
             LastName = "de Boer",
             Role = Chairly.Domain.Enums.StaffRole.StaffMember,
@@ -214,7 +213,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = bookingId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -230,7 +229,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = bookingId,
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -291,7 +290,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -315,7 +314,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -336,7 +335,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking1 = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         var result1 = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking1.Id });
         var response1 = result1.AsT0;
@@ -356,7 +355,7 @@ public class InvoiceHandlerTests
     public async Task GenerateInvoiceHandler_BookingNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = Guid.NewGuid() });
 
@@ -371,7 +370,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -380,7 +379,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(1),
@@ -389,7 +388,7 @@ public class InvoiceHandlerTests
         };
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
@@ -402,7 +401,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         // Generate first invoice
         await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
@@ -419,7 +418,7 @@ public class InvoiceHandlerTests
     public async Task GetInvoicesListHandler_EmptyList_ReturnsEmptyCollection()
     {
         await using var db = CreateDbContext();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoicesListQuery());
 
@@ -433,7 +432,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Anna",
             LastName = "Jansen",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -444,7 +443,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -459,7 +458,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -475,7 +474,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0003",
@@ -491,7 +490,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0004",
@@ -504,7 +503,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetInvoicesListQuery())).ToList();
 
@@ -523,7 +522,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "User",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -533,7 +532,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -547,7 +546,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -559,7 +558,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetInvoicesListQuery())).ToList();
 
@@ -575,7 +574,7 @@ public class InvoiceHandlerTests
         var client1 = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -583,7 +582,7 @@ public class InvoiceHandlerTests
         var client2 = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "Bakker",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -593,7 +592,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client1.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -607,7 +606,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client2.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -619,7 +618,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetInvoicesListQuery { ClientName = "vries" })).ToList();
 
@@ -639,7 +638,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "User",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -649,7 +648,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -663,7 +662,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -675,7 +674,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetInvoicesListQuery
         {
@@ -694,7 +693,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "User",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -705,7 +704,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -720,7 +719,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -733,7 +732,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var draftResult = (await handler.Handle(new GetInvoicesListQuery { Status = "Concept" })).ToList();
         Assert.Single(draftResult);
@@ -751,7 +750,7 @@ public class InvoiceHandlerTests
         var client1 = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -759,7 +758,7 @@ public class InvoiceHandlerTests
         var client2 = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "Bakker",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -769,7 +768,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client1.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -783,7 +782,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = Guid.NewGuid(),
             ClientId = client2.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0002",
@@ -795,7 +794,7 @@ public class InvoiceHandlerTests
         });
 
         await db.SaveChangesAsync();
-        var handler = new GetInvoicesListHandler(db);
+        var handler = new GetInvoicesListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetInvoicesListQuery { ClientId = client1.Id })).ToList();
 
@@ -811,7 +810,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
 
@@ -828,7 +827,7 @@ public class InvoiceHandlerTests
     public async Task GetInvoiceHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(Guid.NewGuid()));
 
@@ -843,7 +842,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
 
@@ -859,7 +858,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.SentAtUtc = DateTimeOffset.UtcNow.AddDays(-1);
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
 
@@ -874,7 +873,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
 
@@ -889,7 +888,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
 
@@ -904,12 +903,12 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
 
         // First: send the invoice
-        var sentHandler = new MarkInvoiceSentHandler(db);
+        var sentHandler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
         var sentResult = await sentHandler.Handle(new MarkInvoiceSentCommand(invoice.Id));
         Assert.Equal("Verzonden", sentResult.AsT0.Status);
 
         // Second: edit the sent invoice (adds line item, resets to draft)
-        var addHandler = new AddInvoiceLineItemHandler(db);
+        var addHandler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
         var addResult = await addHandler.Handle(new AddInvoiceLineItemCommand
         {
             InvoiceId = invoice.Id,
@@ -930,7 +929,7 @@ public class InvoiceHandlerTests
     public async Task MarkInvoiceSentHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(Guid.NewGuid()));
 
@@ -945,7 +944,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new MarkInvoicePaidHandler(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
 
@@ -961,7 +960,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow.AddDays(-1);
         await db.SaveChangesAsync();
-        var handler = new MarkInvoicePaidHandler(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
 
@@ -976,7 +975,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkInvoicePaidHandler(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
 
@@ -988,7 +987,7 @@ public class InvoiceHandlerTests
     public async Task MarkInvoicePaidHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new MarkInvoicePaidHandler(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoicePaidCommand(Guid.NewGuid()));
 
@@ -1003,7 +1002,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new VoidInvoiceHandler(db);
+        var handler = new VoidInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new VoidInvoiceCommand(invoice.Id));
 
@@ -1019,7 +1018,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new VoidInvoiceHandler(db);
+        var handler = new VoidInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new VoidInvoiceCommand(invoice.Id));
 
@@ -1031,7 +1030,7 @@ public class InvoiceHandlerTests
     public async Task VoidInvoiceHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new VoidInvoiceHandler(db);
+        var handler = new VoidInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new VoidInvoiceCommand(Guid.NewGuid()));
 
@@ -1046,7 +1045,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1079,7 +1078,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1111,7 +1110,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1141,7 +1140,7 @@ public class InvoiceHandlerTests
         invoice.SentBy = Guid.Empty;
 #pragma warning restore MA0026
         await db.SaveChangesAsync();
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1166,7 +1165,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1189,7 +1188,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1209,7 +1208,7 @@ public class InvoiceHandlerTests
     public async Task AddInvoiceLineItemHandler_InvoiceNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {
@@ -1234,7 +1233,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoiceWithManualItem(db);
         var manualItem = invoice.LineItems.First(li => li.IsManual);
 
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, manualItem.Id));
 
         var response = result.AsT0;
@@ -1253,7 +1252,7 @@ public class InvoiceHandlerTests
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
         var autoItem = invoice.LineItems.First();
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, autoItem.Id));
 
@@ -1272,7 +1271,7 @@ public class InvoiceHandlerTests
 #pragma warning restore MA0026
         await db.SaveChangesAsync();
         var manualItem = invoice.LineItems.First(li => li.IsManual);
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, manualItem.Id));
 
@@ -1289,7 +1288,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, invoice.LineItems.First().Id));
 
@@ -1302,7 +1301,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(invoice.Id, Guid.NewGuid()));
 
@@ -1314,7 +1313,7 @@ public class InvoiceHandlerTests
     public async Task RemoveInvoiceLineItemHandler_InvoiceNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new RemoveInvoiceLineItemHandler(db);
+        var handler = new RemoveInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new RemoveInvoiceLineItemCommand(Guid.NewGuid(), Guid.NewGuid()));
 
@@ -1373,7 +1372,7 @@ public class InvoiceHandlerTests
         var service = new Service
         {
             Id = serviceId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Herenknippen",
             Duration = TimeSpan.FromMinutes(30),
             Price = 25.00m,
@@ -1387,7 +1386,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1397,7 +1396,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1423,7 +1422,7 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
@@ -1440,7 +1439,7 @@ public class InvoiceHandlerTests
         var service = new Service
         {
             Id = serviceId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Herenknippen",
             Duration = TimeSpan.FromMinutes(30),
             Price = 39.99m,
@@ -1454,7 +1453,7 @@ public class InvoiceHandlerTests
         db.VatSettings.Add(new VatSettings
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             DefaultVatRate = 21m,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         });
@@ -1462,7 +1461,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "Bakker",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1472,7 +1471,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1498,7 +1497,7 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
@@ -1512,14 +1511,14 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateCompletedBooking(db);
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
 
         await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var vatSettings = await db.VatSettings.SingleOrDefaultAsync();
         Assert.NotNull(vatSettings);
         Assert.Equal(21m, vatSettings.DefaultVatRate);
-        Assert.Equal(TenantConstants.DefaultTenantId, vatSettings.TenantId);
+        Assert.Equal(TestTenantContext.DefaultTenantId, vatSettings.TenantId);
     }
 
     [Fact]
@@ -1530,7 +1529,7 @@ public class InvoiceHandlerTests
         db.Services.Add(new Service
         {
             Id = serviceId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Herenknippen",
             Duration = TimeSpan.FromMinutes(30),
             Price = 39.99m,
@@ -1543,7 +1542,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1553,7 +1552,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1579,7 +1578,7 @@ public class InvoiceHandlerTests
         db.Bookings.Add(booking);
         await db.SaveChangesAsync();
 
-        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new GenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new GenerateInvoiceCommand { BookingId = booking.Id });
 
         var response = result.AsT0;
@@ -1598,7 +1597,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1609,7 +1608,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1648,7 +1647,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -1701,7 +1700,7 @@ public class InvoiceHandlerTests
         await db.SaveChangesAsync();
 
         // Regenerate — should replace the 2 auto-generated line items but PRESERVE the manual "Toeslag"
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT0);
@@ -1732,7 +1731,7 @@ public class InvoiceHandlerTests
 #pragma warning restore MA0026
         await db.SaveChangesAsync();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
@@ -1750,7 +1749,7 @@ public class InvoiceHandlerTests
 #pragma warning restore MA0026
         await db.SaveChangesAsync();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
@@ -1768,7 +1767,7 @@ public class InvoiceHandlerTests
 #pragma warning restore MA0026
         await db.SaveChangesAsync();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
@@ -1780,7 +1779,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(Guid.NewGuid()));
 
         Assert.True(result.IsT1);
@@ -1795,7 +1794,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1806,7 +1805,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1831,7 +1830,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0099",
@@ -1859,7 +1858,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(invoice);
         await db.SaveChangesAsync();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
@@ -1874,7 +1873,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1884,7 +1883,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -1916,7 +1915,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = client.Id,
             InvoiceNumber = originalInvoiceNumber,
@@ -1945,7 +1944,7 @@ public class InvoiceHandlerTests
         await db.SaveChangesAsync();
 
         // Regenerate
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT0);
@@ -1963,7 +1962,7 @@ public class InvoiceHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Jan",
             LastName = "de Vries",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -1974,7 +1973,7 @@ public class InvoiceHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -2003,7 +2002,7 @@ public class InvoiceHandlerTests
         var invoice = new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = client.Id,
             InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -2055,7 +2054,7 @@ public class InvoiceHandlerTests
         db.Invoices.Add(invoice);
         await db.SaveChangesAsync();
 
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT0);
@@ -2107,7 +2106,7 @@ public class InvoiceHandlerTests
             var client = new Client
             {
                 Id = clientId,
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = TestTenantContext.DefaultTenantId,
                 FirstName = "Jan",
                 LastName = "de Vries",
                 Email = "jan@example.com",
@@ -2119,7 +2118,7 @@ public class InvoiceHandlerTests
             var staffMember = new StaffMember
             {
                 Id = staffMemberId,
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = TestTenantContext.DefaultTenantId,
                 FirstName = "Anna",
                 LastName = "Jansen",
                 Role = Chairly.Domain.Enums.StaffRole.StaffMember,
@@ -2131,7 +2130,7 @@ public class InvoiceHandlerTests
             var booking = new Booking
             {
                 Id = bookingId,
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = TestTenantContext.DefaultTenantId,
                 ClientId = clientId,
                 StaffMemberId = staffMemberId,
                 StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -2168,7 +2167,7 @@ public class InvoiceHandlerTests
             var invoice = new Invoice
             {
                 Id = invoiceId,
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = TestTenantContext.DefaultTenantId,
                 BookingId = bookingId,
                 ClientId = clientId,
                 InvoiceNumber = $"{DateTime.UtcNow.Year}-0001",
@@ -2227,7 +2226,7 @@ public class InvoiceHandlerTests
 
         // Step 4: Regenerate invoice (separate context, simulating a different HTTP request)
         await using var db = new ChairlyDbContext(options);
-        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db));
+        var handler = new RegenerateInvoiceHandler(db, new InvoiceLineItemBuilder(db, TestTenantContext.Create()), TestTenantContext.Create());
         var result = await handler.Handle(new RegenerateInvoiceCommand(invoiceId));
 
         // Step 5: Assertions
@@ -2258,7 +2257,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
 
@@ -2274,7 +2273,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
 
@@ -2287,7 +2286,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
 
@@ -2300,7 +2299,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new GetInvoiceHandler(db);
+        var handler = new GetInvoiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetInvoiceQuery(invoice.Id));
 
@@ -2314,7 +2313,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new MarkInvoiceSentHandler(db);
+        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
 
@@ -2330,7 +2329,7 @@ public class InvoiceHandlerTests
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new AddInvoiceLineItemHandler(db);
+        var handler = new AddInvoiceLineItemHandler(db, TestTenantContext.Create());
 
         var command = new AddInvoiceLineItemCommand
         {

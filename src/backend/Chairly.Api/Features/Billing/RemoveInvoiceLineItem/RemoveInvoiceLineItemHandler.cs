@@ -9,7 +9,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
 
-internal sealed class RemoveInvoiceLineItemHandler(ChairlyDbContext db) : IRequestHandler<RemoveInvoiceLineItemCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
+internal sealed class RemoveInvoiceLineItemHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<RemoveInvoiceLineItemCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable>> Handle(RemoveInvoiceLineItemCommand command, CancellationToken cancellationToken = default)
     {
@@ -17,7 +17,7 @@ internal sealed class RemoveInvoiceLineItemHandler(ChairlyDbContext db) : IReque
 
         var invoice = await db.Invoices
             .Include(i => i.LineItems)
-            .FirstOrDefaultAsync(i => i.Id == command.InvoiceId && i.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(i => i.Id == command.InvoiceId && i.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (invoice is null)

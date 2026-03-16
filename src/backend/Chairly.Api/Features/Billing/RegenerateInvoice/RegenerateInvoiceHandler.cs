@@ -10,7 +10,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.RegenerateInvoice;
 
-internal sealed class RegenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineItemBuilder lineItemBuilder) : IRequestHandler<RegenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
+internal sealed class RegenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineItemBuilder lineItemBuilder, ITenantContext tenantContext) : IRequestHandler<RegenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable>> Handle(RegenerateInvoiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -18,7 +18,7 @@ internal sealed class RegenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineI
 
         var invoice = await db.Invoices
             .Include(i => i.LineItems)
-            .FirstOrDefaultAsync(i => i.Id == command.Id && i.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(i => i.Id == command.Id && i.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (invoice is null)
@@ -33,7 +33,7 @@ internal sealed class RegenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineI
 
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
-            .FirstOrDefaultAsync(b => b.Id == invoice.BookingId && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == invoice.BookingId && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
