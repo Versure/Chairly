@@ -1,0 +1,83 @@
+{
+  "feature": "authentication",
+  "specPath": "docs/specs/authentication.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Keycloak container in AppHost",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "StaffMember entity: add Email and KeycloakUserId",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Dynamic JWT Bearer authentication + tenant context middleware",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "Authorization policies + secure all endpoints",
+      "status": "pending",
+      "dependsOn": ["B3"]
+    },
+    {
+      "id": "B5",
+      "layer": "backend",
+      "title": "Keycloak Admin API service",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B6",
+      "layer": "backend",
+      "title": "Tenant provisioning endpoint",
+      "status": "pending",
+      "dependsOn": ["B5"]
+    },
+    {
+      "id": "B7",
+      "layer": "backend",
+      "title": "Staff–Keycloak user sync",
+      "status": "pending",
+      "dependsOn": ["B2", "B5"]
+    },
+    {
+      "id": "B8",
+      "layer": "backend",
+      "title": "Runtime config endpoint",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Runtime config service + Keycloak-angular setup",
+      "status": "pending",
+      "dependsOn": ["B1", "B8"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Bearer token interceptor + auth guard",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Auth integration in nav + user info + logout",
+      "status": "pending",
+      "dependsOn": ["F1", "F2"]
+    }
+  ]
+}
