@@ -176,6 +176,26 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password,
+        bool temporary = false, CancellationToken ct = default)
+    {
+        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+
+        var credential = new
+        {
+            type = "password",
+            value = password,
+            temporary,
+        };
+
+        var response = await client.PutAsJsonAsync(
+            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}/reset-password",
+            credential,
+            _jsonOptions,
+            ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default)
     {
         var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);

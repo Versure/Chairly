@@ -19,5 +19,8 @@ public interface IKeycloakAdminService
     Task AssignRealmRoleAsync(Guid tenantId, string keycloakUserId, string roleName,
         CancellationToken ct = default);
 
+    Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password,
+        bool temporary = false, CancellationToken ct = default);
+
     Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default);
 }

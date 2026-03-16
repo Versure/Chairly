@@ -51,6 +51,10 @@ internal sealed class NullKeycloakAdminService : IKeycloakAdminService
         return Task.CompletedTask;
     }
 
+    public Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password,
+        bool temporary = false, CancellationToken ct = default)
+        => Task.CompletedTask;
+
     public Task AssignRealmRoleAsync(Guid tenantId, string keycloakUserId, string roleName,
         CancellationToken ct = default)
     {

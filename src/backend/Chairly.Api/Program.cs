@@ -192,4 +192,10 @@ if (runMigrations)
     }
 }
 
+if (app.Environment.IsDevelopment())
+{
+    await KeycloakDevSeeder.SeedAsync(
+        app.Services, app.Configuration, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+}
+
 await app.RunAsync().ConfigureAwait(false);
