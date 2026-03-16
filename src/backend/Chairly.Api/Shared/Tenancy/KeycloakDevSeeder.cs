@@ -45,6 +45,9 @@ internal static partial class KeycloakDevSeeder
         await CreateRealmAsync(httpClientFactory, token, keycloakUrl, tenantId,
             frontendClientId, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
 
+        // Step 1b: Always ensure realm display name and login theme are set.
+        await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, tenantId, logger, ct).ConfigureAwait(false);
+
         // Step 2: Create user (skip if already exists).
         var userId = await CreateUserAsync(httpClientFactory, token, keycloakUrl, tenantId, logger, ct).ConfigureAwait(false);
 
@@ -145,6 +148,25 @@ internal static partial class KeycloakDevSeeder
         return true;
     }
 
+    private static async Task UpdateRealmSettingsAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        Guid tenantId, ILogger logger, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var settings = new
+        {
+            displayName = "Chairly",
+            loginTheme = "chairly",
+        };
+
+        var response = await client.PutAsJsonAsync(
+            $"{keycloakUrl}/admin/realms/{tenantId}", settings, _jsonOptions, ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        LogRealmSettingsUpdated(logger, tenantId);
+    }
+
     private static async Task<string?> CreateUserAsync(
         IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
         Guid tenantId, ILogger logger, CancellationToken ct)
@@ -219,6 +241,9 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: realm {TenantId} already exists, skipping creation")]
     private static partial void LogRealmAlreadyExists(ILogger logger, Guid tenantId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: realm {TenantId} settings updated (displayName=Chairly, loginTheme=chairly)")]
+    private static partial void LogRealmSettingsUpdated(ILogger logger, Guid tenantId);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: created user {Email}")]
     private static partial void LogUserCreated(ILogger logger, string email);
