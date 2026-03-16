@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
-import { firstValueFrom, from, switchMap } from 'rxjs';
+import { catchError, firstValueFrom, from, of, switchMap } from 'rxjs';
 // eslint-disable-next-line sonarjs/deprecation -- KeycloakService is required for runtime config; provideKeycloak needs static config at build time
 import { KeycloakService } from 'keycloak-angular';
 
@@ -51,8 +51,9 @@ export const appConfig: ApplicationConfig = {
                   checkLoginIframe: false,
                 },
               }),
-            ),
+            ).pipe(catchError(() => of(false))),
           ),
+          catchError(() => of(false)),
         ),
       ).then((authenticated) => {
         if (authenticated) {
