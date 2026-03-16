@@ -96,6 +96,8 @@ internal static partial class KeycloakDevSeeder
         var realm = new
         {
             realm = tenantId.ToString(),
+            displayName = "Chairly",
+            loginTheme = "chairly",
             enabled = true,
             clients = new object[]
             {
