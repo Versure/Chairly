@@ -65,6 +65,7 @@ builder.AddProject<Projects.Chairly_Api>("api")
     .WithEnvironment("Keycloak__Realm", defaultRealm)
     .WithEnvironment("Keycloak__ClientId", "chairly-frontend")
     .WithEnvironment("Keycloak__AdminClientId", "chairly-admin")
+    .WithEnvironment("Keycloak__AdminPassword", keycloakAdminPassword)
     .WithEnvironment("Keycloak__AdminClientSecret", keycloakAdminClientSecret)
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
