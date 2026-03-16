@@ -1,12 +1,43 @@
+import nx from '@nx/eslint-plugin';
 import playwright from 'eslint-plugin-playwright';
-import baseConfig from '../../eslint.config.mjs';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 export default [
+  // ─── Ignores ───────────────────────────────────────────────
+  {
+    ignores: ['**/dist', '**/test-results', '**/playwright-report'],
+  },
+
+  // ─── Nx (base only, no type-aware rules) ──────────────────
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/javascript'],
+
+  // ─── Playwright ───────────────────────────────────────────
   playwright.configs['flat/recommended'],
-  ...baseConfig,
+
+  // ─── TypeScript basics ────────────────────────────────────
   {
     files: ['**/*.ts', '**/*.js'],
-    // Override or add rules here
-    rules: {},
+    rules: {
+      eqeqeq: ['error', 'always'],
+      'no-console': 'off',
+    },
+  },
+
+  // ─── Import sorting ──────────────────────────────────────
+  {
+    files: ['**/*.ts'],
+    plugins: { 'simple-import-sort': simpleImportSort },
+    rules: {
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+    },
+  },
+
+  // ─── SonarJS ─────────────────────────────────────────────
+  {
+    files: ['**/*.ts', '**/*.js'],
+    ...sonarjs.configs.recommended,
   },
 ];
