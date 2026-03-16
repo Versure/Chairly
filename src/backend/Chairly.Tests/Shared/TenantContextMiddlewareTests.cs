@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Chairly.Api.Shared.Tenancy;
+using Microsoft.Extensions.Configuration;
 
 namespace Chairly.Tests.Shared;
 
@@ -34,6 +35,13 @@ public class TenantContextMiddlewareTests
 
         var identity = new ClaimsIdentity(claims, "Bearer");
         return new ClaimsPrincipal(identity);
+    }
+
+    private static IConfiguration CreateConfiguration(Dictionary<string, string?> values)
+    {
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(values)
+            .Build();
     }
 
     [Fact]
@@ -102,7 +110,7 @@ public class TenantContextMiddlewareTests
     }
 
     [Fact]
-    public void TryPopulateTenantContext_IssuerWithInvalidGuid_ReturnsFalse()
+    public void TryPopulateTenantContext_NonGuidRealmWithoutConfig_ReturnsFalse()
     {
         var user = CreateAuthenticatedUser(
             issuer: "http://localhost:8080/realms/not-a-guid",
@@ -112,6 +120,49 @@ public class TenantContextMiddlewareTests
         var tenantContext = new TenantContext();
 
         var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_NonGuidRealmWithConfig_ResolvesFromConfiguration()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: "http://localhost:8080/realms/chairly",
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var configuration = CreateConfiguration(new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:TenantId"] = TestTenantId.ToString(),
+        });
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration);
+
+        Assert.True(result);
+        Assert.Equal(TestTenantId, tenantContext.TenantId);
+        Assert.Equal(TestUserId, tenantContext.UserId);
+        Assert.Equal("owner", tenantContext.UserRole);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_NonGuidRealmWithInvalidConfigTenantId_ReturnsFalse()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: "http://localhost:8080/realms/chairly",
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var configuration = CreateConfiguration(new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:TenantId"] = "also-not-a-guid",
+        });
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration);
 
         Assert.False(result);
     }

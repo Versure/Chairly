@@ -45,8 +45,9 @@ var keycloak = builder.AddContainer("keycloak", "quay.io/keycloak/keycloak", "26
 
 var keycloakEndpoint = keycloak.GetEndpoint("http");
 
-// Default realm for local development — matches the default tenant ID used in tests.
-var defaultRealm = "00000000-0000-0000-0000-000000000001";
+// Default realm for local development — human-readable name used in Keycloak URLs.
+var defaultRealm = "chairly";
+var defaultTenantId = "00000000-0000-0000-0000-000000000001";
 
 // Keycloak Admin API service account credentials.
 var keycloakAdminClientSecret = builder.AddParameter("keycloak-admin-client-secret", secret: true);
@@ -67,6 +68,7 @@ builder.AddProject<Projects.Chairly_Api>("api")
     .WithEnvironment("Keycloak__ClientId", "chairly-frontend")
     .WithEnvironment("Keycloak__AdminClientId", "chairly-admin")
     .WithEnvironment("Keycloak__AdminPassword", keycloakAdminPassword)
+    .WithEnvironment("Keycloak__TenantId", defaultTenantId)
     .WithEnvironment("Keycloak__AdminClientSecret", keycloakAdminClientSecret)
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
