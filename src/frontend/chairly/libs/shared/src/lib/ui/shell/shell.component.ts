@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { AuthStore } from '../../data-access';
 import { ThemeService } from '../theme.service';
 
 @Component({
@@ -12,6 +13,7 @@ import { ThemeService } from '../theme.service';
 })
 export class ShellComponent {
   protected readonly themeService = inject(ThemeService);
+  protected readonly authStore = inject(AuthStore);
 
   readonly sidebarOpen = signal(false);
 
@@ -21,5 +23,9 @@ export class ShellComponent {
 
   closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  onLogout(): void {
+    this.authStore.logout();
   }
 }
