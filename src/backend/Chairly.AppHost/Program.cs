@@ -40,6 +40,7 @@ var keycloak = builder.AddContainer("keycloak", "quay.io/keycloak/keycloak", "26
     .WithEnvironment("KEYCLOAK_ADMIN_PASSWORD", keycloakAdminPassword)
     .WithArgs("start-dev")
     .WithVolume("keycloak-data", "/opt/keycloak/data")
+    .WithBindMount("keycloak-themes/chairly", "/opt/keycloak/themes/chairly")
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/admin", DisplayText = "Keycloak Admin" });
 
 var keycloakEndpoint = keycloak.GetEndpoint("http");
