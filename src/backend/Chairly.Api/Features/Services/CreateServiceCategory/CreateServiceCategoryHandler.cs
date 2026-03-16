@@ -6,7 +6,7 @@ using Chairly.Infrastructure.Persistence;
 namespace Chairly.Api.Features.Services.CreateServiceCategory;
 
 #pragma warning disable CA1812
-internal sealed class CreateServiceCategoryHandler(ChairlyDbContext db) : IRequestHandler<CreateServiceCategoryCommand, ServiceCategoryResponse>
+internal sealed class CreateServiceCategoryHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<CreateServiceCategoryCommand, ServiceCategoryResponse>
 {
     public async Task<ServiceCategoryResponse> Handle(CreateServiceCategoryCommand command, CancellationToken cancellationToken = default)
     {
@@ -15,13 +15,11 @@ internal sealed class CreateServiceCategoryHandler(ChairlyDbContext db) : IReque
         var category = new ServiceCategory
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             Name = command.Name,
             SortOrder = command.SortOrder,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
 
         db.ServiceCategories.Add(category);

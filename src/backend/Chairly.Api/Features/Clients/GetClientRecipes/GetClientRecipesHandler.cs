@@ -8,14 +8,14 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Clients.GetClientRecipes;
 
-internal sealed class GetClientRecipesHandler(ChairlyDbContext db) : IRequestHandler<GetClientRecipesQuery, OneOf<IReadOnlyList<ClientRecipeSummaryResponse>, NotFound>>
+internal sealed class GetClientRecipesHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetClientRecipesQuery, OneOf<IReadOnlyList<ClientRecipeSummaryResponse>, NotFound>>
 {
     public async Task<OneOf<IReadOnlyList<ClientRecipeSummaryResponse>, NotFound>> Handle(GetClientRecipesQuery query, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         var clientExists = await db.Clients
-            .AnyAsync(c => c.Id == query.ClientId && c.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .AnyAsync(c => c.Id == query.ClientId && c.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (!clientExists)
@@ -28,7 +28,7 @@ internal sealed class GetClientRecipesHandler(ChairlyDbContext db) : IRequestHan
 
         var recipes = await db.Recipes
             .Include(r => r.Products)
-            .Where(r => r.ClientId == query.ClientId && r.TenantId == TenantConstants.DefaultTenantId)
+            .Where(r => r.ClientId == query.ClientId && r.TenantId == tenantContext.TenantId)
             .Join(
                 db.Bookings,
                 r => r.BookingId,

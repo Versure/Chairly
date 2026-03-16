@@ -10,7 +10,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.GenerateInvoice;
 
-internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineItemBuilder lineItemBuilder) : IRequestHandler<GenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>>
+internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineItemBuilder lineItemBuilder, ITenantContext tenantContext) : IRequestHandler<GenerateInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable, Conflict>> Handle(GenerateInvoiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -18,7 +18,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineIte
 
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
-            .FirstOrDefaultAsync(b => b.Id == command.BookingId && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.BookingId && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -32,7 +32,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineIte
         }
 
         var invoiceExists = await db.Invoices
-            .AnyAsync(i => i.BookingId == command.BookingId && i.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .AnyAsync(i => i.BookingId == command.BookingId && i.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (invoiceExists)
@@ -61,7 +61,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineIte
         return new Invoice
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             BookingId = booking.Id,
             ClientId = booking.ClientId,
             InvoiceNumber = invoiceNumber,
@@ -71,9 +71,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineIte
             TotalAmount = subTotalAmount + totalVatAmount,
             LineItems = lineItems,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
     }
 
@@ -83,7 +81,7 @@ internal sealed class GenerateInvoiceHandler(ChairlyDbContext db, InvoiceLineIte
         var yearPrefix = $"{currentYear}-";
 
         var lastNumber = await db.Invoices
-            .Where(i => i.TenantId == TenantConstants.DefaultTenantId && i.InvoiceNumber.StartsWith(yearPrefix))
+            .Where(i => i.TenantId == tenantContext.TenantId && i.InvoiceNumber.StartsWith(yearPrefix))
             .OrderByDescending(i => i.InvoiceNumber)
             .Select(i => i.InvoiceNumber)
             .FirstOrDefaultAsync(cancellationToken)

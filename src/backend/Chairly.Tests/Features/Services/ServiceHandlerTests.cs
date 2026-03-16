@@ -5,7 +5,6 @@ using Chairly.Api.Features.Services.GetService;
 using Chairly.Api.Features.Services.GetServicesList;
 using Chairly.Api.Features.Services.ToggleServiceActive;
 using Chairly.Api.Features.Services.UpdateService;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +28,7 @@ public class ServiceHandlerTests
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Test Service",
             Duration = TimeSpan.FromMinutes(30),
             Price = 25.00m,
@@ -46,7 +45,7 @@ public class ServiceHandlerTests
     public async Task CreateServiceHandler_HappyPath_CreatesServiceWithIsActiveTrue()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceHandler(db);
+        var handler = new CreateServiceHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCommand
         {
             Name = "Men's Haircut",
@@ -104,7 +103,7 @@ public class ServiceHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestService(db);
-        var handler = new UpdateServiceHandler(db);
+        var handler = new UpdateServiceHandler(db, TestTenantContext.Create());
         var command = new UpdateServiceCommand
         {
             Id = existing.Id,
@@ -125,7 +124,7 @@ public class ServiceHandlerTests
     public async Task UpdateServiceHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateServiceHandler(db);
+        var handler = new UpdateServiceHandler(db, TestTenantContext.Create());
         var command = new UpdateServiceCommand
         {
             Id = Guid.NewGuid(),
@@ -145,7 +144,7 @@ public class ServiceHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestService(db);
-        var handler = new DeleteServiceHandler(db);
+        var handler = new DeleteServiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeleteServiceCommand(existing.Id));
 
@@ -158,7 +157,7 @@ public class ServiceHandlerTests
     public async Task DeleteServiceHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new DeleteServiceHandler(db);
+        var handler = new DeleteServiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeleteServiceCommand(Guid.NewGuid()));
 
@@ -171,7 +170,7 @@ public class ServiceHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestService(db, isActive: true);
-        var handler = new ToggleServiceActiveHandler(db);
+        var handler = new ToggleServiceActiveHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new ToggleServiceActiveCommand(existing.Id));
 
@@ -185,7 +184,7 @@ public class ServiceHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestService(db, isActive: false);
-        var handler = new ToggleServiceActiveHandler(db);
+        var handler = new ToggleServiceActiveHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new ToggleServiceActiveCommand(existing.Id));
 
@@ -198,7 +197,7 @@ public class ServiceHandlerTests
     public async Task ToggleServiceActiveHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new ToggleServiceActiveHandler(db);
+        var handler = new ToggleServiceActiveHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new ToggleServiceActiveCommand(Guid.NewGuid()));
 
@@ -210,7 +209,7 @@ public class ServiceHandlerTests
     public async Task CreateServiceHandler_HappyPath_AssignsTenantId()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceHandler(db);
+        var handler = new CreateServiceHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCommand
         {
             Name = "Haircut",
@@ -221,7 +220,7 @@ public class ServiceHandlerTests
         await handler.Handle(command);
 
         var entity = await db.Services.SingleAsync();
-        Assert.Equal(TenantConstants.DefaultTenantId, entity.TenantId);
+        Assert.Equal(TestTenantContext.DefaultTenantId, entity.TenantId);
     }
 
     [Fact]
@@ -231,7 +230,7 @@ public class ServiceHandlerTests
         var category = new ServiceCategory
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Hair",
             SortOrder = 0,
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -240,7 +239,7 @@ public class ServiceHandlerTests
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Trim",
             Duration = TimeSpan.FromMinutes(15),
             Price = 10.00m,
@@ -251,7 +250,7 @@ public class ServiceHandlerTests
         };
         db.Services.Add(service);
         await db.SaveChangesAsync();
-        var handler = new GetServiceHandler(db);
+        var handler = new GetServiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetServiceQuery(service.Id));
 
@@ -267,7 +266,7 @@ public class ServiceHandlerTests
         db.Services.Add(new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "B",
             Duration = TimeSpan.FromMinutes(30),
             Price = 10.00m,
@@ -278,7 +277,7 @@ public class ServiceHandlerTests
         db.Services.Add(new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "A",
             Duration = TimeSpan.FromMinutes(30),
             Price = 10.00m,
@@ -287,7 +286,7 @@ public class ServiceHandlerTests
             CreatedAtUtc = DateTimeOffset.UtcNow,
         });
         await db.SaveChangesAsync();
-        var handler = new GetServicesListHandler(db);
+        var handler = new GetServicesListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetServicesListQuery());
 
@@ -301,7 +300,7 @@ public class ServiceHandlerTests
     public async Task CreateServiceHandler_WithVatRate21_StoresVatRate()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceHandler(db);
+        var handler = new CreateServiceHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCommand
         {
             Name = "Herenknippen",
@@ -321,7 +320,7 @@ public class ServiceHandlerTests
     public async Task CreateServiceHandler_WithNullVatRate_StoresNull()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceHandler(db);
+        var handler = new CreateServiceHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCommand
         {
             Name = "Herenknippen",
@@ -341,7 +340,7 @@ public class ServiceHandlerTests
     public async Task CreateServiceHandler_WithInvalidVatRate15_ThrowsValidationException()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceHandler(db);
+        var handler = new CreateServiceHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCommand
         {
             Name = "Herenknippen",
@@ -358,7 +357,7 @@ public class ServiceHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestService(db);
-        var handler = new UpdateServiceHandler(db);
+        var handler = new UpdateServiceHandler(db, TestTenantContext.Create());
         var command = new UpdateServiceCommand
         {
             Id = existing.Id,
@@ -382,7 +381,7 @@ public class ServiceHandlerTests
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "Herenknippen",
             Duration = TimeSpan.FromMinutes(30),
             Price = 25.00m,
@@ -393,7 +392,7 @@ public class ServiceHandlerTests
         };
         db.Services.Add(service);
         await db.SaveChangesAsync();
-        var handler = new GetServiceHandler(db);
+        var handler = new GetServiceHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetServiceQuery(service.Id));
 

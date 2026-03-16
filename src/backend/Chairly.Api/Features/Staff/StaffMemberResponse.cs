@@ -4,6 +4,7 @@ internal sealed record StaffMemberResponse(
     Guid Id,
     string FirstName,
     string LastName,
+    string Email,
     string Role,
     string Color,
     string? PhotoUrl,

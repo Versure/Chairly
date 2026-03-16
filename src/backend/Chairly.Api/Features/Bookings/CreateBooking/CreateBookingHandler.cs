@@ -13,7 +13,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.CreateBooking;
 
 #pragma warning disable CA1812
-internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher, ILogger<CreateBookingHandler> logger) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
+internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher, ILogger<CreateBookingHandler> logger, ITenantContext tenantContext) : IRequestHandler<CreateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
 {
     public async Task<OneOf<BookingResponse, NotFound, Conflict>> Handle(CreateBookingCommand command, CancellationToken cancellationToken = default)
     {
@@ -68,21 +68,21 @@ internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBooking
     private async Task<bool> ClientExistsAsync(Guid clientId, CancellationToken cancellationToken)
     {
         return await db.Clients
-            .AnyAsync(c => c.Id == clientId && c.TenantId == TenantConstants.DefaultTenantId && c.DeletedAtUtc == null, cancellationToken)
+            .AnyAsync(c => c.Id == clientId && c.TenantId == tenantContext.TenantId && c.DeletedAtUtc == null, cancellationToken)
             .ConfigureAwait(false);
     }
 
     private async Task<bool> StaffMemberExistsAsync(Guid staffMemberId, CancellationToken cancellationToken)
     {
         return await db.StaffMembers
-            .AnyAsync(s => s.Id == staffMemberId && s.TenantId == TenantConstants.DefaultTenantId && s.DeactivatedAtUtc == null, cancellationToken)
+            .AnyAsync(s => s.Id == staffMemberId && s.TenantId == tenantContext.TenantId && s.DeactivatedAtUtc == null, cancellationToken)
             .ConfigureAwait(false);
     }
 
     private async Task<List<Service>> LoadActiveServicesAsync(List<Guid> serviceIds, CancellationToken cancellationToken)
     {
         return await db.Services
-            .Where(s => serviceIds.Contains(s.Id) && s.TenantId == TenantConstants.DefaultTenantId && s.IsActive)
+            .Where(s => serviceIds.Contains(s.Id) && s.TenantId == tenantContext.TenantId && s.IsActive)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -93,7 +93,7 @@ internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBooking
             .AnyAsync(b =>
                 b.Id != excludeBookingId
                 && b.StaffMemberId == staffMemberId
-                && b.TenantId == TenantConstants.DefaultTenantId
+                && b.TenantId == tenantContext.TenantId
                 && b.CancelledAtUtc == null
                 && b.NoShowAtUtc == null
                 && b.StartTime < endTime
@@ -101,21 +101,19 @@ internal sealed partial class CreateBookingHandler(ChairlyDbContext db, IBooking
             .ConfigureAwait(false);
     }
 
-    private static Booking BuildBooking(CreateBookingCommand command, DateTimeOffset endTime)
+    private Booking BuildBooking(CreateBookingCommand command, DateTimeOffset endTime)
     {
         return new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             ClientId = command.ClientId,
             StaffMemberId = command.StaffMemberId,
             StartTime = command.StartTime,
             EndTime = endTime,
             Notes = command.Notes,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
     }
 

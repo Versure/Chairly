@@ -9,14 +9,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Clients.DeleteClient;
 
 #pragma warning disable CA1812
-internal sealed class DeleteClientHandler(ChairlyDbContext db) : IRequestHandler<DeleteClientCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed class DeleteClientHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<DeleteClientCommand, OneOf<Success, NotFound, Conflict>>
 {
     public async Task<OneOf<Success, NotFound, Conflict>> Handle(DeleteClientCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var client = await db.Clients
-            .FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(c => c.Id == command.Id && c.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (client is null)
@@ -30,9 +30,7 @@ internal sealed class DeleteClientHandler(ChairlyDbContext db) : IRequestHandler
         }
 
         client.DeletedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-        client.DeletedBy = Guid.Empty;
-#pragma warning restore MA0026
+        client.DeletedBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

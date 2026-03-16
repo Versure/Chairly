@@ -19,6 +19,10 @@ internal sealed class UpdateStaffMemberCommand : IRequest<OneOf<StaffMemberRespo
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
 
+    [EmailAddress]
+    [MaxLength(256)]
+    public string? Email { get; set; }
+
     [Required]
     [AllowedValues("manager", "staff_member")]
     public string Role { get; set; } = string.Empty;

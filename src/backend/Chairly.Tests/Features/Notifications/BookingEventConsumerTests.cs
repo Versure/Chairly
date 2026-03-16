@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Chairly.Api.Features.Notifications.Infrastructure;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Enums;
 using Chairly.Domain.Events;
 using Chairly.Infrastructure.Persistence;
@@ -44,7 +43,7 @@ public class BookingEventConsumerTests
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingCreatedEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             Guid.NewGuid(),
             Guid.NewGuid(),
             DateTimeOffset.UtcNow.AddDays(2));
@@ -64,7 +63,7 @@ public class BookingEventConsumerTests
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingConfirmedEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             Guid.NewGuid(),
             Guid.NewGuid(),
             DateTimeOffset.UtcNow.AddDays(2));
@@ -83,7 +82,7 @@ public class BookingEventConsumerTests
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingCancelledEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             Guid.NewGuid(),
             Guid.NewGuid());
 
@@ -105,7 +104,7 @@ public class BookingEventConsumerTests
 
         // First create a booking created event to generate reminders
         var createdEvent = new BookingCreatedEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             bookingId,
             clientId,
             DateTimeOffset.UtcNow.AddDays(2));
@@ -115,7 +114,7 @@ public class BookingEventConsumerTests
 
         // Now cancel the booking
         var cancelledEvent = new BookingCancelledEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             bookingId,
             clientId);
 
@@ -151,7 +150,7 @@ public class BookingEventConsumerTests
         var startTime = DateTimeOffset.UtcNow.AddDays(3);
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingCreatedEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             Guid.NewGuid(),
             Guid.NewGuid(),
             startTime);
@@ -173,7 +172,7 @@ public class BookingEventConsumerTests
     {
         var (consumer, dbName) = CreateConsumer();
         var bookingEvent = new BookingCreatedEvent(
-            TenantConstants.DefaultTenantId,
+            TestTenantContext.DefaultTenantId,
             Guid.NewGuid(),
             Guid.NewGuid(),
             DateTimeOffset.UtcNow.AddHours(2));

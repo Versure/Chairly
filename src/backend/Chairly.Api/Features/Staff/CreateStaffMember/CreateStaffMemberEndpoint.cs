@@ -1,4 +1,5 @@
 using Chairly.Api.Shared.Mediator;
+using Chairly.Api.Shared.Results;
 
 namespace Chairly.Api.Features.Staff.CreateStaffMember;
 
@@ -12,7 +13,11 @@ internal static class CreateStaffMemberEndpoint
             CancellationToken cancellationToken) =>
         {
             var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
-            return Results.Created($"/api/staff/{result.Id}", result);
+            return result.Match<IResult>(
+                response => Results.Created($"/api/staff/{response.Id}", response),
+                (KeycloakError error) => Results.Problem(
+                    detail: error.Message,
+                    statusCode: StatusCodes.Status502BadGateway));
         });
     }
 }

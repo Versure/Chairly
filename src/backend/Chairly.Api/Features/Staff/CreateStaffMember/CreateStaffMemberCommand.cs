@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Shared.Mediator;
+using Chairly.Api.Shared.Results;
+using OneOf;
 
 #pragma warning disable CA1812 // Instantiated via ASP.NET Core model binding
 namespace Chairly.Api.Features.Staff.CreateStaffMember;
 
-internal sealed class CreateStaffMemberCommand : IRequest<StaffMemberResponse>
+internal sealed class CreateStaffMemberCommand : IRequest<OneOf<StaffMemberResponse, KeycloakError>>
 {
     [Required]
     [MaxLength(100)]
@@ -13,6 +15,11 @@ internal sealed class CreateStaffMemberCommand : IRequest<StaffMemberResponse>
     [Required]
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    [MaxLength(256)]
+    public string Email { get; set; } = string.Empty;
 
     [Required]
     [AllowedValues("manager", "staff_member")]

@@ -9,7 +9,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Clients.GetRecipeByBooking;
 
-internal sealed class GetRecipeByBookingHandler(ChairlyDbContext db) : IRequestHandler<GetRecipeByBookingQuery, OneOf<RecipeResponse, NotFound, Forbidden>>
+internal sealed class GetRecipeByBookingHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetRecipeByBookingQuery, OneOf<RecipeResponse, NotFound, Forbidden>>
 {
     public async Task<OneOf<RecipeResponse, NotFound, Forbidden>> Handle(GetRecipeByBookingQuery query, CancellationToken cancellationToken = default)
     {
@@ -17,7 +17,7 @@ internal sealed class GetRecipeByBookingHandler(ChairlyDbContext db) : IRequestH
 
         var recipe = await db.Recipes
             .Include(r => r.Products)
-            .FirstOrDefaultAsync(r => r.BookingId == query.BookingId && r.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(r => r.BookingId == query.BookingId && r.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (recipe is null)

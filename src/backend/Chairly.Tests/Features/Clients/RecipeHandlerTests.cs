@@ -4,7 +4,6 @@ using Chairly.Api.Features.Clients.GetClientRecipes;
 using Chairly.Api.Features.Clients.GetRecipeByBooking;
 using Chairly.Api.Features.Clients.UpdateRecipe;
 using Chairly.Api.Shared.Results;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public class RecipeHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = Guid.NewGuid(),
             StaffMemberId = staffMemberId ?? Guid.NewGuid(),
             StartTime = DateTimeOffset.UtcNow.AddHours(-2),
@@ -47,7 +46,7 @@ public class RecipeHandlerTests
         var client = new Client
         {
             Id = id ?? Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Anna",
             LastName = "Bakker",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -63,7 +62,7 @@ public class RecipeHandlerTests
         var staffMember = new StaffMember
         {
             Id = id ?? Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Pieter",
             LastName = "de Vries",
             Color = "#FF5733",
@@ -81,7 +80,7 @@ public class RecipeHandlerTests
         var recipe = new Recipe
         {
             Id = recipeId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = bookingId,
             ClientId = clientId,
             StaffMemberId = staffMemberId,
@@ -113,7 +112,7 @@ public class RecipeHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateTestBooking(db, completed: true);
-        var handler = new CreateRecipeHandler(db);
+        var handler = new CreateRecipeHandler(db, TestTenantContext.Create());
         var command = new CreateRecipeCommand
         {
             BookingId = booking.Id,
@@ -148,7 +147,7 @@ public class RecipeHandlerTests
     public async Task CreateRecipeHandler_BookingNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateRecipeHandler(db);
+        var handler = new CreateRecipeHandler(db, TestTenantContext.Create());
         var command = new CreateRecipeCommand
         {
             BookingId = Guid.NewGuid(),
@@ -165,7 +164,7 @@ public class RecipeHandlerTests
     {
         await using var db = CreateDbContext();
         var booking = CreateTestBooking(db, completed: false);
-        var handler = new CreateRecipeHandler(db);
+        var handler = new CreateRecipeHandler(db, TestTenantContext.Create());
         var command = new CreateRecipeCommand
         {
             BookingId = booking.Id,
@@ -185,7 +184,7 @@ public class RecipeHandlerTests
         await using var db = CreateDbContext();
         var booking = CreateTestBooking(db, completed: true);
         CreateTestRecipe(db, booking.Id, booking.ClientId, booking.StaffMemberId);
-        var handler = new CreateRecipeHandler(db);
+        var handler = new CreateRecipeHandler(db, TestTenantContext.Create());
         var command = new CreateRecipeCommand
         {
             BookingId = booking.Id,
@@ -241,7 +240,7 @@ public class RecipeHandlerTests
         await using var db = CreateDbContext();
         var booking = CreateTestBooking(db, completed: true);
         var recipe = CreateTestRecipe(db, booking.Id, booking.ClientId, booking.StaffMemberId);
-        var handler = new GetRecipeByBookingHandler(db);
+        var handler = new GetRecipeByBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetRecipeByBookingQuery(booking.Id));
 
@@ -255,7 +254,7 @@ public class RecipeHandlerTests
     public async Task GetRecipeByBookingHandler_NoRecipeForBooking_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GetRecipeByBookingHandler(db);
+        var handler = new GetRecipeByBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetRecipeByBookingQuery(Guid.NewGuid()));
 
@@ -273,7 +272,7 @@ public class RecipeHandlerTests
         var recipe = new Recipe
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = booking.ClientId,
             StaffMemberId = booking.StaffMemberId,
@@ -296,7 +295,7 @@ public class RecipeHandlerTests
         db.Recipes.Add(recipe);
         await db.SaveChangesAsync();
 
-        var handler = new UpdateRecipeHandler(db);
+        var handler = new UpdateRecipeHandler(db, TestTenantContext.Create());
         var command = new UpdateRecipeCommand
         {
             Id = recipe.Id,
@@ -334,7 +333,7 @@ public class RecipeHandlerTests
     public async Task UpdateRecipeHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateRecipeHandler(db);
+        var handler = new UpdateRecipeHandler(db, TestTenantContext.Create());
         var command = new UpdateRecipeCommand
         {
             Id = Guid.NewGuid(),
@@ -353,7 +352,7 @@ public class RecipeHandlerTests
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
-        var handler = new GetClientRecipesHandler(db);
+        var handler = new GetClientRecipesHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetClientRecipesQuery(client.Id));
 
@@ -371,7 +370,7 @@ public class RecipeHandlerTests
         var booking1 = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddDays(-7),
@@ -386,7 +385,7 @@ public class RecipeHandlerTests
         var booking2 = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
             StartTime = DateTimeOffset.UtcNow.AddDays(-1),
@@ -402,7 +401,7 @@ public class RecipeHandlerTests
         var recipe1 = new Recipe
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking1.Id,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
@@ -415,7 +414,7 @@ public class RecipeHandlerTests
         var recipe2 = new Recipe
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking2.Id,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
@@ -426,7 +425,7 @@ public class RecipeHandlerTests
         db.Recipes.Add(recipe2);
         await db.SaveChangesAsync();
 
-        var handler = new GetClientRecipesHandler(db);
+        var handler = new GetClientRecipesHandler(db, TestTenantContext.Create());
         var result = await handler.Handle(new GetClientRecipesQuery(client.Id));
 
         var recipes = result.AsT0;
@@ -439,7 +438,7 @@ public class RecipeHandlerTests
     public async Task GetClientRecipesHandler_ClientNotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GetClientRecipesHandler(db);
+        var handler = new GetClientRecipesHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetClientRecipesQuery(Guid.NewGuid()));
 
@@ -457,7 +456,7 @@ public class RecipeHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
             StartTime = bookingStartTime,
@@ -474,7 +473,7 @@ public class RecipeHandlerTests
         var recipe = new Recipe
         {
             Id = recipeId,
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             BookingId = booking.Id,
             ClientId = client.Id,
             StaffMemberId = staffMember.Id,
@@ -496,7 +495,7 @@ public class RecipeHandlerTests
         db.Recipes.Add(recipe);
         await db.SaveChangesAsync();
 
-        var handler = new GetClientRecipesHandler(db);
+        var handler = new GetClientRecipesHandler(db, TestTenantContext.Create());
         var result = await handler.Handle(new GetClientRecipesQuery(client.Id));
 
         var recipes = result.AsT0;

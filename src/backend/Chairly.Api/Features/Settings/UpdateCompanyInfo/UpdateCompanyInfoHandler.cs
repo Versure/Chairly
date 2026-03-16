@@ -9,14 +9,14 @@ using OneOf;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Settings.UpdateCompanyInfo;
 
-internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db) : IRequestHandler<UpdateCompanyInfoCommand, OneOf<CompanyInfoResponse, Forbidden>>
+internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateCompanyInfoCommand, OneOf<CompanyInfoResponse, Forbidden>>
 {
     public async Task<OneOf<CompanyInfoResponse, Forbidden>> Handle(UpdateCompanyInfoCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var settings = await db.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (settings is null)
@@ -24,11 +24,9 @@ internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db) : IRequestHa
             settings = new TenantSettings
             {
                 Id = Guid.NewGuid(),
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = tenantContext.TenantId,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-                CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+                CreatedBy = tenantContext.UserId,
             };
 
             db.TenantSettings.Add(settings);
@@ -45,9 +43,7 @@ internal sealed class UpdateCompanyInfoHandler(ChairlyDbContext db) : IRequestHa
         settings.VatNumber = command.VatNumber;
         settings.PaymentPeriodDays = command.PaymentPeriodDays;
         settings.UpdatedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-        settings.UpdatedBy = Guid.Empty;
-#pragma warning restore MA0026
+        settings.UpdatedBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

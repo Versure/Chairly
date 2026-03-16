@@ -10,14 +10,14 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Clients.CreateRecipe;
 
-internal sealed class CreateRecipeHandler(ChairlyDbContext db) : IRequestHandler<CreateRecipeCommand, OneOf<RecipeResponse, NotFound, Unprocessable, Conflict, Forbidden>>
+internal sealed class CreateRecipeHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<CreateRecipeCommand, OneOf<RecipeResponse, NotFound, Unprocessable, Conflict, Forbidden>>
 {
     public async Task<OneOf<RecipeResponse, NotFound, Unprocessable, Conflict, Forbidden>> Handle(CreateRecipeCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var booking = await db.Bookings
-            .FirstOrDefaultAsync(b => b.Id == command.BookingId && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.BookingId && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -31,7 +31,7 @@ internal sealed class CreateRecipeHandler(ChairlyDbContext db) : IRequestHandler
         }
 
         var recipeExists = await db.Recipes
-            .AnyAsync(r => r.BookingId == command.BookingId && r.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .AnyAsync(r => r.BookingId == command.BookingId && r.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (recipeExists)
@@ -45,7 +45,7 @@ internal sealed class CreateRecipeHandler(ChairlyDbContext db) : IRequestHandler
         var recipe = new Recipe
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             BookingId = booking.Id,
             ClientId = booking.ClientId,
             StaffMemberId = booking.StaffMemberId,
@@ -60,9 +60,7 @@ internal sealed class CreateRecipeHandler(ChairlyDbContext db) : IRequestHandler
                 SortOrder = p.SortOrder,
             }).ToList(),
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
 
         db.Recipes.Add(recipe);

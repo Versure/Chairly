@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Settings.GetCompanyInfo;
 
-internal sealed class GetCompanyInfoHandler(ChairlyDbContext db) : IRequestHandler<GetCompanyInfoQuery, CompanyInfoResponse>
+internal sealed class GetCompanyInfoHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetCompanyInfoQuery, CompanyInfoResponse>
 {
     public async Task<CompanyInfoResponse> Handle(GetCompanyInfoQuery query, CancellationToken cancellationToken = default)
     {
         var settings = await db.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(s => s.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (settings is null)
@@ -20,11 +20,9 @@ internal sealed class GetCompanyInfoHandler(ChairlyDbContext db) : IRequestHandl
             settings = new TenantSettings
             {
                 Id = Guid.NewGuid(),
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = tenantContext.TenantId,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-                CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+                CreatedBy = tenantContext.UserId,
             };
 
             db.TenantSettings.Add(settings);

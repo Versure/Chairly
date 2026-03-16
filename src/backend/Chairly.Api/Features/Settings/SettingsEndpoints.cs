@@ -9,15 +9,25 @@ internal static class SettingsEndpoints
 {
     public static IEndpointRouteBuilder MapSettingsEndpoints(this IEndpointRouteBuilder app)
     {
-        var settingsGroup = app.MapGroup("/api/settings");
+        var settingsReadGroup = app.MapGroup("/api/settings")
+            .RequireAuthorization("RequireStaff");
 
-        settingsGroup.MapGetVatSettings();
-        settingsGroup.MapUpdateVatSettings();
+        settingsReadGroup.MapGetVatSettings();
 
-        var companyGroup = app.MapGroup("/api/settings/company");
+        var settingsWriteGroup = app.MapGroup("/api/settings")
+            .RequireAuthorization("RequireOwner");
 
-        companyGroup.MapGetCompanyInfo();
-        companyGroup.MapUpdateCompanyInfo();
+        settingsWriteGroup.MapUpdateVatSettings();
+
+        var companyReadGroup = app.MapGroup("/api/settings/company")
+            .RequireAuthorization("RequireStaff");
+
+        companyReadGroup.MapGetCompanyInfo();
+
+        var companyWriteGroup = app.MapGroup("/api/settings/company")
+            .RequireAuthorization("RequireOwner");
+
+        companyWriteGroup.MapUpdateCompanyInfo();
 
         return app;
     }

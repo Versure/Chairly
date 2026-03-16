@@ -9,14 +9,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.MarkBookingNoShow;
 
 #pragma warning disable CA1812
-internal sealed class MarkBookingNoShowHandler(ChairlyDbContext db) : IRequestHandler<MarkBookingNoShowCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed class MarkBookingNoShowHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<MarkBookingNoShowCommand, OneOf<Success, NotFound, Conflict>>
 {
     public async Task<OneOf<Success, NotFound, Conflict>> Handle(MarkBookingNoShowCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var booking = await db.Bookings
-            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -30,9 +30,7 @@ internal sealed class MarkBookingNoShowHandler(ChairlyDbContext db) : IRequestHa
         }
 
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-        booking.NoShowBy = Guid.Empty;
-#pragma warning restore MA0026
+        booking.NoShowBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

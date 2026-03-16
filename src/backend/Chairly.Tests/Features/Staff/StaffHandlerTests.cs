@@ -4,11 +4,13 @@ using Chairly.Api.Features.Staff.DeactivateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
 using Chairly.Api.Features.Staff.ReactivateStaffMember;
 using Chairly.Api.Features.Staff.UpdateStaffMember;
-using Chairly.Api.Shared.Tenancy;
+using Chairly.Api.Shared.Results;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
+using Chairly.Tests.Helpers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using OneOf.Types;
 
 namespace Chairly.Tests.Features.Staff;
@@ -28,9 +30,10 @@ public class StaffHandlerTests
         var member = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = firstName,
             LastName = lastName,
+            Email = $"{firstName}@example.com",
             Role = role,
             Color = "#FF5733",
             ScheduleJson = "{}",
@@ -49,7 +52,7 @@ public class StaffHandlerTests
         CreateTestStaffMember(db, firstName: "Zara", lastName: "Bakker");
         CreateTestStaffMember(db, firstName: "Anna", lastName: "Visser");
 
-        var handler = new GetStaffListHandler(db);
+        var handler = new GetStaffListHandler(db, TestTenantContext.Create());
         var result = (await handler.Handle(new GetStaffListQuery())).ToList();
 
         Assert.Equal(2, result.Count);
@@ -61,31 +64,35 @@ public class StaffHandlerTests
     public async Task CreateStaffMemberHandler_HappyPath_CreatesWithCorrectRole()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
         var command = new CreateStaffMemberCommand
         {
             FirstName = "Pieter",
             LastName = "de Vries",
+            Email = "pieter@example.com",
             Role = "manager",
             Color = "#123456",
         };
 
-        await handler.Handle(command);
+        var result = await handler.Handle(command);
 
-        var saved = await db.StaffMembers.FirstAsync();
-        Assert.Equal(StaffRole.Manager, saved.Role);
-        Assert.Equal("Pieter", saved.FirstName);
+        var response = result.AsT0;
+        Assert.Equal(StaffRole.Manager, (await db.StaffMembers.FirstAsync()).Role);
+        Assert.Equal("Pieter", response.FirstName);
     }
 
     [Fact]
     public async Task CreateStaffMemberHandler_HappyPath_StoresScheduleJson()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
         var command = new CreateStaffMemberCommand
         {
             FirstName = "Sophie",
             LastName = "Bakker",
+            Email = "sophie@example.com",
             Role = "staff_member",
             Color = "#ABCDEF",
             Schedule = new Dictionary<string, ShiftBlockCommand[]>(StringComparer.OrdinalIgnoreCase)
@@ -101,12 +108,60 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task CreateStaffMemberHandler_HappyPath_CallsKeycloakAndSetsKeycloakUserId()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT0);
+        Assert.True(keycloak.CreateUserCalled);
+        Assert.True(keycloak.AssignRoleCalled);
+
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.Equal(keycloak.LastCreatedUserId, saved.KeycloakUserId);
+    }
+
+    [Fact]
+    public async Task CreateStaffMemberHandler_KeycloakFails_DeletesDbRecordAndReturnsError()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new FailingKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT1);
+        Assert.IsType<KeycloakError>(result.AsT1);
+        Assert.Empty(await db.StaffMembers.ToListAsync());
+    }
+
+    [Fact]
     public void CreateStaffMemberCommand_EmptyFirstName_FailsValidation()
     {
         var command = new CreateStaffMemberCommand
         {
             FirstName = string.Empty,
             LastName = "Bakker",
+            Email = "test@example.com",
             Role = "manager",
             Color = "#FF0000",
         };
@@ -126,6 +181,7 @@ public class StaffHandlerTests
         {
             FirstName = "Jan",
             LastName = "Bakker",
+            Email = "jan@example.com",
             Role = "invalid_role",
             Color = "#FF0000",
         };
@@ -143,7 +199,8 @@ public class StaffHandlerTests
     {
         await using var db = CreateDbContext();
         var existing = CreateTestStaffMember(db, firstName: "Oud", lastName: "Naam");
-        var handler = new UpdateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new UpdateStaffMemberHandler(db, keycloak, NullLogger<UpdateStaffMemberHandler>.Instance, TestTenantContext.Create());
         var command = new UpdateStaffMemberCommand
         {
             Id = existing.Id,
@@ -165,7 +222,8 @@ public class StaffHandlerTests
     public async Task UpdateStaffMemberHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new UpdateStaffMemberHandler(db, keycloak, NullLogger<UpdateStaffMemberHandler>.Instance, TestTenantContext.Create());
         var command = new UpdateStaffMemberCommand
         {
             Id = Guid.NewGuid(),
@@ -181,11 +239,85 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task UpdateStaffMemberHandler_NameChanged_CallsKeycloakUpdate()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db, firstName: "Oud", lastName: "Naam");
+        existing.KeycloakUserId = "kc-user-123";
+        await db.SaveChangesAsync();
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new UpdateStaffMemberHandler(db, keycloak, NullLogger<UpdateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new UpdateStaffMemberCommand
+        {
+            Id = existing.Id,
+            FirstName = "Nieuw",
+            LastName = "Naam",
+            Role = "staff_member",
+            Color = "#FF5733",
+        };
+
+        await handler.Handle(command);
+
+        Assert.True(keycloak.UpdateUserCalled);
+    }
+
+    [Fact]
+    public async Task UpdateStaffMemberHandler_NoKeycloakUserId_SkipsKeycloakUpdate()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db, firstName: "Oud", lastName: "Naam");
+        // KeycloakUserId is null by default.
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new UpdateStaffMemberHandler(db, keycloak, NullLogger<UpdateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new UpdateStaffMemberCommand
+        {
+            Id = existing.Id,
+            FirstName = "Nieuw",
+            LastName = "Naam",
+            Role = "staff_member",
+            Color = "#FF5733",
+        };
+
+        await handler.Handle(command);
+
+        Assert.False(keycloak.UpdateUserCalled);
+    }
+
+    [Fact]
+    public async Task UpdateStaffMemberHandler_KeycloakFails_StillUpdatesDb()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db, firstName: "Oud", lastName: "Naam");
+        existing.KeycloakUserId = "kc-user-123";
+        await db.SaveChangesAsync();
+
+        var keycloak = new FailingKeycloakAdminService();
+        var handler = new UpdateStaffMemberHandler(db, keycloak, NullLogger<UpdateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new UpdateStaffMemberCommand
+        {
+            Id = existing.Id,
+            FirstName = "Nieuw",
+            LastName = "Naam",
+            Role = "staff_member",
+            Color = "#FF5733",
+        };
+
+        var result = await handler.Handle(command);
+
+        // DB update should still succeed even when Keycloak fails.
+        var response = result.AsT0;
+        Assert.Equal("Nieuw", response.FirstName);
+    }
+
+    [Fact]
     public async Task DeactivateStaffMemberHandler_HappyPath_SetsDeactivatedAtUtc()
     {
         await using var db = CreateDbContext();
         var existing = CreateTestStaffMember(db);
-        var handler = new DeactivateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new DeactivateStaffMemberHandler(db, keycloak, NullLogger<DeactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
 
@@ -196,10 +328,27 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task DeactivateStaffMemberHandler_WithKeycloakUser_CallsDisable()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.KeycloakUserId = "kc-user-456";
+        await db.SaveChangesAsync();
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new DeactivateStaffMemberHandler(db, keycloak, NullLogger<DeactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
+
+        await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
+
+        Assert.True(keycloak.DisableUserCalled);
+    }
+
+    [Fact]
     public async Task DeactivateStaffMemberHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new DeactivateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new DeactivateStaffMemberHandler(db, keycloak, NullLogger<DeactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new DeactivateStaffMemberCommand(Guid.NewGuid()));
 
@@ -216,11 +365,30 @@ public class StaffHandlerTests
         existing.DeactivatedBy = Guid.Empty;
         await db.SaveChangesAsync();
 
-        var handler = new DeactivateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new DeactivateStaffMemberHandler(db, keycloak, NullLogger<DeactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
         await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
 
         var saved = await db.StaffMembers.FirstAsync();
         Assert.Equal(originalDeactivatedAt, saved.DeactivatedAtUtc);
+    }
+
+    [Fact]
+    public async Task DeactivateStaffMemberHandler_KeycloakFails_StillDeactivatesInDb()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.KeycloakUserId = "kc-user-789";
+        await db.SaveChangesAsync();
+
+        var keycloak = new FailingKeycloakAdminService();
+        var handler = new DeactivateStaffMemberHandler(db, keycloak, NullLogger<DeactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new DeactivateStaffMemberCommand(existing.Id));
+
+        // DB should still be deactivated even when Keycloak fails.
+        var response = result.AsT0;
+        Assert.False(response.IsActive);
     }
 
     [Fact]
@@ -232,7 +400,8 @@ public class StaffHandlerTests
         existing.DeactivatedBy = Guid.Empty;
         await db.SaveChangesAsync();
 
-        var handler = new ReactivateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ReactivateStaffMemberHandler(db, keycloak, NullLogger<ReactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
         var result = await handler.Handle(new ReactivateStaffMemberCommand(existing.Id));
 
         var response = result.AsT0;
@@ -242,13 +411,51 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task ReactivateStaffMemberHandler_WithKeycloakUser_CallsEnable()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.DeactivatedAtUtc = DateTimeOffset.UtcNow;
+        existing.DeactivatedBy = Guid.Empty;
+        existing.KeycloakUserId = "kc-user-enable";
+        await db.SaveChangesAsync();
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ReactivateStaffMemberHandler(db, keycloak, NullLogger<ReactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        await handler.Handle(new ReactivateStaffMemberCommand(existing.Id));
+
+        Assert.True(keycloak.EnableUserCalled);
+    }
+
+    [Fact]
     public async Task ReactivateStaffMemberHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new ReactivateStaffMemberHandler(db);
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ReactivateStaffMemberHandler(db, keycloak, NullLogger<ReactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ReactivateStaffMemberCommand(Guid.NewGuid()));
 
         Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task ReactivateStaffMemberHandler_KeycloakFails_StillReactivatesInDb()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.DeactivatedAtUtc = DateTimeOffset.UtcNow;
+        existing.DeactivatedBy = Guid.Empty;
+        existing.KeycloakUserId = "kc-user-fail";
+        await db.SaveChangesAsync();
+
+        var keycloak = new FailingKeycloakAdminService();
+        var handler = new ReactivateStaffMemberHandler(db, keycloak, NullLogger<ReactivateStaffMemberHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new ReactivateStaffMemberCommand(existing.Id));
+
+        // DB should still be reactivated even when Keycloak fails.
+        var response = result.AsT0;
+        Assert.True(response.IsActive);
     }
 }

@@ -3,7 +3,6 @@ using Chairly.Api.Features.Services.CreateServiceCategory;
 using Chairly.Api.Features.Services.DeleteServiceCategory;
 using Chairly.Api.Features.Services.GetServiceCategoriesList;
 using Chairly.Api.Features.Services.UpdateServiceCategory;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +24,7 @@ public class ServiceCategoryHandlerTests
     public async Task CreateServiceCategoryHandler_HappyPath_CreatesAndReturnsCategory()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceCategoryHandler(db);
+        var handler = new CreateServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCategoryCommand { Name = "Hair Services", SortOrder = 1 };
 
         var result = await handler.Handle(command);
@@ -53,11 +52,11 @@ public class ServiceCategoryHandlerTests
     public async Task UpdateServiceCategoryHandler_HappyPath_UpdatesAndReturnsCategory()
     {
         await using var db = CreateDbContext();
-        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TenantConstants.DefaultTenantId, Name = "Old Name", SortOrder = 0 };
+        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TestTenantContext.DefaultTenantId, Name = "Old Name", SortOrder = 0 };
         db.ServiceCategories.Add(existing);
         await db.SaveChangesAsync();
 
-        var handler = new UpdateServiceCategoryHandler(db);
+        var handler = new UpdateServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new UpdateServiceCategoryCommand { Id = existing.Id, Name = "New Name", SortOrder = 5 };
 
         var result = await handler.Handle(command);
@@ -71,7 +70,7 @@ public class ServiceCategoryHandlerTests
     public async Task UpdateServiceCategoryHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateServiceCategoryHandler(db);
+        var handler = new UpdateServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new UpdateServiceCategoryCommand { Id = Guid.NewGuid(), Name = "Any", SortOrder = 0 };
 
         var result = await handler.Handle(command);
@@ -84,11 +83,11 @@ public class ServiceCategoryHandlerTests
     public async Task DeleteServiceCategoryHandler_HappyPath_DeletesAndReturnsSuccess()
     {
         await using var db = CreateDbContext();
-        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TenantConstants.DefaultTenantId, Name = "Test", SortOrder = 0 };
+        var existing = new ServiceCategory { Id = Guid.NewGuid(), TenantId = TestTenantContext.DefaultTenantId, Name = "Test", SortOrder = 0 };
         db.ServiceCategories.Add(existing);
         await db.SaveChangesAsync();
 
-        var handler = new DeleteServiceCategoryHandler(db);
+        var handler = new DeleteServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new DeleteServiceCategoryCommand { Id = existing.Id };
 
         var result = await handler.Handle(command);
@@ -102,7 +101,7 @@ public class ServiceCategoryHandlerTests
     public async Task DeleteServiceCategoryHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new DeleteServiceCategoryHandler(db);
+        var handler = new DeleteServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new DeleteServiceCategoryCommand { Id = Guid.NewGuid() };
 
         var result = await handler.Handle(command);
@@ -115,13 +114,13 @@ public class ServiceCategoryHandlerTests
     public async Task CreateServiceCategoryHandler_HappyPath_AssignsTenantId()
     {
         await using var db = CreateDbContext();
-        var handler = new CreateServiceCategoryHandler(db);
+        var handler = new CreateServiceCategoryHandler(db, TestTenantContext.Create());
         var command = new CreateServiceCategoryCommand { Name = "Nails", SortOrder = 0 };
 
         await handler.Handle(command);
 
         var entity = await db.ServiceCategories.SingleAsync();
-        Assert.Equal(TenantConstants.DefaultTenantId, entity.TenantId);
+        Assert.Equal(TestTenantContext.DefaultTenantId, entity.TenantId);
     }
 
     [Fact]
@@ -131,7 +130,7 @@ public class ServiceCategoryHandlerTests
         db.ServiceCategories.Add(new ServiceCategory
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "B",
             SortOrder = 2,
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -139,13 +138,13 @@ public class ServiceCategoryHandlerTests
         db.ServiceCategories.Add(new ServiceCategory
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = "A",
             SortOrder = 1,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         });
         await db.SaveChangesAsync();
-        var handler = new GetServiceCategoriesListHandler(db);
+        var handler = new GetServiceCategoriesListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetServiceCategoriesListQuery());
 

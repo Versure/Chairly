@@ -8,7 +8,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Services.GetService;
 
 #pragma warning disable CA1812
-internal sealed class GetServiceHandler(ChairlyDbContext db) : IRequestHandler<GetServiceQuery, OneOf<ServiceResponse, NotFound>>
+internal sealed class GetServiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetServiceQuery, OneOf<ServiceResponse, NotFound>>
 {
     public async Task<OneOf<ServiceResponse, NotFound>> Handle(GetServiceQuery query, CancellationToken cancellationToken = default)
     {
@@ -16,7 +16,7 @@ internal sealed class GetServiceHandler(ChairlyDbContext db) : IRequestHandler<G
 
         var service = await db.Services
             .Include(s => s.Category)
-            .FirstOrDefaultAsync(s => s.Id == query.Id && s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(s => s.Id == query.Id && s.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (service is null)

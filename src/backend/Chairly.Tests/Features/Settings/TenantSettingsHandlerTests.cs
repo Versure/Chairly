@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Chairly.Api.Features.Settings.GetCompanyInfo;
 using Chairly.Api.Features.Settings.UpdateCompanyInfo;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +22,7 @@ public class TenantSettingsHandlerTests
         var settings = new TenantSettings
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             CompanyName = "Test Salon",
             CompanyEmail = "info@testsalon.nl",
             Street = "Teststraat",
@@ -45,7 +44,7 @@ public class TenantSettingsHandlerTests
     public async Task GetCompanyInfoHandler_NoExistingSettings_AutoCreatesEmptySettings()
     {
         await using var db = CreateDbContext();
-        var handler = new GetCompanyInfoHandler(db);
+        var handler = new GetCompanyInfoHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetCompanyInfoQuery());
 
@@ -67,7 +66,7 @@ public class TenantSettingsHandlerTests
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
-        var handler = new GetCompanyInfoHandler(db);
+        var handler = new GetCompanyInfoHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetCompanyInfoQuery());
 
@@ -88,7 +87,7 @@ public class TenantSettingsHandlerTests
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
-        var handler = new UpdateCompanyInfoHandler(db);
+        var handler = new UpdateCompanyInfoHandler(db, TestTenantContext.Create());
         var command = new UpdateCompanyInfoCommand
         {
             CompanyName = "Updated Salon",
@@ -123,7 +122,7 @@ public class TenantSettingsHandlerTests
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
-        var handler = new UpdateCompanyInfoHandler(db);
+        var handler = new UpdateCompanyInfoHandler(db, TestTenantContext.Create());
         var command = new UpdateCompanyInfoCommand
         {
             CompanyName = null,
@@ -157,7 +156,7 @@ public class TenantSettingsHandlerTests
     public async Task UpdateCompanyInfoHandler_NoExistingSettings_AutoCreatesAndUpdates()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateCompanyInfoHandler(db);
+        var handler = new UpdateCompanyInfoHandler(db, TestTenantContext.Create());
         var command = new UpdateCompanyInfoCommand
         {
             CompanyName = "New Salon",
@@ -177,7 +176,7 @@ public class TenantSettingsHandlerTests
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
-        var handler = new UpdateCompanyInfoHandler(db);
+        var handler = new UpdateCompanyInfoHandler(db, TestTenantContext.Create());
         var command = new UpdateCompanyInfoCommand
         {
             CompanyName = "Updated",

@@ -11,14 +11,19 @@ internal static class ServiceEndpoints
 {
     public static IEndpointRouteBuilder MapServiceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/services");
+        var readGroup = app.MapGroup("/api/services")
+            .RequireAuthorization("RequireStaff");
 
-        group.MapCreateService();
-        group.MapGetServicesList();
-        group.MapGetService();
-        group.MapUpdateService();
-        group.MapDeleteService();
-        group.MapToggleServiceActive();
+        readGroup.MapGetServicesList();
+        readGroup.MapGetService();
+
+        var writeGroup = app.MapGroup("/api/services")
+            .RequireAuthorization("RequireManager");
+
+        writeGroup.MapCreateService();
+        writeGroup.MapUpdateService();
+        writeGroup.MapDeleteService();
+        writeGroup.MapToggleServiceActive();
 
         return app;
     }

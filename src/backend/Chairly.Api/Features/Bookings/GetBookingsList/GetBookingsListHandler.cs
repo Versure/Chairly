@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Bookings.GetBookingsList;
 
 #pragma warning disable CA1812
-internal sealed class GetBookingsListHandler(ChairlyDbContext db) : IRequestHandler<GetBookingsListQuery, IReadOnlyList<BookingResponse>>
+internal sealed class GetBookingsListHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetBookingsListQuery, IReadOnlyList<BookingResponse>>
 {
     public async Task<IReadOnlyList<BookingResponse>> Handle(GetBookingsListQuery query, CancellationToken cancellationToken = default)
     {
@@ -14,7 +14,7 @@ internal sealed class GetBookingsListHandler(ChairlyDbContext db) : IRequestHand
 
         var queryable = db.Bookings
             .Include(b => b.BookingServices)
-            .Where(b => b.TenantId == TenantConstants.DefaultTenantId);
+            .Where(b => b.TenantId == tenantContext.TenantId);
 
         if (query.Date.HasValue)
         {

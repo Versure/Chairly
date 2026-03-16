@@ -7,12 +7,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Staff.GetStaffList;
 
 #pragma warning disable CA1812
-internal sealed class GetStaffListHandler(ChairlyDbContext db) : IRequestHandler<GetStaffListQuery, IEnumerable<StaffMemberResponse>>
+internal sealed class GetStaffListHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetStaffListQuery, IEnumerable<StaffMemberResponse>>
 {
     public async Task<IEnumerable<StaffMemberResponse>> Handle(GetStaffListQuery query, CancellationToken cancellationToken = default)
     {
         var members = await db.StaffMembers
-            .Where(s => s.TenantId == TenantConstants.DefaultTenantId)
+            .Where(s => s.TenantId == tenantContext.TenantId)
             .OrderBy(s => s.FirstName)
             .ThenBy(s => s.LastName)
             .ToListAsync(cancellationToken)
