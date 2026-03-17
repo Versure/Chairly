@@ -37,7 +37,8 @@ internal static partial class KeycloakDevSeeder
 
         // Get admin token using the built-in admin-cli client with password grant.
         // This works on a fresh Keycloak without any pre-existing service accounts.
-        var token = await GetAdminTokenAsync(httpClientFactory, keycloakUrl, adminPassword, ct).ConfigureAwait(false);
+        // Includes retry logic because Keycloak may not be fully ready on first start.
+        var token = await GetAdminTokenAsync(httpClientFactory, keycloakUrl, adminPassword, logger, ct).ConfigureAwait(false);
 
         // Step 1: Create realm (skip if already exists).
         await CreateRealmAsync(httpClientFactory, token, keycloakUrl, realmName,
@@ -66,24 +67,43 @@ internal static partial class KeycloakDevSeeder
     }
 
     private static async Task<string> GetAdminTokenAsync(
-        IHttpClientFactory httpClientFactory, string keycloakUrl, string adminPassword, CancellationToken ct)
+        IHttpClientFactory httpClientFactory, string keycloakUrl, string adminPassword,
+        ILogger logger, CancellationToken ct)
     {
-        using var client = httpClientFactory.CreateClient();
-        using var request = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
+        // Keycloak may not be fully ready even after Aspire reports the container as running.
+        // Retry a few times with backoff so the app starts on the first attempt.
+        const int maxAttempts = 5;
+        const int delayMs = 2000;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            ["grant_type"] = "password",
-            ["client_id"] = "admin-cli",
-            ["username"] = "admin",
-            ["password"] = adminPassword,
-        });
+            try
+            {
+                using var client = httpClientFactory.CreateClient();
+                using var request = new FormUrlEncodedContent(new Dictionary<string, string>(StringComparer.Ordinal)
+                {
+                    ["grant_type"] = "password",
+                    ["client_id"] = "admin-cli",
+                    ["username"] = "admin",
+                    ["password"] = adminPassword,
+                });
 
-        var response = await client.PostAsync(
-            new Uri($"{keycloakUrl}/realms/master/protocol/openid-connect/token"),
-            request, ct).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+                var response = await client.PostAsync(
+                    new Uri($"{keycloakUrl}/realms/master/protocol/openid-connect/token"),
+                    request, ct).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
 
-        var tokenResponse = await response.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
-        return tokenResponse.GetProperty("access_token").GetString()!;
+                var tokenResponse = await response.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+                return tokenResponse.GetProperty("access_token").GetString()!;
+            }
+            catch (HttpRequestException) when (attempt < maxAttempts)
+            {
+                LogKeycloakNotReady(logger, attempt, maxAttempts);
+                await Task.Delay(delayMs * attempt, ct).ConfigureAwait(false);
+            }
+        }
+
+        throw new InvalidOperationException("Keycloak admin API did not become available after retries.");
     }
 
     private static async Task<bool> CreateRealmAsync(
@@ -257,4 +277,10 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed complete. Login: {Email} / {Password}")]
     private static partial void LogSeedComplete(ILogger logger, string email, string password);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Keycloak admin API not ready (attempt {Attempt}/{MaxAttempts}), retrying...")]
+    private static partial void LogKeycloakNotReady(ILogger logger, int attempt, int maxAttempts);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Keycloak dev seeder failed — the app will continue without seeded data. You may need to configure Keycloak manually or restart once Keycloak is ready.")]
+    internal static partial void LogSeederFailed(ILogger logger, Exception exception);
 }

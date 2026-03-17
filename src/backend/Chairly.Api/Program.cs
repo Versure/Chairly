@@ -230,8 +230,21 @@ if (runMigrations)
 
 if (app.Environment.IsDevelopment())
 {
-    await KeycloakDevSeeder.SeedAsync(
-        app.Services, app.Configuration, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+    try
+    {
+        await KeycloakDevSeeder.SeedAsync(
+            app.Services, app.Configuration, app.Lifetime.ApplicationStopping).ConfigureAwait(false);
+    }
+    catch (HttpRequestException ex)
+    {
+        var seederLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("KeycloakDevSeeder");
+        KeycloakDevSeeder.LogSeederFailed(seederLogger, ex);
+    }
+    catch (InvalidOperationException ex)
+    {
+        var seederLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("KeycloakDevSeeder");
+        KeycloakDevSeeder.LogSeederFailed(seederLogger, ex);
+    }
 }
 
 await app.RunAsync().ConfigureAwait(false);
