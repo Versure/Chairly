@@ -8,6 +8,7 @@ using Chairly.Api.Features.Settings;
 using Chairly.Api.Features.Staff;
 using Chairly.Api.Features.Tenants;
 using Chairly.Api.Shared.Mediator;
+using Chairly.Api.Shared.Persistence;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Infrastructure.Keycloak;
 using Chairly.Infrastructure.Messaging;
@@ -147,6 +148,7 @@ var runMigrations = app.Configuration.GetValue<bool>("Migrations:RunOnStartup", 
 
 if (runMigrations)
 {
+    var migrationLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Chairly.Migrations");
     var stoppingToken = app.Lifetime.ApplicationStopping;
 
     // Use a dedicated, non-pooled connection for the advisory lock so that:
@@ -180,6 +182,11 @@ if (runMigrations)
             await lockCmd.DisposeAsync().ConfigureAwait(false);
         }
 
+        // On a fresh database, EF Core logs a 'fail' for the initial SELECT from
+        // __EFMigrationsHistory because the table doesn't exist yet. This is expected —
+        // EF creates the table automatically and proceeds with migrations.
+        MigrationLog.ApplyingMigrations(migrationLogger);
+
         var migrateScope = app.Services.CreateAsyncScope();
         try
         {
@@ -190,6 +197,8 @@ if (runMigrations)
         {
             await migrateScope.DisposeAsync().ConfigureAwait(false);
         }
+
+        MigrationLog.MigrationsApplied(migrationLogger);
 
         // Explicitly unlock before closing. If this fails (e.g. broken connection),
         // disposing the non-pooled connection will end the session and release the lock.
