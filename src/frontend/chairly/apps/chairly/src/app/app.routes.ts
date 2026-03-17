@@ -1,12 +1,16 @@
 import { Route } from '@angular/router';
 
-import { ShellComponent } from '@org/shared-lib';
+import { authGuard, roleGuard, ShellComponent } from '@org/shared-lib';
+
+import { AccessDeniedComponent } from './access-denied/access-denied.component';
 
 export const appRoutes: Route[] = [
   { path: '', redirectTo: 'diensten', pathMatch: 'full' },
+  { path: 'toegang-geweigerd', component: AccessDeniedComponent },
   {
     path: '',
     component: ShellComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: 'boekingen',
@@ -22,6 +26,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'facturen',
+        canActivate: [roleGuard('manager')],
         loadChildren: () => import('@org/chairly-lib').then((m) => m.billingRoutes),
       },
       {
@@ -34,6 +39,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'instellingen',
+        canActivate: [roleGuard('owner')],
         loadChildren: () => import('@org/chairly-lib').then((m) => m.settingsRoutes),
       },
     ],

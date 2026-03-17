@@ -1,5 +1,4 @@
 using Chairly.Api.Features.Notifications.GetNotificationsList;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
@@ -22,7 +21,7 @@ public class NotificationHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = firstName,
             LastName = lastName,
             Email = "test@example.com",
@@ -45,7 +44,7 @@ public class NotificationHandlerTests
         var notification = new Notification
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             RecipientId = clientId,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,
@@ -68,7 +67,7 @@ public class NotificationHandlerTests
     public async Task GetNotificationsListHandler_ReturnsEmptyList_WhenNoNotifications()
     {
         await using var db = CreateDbContext();
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -81,7 +80,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         CreateTestNotification(db, client.Id);
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -95,7 +94,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         CreateTestNotification(db, client.Id, sentAtUtc: DateTimeOffset.UtcNow);
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -109,7 +108,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         CreateTestNotification(db, client.Id, failedAtUtc: DateTimeOffset.UtcNow, failureReason: "SMTP error");
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -127,7 +126,7 @@ public class NotificationHandlerTests
         var older = new Notification
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             RecipientId = client.Id,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,
@@ -140,7 +139,7 @@ public class NotificationHandlerTests
         var newer = new Notification
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             RecipientId = client.Id,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,
@@ -154,7 +153,7 @@ public class NotificationHandlerTests
         db.Notifications.Add(newer);
         await db.SaveChangesAsync();
 
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -169,7 +168,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db, "Jan", "de Vries");
         CreateTestNotification(db, client.Id);
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -183,7 +182,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         CreateTestNotification(db, client.Id, NotificationType.BookingCancellation);
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -197,7 +196,7 @@ public class NotificationHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         CreateTestNotification(db, client.Id);
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
@@ -212,7 +211,7 @@ public class NotificationHandlerTests
         // This test documents the requirement and should be unskipped
         // when role-based authorization is wired via Keycloak.
         await using var db = CreateDbContext();
-        var handler = new GetNotificationsListHandler(db);
+        var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
 #pragma warning disable MA0026 // Inject a StaffMember principal and assert 403 response once Keycloak auth is wired
         await handler.Handle(new GetNotificationsListQuery());

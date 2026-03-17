@@ -1,18 +1,26 @@
 using System.Text.Json;
 using Chairly.Api.Shared.Mediator;
+using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
+using Chairly.Infrastructure.Keycloak;
 using Chairly.Infrastructure.Persistence;
+using Microsoft.Extensions.Logging;
+using OneOf;
 
 namespace Chairly.Api.Features.Staff.CreateStaffMember;
 
 #pragma warning disable CA1812
-internal sealed class CreateStaffMemberHandler(ChairlyDbContext db) : IRequestHandler<CreateStaffMemberCommand, StaffMemberResponse>
+internal sealed partial class CreateStaffMemberHandler(
+    ChairlyDbContext db,
+    IKeycloakAdminService keycloakAdmin,
+    ILogger<CreateStaffMemberHandler> logger,
+    ITenantContext tenantContext) : IRequestHandler<CreateStaffMemberCommand, OneOf<StaffMemberResponse, KeycloakError>>
 {
     private static readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public async Task<StaffMemberResponse> Handle(CreateStaffMemberCommand command, CancellationToken cancellationToken = default)
+    public async Task<OneOf<StaffMemberResponse, KeycloakError>> Handle(CreateStaffMemberCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
@@ -21,21 +29,44 @@ internal sealed class CreateStaffMemberHandler(ChairlyDbContext db) : IRequestHa
         var member = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = tenantContext.TenantId,
             FirstName = command.FirstName,
             LastName = command.LastName,
+            Email = command.Email,
             Role = ParseRole(command.Role),
             Color = command.Color,
             PhotoUrl = command.PhotoUrl,
             ScheduleJson = scheduleJson,
             CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak
-            CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+            CreatedBy = tenantContext.UserId,
         };
 
         db.StaffMembers.Add(member);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            var keycloakUserId = await keycloakAdmin.CreateUserAsync(
+                tenantContext.TenantId, command.Email, command.FirstName, command.LastName,
+                MapRoleToString(member.Role), cancellationToken).ConfigureAwait(false);
+
+            await keycloakAdmin.AssignRealmRoleAsync(
+                tenantContext.TenantId, keycloakUserId, MapRoleToString(member.Role),
+                cancellationToken).ConfigureAwait(false);
+
+            member.KeycloakUserId = keycloakUserId;
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            LogKeycloakCreateFailed(logger, member.Id, ex);
+
+            // Roll back the DB record on Keycloak failure.
+            db.StaffMembers.Remove(member);
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            return new KeycloakError("Failed to create Keycloak user for staff member.");
+        }
 
         return ToResponse(member);
     }
@@ -63,6 +94,7 @@ internal sealed class CreateStaffMemberHandler(ChairlyDbContext db) : IRequestHa
             member.Id,
             member.FirstName,
             member.LastName,
+            member.Email,
             MapRoleToString(member.Role),
             member.Color,
             member.PhotoUrl,
@@ -71,5 +103,8 @@ internal sealed class CreateStaffMemberHandler(ChairlyDbContext db) : IRequestHa
             member.CreatedAtUtc,
             member.UpdatedAtUtc);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to create Keycloak user for staff member {StaffMemberId}")]
+    private static partial void LogKeycloakCreateFailed(ILogger logger, Guid staffMemberId, Exception exception);
 }
 #pragma warning restore CA1812

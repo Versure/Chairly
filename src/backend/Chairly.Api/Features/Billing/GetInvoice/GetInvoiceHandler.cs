@@ -8,7 +8,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.GetInvoice;
 
-internal sealed class GetInvoiceHandler(ChairlyDbContext db) : IRequestHandler<GetInvoiceQuery, OneOf<InvoiceResponse, NotFound>>
+internal sealed class GetInvoiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetInvoiceQuery, OneOf<InvoiceResponse, NotFound>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound>> Handle(GetInvoiceQuery query, CancellationToken cancellationToken = default)
     {
@@ -16,7 +16,7 @@ internal sealed class GetInvoiceHandler(ChairlyDbContext db) : IRequestHandler<G
 
         var invoice = await db.Invoices
             .Include(i => i.LineItems)
-            .FirstOrDefaultAsync(i => i.Id == query.Id && i.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(i => i.Id == query.Id && i.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (invoice is null)

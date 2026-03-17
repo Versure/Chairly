@@ -10,7 +10,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.UpdateBooking;
 
 #pragma warning disable CA1812
-internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandler<UpdateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
+internal sealed class UpdateBookingHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateBookingCommand, OneOf<BookingResponse, NotFound, Conflict>>
 {
     public async Task<OneOf<BookingResponse, NotFound, Conflict>> Handle(UpdateBookingCommand command, CancellationToken cancellationToken = default)
     {
@@ -18,7 +18,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
 
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
-            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -64,7 +64,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
     private async Task<bool> ValidateReferencesAsync(UpdateBookingCommand command, CancellationToken cancellationToken)
     {
         var clientExists = await db.Clients
-            .AnyAsync(c => c.Id == command.ClientId && c.TenantId == TenantConstants.DefaultTenantId && c.DeletedAtUtc == null, cancellationToken)
+            .AnyAsync(c => c.Id == command.ClientId && c.TenantId == tenantContext.TenantId && c.DeletedAtUtc == null, cancellationToken)
             .ConfigureAwait(false);
 
         if (!clientExists)
@@ -73,14 +73,14 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
         }
 
         return await db.StaffMembers
-            .AnyAsync(s => s.Id == command.StaffMemberId && s.TenantId == TenantConstants.DefaultTenantId && s.DeactivatedAtUtc == null, cancellationToken)
+            .AnyAsync(s => s.Id == command.StaffMemberId && s.TenantId == tenantContext.TenantId && s.DeactivatedAtUtc == null, cancellationToken)
             .ConfigureAwait(false);
     }
 
     private async Task<List<Service>> LoadActiveServicesAsync(List<Guid> serviceIds, CancellationToken cancellationToken)
     {
         return await db.Services
-            .Where(s => serviceIds.Contains(s.Id) && s.TenantId == TenantConstants.DefaultTenantId && s.IsActive)
+            .Where(s => serviceIds.Contains(s.Id) && s.TenantId == tenantContext.TenantId && s.IsActive)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -91,7 +91,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
             .AnyAsync(b =>
                 b.Id != excludeBookingId
                 && b.StaffMemberId == staffMemberId
-                && b.TenantId == TenantConstants.DefaultTenantId
+                && b.TenantId == tenantContext.TenantId
                 && b.CancelledAtUtc == null
                 && b.NoShowAtUtc == null
                 && b.StartTime < endTime
@@ -99,7 +99,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
             .ConfigureAwait(false);
     }
 
-    private static void ApplyUpdates(Booking booking, UpdateBookingCommand command, DateTimeOffset newEndTime)
+    private void ApplyUpdates(Booking booking, UpdateBookingCommand command, DateTimeOffset newEndTime)
     {
         booking.ClientId = command.ClientId;
         booking.StaffMemberId = command.StaffMemberId;
@@ -107,9 +107,7 @@ internal sealed class UpdateBookingHandler(ChairlyDbContext db) : IRequestHandle
         booking.EndTime = newEndTime;
         booking.Notes = command.Notes;
         booking.UpdatedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-        booking.UpdatedBy = Guid.Empty;
-#pragma warning restore MA0026
+        booking.UpdatedBy = tenantContext.UserId;
     }
 
     private void ReplaceBookingServices(Booking booking, List<Guid> serviceIds, List<Service> services)

@@ -12,14 +12,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.CancelBooking;
 
 #pragma warning disable CA1812
-internal sealed partial class CancelBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher, ILogger<CancelBookingHandler> logger) : IRequestHandler<CancelBookingCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed partial class CancelBookingHandler(ChairlyDbContext db, IBookingEventPublisher eventPublisher, ILogger<CancelBookingHandler> logger, ITenantContext tenantContext) : IRequestHandler<CancelBookingCommand, OneOf<Success, NotFound, Conflict>>
 {
     public async Task<OneOf<Success, NotFound, Conflict>> Handle(CancelBookingCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var booking = await db.Bookings
-            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -33,9 +33,7 @@ internal sealed partial class CancelBookingHandler(ChairlyDbContext db, IBooking
         }
 
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-        booking.CancelledBy = Guid.Empty;
-#pragma warning restore MA0026
+        booking.CancelledBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

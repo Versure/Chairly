@@ -9,7 +9,7 @@ using OneOf.Types;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Billing.VoidInvoice;
 
-internal sealed class VoidInvoiceHandler(ChairlyDbContext db) : IRequestHandler<VoidInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
+internal sealed class VoidInvoiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<VoidInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
 {
     public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable>> Handle(VoidInvoiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -17,7 +17,7 @@ internal sealed class VoidInvoiceHandler(ChairlyDbContext db) : IRequestHandler<
 
         var invoice = await db.Invoices
             .Include(i => i.LineItems)
-            .FirstOrDefaultAsync(i => i.Id == command.Id && i.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(i => i.Id == command.Id && i.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (invoice is null)
@@ -34,9 +34,7 @@ internal sealed class VoidInvoiceHandler(ChairlyDbContext db) : IRequestHandler<
         if (invoice.VoidedAtUtc == null)
         {
             invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            invoice.VoidedBy = Guid.Empty;
-#pragma warning restore MA0026
+            invoice.VoidedBy = tenantContext.UserId;
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

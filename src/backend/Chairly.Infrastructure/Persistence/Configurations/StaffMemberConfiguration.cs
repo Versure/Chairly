@@ -24,6 +24,14 @@ internal sealed class StaffMemberConfiguration : IEntityTypeConfiguration<StaffM
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(s => s.Email)
+            .IsRequired()
+            .HasMaxLength(256);
+
+        builder.Property(s => s.KeycloakUserId)
+            .IsRequired(false)
+            .HasMaxLength(256);
+
         builder.Property(s => s.Color)
             .IsRequired()
             .HasMaxLength(20);
@@ -49,6 +57,7 @@ internal sealed class StaffMemberConfiguration : IEntityTypeConfiguration<StaffM
             .HasConversion<string>();
 
         builder.HasIndex(s => new { s.FirstName, s.LastName, s.TenantId });
+        builder.HasIndex(s => new { s.TenantId, s.Email }).IsUnique().HasFilter("\"Email\" != ''");
     }
 }
 #pragma warning restore CA1812

@@ -10,13 +10,18 @@ internal static class StaffEndpoints
 {
     public static IEndpointRouteBuilder MapStaffEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/staff");
+        var readGroup = app.MapGroup("/api/staff")
+            .RequireAuthorization("RequireStaff");
 
-        group.MapGetStaffList();
-        group.MapCreateStaffMember();
-        group.MapUpdateStaffMember();
-        group.MapDeactivateStaffMember();
-        group.MapReactivateStaffMember();
+        readGroup.MapGetStaffList();
+
+        var writeGroup = app.MapGroup("/api/staff")
+            .RequireAuthorization("RequireManager");
+
+        writeGroup.MapCreateStaffMember();
+        writeGroup.MapUpdateStaffMember();
+        writeGroup.MapDeactivateStaffMember();
+        writeGroup.MapReactivateStaffMember();
 
         return app;
     }

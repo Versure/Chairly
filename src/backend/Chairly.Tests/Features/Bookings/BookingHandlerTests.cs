@@ -9,7 +9,6 @@ using Chairly.Api.Features.Bookings.MarkBookingNoShow;
 using Chairly.Api.Features.Bookings.StartBooking;
 using Chairly.Api.Features.Bookings.UpdateBooking;
 using Chairly.Api.Shared.Results;
-using Chairly.Api.Shared.Tenancy;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
 using Chairly.Tests.Helpers;
@@ -34,7 +33,7 @@ public class BookingHandlerTests
         var client = new Client
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "Client",
             CreatedAtUtc = DateTimeOffset.UtcNow,
@@ -49,7 +48,7 @@ public class BookingHandlerTests
         var staffMember = new StaffMember
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             FirstName = "Test",
             LastName = "Staff",
             Color = "#000000",
@@ -65,7 +64,7 @@ public class BookingHandlerTests
         var service = new Service
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             Name = name,
             Duration = duration ?? TimeSpan.FromMinutes(30),
             Price = price,
@@ -91,7 +90,7 @@ public class BookingHandlerTests
         var booking = new Booking
         {
             Id = Guid.NewGuid(),
-            TenantId = TenantConstants.DefaultTenantId,
+            TenantId = TestTenantContext.DefaultTenantId,
             ClientId = clientId,
             StaffMemberId = staffMemberId,
             StartTime = start,
@@ -182,7 +181,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var startTime = DateTimeOffset.UtcNow.AddHours(1);
 
         var command = new CreateBookingCommand
@@ -213,7 +212,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db, TimeSpan.FromMinutes(45), 35.00m, "Haircut");
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -239,7 +238,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var service1 = CreateTestService(db, TimeSpan.FromMinutes(30), name: "Service 1");
         var service2 = CreateTestService(db, TimeSpan.FromMinutes(15), name: "Service 2");
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var startTime = DateTimeOffset.UtcNow.AddHours(1);
 
         var command = new CreateBookingCommand
@@ -261,7 +260,7 @@ public class BookingHandlerTests
         await using var db = CreateDbContext();
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -286,7 +285,7 @@ public class BookingHandlerTests
         await db.SaveChangesAsync();
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -307,7 +306,7 @@ public class BookingHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         var service = CreateTestService(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -331,7 +330,7 @@ public class BookingHandlerTests
         staff.DeactivatedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
         var service = CreateTestService(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -352,7 +351,7 @@ public class BookingHandlerTests
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -376,7 +375,7 @@ public class BookingHandlerTests
         var service = CreateTestService(db);
         service.IsActive = false;
         await db.SaveChangesAsync();
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -400,7 +399,7 @@ public class BookingHandlerTests
         var service = CreateTestService(db);
         var startTime = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero);
         CreateTestBooking(db, client.Id, staff.Id, startTime, startTime.AddMinutes(30));
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -427,7 +426,7 @@ public class BookingHandlerTests
         var existingBooking = CreateTestBooking(db, client.Id, staff.Id, startTime, startTime.AddMinutes(30));
         existingBooking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -453,7 +452,7 @@ public class BookingHandlerTests
         var existingBooking = CreateTestBooking(db, client.Id, staff.Id, startTime, startTime.AddMinutes(30));
         existingBooking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -476,7 +475,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var service1 = CreateTestService(db, name: "First");
         var service2 = CreateTestService(db, name: "Second");
-        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -505,7 +504,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new GetBookingHandler(db);
+        var handler = new GetBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetBookingQuery(booking.Id));
 
@@ -519,7 +518,7 @@ public class BookingHandlerTests
     public async Task GetBookingHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GetBookingHandler(db);
+        var handler = new GetBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetBookingQuery(Guid.NewGuid()));
 
@@ -539,7 +538,7 @@ public class BookingHandlerTests
         var startTime2 = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero);
         CreateTestBooking(db, client.Id, staff.Id, startTime1, startTime1.AddMinutes(30));
         CreateTestBooking(db, client.Id, staff.Id, startTime2, startTime2.AddMinutes(30));
-        var handler = new GetBookingsListHandler(db);
+        var handler = new GetBookingsListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetBookingsListQuery(null, null))).ToList();
 
@@ -558,7 +557,7 @@ public class BookingHandlerTests
         var date2 = new DateTimeOffset(2026, 6, 2, 10, 0, 0, TimeSpan.Zero);
         CreateTestBooking(db, client.Id, staff.Id, date1, date1.AddMinutes(30));
         CreateTestBooking(db, client.Id, staff.Id, date2, date2.AddMinutes(30));
-        var handler = new GetBookingsListHandler(db);
+        var handler = new GetBookingsListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetBookingsListQuery(new DateOnly(2026, 6, 1), null))).ToList();
 
@@ -576,7 +575,7 @@ public class BookingHandlerTests
         var startTime = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero);
         CreateTestBooking(db, client.Id, staff1.Id, startTime, startTime.AddMinutes(30));
         CreateTestBooking(db, client.Id, staff2.Id, startTime.AddHours(1), startTime.AddHours(1).AddMinutes(30));
-        var handler = new GetBookingsListHandler(db);
+        var handler = new GetBookingsListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetBookingsListQuery(null, staff1.Id))).ToList();
 
@@ -596,7 +595,7 @@ public class BookingHandlerTests
         CreateTestBooking(db, client.Id, staff1.Id, date1Time, date1Time.AddMinutes(30));
         CreateTestBooking(db, client.Id, staff1.Id, date2Time, date2Time.AddMinutes(30));
         CreateTestBooking(db, client.Id, staff2.Id, date1Time.AddHours(2), date1Time.AddHours(2).AddMinutes(30));
-        var handler = new GetBookingsListHandler(db);
+        var handler = new GetBookingsListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetBookingsListQuery(new DateOnly(2026, 6, 1), staff1.Id))).ToList();
 
@@ -608,7 +607,7 @@ public class BookingHandlerTests
     public async Task GetBookingsListHandler_NoMatch_ReturnsEmptyList()
     {
         await using var db = CreateDbContext();
-        var handler = new GetBookingsListHandler(db);
+        var handler = new GetBookingsListHandler(db, TestTenantContext.Create());
 
         var result = (await handler.Handle(new GetBookingsListQuery(null, null))).ToList();
 
@@ -626,7 +625,7 @@ public class BookingHandlerTests
         var service = CreateTestService(db);
 
         // Create booking via handler to ensure proper EF change tracking with InMemory provider
-        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var createResult = await createHandler.Handle(new CreateBookingCommand
         {
             ClientId = client.Id,
@@ -636,7 +635,7 @@ public class BookingHandlerTests
         });
         var bookingId = createResult.AsT0.Id;
 
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
         var newStartTime = DateTimeOffset.UtcNow.AddHours(5);
 
         var command = new UpdateBookingCommand
@@ -664,7 +663,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -692,7 +691,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -721,7 +720,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -747,7 +746,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -771,7 +770,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -797,7 +796,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         staff.DeactivatedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -823,7 +822,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         service.IsActive = false;
         await db.SaveChangesAsync();
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -849,7 +848,7 @@ public class BookingHandlerTests
         var startTime = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero);
 
         // Create booking via handler for proper EF change tracking with InMemory provider
-        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var createResult = await createHandler.Handle(new CreateBookingCommand
         {
             ClientId = client.Id,
@@ -859,7 +858,7 @@ public class BookingHandlerTests
         });
         var bookingId = createResult.AsT0.Id;
 
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -885,7 +884,7 @@ public class BookingHandlerTests
         var startTime = new DateTimeOffset(2026, 6, 1, 10, 0, 0, TimeSpan.Zero);
         CreateTestBooking(db, client.Id, staff.Id, startTime, startTime.AddMinutes(30));
         var booking2 = CreateTestBooking(db, client.Id, staff.Id, startTime.AddHours(2), startTime.AddHours(2).AddMinutes(30));
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -911,7 +910,7 @@ public class BookingHandlerTests
         var service2 = CreateTestService(db, name: "New Service");
 
         // Create booking via handler for proper EF change tracking with InMemory provider
-        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance);
+        var createHandler = new CreateBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var createResult = await createHandler.Handle(new CreateBookingCommand
         {
             ClientId = client.Id,
@@ -921,7 +920,7 @@ public class BookingHandlerTests
         });
         var bookingId = createResult.AsT0.Id;
 
-        var handler = new UpdateBookingHandler(db);
+        var handler = new UpdateBookingHandler(db, TestTenantContext.Create());
 
         var command = new UpdateBookingCommand
         {
@@ -948,7 +947,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -967,7 +966,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -983,7 +982,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -994,7 +993,7 @@ public class BookingHandlerTests
     public async Task CancelBookingHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(Guid.NewGuid()));
 
@@ -1012,7 +1011,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -1029,7 +1028,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -1045,7 +1044,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, new NullBookingEventPublisher(), NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -1061,7 +1060,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1080,7 +1079,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1096,7 +1095,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1113,7 +1112,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1129,7 +1128,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1145,7 +1144,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1156,7 +1155,7 @@ public class BookingHandlerTests
     public async Task ConfirmBookingHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, new NullBookingEventPublisher(), NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(Guid.NewGuid()));
 
@@ -1173,7 +1172,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1192,7 +1191,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1208,7 +1207,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1225,7 +1224,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1241,7 +1240,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1257,7 +1256,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(booking.Id));
 
@@ -1268,7 +1267,7 @@ public class BookingHandlerTests
     public async Task StartBookingHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new StartBookingHandler(db);
+        var handler = new StartBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new StartBookingCommand(Guid.NewGuid()));
 
@@ -1287,7 +1286,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1304,7 +1303,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1320,7 +1319,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1337,7 +1336,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1353,7 +1352,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1369,7 +1368,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(booking.Id));
 
@@ -1380,7 +1379,7 @@ public class BookingHandlerTests
     public async Task CompleteBookingHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new CompleteBookingHandler(db);
+        var handler = new CompleteBookingHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new CompleteBookingCommand(Guid.NewGuid()));
 
@@ -1397,7 +1396,7 @@ public class BookingHandlerTests
         var client = CreateTestClient(db);
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1416,7 +1415,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1432,7 +1431,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1449,7 +1448,7 @@ public class BookingHandlerTests
         booking.StartedAtUtc = DateTimeOffset.UtcNow;
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1465,7 +1464,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1481,7 +1480,7 @@ public class BookingHandlerTests
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         booking.NoShowAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(booking.Id));
 
@@ -1492,7 +1491,7 @@ public class BookingHandlerTests
     public async Task MarkBookingNoShowHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new MarkBookingNoShowHandler(db);
+        var handler = new MarkBookingNoShowHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new MarkBookingNoShowCommand(Guid.NewGuid()));
 
@@ -1510,7 +1509,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var service = CreateTestService(db);
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new CreateBookingHandler(db, publisher, NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, publisher, NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
         var startTime = DateTimeOffset.UtcNow.AddHours(1);
 
         var command = new CreateBookingCommand
@@ -1534,7 +1533,7 @@ public class BookingHandlerTests
     {
         await using var db = CreateDbContext();
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new CreateBookingHandler(db, publisher, NullLogger<CreateBookingHandler>.Instance);
+        var handler = new CreateBookingHandler(db, publisher, NullLogger<CreateBookingHandler>.Instance, TestTenantContext.Create());
 
         var command = new CreateBookingCommand
         {
@@ -1558,7 +1557,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new ConfirmBookingHandler(db, publisher, NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, publisher, NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1578,7 +1577,7 @@ public class BookingHandlerTests
         booking.ConfirmedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new ConfirmBookingHandler(db, publisher, NullLogger<ConfirmBookingHandler>.Instance);
+        var handler = new ConfirmBookingHandler(db, publisher, NullLogger<ConfirmBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new ConfirmBookingCommand(booking.Id));
 
@@ -1594,7 +1593,7 @@ public class BookingHandlerTests
         var staff = CreateTestStaffMember(db);
         var booking = CreateTestBooking(db, client.Id, staff.Id);
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new CancelBookingHandler(db, publisher, NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, publisher, NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 
@@ -1614,7 +1613,7 @@ public class BookingHandlerTests
         booking.CancelledAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
         var publisher = new RecordingBookingEventPublisher();
-        var handler = new CancelBookingHandler(db, publisher, NullLogger<CancelBookingHandler>.Instance);
+        var handler = new CancelBookingHandler(db, publisher, NullLogger<CancelBookingHandler>.Instance, TestTenantContext.Create());
 
         var result = await handler.Handle(new CancelBookingCommand(booking.Id));
 

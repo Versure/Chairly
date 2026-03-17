@@ -9,7 +9,7 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Services.UpdateService;
 
 #pragma warning disable CA1812
-internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandler<UpdateServiceCommand, OneOf<ServiceResponse, NotFound>>
+internal sealed class UpdateServiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateServiceCommand, OneOf<ServiceResponse, NotFound>>
 {
     public async Task<OneOf<ServiceResponse, NotFound>> Handle(UpdateServiceCommand command, CancellationToken cancellationToken = default)
     {
@@ -19,7 +19,7 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
 
         var service = await db.Services
             .Include(s => s.Category)
-            .FirstOrDefaultAsync(s => s.Id == command.Id && s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(s => s.Id == command.Id && s.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (service is null)
@@ -35,9 +35,7 @@ internal sealed class UpdateServiceHandler(ChairlyDbContext db) : IRequestHandle
         service.CategoryId = command.CategoryId;
         service.SortOrder = command.SortOrder;
         service.UpdatedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-        service.UpdatedBy = Guid.Empty;
-#pragma warning restore MA0026
+        service.UpdatedBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

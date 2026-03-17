@@ -9,14 +9,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Bookings.CompleteBooking;
 
 #pragma warning disable CA1812
-internal sealed class CompleteBookingHandler(ChairlyDbContext db) : IRequestHandler<CompleteBookingCommand, OneOf<Success, NotFound, Conflict>>
+internal sealed class CompleteBookingHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<CompleteBookingCommand, OneOf<Success, NotFound, Conflict>>
 {
     public async Task<OneOf<Success, NotFound, Conflict>> Handle(CompleteBookingCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var booking = await db.Bookings
-            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(b => b.Id == command.Id && b.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (booking is null)
@@ -30,9 +30,7 @@ internal sealed class CompleteBookingHandler(ChairlyDbContext db) : IRequestHand
         }
 
         booking.CompletedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-        booking.CompletedBy = Guid.Empty;
-#pragma warning restore MA0026
+        booking.CompletedBy = tenantContext.UserId;
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

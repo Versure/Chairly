@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Settings.UpdateVatSettings;
 
-internal sealed class UpdateVatSettingsHandler(ChairlyDbContext db) : IRequestHandler<UpdateVatSettingsCommand, VatSettingsResponse>
+internal sealed class UpdateVatSettingsHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<UpdateVatSettingsCommand, VatSettingsResponse>
 {
     public async Task<VatSettingsResponse> Handle(UpdateVatSettingsCommand command, CancellationToken cancellationToken = default)
     {
@@ -17,7 +17,7 @@ internal sealed class UpdateVatSettingsHandler(ChairlyDbContext db) : IRequestHa
         VatRateValidator.ValidateRequired(command.DefaultVatRate);
 
         var vatSettings = await db.VatSettings
-            .FirstOrDefaultAsync(v => v.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(v => v.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (vatSettings is null)
@@ -25,12 +25,10 @@ internal sealed class UpdateVatSettingsHandler(ChairlyDbContext db) : IRequestHa
             vatSettings = new VatSettings
             {
                 Id = Guid.NewGuid(),
-                TenantId = TenantConstants.DefaultTenantId,
+                TenantId = tenantContext.TenantId,
                 DefaultVatRate = command.DefaultVatRate,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-                CreatedBy = Guid.Empty,
-#pragma warning restore MA0026
+                CreatedBy = tenantContext.UserId,
             };
             db.VatSettings.Add(vatSettings);
         }
@@ -38,9 +36,7 @@ internal sealed class UpdateVatSettingsHandler(ChairlyDbContext db) : IRequestHa
         {
             vatSettings.DefaultVatRate = command.DefaultVatRate;
             vatSettings.UpdatedAtUtc = DateTimeOffset.UtcNow;
-#pragma warning disable MA0026 // TODO: Replace with authenticated user ID from Keycloak (see Keycloak integration)
-            vatSettings.UpdatedBy = Guid.Empty;
-#pragma warning restore MA0026
+            vatSettings.UpdatedBy = tenantContext.UserId;
         }
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

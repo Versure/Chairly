@@ -8,14 +8,14 @@ using OneOf.Types;
 namespace Chairly.Api.Features.Services.DeleteService;
 
 #pragma warning disable CA1812
-internal sealed class DeleteServiceHandler(ChairlyDbContext db) : IRequestHandler<DeleteServiceCommand, OneOf<Success, NotFound>>
+internal sealed class DeleteServiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<DeleteServiceCommand, OneOf<Success, NotFound>>
 {
     public async Task<OneOf<Success, NotFound>> Handle(DeleteServiceCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
         var service = await db.Services
-            .FirstOrDefaultAsync(s => s.Id == command.Id && s.TenantId == TenantConstants.DefaultTenantId, cancellationToken)
+            .FirstOrDefaultAsync(s => s.Id == command.Id && s.TenantId == tenantContext.TenantId, cancellationToken)
             .ConfigureAwait(false);
 
         if (service is null)

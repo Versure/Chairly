@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Chairly.Api.Features.Services.GetServicesList;
 
 #pragma warning disable CA1812
-internal sealed class GetServicesListHandler(ChairlyDbContext db) : IRequestHandler<GetServicesListQuery, IEnumerable<ServiceResponse>>
+internal sealed class GetServicesListHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<GetServicesListQuery, IEnumerable<ServiceResponse>>
 {
     public async Task<IEnumerable<ServiceResponse>> Handle(GetServicesListQuery query, CancellationToken cancellationToken = default)
     {
         return await db.Services
             .Include(s => s.Category)
-            .Where(s => s.TenantId == TenantConstants.DefaultTenantId)
+            .Where(s => s.TenantId == tenantContext.TenantId)
             .OrderBy(s => s.SortOrder)
             .Select(s => new ServiceResponse(
                 s.Id,

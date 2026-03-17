@@ -10,7 +10,8 @@ internal static class ClientEndpoints
 {
     public static IEndpointRouteBuilder MapClientEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/clients");
+        var group = app.MapGroup("/api/clients")
+            .RequireAuthorization("RequireStaff");
 
         group.MapGetClientsList();
         group.MapCreateClient();

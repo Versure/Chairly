@@ -1,5 +1,17 @@
-export type { ClientInvoiceSummary, GenerateInvoiceResponse } from './lib/data-access';
-export { InvoiceGenerationService } from './lib/data-access';
+export type {
+  AppConfig,
+  AuthState,
+  ClientInvoiceSummary,
+  GenerateInvoiceResponse,
+} from './lib/data-access';
+export {
+  AppConfigService,
+  authGuard,
+  authInterceptor,
+  AuthStore,
+  InvoiceGenerationService,
+  roleGuard,
+} from './lib/data-access';
 export type { DropdownOption } from './lib/ui';
 export {
   ConfirmationDialogComponent,

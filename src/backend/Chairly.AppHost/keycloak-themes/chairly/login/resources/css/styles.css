@@ -1,0 +1,50 @@
+/* Chairly Keycloak Login Theme */
+
+/* Background */
+body.kcBodyClass {
+  background: linear-gradient(135deg, #f5f4fb 0%, #ede9fa 50%, #dbd5f5 100%) !important;
+}
+
+/* Header / Realm name */
+#kc-header-wrapper {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: #3f3367 !important;
+  padding: 2rem 0 1rem !important;
+}
+
+/* Login card */
+#kc-form-wrapper,
+.pf-v5-c-login__main-body {
+  border-radius: 1rem !important;
+}
+
+/* Primary buttons */
+input[type="submit"],
+button[type="submit"],
+.pf-v5-c-button.pf-m-primary {
+  background-color: #7362b8 !important;
+  border-color: #7362b8 !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+input[type="submit"]:hover,
+button[type="submit"]:hover,
+.pf-v5-c-button.pf-m-primary:hover {
+  background-color: #5e4e9a !important;
+  border-color: #5e4e9a !important;
+}
+
+/* Links */
+a,
+.pf-v5-c-button.pf-m-link {
+  color: #7362b8 !important;
+}
+
+a:hover,
+.pf-v5-c-button.pf-m-link:hover {
+  color: #5e4e9a !important;
+}
