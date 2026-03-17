@@ -149,22 +149,35 @@ if (runMigrations)
 {
     var stoppingToken = app.Lifetime.ApplicationStopping;
 
-    // Use a dedicated scope/connection for the advisory lock so that the migration
-    // scope can manage its own connection lifecycle. This allows EF Core to correctly
-    // bootstrap __EFMigrationsHistory on a fresh database (pre-opening the migration
-    // connection bypasses EF Core's own connection setup and breaks the history check).
-    var lockScope = app.Services.CreateAsyncScope();
+    // Use a dedicated, non-pooled connection for the advisory lock so that:
+    // 1. The lock is guaranteed to be released when the connection is disposed
+    //    (session-level advisory locks are released on session end).
+    // 2. The migration scope can manage its own connection lifecycle, allowing
+    //    EF Core to correctly bootstrap __EFMigrationsHistory on a fresh database.
+    // 3. If the process crashes, the non-pooled connection is closed by the OS,
+    //    releasing the lock immediately — no stale locks in the connection pool.
+    var connString = app.Configuration.GetConnectionString("ChairlyDb")!;
+
+    // Append Pooling=false so this connection is truly closed on dispose, not
+    // returned to Npgsql's pool where a session-level advisory lock would persist.
+    var lockConnString = connString.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)
+        ? connString
+        : connString + ";Pooling=false";
+
+    var lockConn = new Npgsql.NpgsqlConnection(lockConnString);
     try
     {
-        var dbLock = lockScope.ServiceProvider.GetRequiredService<ChairlyDbContext>();
+        await lockConn.OpenAsync(stoppingToken).ConfigureAwait(false);
 
-        await dbLock.Database.OpenConnectionAsync(stoppingToken).ConfigureAwait(false);
-        var lockConn = dbLock.Database.GetDbConnection();
-
-        using (var lockCmd = lockConn.CreateCommand())
+        var lockCmd = lockConn.CreateCommand();
+        try
         {
             lockCmd.CommandText = "SELECT pg_advisory_lock(1000000001)";
             await lockCmd.ExecuteNonQueryAsync(stoppingToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await lockCmd.DisposeAsync().ConfigureAwait(false);
         }
 
         var migrateScope = app.Services.CreateAsyncScope();
@@ -176,19 +189,33 @@ if (runMigrations)
         finally
         {
             await migrateScope.DisposeAsync().ConfigureAwait(false);
+        }
 
-            using (var unlockCmd = lockConn.CreateCommand())
+        // Explicitly unlock before closing. If this fails (e.g. broken connection),
+        // disposing the non-pooled connection will end the session and release the lock.
+        try
+        {
+            var unlockCmd = lockConn.CreateCommand();
+            try
             {
                 unlockCmd.CommandText = "SELECT pg_advisory_unlock(1000000001)";
                 await unlockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
             }
-
-            await dbLock.Database.CloseConnectionAsync().ConfigureAwait(false);
+            finally
+            {
+                await unlockCmd.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        catch (Npgsql.NpgsqlException)
+        {
+            // Connection already broken — disposing the connection releases the lock.
         }
     }
     finally
     {
-        await lockScope.DisposeAsync().ConfigureAwait(false);
+        // Truly close the non-pooled TCP connection, releasing any remaining
+        // session-level advisory locks even if unlock failed above.
+        await lockConn.DisposeAsync().ConfigureAwait(false);
     }
 }
 
