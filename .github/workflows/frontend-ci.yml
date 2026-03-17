@@ -38,8 +38,8 @@ jobs:
 
       - run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+      - name: Install Playwright browsers (Chromium only for CI)
+        run: npx playwright install --with-deps chromium
 
       - name: Fetch base branch
         run: git fetch origin main

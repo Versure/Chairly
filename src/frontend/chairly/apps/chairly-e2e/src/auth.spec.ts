@@ -1,59 +1,29 @@
 import { expect, test } from './fixtures';
 
 /**
- * Authentication & Authorization E2E tests.
+ * Authentication E2E tests.
  *
- * These tests require a running Keycloak instance with a configured realm,
- * users, and roles. They are skipped by default and should be enabled in
- * environments where Keycloak is available (e.g. CI with docker-compose).
+ * These tests verify that the mock Keycloak OIDC flow works correctly
+ * and that the authenticated app renders properly.
  */
 
-test.describe('Authentication flow', () => {
-  test.skip(true, 'Requires a running Keycloak instance');
+test('app bootstraps with mock authentication and shows main content', async ({ page }) => {
+  // Mock the services API so the default redirect to /diensten works
+  await page.route('**/api/service-categories', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/services', (route) => route.fulfill({ json: [] }));
 
-  test('app redirects to Keycloak login on first visit', async ({ page }) => {
-    await page.goto('/');
+  await page.goto('/diensten');
 
-    // The app should redirect to the Keycloak login page
-    await expect(page).toHaveURL(/\/realms\/.*\/protocol\/openid-connect\/auth/);
-  });
-
-  test('clicking "Uitloggen" redirects to Keycloak logout', async ({ page }) => {
-    // Assumes user is already logged in via Keycloak
-    await page.goto('/diensten');
-
-    const logoutButton = page.getByRole('button', { name: 'Uitloggen' });
-    await expect(logoutButton).toBeVisible();
-    await logoutButton.click();
-
-    // After logout, the app should redirect to the Keycloak login page
-    await expect(page).toHaveURL(/\/realms\/.*\/protocol\/openid-connect/);
-  });
+  await expect(page.getByRole('heading', { name: 'Diensten', level: 1 })).toBeVisible();
 });
 
-test.describe('Role-based visibility', () => {
-  test.skip(true, 'Requires a running Keycloak instance');
+test('authenticated user name is visible in the shell', async ({ page }) => {
+  await page.route('**/api/service-categories', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/services', (route) => route.fulfill({ json: [] }));
 
-  test('staff_member does not see "Facturatie" nav item', async ({ page }) => {
-    // Log in as a staff_member user (Keycloak test user with staff_member role)
-    await page.goto('/diensten');
+  await page.goto('/diensten');
 
-    // The "Facturen" nav link should not be visible for staff_member
-    const facturenLink = page.getByRole('link', { name: 'Facturen' });
-    await expect(facturenLink).toBeHidden();
-  });
-});
-
-test.describe('Unauthorized route access', () => {
-  test.skip(true, 'Requires a running Keycloak instance');
-
-  test('staff_member navigating to manager-only route is redirected to /toegang-geweigerd', async ({
-    page,
-  }) => {
-    // Log in as a staff_member user, then manually navigate to a manager-only route
-    await page.goto('/facturen');
-
-    // The role guard should redirect to the access denied page
-    await expect(page).toHaveURL(/\/toegang-geweigerd/);
-  });
+  // The AuthStore loads the profile from the Keycloak mock account endpoint.
+  // The shell should display the user's name.
+  await expect(page.getByText('Test User')).toBeVisible();
 });
