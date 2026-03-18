@@ -32,20 +32,20 @@ internal sealed class SendInvoiceHandler(ChairlyDbContext db, ITenantContext ten
             return new Unprocessable("Betaalde of vervallen facturen kunnen niet worden verstuurd");
         }
 
-        var clientEmail = await db.Clients
-            .Where(c => c.Id == invoice.ClientId && c.TenantId == tenantContext.TenantId)
-            .Select(c => c.Email)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        if (string.IsNullOrWhiteSpace(clientEmail))
-        {
-            return new Unprocessable("Cliënt heeft geen e-mailadres");
-        }
-
         // Idempotent: if already sent, return current state
         if (invoice.SentAtUtc == null)
         {
+            var clientEmail = await db.Clients
+                .Where(c => c.Id == invoice.ClientId && c.TenantId == tenantContext.TenantId)
+                .Select(c => c.Email)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (string.IsNullOrWhiteSpace(clientEmail))
+            {
+                return new Unprocessable("Cliënt heeft geen e-mailadres");
+            }
+
             var now = DateTimeOffset.UtcNow;
             invoice.SentAtUtc = now;
             invoice.SentBy = tenantContext.UserId;

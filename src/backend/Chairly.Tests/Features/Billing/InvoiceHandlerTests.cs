@@ -876,6 +876,28 @@ public class InvoiceHandlerTests
     }
 
     [Fact]
+    public async Task SendInvoiceHandler_AlreadySent_ClientEmailRemoved_ReturnsCurrentState()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        invoice.SentAtUtc = DateTimeOffset.UtcNow.AddDays(-1);
+        await db.SaveChangesAsync();
+
+        var client = await db.Clients.FirstAsync(c => c.Id == invoice.ClientId);
+        client.Email = null;
+        await db.SaveChangesAsync();
+
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
+
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT0);
+        var response = result.AsT0;
+        Assert.Equal("Verzonden", response.Status);
+        Assert.NotNull(response.SentAtUtc);
+    }
+
+    [Fact]
     public async Task SendInvoiceHandler_VoidedInvoice_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
