@@ -4,9 +4,9 @@ using Chairly.Api.Features.Billing.GenerateInvoice;
 using Chairly.Api.Features.Billing.GetInvoice;
 using Chairly.Api.Features.Billing.GetInvoicesList;
 using Chairly.Api.Features.Billing.MarkInvoicePaid;
-using Chairly.Api.Features.Billing.MarkInvoiceSent;
 using Chairly.Api.Features.Billing.RegenerateInvoice;
 using Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
+using Chairly.Api.Features.Billing.SendInvoice;
 using Chairly.Api.Features.Billing.VoidInvoice;
 using Chairly.Domain.Entities;
 using Chairly.Infrastructure.Persistence;
@@ -835,76 +835,95 @@ public class InvoiceHandlerTests
         Assert.IsType<NotFound>(result.AsT1);
     }
 
-    // ── MarkInvoiceSent ─────────────────────────────────────────────
+    // ── SendInvoice ─────────────────────────────────────────────
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_HappyPath_SetsSentTimestamp()
+    public async Task SendInvoiceHandler_HappyPath_SetsSentTimestamp()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var tenantContext = TestTenantContext.Create();
+        var handler = new SendInvoiceHandler(db, tenantContext);
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         var response = result.AsT0;
         Assert.Equal("Verzonden", response.Status);
         Assert.NotNull(response.SentAtUtc);
+        var persisted = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
+        Assert.Equal(tenantContext.UserId, persisted.SentBy);
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_AlreadySent_ReturnsCurrentState()
+    public async Task SendInvoiceHandler_AlreadySent_ReturnsCurrentState()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
         invoice.SentAtUtc = DateTimeOffset.UtcNow.AddDays(-1);
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         var response = result.AsT0;
         Assert.Equal("Verzonden", response.Status);
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_VoidedInvoice_ReturnsUnprocessable()
+    public async Task SendInvoiceHandler_VoidedInvoice_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
         invoice.VoidedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
-        Assert.Equal("Factuur kan niet als verzonden worden gemarkeerd", result.AsT2.Message);
+        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden verstuurd", result.AsT2.Message);
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_PaidInvoice_ReturnsUnprocessable()
+    public async Task SendInvoiceHandler_PaidInvoice_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
         invoice.PaidAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
-        Assert.Equal("Factuur kan niet als verzonden worden gemarkeerd", result.AsT2.Message);
+        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden verstuurd", result.AsT2.Message);
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_ResendAfterEdit_SetsSentTimestampAgain()
+    public async Task SendInvoiceHandler_ClientWithoutEmail_ReturnsUnprocessable()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var client = await db.Clients.FirstAsync(c => c.Id == invoice.ClientId);
+        client.Email = null;
+        await db.SaveChangesAsync();
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
+
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
+
+        Assert.True(result.IsT2);
+        Assert.Equal("Cliënt heeft geen e-mailadres", result.AsT2.Message);
+    }
+
+    [Fact]
+    public async Task SendInvoiceHandler_ResendAfterEdit_SetsSentTimestampAgain()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
 
         // First: send the invoice
-        var sentHandler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
-        var sentResult = await sentHandler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var sentHandler = new SendInvoiceHandler(db, TestTenantContext.Create());
+        var sentResult = await sentHandler.Handle(new SendInvoiceCommand(invoice.Id));
         Assert.Equal("Verzonden", sentResult.AsT0.Status);
 
         // Second: edit the sent invoice (adds line item, resets to draft)
@@ -920,18 +939,18 @@ public class InvoiceHandlerTests
         Assert.Null(addResult.AsT0.SentAtUtc);
 
         // Third: re-send the invoice
-        var resendResult = await sentHandler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var resendResult = await sentHandler.Handle(new SendInvoiceCommand(invoice.Id));
         Assert.Equal("Verzonden", resendResult.AsT0.Status);
         Assert.NotNull(resendResult.AsT0.SentAtUtc);
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_NotFound_ReturnsNotFound()
+    public async Task SendInvoiceHandler_NotFound_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(Guid.NewGuid()));
+        var result = await handler.Handle(new SendInvoiceCommand(Guid.NewGuid()));
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);
@@ -2309,13 +2328,13 @@ public class InvoiceHandlerTests
     }
 
     [Fact]
-    public async Task MarkInvoiceSentHandler_ResponseIncludesClientSnapshotAndStaffMemberName()
+    public async Task SendInvoiceHandler_ResponseIncludesClientSnapshotAndStaffMemberName()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
-        var handler = new MarkInvoiceSentHandler(db, TestTenantContext.Create());
+        var handler = new SendInvoiceHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoiceSentCommand(invoice.Id));
+        var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         var response = result.AsT0;
         Assert.NotNull(response.ClientSnapshot);

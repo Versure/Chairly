@@ -7,11 +7,11 @@ using OneOf;
 using OneOf.Types;
 
 #pragma warning disable CA1812
-namespace Chairly.Api.Features.Billing.MarkInvoiceSent;
+namespace Chairly.Api.Features.Billing.SendInvoice;
 
-internal sealed class MarkInvoiceSentHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<MarkInvoiceSentCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
+internal sealed class SendInvoiceHandler(ChairlyDbContext db, ITenantContext tenantContext) : IRequestHandler<SendInvoiceCommand, OneOf<InvoiceResponse, NotFound, Unprocessable>>
 {
-    public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable>> Handle(MarkInvoiceSentCommand command, CancellationToken cancellationToken = default)
+    public async Task<OneOf<InvoiceResponse, NotFound, Unprocessable>> Handle(SendInvoiceCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
 
@@ -27,7 +27,18 @@ internal sealed class MarkInvoiceSentHandler(ChairlyDbContext db, ITenantContext
 
         if (invoice.VoidedAtUtc != null || invoice.PaidAtUtc != null)
         {
-            return new Unprocessable("Factuur kan niet als verzonden worden gemarkeerd");
+            return new Unprocessable("Betaalde of vervallen facturen kunnen niet worden verstuurd");
+        }
+
+        var clientEmail = await db.Clients
+            .Where(c => c.Id == invoice.ClientId && c.TenantId == tenantContext.TenantId)
+            .Select(c => c.Email)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (string.IsNullOrWhiteSpace(clientEmail))
+        {
+            return new Unprocessable("Cliënt heeft geen e-mailadres");
         }
 
         // Idempotent: if already sent, return current state
