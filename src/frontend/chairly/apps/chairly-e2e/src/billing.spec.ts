@@ -145,7 +145,7 @@ test('invoice detail page shows line items and status history', async ({ page })
   await expect(page.getByText('Jan de Vries')).toBeVisible();
 });
 
-test('clicking Markeer als verzonden updates status badge to Verzonden', async ({ page }) => {
+test('clicking Factuur versturen updates status badge to Verzonden', async ({ page }) => {
   const sentInvoice = {
     ...mockInvoiceDetail,
     status: 'Verzonden',
@@ -177,7 +177,7 @@ test('clicking Markeer als verzonden updates status badge to Verzonden', async (
     page.locator('span.rounded-full').getByText('Concept', { exact: true }),
   ).toBeVisible();
 
-  await page.getByRole('button', { name: 'Markeer als verzonden' }).click();
+  await page.getByRole('button', { name: 'Factuur versturen' }).click();
 
   await expect(
     page.locator('span.rounded-full').getByText('Verzonden', { exact: true }),
@@ -256,7 +256,7 @@ test('Vervallen verklaren button is not shown on a paid invoice', async ({ page 
   ).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Vervallen verklaren' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Markeer als verzonden' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Factuur versturen' })).toBeHidden();
 });
 
 test('back link navigates to invoice list', async ({ page }) => {
