@@ -48,6 +48,7 @@ cd src/frontend/chairly
 npx nx affected -t lint --base=main
 npx nx format:check --base=main
 npx nx affected -t test --base=main
+npx nx affected -t e2e --base=main
 npx nx affected -t build --base=main
 ```
 

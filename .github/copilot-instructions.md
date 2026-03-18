@@ -53,7 +53,7 @@ Prefixes: `feat`, `fix`, `chore`, `refactor`, `test`, `docs`
 - No `any` types in TypeScript
 - No `console` statements in production code
 - No business logic in controllers/endpoints
-- No direct use of DbContext outside Infrastructure layer
+- No direct use of DbContext outside Infrastructure layer, except in API slice handlers
 - No hardcoded strings for configuration
 - No status enum columns — use timestamp pairs (ADR-009)
 - No cross-domain imports in the frontend without going through `shared/`
