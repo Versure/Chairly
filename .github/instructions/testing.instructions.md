@@ -22,7 +22,7 @@ public async Task HandlerName_Scenario_ExpectedResult()
     var handler = new SomeHandler(db);
     var command = new SomeCommand { /* ... */ };
 
-    var result = await handler.Handle(command);
+    var result = await handler.Handle(command).ConfigureAwait(false);
 
     Assert.Equal(expected, result.Property);
 }

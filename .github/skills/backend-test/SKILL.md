@@ -52,11 +52,11 @@ public class {Entity}HandlerTests
         var handler = new Create{Entity}Handler(db);
         var command = new Create{Entity}Command { Name = "Test Name" };
 
-        var result = await handler.Handle(command);
+        var result = await handler.Handle(command).ConfigureAwait(false);
 
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal("Test Name", result.Name);
-        Assert.Equal(1, await db.{Entities}.CountAsync());
+        Assert.Equal(1, await db.{Entities}.CountAsync().ConfigureAwait(false));
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class {Entity}HandlerTests
         await using var db = CreateDbContext();
         var handler = new Update{Entity}Handler(db);
 
-        var result = await handler.Handle(new Update{Entity}Command { Id = Guid.NewGuid(), Name = "Any" });
+        var result = await handler.Handle(new Update{Entity}Command { Id = Guid.NewGuid(), Name = "Any" }).ConfigureAwait(false);
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);
