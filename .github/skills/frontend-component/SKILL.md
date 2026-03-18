@@ -18,7 +18,6 @@ import { {Entity}Store } from '../../data-access';
 
 @Component({
   selector: 'chairly-{feature-name}',
-  standalone: true,
   templateUrl: './{feature-name}.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -46,7 +45,6 @@ import { {Entity}Response } from '../../models';
 
 @Component({
   selector: 'chairly-{component-name}',
-  standalone: true,
   templateUrl: './{component-name}.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
