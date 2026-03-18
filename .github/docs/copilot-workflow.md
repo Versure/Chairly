@@ -77,10 +77,38 @@ copilot --agent=spec-writer --prompt "Update the spec at .github/tasks/booking-m
 
 ## Step 3 — Implement the Feature
 
-Once the spec is approved, kick off implementation in autopilot mode:
+Once the spec is approved, use an **interactive Copilot session** so you can see live progress and control subagents.
+
+### Recommended kickoff flow (`/fleet` in interactive mode)
+
+```bash
+copilot --autopilot --yolo
+```
+
+Then run:
+
+```text
+/fleet Implement the feature spec at .github/tasks/{feature-name}/spec.md. Use the backend-dev agent for all backend tasks and the frontend-dev agent for all frontend tasks. Set up git worktrees: .worktrees/{feature-name}/backend/ on branch impl/{feature-name}-backend and .worktrees/{feature-name}/frontend/ on branch impl/{feature-name}-frontend, both branching from feat/{feature-name}. After implementation, use the reviewer agent to review the code. Then merge worktree branches into feat/{feature-name} and create a PR to main.
+```
+
+Monitor progress during execution:
+
+- `/tasks` — see running/completed subagents and shell tasks
+- `/diff` — inspect generated changes
+- `/review` — run an additional review pass if needed
+
+### One-shot mode (less visibility)
+
+You can still run everything from a single terminal command, but progress is less transparent:
 
 ```bash
 copilot --autopilot --yolo --max-autopilot-continues 30 -p "/fleet Implement the feature spec at .github/tasks/{feature-name}/spec.md. Use the backend-dev agent for all backend tasks and the frontend-dev agent for all frontend tasks. Set up git worktrees: .worktrees/{feature-name}/backend/ on branch impl/{feature-name}-backend and .worktrees/{feature-name}/frontend/ on branch impl/{feature-name}-frontend, both branching from feat/{feature-name}. After implementation, use the reviewer agent to review the code. Then merge worktree branches into feat/{feature-name} and create a PR to main."
+```
+
+If your repository has custom skills that can hijack orchestration, add this guardrail to your prompt:
+
+```text
+Execute this as a Copilot CLI /fleet workflow. Do not invoke project skills.
 ```
 
 ### What happens
