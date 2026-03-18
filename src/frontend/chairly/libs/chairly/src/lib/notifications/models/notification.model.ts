@@ -2,7 +2,8 @@ export type NotificationType =
   | 'BookingConfirmation'
   | 'BookingReminder'
   | 'BookingCancellation'
-  | 'BookingReceived';
+  | 'BookingReceived'
+  | 'InvoiceSent';
 export type NotificationChannel = 'Email' | 'Sms';
 export type NotificationStatus = 'Wachtend' | 'Verzonden' | 'Mislukt';
 

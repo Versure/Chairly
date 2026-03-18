@@ -34,6 +34,17 @@ const mockNotifications = [
     retryCount: 3,
     referenceId: 'booking-3',
   },
+  {
+    id: 'notif-4',
+    type: 'InvoiceSent',
+    recipientName: 'Sanne Visser',
+    channel: 'Email',
+    status: 'Verzonden',
+    scheduledAtUtc: '2026-03-12T08:00:00Z',
+    sentAtUtc: '2026-03-12T08:00:10Z',
+    retryCount: 0,
+    referenceId: 'invoice-4',
+  },
 ];
 
 async function setupApiMocks(
@@ -72,6 +83,7 @@ test('displays notification table with correct Dutch type labels', async ({ page
   await expect(page.getByText('Bevestiging')).toBeVisible();
   await expect(page.getByText('Herinnering')).toBeVisible();
   await expect(page.getByText('Annulering')).toBeVisible();
+  await expect(page.getByText('Factuur verzonden')).toBeVisible();
 });
 
 test('displays recipient names in the table', async ({ page }) => {
@@ -81,6 +93,7 @@ test('displays recipient names in the table', async ({ page }) => {
   await expect(page.getByText('Jan de Vries')).toBeVisible();
   await expect(page.getByText('Petra Jansen')).toBeVisible();
   await expect(page.getByText('Kees Bakker')).toBeVisible();
+  await expect(page.getByText('Sanne Visser')).toBeVisible();
 });
 
 test('shows correct status badges with appropriate styling', async ({ page }) => {
