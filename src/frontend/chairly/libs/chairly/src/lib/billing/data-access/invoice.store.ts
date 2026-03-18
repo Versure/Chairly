@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
@@ -29,6 +30,42 @@ const initialState: InvoiceState = {
 };
 
 function toErrorMessage(err: unknown): string {
+  if (err instanceof HttpErrorResponse) {
+    if (typeof err.error === 'string' && err.error.trim().length > 0) {
+      return err.error;
+    }
+
+    if (
+      typeof err.error === 'object' &&
+      err.error !== null &&
+      'message' in err.error &&
+      typeof err.error.message === 'string' &&
+      err.error.message.trim().length > 0
+    ) {
+      return err.error.message;
+    }
+
+    if (
+      typeof err.error === 'object' &&
+      err.error !== null &&
+      'detail' in err.error &&
+      typeof err.error.detail === 'string' &&
+      err.error.detail.trim().length > 0
+    ) {
+      return err.error.detail;
+    }
+
+    if (
+      typeof err.error === 'object' &&
+      err.error !== null &&
+      'title' in err.error &&
+      typeof err.error.title === 'string' &&
+      err.error.title.trim().length > 0
+    ) {
+      return err.error.title;
+    }
+  }
+
   return err instanceof Error ? err.message : String(err);
 }
 
@@ -91,9 +128,10 @@ export const InvoiceStore = signalStore(
           });
       },
 
-      markAsSent(id: string): void {
+      sendInvoice(id: string): void {
+        patchState(store, { error: null });
         invoiceApi
-          .markAsSent(id)
+          .sendInvoice(id)
           .pipe(take(1))
           .subscribe({
             next: (updated) =>
