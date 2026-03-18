@@ -6,4 +6,5 @@ public enum NotificationType
     BookingReminder,
     BookingCancellation,
     BookingReceived,
+    InvoiceSent,
 }

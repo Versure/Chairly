@@ -9,6 +9,7 @@ using Chairly.Api.Features.Billing.RemoveInvoiceLineItem;
 using Chairly.Api.Features.Billing.SendInvoice;
 using Chairly.Api.Features.Billing.VoidInvoice;
 using Chairly.Domain.Entities;
+using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf.Types;
@@ -852,6 +853,11 @@ public class InvoiceHandlerTests
         Assert.NotNull(response.SentAtUtc);
         var persisted = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
         Assert.Equal(tenantContext.UserId, persisted.SentBy);
+
+        var notification = await db.Notifications.FirstOrDefaultAsync(n => n.ReferenceId == invoice.Id);
+        Assert.NotNull(notification);
+        Assert.Equal(NotificationType.InvoiceSent, notification!.Type);
+        Assert.Equal(invoice.ClientId, notification.RecipientId);
     }
 
     [Fact]
@@ -942,6 +948,7 @@ public class InvoiceHandlerTests
         var resendResult = await sentHandler.Handle(new SendInvoiceCommand(invoice.Id));
         Assert.Equal("Verzonden", resendResult.AsT0.Status);
         Assert.NotNull(resendResult.AsT0.SentAtUtc);
+        Assert.Equal(2, await db.Notifications.CountAsync(n => n.Type == NotificationType.InvoiceSent && n.ReferenceId == invoice.Id));
     }
 
     [Fact]

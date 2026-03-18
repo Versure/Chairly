@@ -13,10 +13,12 @@ public class NotificationDispatcherTests
     private sealed class FakeEmailSender(bool shouldFail = false) : IEmailSender
     {
         public int SendCallCount { get; private set; }
+        public List<(string ToEmail, string ToName, string Subject, string HtmlBody)> SentEmails { get; } = [];
 
         public Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken cancellationToken)
         {
             SendCallCount++;
+            SentEmails.Add((toEmail, toName, subject, htmlBody));
 
             if (shouldFail)
             {
@@ -56,7 +58,10 @@ public class NotificationDispatcherTests
     }
 
     private static Notification SeedPendingNotification(
-        string dbName, int retryCount = 0, DateTimeOffset? scheduledAt = null)
+        string dbName,
+        NotificationType type = NotificationType.BookingConfirmation,
+        int retryCount = 0,
+        DateTimeOffset? scheduledAt = null)
     {
         using var db = CreateDbContext(dbName);
 
@@ -109,11 +114,71 @@ public class NotificationDispatcherTests
             RecipientId = client.Id,
             RecipientType = RecipientType.Client,
             Channel = NotificationChannel.Email,
-            Type = NotificationType.BookingConfirmation,
+            Type = type,
             ReferenceId = booking.Id,
             ScheduledAtUtc = scheduledAt ?? DateTimeOffset.UtcNow.AddMinutes(-5),
             CreatedAtUtc = DateTimeOffset.UtcNow,
             RetryCount = retryCount,
+        };
+        db.Notifications.Add(notification);
+
+        db.SaveChanges();
+        return notification;
+    }
+
+    private static Notification SeedPendingInvoiceNotification(string dbName)
+    {
+        using var db = CreateDbContext(dbName);
+        var now = DateTimeOffset.UtcNow;
+
+        var tenantSettings = new TenantSettings
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            CompanyName = "Salon De Spiegel",
+            CreatedAtUtc = now,
+        };
+        db.TenantSettings.Add(tenantSettings);
+
+        var client = new Client
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            FirstName = "Test",
+            LastName = "Client",
+            Email = "test@example.com",
+            CreatedAtUtc = now,
+        };
+        db.Clients.Add(client);
+
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = client.Id,
+            InvoiceNumber = "2026-0007",
+            InvoiceDate = DateOnly.FromDateTime(now.UtcDateTime),
+            SubTotalAmount = 40.00m,
+            TotalVatAmount = 8.40m,
+            TotalAmount = 48.40m,
+            CreatedAtUtc = now,
+            CreatedBy = Guid.NewGuid(),
+        };
+        db.Invoices.Add(invoice);
+
+        var notification = new Notification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            RecipientId = client.Id,
+            RecipientType = RecipientType.Client,
+            Channel = NotificationChannel.Email,
+            Type = NotificationType.InvoiceSent,
+            ReferenceId = invoice.Id,
+            ScheduledAtUtc = now.AddMinutes(-5),
+            CreatedAtUtc = now,
+            CreatedBy = Guid.NewGuid(),
         };
         db.Notifications.Add(notification);
 
@@ -211,5 +276,40 @@ public class NotificationDispatcherTests
         await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
 
         Assert.Equal(0, emailSender.SendCallCount);
+    }
+
+    [Fact]
+    public async Task Dispatcher_InvoiceSent_RendersInvoiceTemplateWithDutchContent()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingInvoiceNotification(dbName);
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        Assert.Contains("Factuur 2026-0007", sentEmail.Subject, StringComparison.Ordinal);
+        Assert.Contains("Test Client", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Factuurnummer: 2026-0007", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Factuurdatum", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("€", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Salon De Spiegel", sentEmail.HtmlBody, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(NotificationType.BookingConfirmation)]
+    [InlineData(NotificationType.BookingReminder)]
+    [InlineData(NotificationType.BookingCancellation)]
+    [InlineData(NotificationType.BookingReceived)]
+    public async Task Dispatcher_BookingNotificationTypes_StillDispatchCorrectly(NotificationType type)
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName, type: type);
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Equal(1, emailSender.SendCallCount);
+        Assert.Single(emailSender.SentEmails);
+        Assert.False(string.IsNullOrWhiteSpace(emailSender.SentEmails[0].Subject));
     }
 }

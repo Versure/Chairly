@@ -130,6 +130,29 @@ internal sealed partial class NotificationDispatcher(
     private static async Task<(string Subject, string HtmlBody)> RenderTemplateAsync(
         ChairlyDbContext db, Notification notification, string clientName, CancellationToken cancellationToken)
     {
+        var settings = await db.TenantSettings
+            .FirstOrDefaultAsync(s => s.TenantId == notification.TenantId, cancellationToken)
+            .ConfigureAwait(false);
+        var salonName = settings?.CompanyName ?? "Uw salon";
+
+        return notification.Type switch
+        {
+            NotificationType.BookingConfirmation => await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            NotificationType.BookingReminder => await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            NotificationType.BookingCancellation => await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            NotificationType.BookingReceived => await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            NotificationType.InvoiceSent => await RenderInvoiceTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            _ => (string.Empty, string.Empty),
+        };
+    }
+
+    private static async Task<(string Subject, string HtmlBody)> RenderBookingTemplateAsync(
+        ChairlyDbContext db,
+        Notification notification,
+        string clientName,
+        string salonName,
+        CancellationToken cancellationToken)
+    {
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
             .FirstOrDefaultAsync(b => b.Id == notification.ReferenceId, cancellationToken)
@@ -141,11 +164,6 @@ internal sealed partial class NotificationDispatcher(
 
         var startTime = booking?.StartTime ?? notification.ScheduledAtUtc;
 
-        var settings = await db.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == notification.TenantId, cancellationToken)
-            .ConfigureAwait(false);
-        var salonName = settings?.CompanyName ?? "Uw salon";
-
         return notification.Type switch
         {
             NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary, salonName),
@@ -154,6 +172,30 @@ internal sealed partial class NotificationDispatcher(
             NotificationType.BookingReceived => EmailTemplates.BookingReceived(clientName, startTime, serviceSummary, salonName),
             _ => (string.Empty, string.Empty),
         };
+    }
+
+    private static async Task<(string Subject, string HtmlBody)> RenderInvoiceTemplateAsync(
+        ChairlyDbContext db,
+        Notification notification,
+        string clientName,
+        string salonName,
+        CancellationToken cancellationToken)
+    {
+        var invoice = await db.Invoices
+            .FirstOrDefaultAsync(i => i.Id == notification.ReferenceId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (invoice is null)
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        return EmailTemplates.InvoiceSent(
+            clientName,
+            invoice.InvoiceNumber,
+            invoice.InvoiceDate,
+            invoice.TotalAmount,
+            salonName);
     }
 
     private void HandleSendFailure(Notification notification, Exception ex)
