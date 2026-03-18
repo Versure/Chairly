@@ -1,6 +1,8 @@
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Api.Shared.Tenancy;
+using Chairly.Domain.Entities;
+using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
@@ -44,8 +46,23 @@ internal sealed class SendInvoiceHandler(ChairlyDbContext db, ITenantContext ten
         // Idempotent: if already sent, return current state
         if (invoice.SentAtUtc == null)
         {
-            invoice.SentAtUtc = DateTimeOffset.UtcNow;
+            var now = DateTimeOffset.UtcNow;
+            invoice.SentAtUtc = now;
             invoice.SentBy = tenantContext.UserId;
+
+            db.Notifications.Add(new Notification
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantContext.TenantId,
+                RecipientId = invoice.ClientId,
+                RecipientType = RecipientType.Client,
+                Channel = NotificationChannel.Email,
+                Type = NotificationType.InvoiceSent,
+                ReferenceId = invoice.Id,
+                ScheduledAtUtc = now,
+                CreatedAtUtc = now,
+                CreatedBy = tenantContext.UserId,
+            });
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

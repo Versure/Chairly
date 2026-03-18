@@ -71,6 +71,28 @@ internal static class EmailTemplates
         return (subject, htmlBody);
     }
 
+    public static (string Subject, string HtmlBody) InvoiceSent(
+        string clientName,
+        string invoiceNumber,
+        DateOnly invoiceDate,
+        decimal totalAmount,
+        string salonName)
+    {
+        var subject = $"Factuur {invoiceNumber} van {salonName}";
+        var formattedInvoiceDate = invoiceDate.ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
+        var formattedTotalAmount = totalAmount.ToString("C", new CultureInfo("nl-NL"));
+        var htmlBody = BuildTemplate(
+            salonName,
+            clientName,
+            $"Uw factuur {invoiceNumber} is verzonden.",
+            formattedInvoiceDate,
+            $"Factuurnummer: {invoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}",
+            "Dank u wel voor uw bezoek.",
+            "Factuurdatum");
+
+        return (subject, htmlBody);
+    }
+
     private static string BuildTemplate(
         string salonName,
         string clientName,
