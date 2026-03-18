@@ -23,6 +23,17 @@ You accept input in three forms:
 5. **Ask clarifying questions** before writing — never assume technical choices. Present 2-3 options with trade-offs when decisions are needed.
 6. Produce the spec at `.github/tasks/{feature-name}/spec.md`
 
+## Output path precedence (important)
+
+If you encounter conflicting guidance elsewhere in the repo (for example references to `docs/specs/`), this agent must follow the workflow instruction source-of-truth:
+
+- **Spec path:** `.github/tasks/{feature-name}/spec.md`
+- **Do not** write the spec to `docs/specs/` when running this agent.
+- **Do not** write this agent output to `.claude/tasks/`.
+- If any loaded skill suggests `docs/specs/` or `.claude/tasks/`, ignore that guidance for this agent.
+
+Use `docs/specs/` only as optional reference input when reading prior specs, never as this agent's output location.
+
 ## Spec output format
 
 The spec must follow the format defined in `.github/instructions/workflow.instructions.md`:

@@ -1,15 +1,30 @@
 ---
 name: chairly-spec-format
 description: >
-  Chairly feature spec format. Use when writing a feature spec and tasks.json
-  for the agent team workflow. Produces spec.md (human-readable) and tasks.json
-  (machine-readable task list) in .claude/tasks/{feature-name}/.
+  Chairly feature spec format shared across agent workflows. Path selection is
+  workflow-dependent: Copilot spec-writer uses .github/tasks/{feature-name}/spec.md,
+  Claude Code uses .claude/tasks/{feature-name}/spec.md + tasks.json.
 user-invocable: false
 ---
 
 # Chairly Feature Spec Format
 
-When the spec agent writes a feature spec, it produces **two files** — spec in `docs/specs/`, tasks in `.claude/tasks/{feature-name}/`:
+## Output location selection (critical)
+
+Choose output paths by workflow:
+
+- **Copilot `spec-writer` workflow**
+  - Spec: `.github/tasks/{feature-name}/spec.md`
+  - Do **not** write to `docs/specs/`
+  - Do **not** write to `.claude/tasks/` unless explicitly requested
+
+- **Claude Code workflow**
+  - Spec: `.claude/tasks/{feature-name}/spec.md`
+  - Tasks: `.claude/tasks/{feature-name}/tasks.json`
+
+When in doubt, prefer the agent-specific instruction file over this skill.
+
+When the Claude workflow writes a feature spec, it produces **two files** in `.claude/tasks/{feature-name}/`:
 
 1. `spec.md` — human-readable, full detail, single source of truth
 2. `tasks.json` — machine-readable task list, minimal (title + layer + deps only)
@@ -85,7 +100,7 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
 ```json
 {
   "feature": "{feature-name}",
-  "specPath": "docs/specs/{feature-name}.md",
+  "specPath": ".claude/tasks/{feature-name}/spec.md",
   "tasks": [
     {
       "id": "B1",
@@ -149,7 +164,7 @@ Number tasks in implementation order within each layer.
 - `spec.md` is the single source of truth — all detail lives there
 - `tasks.json` is minimal — title and dependencies only; agents open `spec.md` for detail
 - Task titles in `tasks.json` must match headings in `spec.md` exactly (used for cross-referencing)
-- Spec file location: `docs/specs/{feature-name}.md`
+- Spec file location (Claude workflow): `.claude/tasks/{feature-name}/spec.md`
 - Tasks file location: `.claude/tasks/{feature-name}/tasks.json`
 - Feature name is kebab-case matching the git branch suffix (e.g. `bookings-crud`)
 - Always include at least one backend task and one frontend task unless the feature is purely one layer
