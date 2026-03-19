@@ -282,3 +282,98 @@ test('edit dialog pre-fills all fields including optional ones (email, phone, no
 
   await page.keyboard.press('Escape');
 });
+
+test('manager kan een klant toevoegen zonder autorisatiefout', async ({ page }) => {
+  const managerClient = {
+    ...mockClient,
+    id: 'client-4',
+    firstName: 'Mila',
+    lastName: 'Jansen',
+    email: null,
+  };
+
+  let postStatus = 0;
+
+  await page.route('**/api/clients', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      postStatus = 201;
+      return route.fulfill({ status: 201, json: managerClient });
+    }
+    if (method === 'GET') {
+      return route.fulfill({ json: [mockClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await page.getByRole('button', { name: '+ Klant toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await dialog.getByLabel('Voornaam').fill('Mila');
+  await dialog.getByLabel('Achternaam').fill('Jansen');
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+
+  expect(postStatus).toBe(201);
+  await expect(page.getByText('Jansen, Mila')).toBeVisible();
+  await expect(
+    page.getByText('Je sessie is verlopen of ongeldig. Log opnieuw in en probeer het nogmaals.'),
+  ).toHaveCount(0);
+  await expect(page.getByText('Je hebt geen rechten om deze actie uit te voeren.')).toHaveCount(0);
+});
+
+test('bij 401 op klant toevoegen verschijnt sessie-verlopen melding', async ({ page }) => {
+  await page.route('**/api/clients', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ title: 'Unauthorized' }),
+      });
+    }
+    if (method === 'GET') {
+      return route.fulfill({ json: [mockClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await page.getByRole('button', { name: '+ Klant toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await dialog.getByLabel('Voornaam').fill('Mila');
+  await dialog.getByLabel('Achternaam').fill('Jansen');
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+
+  await expect(
+    page.getByText('Je sessie is verlopen of ongeldig. Log opnieuw in en probeer het nogmaals.'),
+  ).toBeVisible();
+});
+
+test('bij 403 op klant toevoegen verschijnt geen-rechten melding', async ({ page }) => {
+  await page.route('**/api/clients', (route) => {
+    const method = route.request().method();
+    if (method === 'POST') {
+      return route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ title: 'Forbidden' }),
+      });
+    }
+    if (method === 'GET') {
+      return route.fulfill({ json: [mockClient] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/klanten');
+  await page.getByRole('button', { name: '+ Klant toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await dialog.getByLabel('Voornaam').fill('Mila');
+  await dialog.getByLabel('Achternaam').fill('Jansen');
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+
+  await expect(page.getByText('Je hebt geen rechten om deze actie uit te voeren.')).toBeVisible();
+});

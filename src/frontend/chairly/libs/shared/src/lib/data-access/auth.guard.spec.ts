@@ -68,11 +68,44 @@ describe('roleGuard', () => {
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
   });
 
-  it('returns true when user has the required role', async () => {
+  it('returns true for owner when required role is owner', async () => {
     keycloakServiceMock.getUserRoles.mockReturnValue(['owner', 'manager', 'staff_member']);
 
     const { roleGuard: roleGuardFn } = await import('./role.guard');
     const guard = roleGuardFn('owner');
+
+    const result = TestBed.runInInjectionContext(() => guard({} as never, {} as never));
+
+    expect(result).toBe(true);
+  });
+
+  it('returns true for owner when required role is manager', async () => {
+    keycloakServiceMock.getUserRoles.mockReturnValue(['owner']);
+
+    const { roleGuard: roleGuardFn } = await import('./role.guard');
+    const guard = roleGuardFn('manager');
+
+    const result = TestBed.runInInjectionContext(() => guard({} as never, {} as never));
+
+    expect(result).toBe(true);
+  });
+
+  it('returns true for manager when required role is manager', async () => {
+    keycloakServiceMock.getUserRoles.mockReturnValue(['manager']);
+
+    const { roleGuard: roleGuardFn } = await import('./role.guard');
+    const guard = roleGuardFn('manager');
+
+    const result = TestBed.runInInjectionContext(() => guard({} as never, {} as never));
+
+    expect(result).toBe(true);
+  });
+
+  it('returns true for staff member when required role is staff_member', async () => {
+    keycloakServiceMock.getUserRoles.mockReturnValue(['staff_member']);
+
+    const { roleGuard: roleGuardFn } = await import('./role.guard');
+    const guard = roleGuardFn('staff_member');
 
     const result = TestBed.runInInjectionContext(() => guard({} as never, {} as never));
 

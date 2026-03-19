@@ -22,20 +22,27 @@ internal sealed class KeycloakRoleClaimTransformer : IClaimsTransformation
             return Task.FromResult(principal);
         }
 
-        using var doc = JsonDocument.Parse(realmAccessClaim);
-        if (!doc.RootElement.TryGetProperty("roles", out var rolesElement)
-            || rolesElement.ValueKind != JsonValueKind.Array)
+        try
         {
-            return Task.FromResult(principal);
-        }
-
-        foreach (var role in rolesElement.EnumerateArray())
-        {
-            var roleValue = role.GetString();
-            if (roleValue is not null && !identity.HasClaim(ClaimTypes.Role, roleValue))
+            using var doc = JsonDocument.Parse(realmAccessClaim);
+            if (!doc.RootElement.TryGetProperty("roles", out var rolesElement)
+                || rolesElement.ValueKind != JsonValueKind.Array)
             {
-                identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                return Task.FromResult(principal);
             }
+
+            foreach (var role in rolesElement.EnumerateArray())
+            {
+                var roleValue = role.GetString();
+                if (roleValue is not null && !identity.HasClaim(ClaimTypes.Role, roleValue))
+                {
+                    identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Keep original principal; malformed role claims are handled by tenant middleware diagnostics.
         }
 
         return Task.FromResult(principal);
