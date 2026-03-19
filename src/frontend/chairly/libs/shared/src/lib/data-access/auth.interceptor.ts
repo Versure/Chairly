@@ -6,9 +6,15 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 
-import { catchError, from, switchMap, throwError } from 'rxjs';
+import { catchError, from, Observable, switchMap, throwError } from 'rxjs';
 // eslint-disable-next-line sonarjs/deprecation -- KeycloakService is required for runtime config; provideKeycloak needs static config at build time
 import { KeycloakService } from 'keycloak-angular';
+
+let hasTriggeredLoginRedirect = false;
+
+export const resetAuthInterceptorStateForTests = (): void => {
+  hasTriggeredLoginRedirect = false;
+};
 
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -22,6 +28,15 @@ export const authInterceptor: HttpInterceptorFn = (
   const keycloakService = inject(KeycloakService);
 
   const withRetryHeader = req.headers.has('X-Auth-Retry');
+  const triggerLoginIfNeeded = (error: HttpErrorResponse): Observable<never> => {
+    if (!keycloakService.isLoggedIn() && !hasTriggeredLoginRedirect) {
+      hasTriggeredLoginRedirect = true;
+      void keycloakService.login({ redirectUri: window.location.href });
+    }
+
+    return throwError(() => error);
+  };
+
   const withToken = (token: string | null, request: HttpRequest<unknown>): HttpRequest<unknown> => {
     if (!token) {
       return request;
@@ -49,8 +64,7 @@ export const authInterceptor: HttpInterceptorFn = (
             ),
           ),
           catchError(() => {
-            void keycloakService.login({ redirectUri: window.location.href });
-            return throwError(() => error);
+            return triggerLoginIfNeeded(error);
           }),
         );
       }

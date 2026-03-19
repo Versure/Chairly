@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 // eslint-disable-next-line sonarjs/deprecation -- KeycloakService is required for runtime config
 import { KeycloakService } from 'keycloak-angular';
 
-import { authInterceptor } from './auth.interceptor';
+import { authInterceptor, resetAuthInterceptorStateForTests } from './auth.interceptor';
 
 describe('authInterceptor', () => {
   let httpClient: HttpClient;
@@ -15,13 +15,17 @@ describe('authInterceptor', () => {
     getToken: ReturnType<typeof vi.fn>;
     updateToken: ReturnType<typeof vi.fn>;
     login: ReturnType<typeof vi.fn>;
+    isLoggedIn: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(() => {
+    resetAuthInterceptorStateForTests();
+
     keycloakServiceMock = {
       getToken: vi.fn().mockResolvedValue('mock-token-123'),
       updateToken: vi.fn().mockResolvedValue(true),
       login: vi.fn().mockResolvedValue(undefined),
+      isLoggedIn: vi.fn().mockReturnValue(true),
     };
 
     TestBed.configureTestingModule({
@@ -98,6 +102,7 @@ describe('authInterceptor', () => {
   it('redirects to login when refresh fails after 401', async () => {
     keycloakServiceMock.getToken.mockResolvedValue('expired-token');
     keycloakServiceMock.updateToken.mockRejectedValue(new Error('refresh failed'));
+    keycloakServiceMock.isLoggedIn = vi.fn().mockReturnValue(false);
 
     const responsePromise = firstValueFrom(httpClient.post('/api/clients', { firstName: 'Anna' }));
     await flushMicrotasks(2);
@@ -108,5 +113,27 @@ describe('authInterceptor', () => {
     await flushMicrotasks(3);
     await expect(responsePromise).rejects.toBeTruthy();
     expect(keycloakServiceMock.login).toHaveBeenCalled();
+  });
+
+  it('does not trigger repeated login redirects after refresh failures', async () => {
+    keycloakServiceMock.getToken.mockResolvedValue('expired-token');
+    keycloakServiceMock.updateToken.mockRejectedValue(new Error('refresh failed'));
+    keycloakServiceMock.isLoggedIn = vi.fn().mockReturnValue(false);
+
+    const firstResponsePromise = firstValueFrom(httpClient.post('/api/clients', { firstName: 'Anna' }));
+    await flushMicrotasks(2);
+    const firstReq = httpTesting.expectOne('/api/clients');
+    firstReq.flush({ title: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    await flushMicrotasks(3);
+    await expect(firstResponsePromise).rejects.toBeTruthy();
+
+    const secondResponsePromise = firstValueFrom(httpClient.post('/api/clients', { firstName: 'Anna' }));
+    await flushMicrotasks(2);
+    const secondReq = httpTesting.expectOne('/api/clients');
+    secondReq.flush({ title: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+    await flushMicrotasks(3);
+    await expect(secondResponsePromise).rejects.toBeTruthy();
+
+    expect(keycloakServiceMock.login).toHaveBeenCalledTimes(1);
   });
 });
