@@ -110,6 +110,16 @@ internal sealed partial class TenantContextMiddleware(RequestDelegate next, ILog
     private static bool TryExtractRole(ClaimsPrincipal user, out string role)
     {
         role = string.Empty;
+
+        foreach (var knownRole in _knownRoles)
+        {
+            if (user.IsInRole(knownRole))
+            {
+                role = knownRole;
+                return true;
+            }
+        }
+
         var realmAccessClaim = user.FindFirst("realm_access")?.Value;
         if (realmAccessClaim is null)
         {
@@ -137,7 +147,9 @@ internal sealed partial class TenantContextMiddleware(RequestDelegate next, ILog
         }
         catch (JsonException)
         {
-            return false;
+            // Role claim parsing failures should not force authentication failure.
+            // Authorization policies can still evaluate existing role claims and return 403 when needed.
+            return true;
         }
 
         return true;
