@@ -22,6 +22,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'klanten',
+        canActivate: [roleGuard('staff_member')],
         loadChildren: () => import('@org/chairly-lib').then((m) => m.clientsRoutes),
       },
       {

@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -129,5 +130,63 @@ describe('ClientListPageComponent', () => {
     ) as Element | null;
     expect(errorEl).toBeTruthy();
     expect(errorEl?.textContent?.trim()).toBeTruthy();
+  });
+
+  it('shows 401 message when create returns unauthorized', () => {
+    mockApi.create = vi
+      .fn()
+      .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401 })));
+
+    const request: CreateClientRequest = {
+      firstName: 'Anna',
+      lastName: 'Bakker',
+      email: null,
+      phoneNumber: null,
+      notes: null,
+    };
+
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
+
+    expect(formDialogComponent).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    formDialogComponent!.saved.emit(request);
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
+    expect(errorEl?.textContent?.trim()).toBe(
+      'Je sessie is verlopen of ongeldig. Log opnieuw in en probeer het nogmaals.',
+    );
+  });
+
+  it('shows 403 message when create returns forbidden', () => {
+    mockApi.create = vi
+      .fn()
+      .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 403 })));
+
+    const request: CreateClientRequest = {
+      firstName: 'Anna',
+      lastName: 'Bakker',
+      email: null,
+      phoneNumber: null,
+      notes: null,
+    };
+
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is ClientFormDialogComponent => c instanceof ClientFormDialogComponent);
+
+    expect(formDialogComponent).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    formDialogComponent!.saved.emit(request);
+    fixture.detectChanges();
+
+    const errorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
+    expect(errorEl?.textContent?.trim()).toBe('Je hebt geen rechten om deze actie uit te voeren.');
   });
 });

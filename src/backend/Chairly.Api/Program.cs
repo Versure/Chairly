@@ -44,11 +44,15 @@ builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastruct
 builder.Services.AddScoped<TenantContext>();
 builder.Services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
 
-var jwksCache = new KeycloakJwksCache();
-builder.Services.AddSingleton(jwksCache);
-
 // JWT Bearer authentication — dynamic multi-issuer validation for realm-per-tenant.
-var keycloakUrl = builder.Configuration["Keycloak:Url"]!;
+var keycloakUrl = (builder.Configuration["Keycloak:Url"] ?? string.Empty).TrimEnd('/');
+var requireHttpsMetadata = !keycloakUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+var jwksCache = new KeycloakJwksCache(requireHttpsMetadata);
+builder.Services.AddSingleton(jwksCache);
+var keycloakClientId = builder.Configuration["Keycloak:ClientId"];
+var validAudiences = string.IsNullOrWhiteSpace(keycloakClientId)
+    ? new[] { "account" }
+    : new[] { "account", keycloakClientId };
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -57,7 +61,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidAudience = "account",
+            ValidAudiences = validAudiences,
             IssuerValidator = (issuer, _, _) =>
             {
                 if (issuer.StartsWith(keycloakUrl + "/realms/", StringComparison.Ordinal))
