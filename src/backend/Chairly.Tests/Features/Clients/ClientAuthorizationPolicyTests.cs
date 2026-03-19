@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Clients.GetClientsList;
 using Chairly.Api.Shared.Mediator;
@@ -5,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using System.Security.Claims;
 
 namespace Chairly.Tests.Features.Clients;
 
