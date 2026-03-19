@@ -227,4 +227,103 @@ public class TenantContextMiddlewareTests
 
         Assert.False(result);
     }
+
+    [Fact]
+    public void TryPopulateTenantContext_ValidManagerClaims_ReturnsNoFailureReason()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: $"http://localhost:8080/realms/{TestTenantId}",
+            sub: TestUserId.ToString(),
+            roles: ManagerRoles);
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration: null, out var failureReason);
+
+        Assert.True(result);
+        Assert.Equal(TenantContextFailureReason.None, failureReason);
+        Assert.Equal("manager", tenantContext.UserRole);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_MissingIssuer_SetsFailureReason()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: null,
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration: null, out var failureReason);
+
+        Assert.False(result);
+        Assert.Equal(TenantContextFailureReason.MissingIssuer, failureReason);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_MissingSub_SetsFailureReason()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: $"http://localhost:8080/realms/{TestTenantId}",
+            sub: null,
+            roles: OwnerRoles);
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration: null, out var failureReason);
+
+        Assert.False(result);
+        Assert.Equal(TenantContextFailureReason.MissingSubject, failureReason);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_InvalidSub_SetsFailureReason()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: $"http://localhost:8080/realms/{TestTenantId}",
+            sub: "not-a-guid",
+            roles: OwnerRoles);
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration: null, out var failureReason);
+
+        Assert.False(result);
+        Assert.Equal(TenantContextFailureReason.InvalidSubject, failureReason);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_NonGuidRealmWithoutFallback_SetsFailureReason()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: "http://localhost:8080/realms/not-a-guid",
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration: null, out var failureReason);
+
+        Assert.False(result);
+        Assert.Equal(TenantContextFailureReason.TenantMappingFailed, failureReason);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_InvalidRealmAccessJson_SetsFailureReason()
+    {
+        var claims = new List<Claim>
+        {
+            new("iss", $"http://localhost:8080/realms/{TestTenantId}"),
+            new("sub", TestUserId.ToString()),
+            new("realm_access", """{"roles":["manager",}"""),
+        };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"));
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(principal, tenantContext, configuration: null, out var failureReason);
+
+        Assert.False(result);
+        Assert.Equal(TenantContextFailureReason.RoleClaimParsingFailed, failureReason);
+    }
 }

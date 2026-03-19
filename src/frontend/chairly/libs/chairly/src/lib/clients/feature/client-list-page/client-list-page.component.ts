@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -48,6 +49,20 @@ export class ClientListPageComponent implements OnInit {
   protected readonly isLoading = this.store.isLoading;
   protected readonly mutationError = signal<string | null>(null);
 
+  private toMutationErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      if (error.status === 401) {
+        return 'Je sessie is verlopen of ongeldig. Log opnieuw in en probeer het nogmaals.';
+      }
+
+      if (error.status === 403) {
+        return 'Je hebt geen rechten om deze actie uit te voeren.';
+      }
+    }
+
+    return 'Er is een fout opgetreden. Probeer het opnieuw.';
+  }
+
   ngOnInit(): void {
     this.store.loadAll();
   }
@@ -79,8 +94,8 @@ export class ClientListPageComponent implements OnInit {
           next: () => {
             this.store.removeClient(client.id);
           },
-          error: () => {
-            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          error: (error: unknown) => {
+            this.mutationError.set(this.toMutationErrorMessage(error));
           },
         });
     }
@@ -98,8 +113,8 @@ export class ClientListPageComponent implements OnInit {
           next: (updated) => {
             this.store.updateClient(updated);
           },
-          error: () => {
-            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          error: (error: unknown) => {
+            this.mutationError.set(this.toMutationErrorMessage(error));
           },
         });
     } else {
@@ -110,8 +125,8 @@ export class ClientListPageComponent implements OnInit {
           next: (created) => {
             this.store.addClient(created);
           },
-          error: () => {
-            this.mutationError.set('Er is een fout opgetreden. Probeer het opnieuw.');
+          error: (error: unknown) => {
+            this.mutationError.set(this.toMutationErrorMessage(error));
           },
         });
     }
