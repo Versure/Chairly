@@ -183,6 +183,51 @@ public class TenantContextMiddlewareTests
     }
 
     [Fact]
+    public void TryPopulateTenantContext_NonGuidRealmMatchingConfiguredRealm_ResolvesFromConfiguration()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: "http://localhost:8080/realms/chairly",
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var configuration = CreateConfiguration(new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:Realm"] = "chairly",
+            ["Keycloak:TenantId"] = TestTenantId.ToString(),
+        });
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration);
+
+        Assert.True(result);
+        Assert.Equal(TestTenantId, tenantContext.TenantId);
+        Assert.Equal(TestUserId, tenantContext.UserId);
+        Assert.Equal("owner", tenantContext.UserRole);
+    }
+
+    [Fact]
+    public void TryPopulateTenantContext_NonGuidRealmNotMatchingConfiguredRealm_ReturnsFalse()
+    {
+        var user = CreateAuthenticatedUser(
+            issuer: "http://localhost:8080/realms/other-realm",
+            sub: TestUserId.ToString(),
+            roles: OwnerRoles);
+
+        var configuration = CreateConfiguration(new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:Realm"] = "chairly",
+            ["Keycloak:TenantId"] = TestTenantId.ToString(),
+        });
+
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(user, tenantContext, configuration);
+
+        Assert.False(result);
+    }
+
+    [Fact]
     public void TryPopulateTenantContext_NonGuidRealmWithInvalidConfigTenantId_ReturnsFalse()
     {
         var user = CreateAuthenticatedUser(

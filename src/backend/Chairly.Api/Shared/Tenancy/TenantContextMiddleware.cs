@@ -101,6 +101,14 @@ internal sealed partial class TenantContextMiddleware(RequestDelegate next, ILog
         }
 
         // Dev path: realm name is human-readable; resolve tenant ID from configuration.
+        var configuredRealm = configuration?["Keycloak:Realm"];
+        if (!string.IsNullOrWhiteSpace(configuredRealm)
+            && !string.Equals(configuredRealm, realmName, StringComparison.Ordinal))
+        {
+            failureReason = TenantContextFailureReason.TenantMappingFailed;
+            return false;
+        }
+
         var configuredTenantId = configuration?["Keycloak:TenantId"];
         var isMapped = configuredTenantId is not null && Guid.TryParse(configuredTenantId, out tenantId);
         failureReason = isMapped ? TenantContextFailureReason.None : TenantContextFailureReason.TenantMappingFailed;
