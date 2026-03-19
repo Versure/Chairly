@@ -100,8 +100,8 @@ test('shows correct status badges with appropriate styling', async ({ page }) =>
   await setupApiMocks(page);
   await page.goto('/meldingen');
 
-  // All three statuses should be visible as badge text (exact match to avoid matching column headers like "Verzonden op")
-  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+  // "Verzonden" appears in multiple rows, so assert count instead of a strict single-locator visibility check.
+  await expect(page.getByText('Verzonden', { exact: true })).toHaveCount(2);
   await expect(page.getByText('Wachtend', { exact: true })).toBeVisible();
   await expect(page.getByText('Mislukt', { exact: true })).toBeVisible();
 });
