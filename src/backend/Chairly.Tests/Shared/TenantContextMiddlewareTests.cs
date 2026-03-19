@@ -293,6 +293,28 @@ public class TenantContextMiddlewareTests
     }
 
     [Fact]
+    public void TryPopulateTenantContext_SubMissingButNameIdentifierPresent_ParsesUserId()
+    {
+        var claims = new List<Claim>
+        {
+            new("iss", $"http://localhost:8080/realms/{TestTenantId}"),
+            new(ClaimTypes.NameIdentifier, TestUserId.ToString()),
+            new("realm_access", JsonSerializer.Serialize(new { roles = OwnerRoles })),
+        };
+
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"));
+        var tenantContext = new TenantContext();
+
+        var result = TenantContextMiddleware.TryPopulateTenantContext(principal, tenantContext, configuration: null, out var failureReason);
+
+        Assert.True(result);
+        Assert.Equal(TenantContextFailureReason.None, failureReason);
+        Assert.Equal(TestTenantId, tenantContext.TenantId);
+        Assert.Equal(TestUserId, tenantContext.UserId);
+        Assert.Equal("owner", tenantContext.UserRole);
+    }
+
+    [Fact]
     public void TryPopulateTenantContext_UnknownIssuerDomain_ReturnsFalse()
     {
         // Issuer contains /realms/ but realm name is not a valid GUID

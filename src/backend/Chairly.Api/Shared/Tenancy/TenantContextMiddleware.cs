@@ -50,7 +50,8 @@ internal sealed partial class TenantContextMiddleware(RequestDelegate next, ILog
 
         tenantContext.TenantId = tenantId;
 
-        var sub = user.FindFirst("sub")?.Value;
+        var sub = user.FindFirst("sub")?.Value
+            ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (sub is null || !Guid.TryParse(sub, out var userId))
         {
             failureReason = sub is null ? TenantContextFailureReason.MissingSubject : TenantContextFailureReason.InvalidSubject;
