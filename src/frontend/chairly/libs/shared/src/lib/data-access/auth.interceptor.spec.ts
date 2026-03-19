@@ -11,11 +11,17 @@ import { authInterceptor } from './auth.interceptor';
 describe('authInterceptor', () => {
   let httpClient: HttpClient;
   let httpTesting: HttpTestingController;
-  let keycloakServiceMock: { getToken: ReturnType<typeof vi.fn> };
+  let keycloakServiceMock: {
+    getToken: ReturnType<typeof vi.fn>;
+    updateToken: ReturnType<typeof vi.fn>;
+    login: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     keycloakServiceMock = {
       getToken: vi.fn().mockResolvedValue('mock-token-123'),
+      updateToken: vi.fn().mockResolvedValue(true),
+      login: vi.fn().mockResolvedValue(undefined),
     };
 
     TestBed.configureTestingModule({
@@ -35,11 +41,17 @@ describe('authInterceptor', () => {
     httpTesting.verify();
   });
 
+  const flushMicrotasks = async (times = 1): Promise<void> => {
+    for (let index = 0; index < times; index += 1) {
+      await Promise.resolve();
+    }
+  };
+
   it('adds Authorization header to non-config requests', async () => {
     const response$ = firstValueFrom(httpClient.get('/api/bookings'));
 
-    // Wait a microtask for the from(promise) in the interceptor to resolve
-    await Promise.resolve();
+    // Wait microtasks for the from(promise) in the interceptor to resolve
+    await flushMicrotasks(2);
 
     const req = httpTesting.expectOne('/api/bookings');
     expect(req.request.headers.get('Authorization')).toBe('Bearer mock-token-123');
@@ -56,5 +68,45 @@ describe('authInterceptor', () => {
     req.flush({});
 
     await response$;
+  });
+
+  it('retries once after 401 by refreshing the token', async () => {
+    keycloakServiceMock.getToken
+      .mockResolvedValueOnce('expired-token')
+      .mockResolvedValueOnce('fresh-token');
+
+    const responsePromise = firstValueFrom(httpClient.post('/api/clients', { firstName: 'Anna' }));
+    await flushMicrotasks(2);
+
+    const firstReq = httpTesting.expectOne('/api/clients');
+    expect(firstReq.request.headers.get('Authorization')).toBe('Bearer expired-token');
+    expect(firstReq.request.headers.has('X-Auth-Retry')).toBe(false);
+    firstReq.flush({ title: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+
+    await flushMicrotasks(4);
+
+    const retryReq = httpTesting.expectOne('/api/clients');
+    expect(retryReq.request.headers.get('Authorization')).toBe('Bearer fresh-token');
+    expect(retryReq.request.headers.get('X-Auth-Retry')).toBe('1');
+    retryReq.flush({ id: 'client-1' }, { status: 201, statusText: 'Created' });
+
+    await responsePromise;
+    expect(keycloakServiceMock.updateToken).toHaveBeenCalledWith(30);
+    expect(keycloakServiceMock.login).not.toHaveBeenCalled();
+  });
+
+  it('redirects to login when refresh fails after 401', async () => {
+    keycloakServiceMock.getToken.mockResolvedValue('expired-token');
+    keycloakServiceMock.updateToken.mockRejectedValue(new Error('refresh failed'));
+
+    const responsePromise = firstValueFrom(httpClient.post('/api/clients', { firstName: 'Anna' }));
+    await flushMicrotasks(2);
+
+    const req = httpTesting.expectOne('/api/clients');
+    req.flush({ title: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
+
+    await flushMicrotasks(3);
+    await expect(responsePromise).rejects.toBeTruthy();
+    expect(keycloakServiceMock.login).toHaveBeenCalled();
   });
 });
