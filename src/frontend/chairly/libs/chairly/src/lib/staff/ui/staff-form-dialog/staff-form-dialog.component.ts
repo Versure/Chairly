@@ -32,6 +32,7 @@ export class StaffFormDialogComponent {
   readonly staffMember: InputSignal<StaffMemberResponse | null> = input<StaffMemberResponse | null>(
     null,
   );
+  readonly apiError: InputSignal<string | null> = input<string | null>(null);
 
   readonly saved: OutputEmitterRef<CreateStaffMemberRequest> = output<CreateStaffMemberRequest>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
@@ -64,6 +65,10 @@ export class StaffFormDialogComponent {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(100)],
     }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email, Validators.maxLength(256)],
+    }),
     role: new FormControl<StaffRole>('staff_member', {
       nonNullable: true,
       validators: [Validators.required],
@@ -81,6 +86,7 @@ export class StaffFormDialogComponent {
       this.form.reset({
         firstName: staffMember.firstName,
         lastName: staffMember.lastName,
+        email: staffMember.email,
         role: staffMember.role,
         color: staffMember.color,
         photoUrl: staffMember.photoUrl,
@@ -91,6 +97,7 @@ export class StaffFormDialogComponent {
       this.form.reset({
         firstName: '',
         lastName: '',
+        email: '',
         role: 'staff_member',
         color: '#6366f1',
         photoUrl: null,
@@ -116,11 +123,11 @@ export class StaffFormDialogComponent {
     if (this.form.invalid) {
       return;
     }
-    const { firstName, lastName, role, color, photoUrl } = this.form.getRawValue();
-    this.close();
+    const { firstName, lastName, email, role, color, photoUrl } = this.form.getRawValue();
     this.saved.emit({
       firstName,
       lastName,
+      email,
       role,
       color,
       photoUrl,
