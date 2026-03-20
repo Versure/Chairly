@@ -38,4 +38,8 @@ internal sealed class CreateUserThenFailAssignRoleKeycloakAdminService : IKeyclo
 
     public Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default)
         => Task.CompletedTask;
+
+    public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+        CancellationToken ct = default)
+        => Task.CompletedTask;
 }

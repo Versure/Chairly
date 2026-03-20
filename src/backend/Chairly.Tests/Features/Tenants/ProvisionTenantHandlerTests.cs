@@ -128,5 +128,9 @@ public class ProvisionTenantHandlerTests
         public Task AssignRealmRoleAsync(Guid tenantId, string keycloakUserId, string roleName,
             CancellationToken ct = default)
             => Task.CompletedTask;
+
+        public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+            CancellationToken ct = default)
+            => Task.CompletedTask;
     }
 }

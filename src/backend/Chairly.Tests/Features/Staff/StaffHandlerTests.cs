@@ -133,6 +133,50 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task CreateStaffMemberHandler_HappyPath_SendsPasswordSetupEmail()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT0);
+        Assert.True(keycloak.SendActionsEmailCalled);
+    }
+
+    [Fact]
+    public async Task CreateStaffMemberHandler_EmailSendFails_StillCreatesStaffMember()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new SendEmailFailingKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        // Staff member should still be created even if email fails.
+        Assert.True(result.IsT0);
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.NotNull(saved.KeycloakUserId);
+    }
+
+    [Fact]
     public async Task CreateStaffMemberHandler_KeycloakFails_DeletesDbRecordAndReturnsError()
     {
         await using var db = CreateDbContext();

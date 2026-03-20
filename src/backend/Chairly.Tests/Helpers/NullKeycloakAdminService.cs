@@ -10,6 +10,7 @@ internal sealed class NullKeycloakAdminService : IKeycloakAdminService
     public bool UpdateUserCalled { get; private set; }
     public bool DisableUserCalled { get; private set; }
     public bool EnableUserCalled { get; private set; }
+    public bool SendActionsEmailCalled { get; private set; }
     public bool DeleteRealmCalled { get; private set; }
 
     public Task<string> CreateRealmAsync(Guid tenantId, string adminEmail, CancellationToken ct = default)
@@ -59,6 +60,13 @@ internal sealed class NullKeycloakAdminService : IKeycloakAdminService
         CancellationToken ct = default)
     {
         AssignRoleCalled = true;
+        return Task.CompletedTask;
+    }
+
+    public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+        CancellationToken ct = default)
+    {
+        SendActionsEmailCalled = true;
         return Task.CompletedTask;
     }
 }
