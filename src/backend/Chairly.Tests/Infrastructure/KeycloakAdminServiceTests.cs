@@ -32,16 +32,30 @@ public class KeycloakAdminServiceTests : IDisposable
         }
     }
 
-    private static IConfiguration CreateConfiguration()
+    private static IConfiguration CreateConfiguration(
+        string? realm = null,
+        Guid? tenantId = null)
     {
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:Url"] = KeycloakUrl,
+            ["Keycloak:AdminClientId"] = AdminClientId,
+            ["Keycloak:AdminClientSecret"] = AdminClientSecret,
+            ["Keycloak:ClientId"] = FrontendClientId,
+        };
+
+        if (!string.IsNullOrWhiteSpace(realm))
+        {
+            values["Keycloak:Realm"] = realm;
+        }
+
+        if (tenantId.HasValue)
+        {
+            values["Keycloak:TenantId"] = tenantId.Value.ToString();
+        }
+
         return new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["Keycloak:Url"] = KeycloakUrl,
-                ["Keycloak:AdminClientId"] = AdminClientId,
-                ["Keycloak:AdminClientSecret"] = AdminClientSecret,
-                ["Keycloak:ClientId"] = FrontendClientId,
-            })
+            .AddInMemoryCollection(values)
             .Build();
     }
 
@@ -168,7 +182,49 @@ public class KeycloakAdminServiceTests : IDisposable
         Assert.Equal(2, tokenRequestCount);
     }
 
-    private KeycloakAdminService CreateService(DelegateHttpMessageHandler handler)
+    [Fact]
+    public async Task CreateUserAsync_UsesConfiguredRealmWhenTenantMatches()
+    {
+        var tenantId = Guid.NewGuid();
+        const string configuredRealm = "chairly";
+        var expectedUserId = Guid.NewGuid().ToString();
+        var capturedUris = new List<string>();
+
+        using var handler = new DelegateHttpMessageHandler(async (request, _) =>
+        {
+            var uri = request.RequestUri!.ToString();
+            capturedUris.Add(uri);
+
+            if (uri.Contains("/protocol/openid-connect/token", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(CreateTokenResponseJson(), System.Text.Encoding.UTF8, "application/json"),
+                };
+            }
+
+            if (uri.Contains($"/admin/realms/{configuredRealm}/users", StringComparison.Ordinal)
+                && request.Method == HttpMethod.Post)
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.Created);
+                response.Headers.Location = new Uri($"{KeycloakUrl}/admin/realms/{configuredRealm}/users/{expectedUserId}");
+                await Task.CompletedTask.ConfigureAwait(false);
+                return response;
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var service = CreateService(handler, CreateConfiguration(configuredRealm, tenantId));
+
+        var userId = await service.CreateUserAsync(tenantId, "test@example.com", "Jan", "Jansen", "owner");
+
+        Assert.Equal(expectedUserId, userId);
+        Assert.Contains(capturedUris, uri => uri.Contains($"/admin/realms/{configuredRealm}/users", StringComparison.Ordinal));
+        Assert.DoesNotContain(capturedUris, uri => uri.Contains($"/admin/realms/{tenantId}/users", StringComparison.Ordinal));
+    }
+
+    private KeycloakAdminService CreateService(DelegateHttpMessageHandler handler, IConfiguration? configuration = null)
     {
         var httpClient = new HttpClient(handler, disposeHandler: false);
         _disposables.Add(httpClient);
@@ -176,7 +232,7 @@ public class KeycloakAdminServiceTests : IDisposable
 
         return new KeycloakAdminService(
             factory,
-            CreateConfiguration(),
+            configuration ?? CreateConfiguration(),
             NullLogger<KeycloakAdminService>.Instance);
     }
 
