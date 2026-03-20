@@ -81,7 +81,7 @@ The mediator lives in `Chairly.Api/Shared/Mediator/` (or a thin shared project i
 
 - **Positive:** Feature code is co-located — everything for a use case lives in one folder.
 - **Positive:** Easy to understand, modify, or delete a feature without touching unrelated code.
-- **Positive:** Ideal for AI-driven development — Ralph can implement a full slice in one context window.
+- **Positive:** Ideal for AI-driven development — the backend-impl agent can implement a full slice in one context window.
 - **Positive:** No commercial license dependency — full control over the mediator implementation.
 - **Positive:** Pipeline behaviors enable clean cross-cutting concerns (validation, logging, tenant resolution).
 - **Negative:** Shared domain entities still live in a separate project — not a pure single-project VSA.
