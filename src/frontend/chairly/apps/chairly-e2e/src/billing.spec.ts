@@ -228,7 +228,7 @@ test('clicking Markeer als betaald updates status badge to Betaald', async ({ pa
   ).toBeVisible();
 });
 
-test('Vervallen verklaren button is not shown on a paid invoice', async ({ page }) => {
+test('paid invoice hides void button but shows send button', async ({ page }) => {
   const paidInvoice = {
     ...mockInvoiceDetail,
     status: 'Betaald',
@@ -256,7 +256,7 @@ test('Vervallen verklaren button is not shown on a paid invoice', async ({ page 
   ).toBeVisible();
 
   await expect(page.getByRole('button', { name: 'Vervallen verklaren' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Factuur versturen' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Factuur versturen' })).toBeVisible();
 });
 
 test('back link navigates to invoice list', async ({ page }) => {
