@@ -44,8 +44,10 @@ internal static partial class KeycloakDevSeeder
         await CreateRealmAsync(httpClientFactory, token, keycloakUrl, realmName,
             frontendClientId, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
 
-        // Step 1b: Always ensure realm display name and login theme are set.
-        await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
+        // Step 1b: Always ensure realm display name, login theme, and SMTP are set.
+        var smtpHost = configuration["Smtp:Host"];
+        var smtpPort = configuration["Smtp:Port"];
+        await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, realmName, smtpHost, smtpPort, logger, ct).ConfigureAwait(false);
 
         // Step 1c: Assign realm-management roles to the admin service account (idempotent).
         await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, realmName, adminClientId, logger, ct).ConfigureAwait(false);
@@ -171,15 +173,33 @@ internal static partial class KeycloakDevSeeder
 
     private static async Task UpdateRealmSettingsAsync(
         IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
-        string realmName, ILogger logger, CancellationToken ct)
+        string realmName, string? smtpHost, string? smtpPort, ILogger logger, CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        Dictionary<string, string>? smtpServer = null;
+
+        if (!string.IsNullOrWhiteSpace(smtpHost) && !string.IsNullOrWhiteSpace(smtpPort))
+        {
+            smtpServer = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["host"] = smtpHost,
+                ["port"] = smtpPort,
+                ["from"] = "noreply@chairly.local",
+                ["fromDisplayName"] = "Chairly",
+            };
+        }
+        else
+        {
+            LogSmtpConfigMissing(logger);
+        }
 
         var settings = new
         {
             displayName = "Chairly",
             loginTheme = "chairly",
+            smtpServer,
         };
 
         var response = await client.PutAsJsonAsync(
@@ -330,6 +350,9 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: realm {RealmName} settings updated (displayName=Chairly, loginTheme=chairly)")]
     private static partial void LogRealmSettingsUpdated(ILogger logger, string realmName);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Keycloak dev seed: Smtp:Host or Smtp:Port not configured — skipping SMTP setup for Keycloak realm")]
+    private static partial void LogSmtpConfigMissing(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: created user {Email}")]
     private static partial void LogUserCreated(ILogger logger, string email);

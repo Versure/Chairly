@@ -210,6 +210,19 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+        CancellationToken ct = default)
+    {
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
+
+        var response = await client.PutAsJsonAsync(
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}/execute-actions-email",
+            actions,
+            ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default)
     {
         var realm = ResolveRealm(tenantId);

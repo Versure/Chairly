@@ -22,5 +22,8 @@ public interface IKeycloakAdminService
     Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password,
         bool temporary = false, CancellationToken ct = default);
 
+    Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+        CancellationToken ct = default);
+
     Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default);
 }

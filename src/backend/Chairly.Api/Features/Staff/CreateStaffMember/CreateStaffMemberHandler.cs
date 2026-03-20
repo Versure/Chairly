@@ -43,27 +43,23 @@ internal sealed partial class CreateStaffMemberHandler(
 
             member.KeycloakUserId = createdKeycloakUserId;
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            try
+            {
+                await keycloakAdmin.SendActionsEmailAsync(
+                    tenantContext.TenantId, createdKeycloakUserId, ["UPDATE_PASSWORD"],
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception emailEx) when (emailEx is HttpRequestException or InvalidOperationException)
+            {
+                LogPasswordEmailFailed(logger, member.Id, emailEx);
+            }
         }
         catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
         {
             LogKeycloakCreateFailed(logger, member.Id, ex);
+            await CleanupKeycloakUserAsync(createdKeycloakUserId, member.Id, cancellationToken).ConfigureAwait(false);
 
-            if (!string.IsNullOrWhiteSpace(createdKeycloakUserId))
-            {
-                try
-                {
-                    await keycloakAdmin.DeleteUserAsync(
-                        tenantContext.TenantId,
-                        createdKeycloakUserId,
-                        cancellationToken).ConfigureAwait(false);
-                }
-                catch (Exception cleanupEx) when (cleanupEx is HttpRequestException or InvalidOperationException)
-                {
-                    LogKeycloakCleanupFailed(logger, member.Id, cleanupEx);
-                }
-            }
-
-            // Roll back the DB record on Keycloak failure.
             db.StaffMembers.Remove(member);
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -71,6 +67,23 @@ internal sealed partial class CreateStaffMemberHandler(
         }
 
         return ToResponse(member);
+    }
+
+    private async Task CleanupKeycloakUserAsync(string? keycloakUserId, Guid staffMemberId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(keycloakUserId))
+        {
+            return;
+        }
+
+        try
+        {
+            await keycloakAdmin.DeleteUserAsync(tenantContext.TenantId, keycloakUserId, ct).ConfigureAwait(false);
+        }
+        catch (Exception cleanupEx) when (cleanupEx is HttpRequestException or InvalidOperationException)
+        {
+            LogKeycloakCleanupFailed(logger, staffMemberId, cleanupEx);
+        }
     }
 
     private StaffMember CreateStaffMember(CreateStaffMemberCommand command)
@@ -131,5 +144,8 @@ internal sealed partial class CreateStaffMemberHandler(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to clean up Keycloak user after create failure for staff member {StaffMemberId}")]
     private static partial void LogKeycloakCleanupFailed(ILogger logger, Guid staffMemberId, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to send password setup email for staff member {StaffMemberId}")]
+    private static partial void LogPasswordEmailFailed(ILogger logger, Guid staffMemberId, Exception exception);
 }
 #pragma warning restore CA1812
