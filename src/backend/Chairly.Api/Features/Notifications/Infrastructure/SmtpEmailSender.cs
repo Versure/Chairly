@@ -7,7 +7,7 @@ namespace Chairly.Api.Features.Notifications.Infrastructure;
 
 internal sealed class SmtpEmailSender(IOptions<SmtpSettings> options) : IEmailSender
 {
-    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken cancellationToken)
+    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody, EmailAttachment? attachment = null, CancellationToken cancellationToken = default)
     {
         var settings = options.Value;
 
@@ -20,6 +20,16 @@ internal sealed class SmtpEmailSender(IOptions<SmtpSettings> options) : IEmailSe
         {
             HtmlBody = htmlBody,
         };
+
+        if (attachment is not null)
+        {
+            await bodyBuilder.Attachments.AddAsync(
+                attachment.FileName,
+                new MemoryStream(attachment.Content),
+                ContentType.Parse(attachment.ContentType),
+                cancellationToken).ConfigureAwait(false);
+        }
+
         message.Body = bodyBuilder.ToMessageBody();
 
         using var client = new SmtpClient();

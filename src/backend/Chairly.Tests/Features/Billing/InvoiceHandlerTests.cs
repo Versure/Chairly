@@ -909,11 +909,11 @@ public class InvoiceHandlerTests
         var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
         Assert.True(result.IsT2);
-        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden verstuurd", result.AsT2.Message);
+        Assert.Equal("Vervallen facturen kunnen niet worden verstuurd", result.AsT2.Message);
     }
 
     [Fact]
-    public async Task SendInvoiceHandler_PaidInvoice_ReturnsUnprocessable()
+    public async Task SendInvoiceHandler_PaidInvoice_SendsSuccessfully()
     {
         await using var db = CreateDbContext();
         var invoice = CreateTestInvoice(db);
@@ -923,8 +923,10 @@ public class InvoiceHandlerTests
 
         var result = await handler.Handle(new SendInvoiceCommand(invoice.Id));
 
-        Assert.True(result.IsT2);
-        Assert.Equal("Betaalde of vervallen facturen kunnen niet worden verstuurd", result.AsT2.Message);
+        var response = result.AsT0;
+        Assert.Equal("Betaald", response.Status);
+        Assert.NotNull(response.SentAtUtc);
+        Assert.NotNull(response.PaidAtUtc);
     }
 
     [Fact]

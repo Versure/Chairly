@@ -135,4 +135,37 @@ public class EmailTemplateTests
 
         Assert.Contains("Kapsalon De Knip", body, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void InvoiceSent_ReturnsNonEmptySubjectAndBody()
+    {
+        var (subject, body) = EmailTemplates.InvoiceSent("Jan Smit", "2026-0001", DateOnly.FromDateTime(DateTime.UtcNow), 48.40m, "Kapsalon De Knip");
+
+        Assert.False(string.IsNullOrEmpty(subject));
+        Assert.False(string.IsNullOrEmpty(body));
+    }
+
+    [Fact]
+    public void InvoiceSent_BodyContainsThankYouMessage()
+    {
+        var (_, body) = EmailTemplates.InvoiceSent("Jan Smit", "2026-0001", DateOnly.FromDateTime(DateTime.UtcNow), 48.40m, "Kapsalon De Knip");
+
+        Assert.Contains("Bedankt voor uw bezoek", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void InvoiceSent_WhenPaid_ContainsPaidBadge()
+    {
+        var (_, body) = EmailTemplates.InvoiceSent("Jan Smit", "2026-0001", DateOnly.FromDateTime(DateTime.UtcNow), 48.40m, "Kapsalon De Knip", isPaid: true);
+
+        Assert.Contains("reeds betaald", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void InvoiceSent_WhenNotPaid_DoesNotContainPaidBadge()
+    {
+        var (_, body) = EmailTemplates.InvoiceSent("Jan Smit", "2026-0001", DateOnly.FromDateTime(DateTime.UtcNow), 48.40m, "Kapsalon De Knip", isPaid: false);
+
+        Assert.DoesNotContain("reeds betaald", body, StringComparison.Ordinal);
+    }
 }
