@@ -70,7 +70,10 @@ export class StaffListPageComponent implements OnInit {
     return normalizedErrors;
   }
 
-  private mapCreateError(error: unknown): { formMessage: string | null; emailMessage: string | null } {
+  private mapCreateError(error: unknown): {
+    formMessage: string | null;
+    emailMessage: string | null;
+  } {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 401) {
         return {

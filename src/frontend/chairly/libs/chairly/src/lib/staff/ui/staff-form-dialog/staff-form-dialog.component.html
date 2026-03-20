@@ -10,10 +10,6 @@
             {{ staffMember() ? 'Medewerker bewerken' : 'Medewerker toevoegen' }}
           </h2>
 
-          @if (apiError()) {
-            <p class="mb-4 text-sm text-red-600 dark:text-red-400">{{ apiError() }}</p>
-          }
-
           <!-- Voornaam -->
           <div class="mb-4">
             <label
@@ -73,6 +69,9 @@
               <p class="mt-1 text-xs text-red-600 dark:text-red-400">
                 E-mailadres mag maximaal 256 tekens bevatten.
               </p>
+            }
+            @if (apiError()) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ apiError() }}</p>
             }
           </div>
 
