@@ -88,7 +88,18 @@ describe('InvoiceDetailPageComponent', () => {
     expect(sendButton).toBeTruthy();
   });
 
-  it('should hide Factuur versturen for non-sendable invoices', () => {
+  it('should render Factuur versturen for paid invoices', () => {
+    selectedInvoice.set(createInvoice('Betaald'));
+    fixture.detectChanges();
+
+    const sendButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Factuur versturen',
+    );
+
+    expect(sendButton).toBeTruthy();
+  });
+
+  it('should hide Factuur versturen for sent invoices', () => {
     selectedInvoice.set(createInvoice('Verzonden'));
     fixture.detectChanges();
 
@@ -97,6 +108,39 @@ describe('InvoiceDetailPageComponent', () => {
     );
 
     expect(sendButton).toBeUndefined();
+  });
+
+  it('should render Markeer als betaald for draft invoices', () => {
+    selectedInvoice.set(createInvoice('Concept'));
+    fixture.detectChanges();
+
+    const payButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Markeer als betaald',
+    );
+
+    expect(payButton).toBeTruthy();
+  });
+
+  it('should render Markeer als betaald for sent invoices', () => {
+    selectedInvoice.set(createInvoice('Verzonden'));
+    fixture.detectChanges();
+
+    const payButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Markeer als betaald',
+    );
+
+    expect(payButton).toBeTruthy();
+  });
+
+  it('should hide Markeer als betaald for paid invoices', () => {
+    selectedInvoice.set(createInvoice('Betaald'));
+    fixture.detectChanges();
+
+    const payButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Markeer als betaald',
+    );
+
+    expect(payButton).toBeUndefined();
   });
 
   it('should call sendInvoice and show success feedback when send succeeds', () => {

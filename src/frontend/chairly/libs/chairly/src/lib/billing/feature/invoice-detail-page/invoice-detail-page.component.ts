@@ -66,12 +66,12 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   protected readonly canSend = computed<boolean>(() => {
     const inv = this.invoice();
-    return inv !== null && inv.status === 'Concept';
+    return inv !== null && ['Concept', 'Betaald'].includes(inv.status);
   });
 
   protected readonly canPay = computed<boolean>(() => {
     const inv = this.invoice();
-    return inv !== null && inv.status === 'Verzonden';
+    return inv !== null && ['Concept', 'Verzonden'].includes(inv.status);
   });
 
   protected readonly canVoid = computed<boolean>(() => {
