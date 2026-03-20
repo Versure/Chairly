@@ -163,6 +163,19 @@ describe('StaffFormDialogComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Voer een geldig e-mailadres in.');
   });
 
+  it('should show API validation message when apiError input is set', () => {
+    fixture.componentRef.setInput(
+      'apiError',
+      'Controleer het e-mailadres. Dit veld is verplicht en moet een geldig formaat hebben.',
+    );
+    component.open();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Controleer het e-mailadres. Dit veld is verplicht en moet een geldig formaat hebben.',
+    );
+  });
+
   it('should emit cancel event on Annuleren click', () => {
     let cancelled = false;
     component.cancelled.subscribe(() => {

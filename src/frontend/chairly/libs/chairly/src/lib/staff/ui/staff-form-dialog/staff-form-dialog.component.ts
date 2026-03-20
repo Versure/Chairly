@@ -32,6 +32,7 @@ export class StaffFormDialogComponent {
   readonly staffMember: InputSignal<StaffMemberResponse | null> = input<StaffMemberResponse | null>(
     null,
   );
+  readonly apiError: InputSignal<string | null> = input<string | null>(null);
 
   readonly saved: OutputEmitterRef<CreateStaffMemberRequest> = output<CreateStaffMemberRequest>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
@@ -123,7 +124,6 @@ export class StaffFormDialogComponent {
       return;
     }
     const { firstName, lastName, email, role, color, photoUrl } = this.form.getRawValue();
-    this.close();
     this.saved.emit({
       firstName,
       lastName,
