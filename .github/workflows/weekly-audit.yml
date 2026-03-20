@@ -8,8 +8,9 @@ on:
 permissions:
   contents: read
   issues: write
+  pull-requests: read
+  actions: read
   id-token: write
-
 jobs:
   audit-backend:
     name: Backend Conventions Audit
