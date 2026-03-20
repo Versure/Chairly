@@ -195,6 +195,46 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public void CreateStaffMemberCommand_MissingEmail_FailsValidation()
+    {
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Jan",
+            LastName = "Bakker",
+            Email = string.Empty,
+            Role = "manager",
+            Color = "#FF0000",
+        };
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(command);
+
+        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
+
+        Assert.False(isValid);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Email), StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void CreateStaffMemberCommand_InvalidEmailFormat_FailsValidation()
+    {
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Jan",
+            LastName = "Bakker",
+            Email = "not-an-email",
+            Role = "manager",
+            Color = "#FF0000",
+        };
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(command);
+
+        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
+
+        Assert.False(isValid);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Email), StringComparer.Ordinal));
+    }
+
+    [Fact]
     public async Task UpdateStaffMemberHandler_HappyPath_UpdatesFieldsAndSetsUpdatedAtUtc()
     {
         await using var db = CreateDbContext();
