@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Billing.SendInvoice;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
 using Chairly.Infrastructure.Persistence;
@@ -114,21 +115,46 @@ internal sealed partial class NotificationDispatcher(
         }
 
         var clientName = $"{client.FirstName} {client.LastName}";
-        var (subject, htmlBody) = await RenderTemplateAsync(db, notification, clientName, cancellationToken).ConfigureAwait(false);
+        var (subject, htmlBody, attachment) = await RenderTemplateAsync(db, notification, clientName, cancellationToken).ConfigureAwait(false);
 
         if (string.IsNullOrEmpty(subject))
         {
             return DispatchResult.Skipped;
         }
 
-        await emailSender.SendAsync(client.Email, clientName, subject, htmlBody, cancellationToken).ConfigureAwait(false);
+        await emailSender.SendAsync(client.Email, clientName, subject, htmlBody, attachment, cancellationToken).ConfigureAwait(false);
 
         notification.SentAtUtc = DateTimeOffset.UtcNow;
         return DispatchResult.Sent;
     }
 
-    private static async Task<(string Subject, string HtmlBody)> RenderTemplateAsync(
+    private static async Task<(string Subject, string HtmlBody, EmailAttachment? Attachment)> RenderTemplateAsync(
         ChairlyDbContext db, Notification notification, string clientName, CancellationToken cancellationToken)
+    {
+        var settings = await db.TenantSettings
+            .FirstOrDefaultAsync(s => s.TenantId == notification.TenantId, cancellationToken)
+            .ConfigureAwait(false);
+        var salonName = settings?.CompanyName ?? "Uw salon";
+
+        return notification.Type switch
+        {
+            NotificationType.BookingConfirmation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingReminder => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingCancellation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingReceived => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
+            NotificationType.InvoiceSent => await RenderInvoiceTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            _ => (string.Empty, string.Empty, null),
+        };
+
+        static (string Subject, string HtmlBody, EmailAttachment? Attachment) ToResult((string Subject, string HtmlBody) r) => (r.Subject, r.HtmlBody, null);
+    }
+
+    private static async Task<(string Subject, string HtmlBody)> RenderBookingTemplateAsync(
+        ChairlyDbContext db,
+        Notification notification,
+        string clientName,
+        string salonName,
+        CancellationToken cancellationToken)
     {
         var booking = await db.Bookings
             .Include(b => b.BookingServices)
@@ -141,11 +167,6 @@ internal sealed partial class NotificationDispatcher(
 
         var startTime = booking?.StartTime ?? notification.ScheduledAtUtc;
 
-        var settings = await db.TenantSettings
-            .FirstOrDefaultAsync(s => s.TenantId == notification.TenantId, cancellationToken)
-            .ConfigureAwait(false);
-        var salonName = settings?.CompanyName ?? "Uw salon";
-
         return notification.Type switch
         {
             NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary, salonName),
@@ -154,6 +175,62 @@ internal sealed partial class NotificationDispatcher(
             NotificationType.BookingReceived => EmailTemplates.BookingReceived(clientName, startTime, serviceSummary, salonName),
             _ => (string.Empty, string.Empty),
         };
+    }
+
+    private static async Task<(string Subject, string HtmlBody, EmailAttachment? Attachment)> RenderInvoiceTemplateAsync(
+        ChairlyDbContext db,
+        Notification notification,
+        string clientName,
+        string salonName,
+        CancellationToken cancellationToken)
+    {
+        var invoice = await db.Invoices
+            .Include(i => i.LineItems)
+            .FirstOrDefaultAsync(i => i.Id == notification.ReferenceId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (invoice is null)
+        {
+            return (string.Empty, string.Empty, null);
+        }
+
+        var isPaid = invoice.PaidAtUtc.HasValue;
+
+        var (subject, htmlBody) = EmailTemplates.InvoiceSent(
+            clientName,
+            invoice.InvoiceNumber,
+            invoice.InvoiceDate,
+            invoice.TotalAmount,
+            salonName,
+            isPaid: isPaid);
+
+        var pdfData = new InvoicePdfData(
+            invoice.InvoiceNumber,
+            invoice.InvoiceDate,
+            clientName,
+            salonName,
+            invoice.SubTotalAmount,
+            invoice.TotalVatAmount,
+            invoice.TotalAmount,
+            isPaid,
+            invoice.LineItems
+                .OrderBy(li => li.SortOrder)
+                .Select(li => new InvoicePdfLineItem(
+                    li.Description,
+                    li.Quantity,
+                    li.UnitPrice,
+                    li.VatPercentage,
+                    li.TotalPrice))
+                .ToList());
+
+        var pdfGenerator = new InvoicePdfGenerator();
+        var pdfBytes = pdfGenerator.Generate(pdfData);
+        var attachment = new EmailAttachment(
+            $"Factuur-{invoice.InvoiceNumber}.pdf",
+            "application/pdf",
+            pdfBytes);
+
+        return (subject, htmlBody, attachment);
     }
 
     private void HandleSendFailure(Notification notification, Exception ex)

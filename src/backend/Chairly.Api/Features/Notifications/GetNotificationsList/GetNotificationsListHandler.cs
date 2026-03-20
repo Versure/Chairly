@@ -43,7 +43,7 @@ internal sealed class GetNotificationsListHandler(ChairlyDbContext db, ITenantCo
 
         return new NotificationResponse(
             notification.Id,
-            notification.Type.ToString(),
+            MapNotificationType(notification.Type),
             recipientName,
             notification.Channel.ToString(),
             DeriveStatus(notification),
@@ -54,6 +54,17 @@ internal sealed class GetNotificationsListHandler(ChairlyDbContext db, ITenantCo
             notification.RetryCount,
             notification.ReferenceId);
     }
+
+    private static string MapNotificationType(NotificationType type) =>
+        type switch
+        {
+            NotificationType.BookingConfirmation => nameof(NotificationType.BookingConfirmation),
+            NotificationType.BookingReminder => nameof(NotificationType.BookingReminder),
+            NotificationType.BookingCancellation => nameof(NotificationType.BookingCancellation),
+            NotificationType.BookingReceived => nameof(NotificationType.BookingReceived),
+            NotificationType.InvoiceSent => nameof(NotificationType.InvoiceSent),
+            _ => type.ToString(),
+        };
 
     private static string DeriveStatus(Notification notification)
     {

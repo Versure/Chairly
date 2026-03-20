@@ -91,6 +91,7 @@ test('filling in the form and clicking Opslaan calls POST /api/staff and shows n
   await dialog.getByLabel('Achternaam').fill('Pietersen');
   await dialog.getByLabel('E-mailadres').fill('piet.pietersen@salon.nl');
   await dialog.getByLabel('Rol').selectOption('staff_member');
+  await expect(dialog.getByRole('button', { name: 'Opslaan' })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
   expect(postCalled).toBe(true);

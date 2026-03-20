@@ -3,13 +3,15 @@ type NotificationType =
   | 'BookingConfirmation'
   | 'BookingReminder'
   | 'BookingCancellation'
-  | 'BookingReceived';
+  | 'BookingReceived'
+  | 'InvoiceSent';
 
 const typeLabels: Record<NotificationType, string> = {
   BookingConfirmation: 'Bevestiging',
   BookingReminder: 'Herinnering',
   BookingCancellation: 'Annulering',
   BookingReceived: 'Ontvangen',
+  InvoiceSent: 'Factuur verzonden',
 };
 
 export function notificationTypeLabel(type: NotificationType): string {

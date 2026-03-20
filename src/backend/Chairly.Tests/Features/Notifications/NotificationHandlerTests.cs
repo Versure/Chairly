@@ -176,18 +176,23 @@ public class NotificationHandlerTests
         Assert.Equal("Jan de Vries", result[0].RecipientName);
     }
 
-    [Fact]
-    public async Task GetNotificationsListHandler_ReturnsCorrectTypeString()
+    [Theory]
+    [InlineData(NotificationType.BookingConfirmation, "BookingConfirmation")]
+    [InlineData(NotificationType.BookingReminder, "BookingReminder")]
+    [InlineData(NotificationType.BookingCancellation, "BookingCancellation")]
+    [InlineData(NotificationType.BookingReceived, "BookingReceived")]
+    [InlineData(NotificationType.InvoiceSent, "InvoiceSent")]
+    public async Task GetNotificationsListHandler_MapsNotificationTypeToApiContract(NotificationType notificationType, string expectedType)
     {
         await using var db = CreateDbContext();
         var client = CreateTestClient(db);
-        CreateTestNotification(db, client.Id, NotificationType.BookingCancellation);
+        CreateTestNotification(db, client.Id, notificationType);
         var handler = new GetNotificationsListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetNotificationsListQuery());
 
         Assert.Single(result);
-        Assert.Equal("BookingCancellation", result[0].Type);
+        Assert.Equal(expectedType, result[0].Type);
     }
 
     [Fact]

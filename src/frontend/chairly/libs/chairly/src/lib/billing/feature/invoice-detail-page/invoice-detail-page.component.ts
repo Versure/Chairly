@@ -3,8 +3,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnInit,
+  signal,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -41,6 +43,11 @@ export class InvoiceDetailPageComponent implements OnInit {
   protected readonly invoice = computed<Invoice | null>(() => this.invoiceStore.selectedInvoice());
   protected readonly company = computed<CompanyInfo | null>(() => this.invoiceStore.companyInfo());
   protected readonly isLoading = computed<boolean>(() => this.invoiceStore.isLoading());
+  protected readonly error = computed<string | null>(() => this.invoiceStore.error());
+  protected readonly actionFeedback = signal<string | null>(null);
+  protected readonly actionFeedbackType = signal<'success' | 'error' | null>(null);
+  protected readonly isSendingInvoice = signal(false);
+  private readonly pendingSendInvoiceId = signal<string | null>(null);
 
   protected readonly isDraft = computed<boolean>(() => {
     const inv = this.invoice();
@@ -59,12 +66,12 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   protected readonly canSend = computed<boolean>(() => {
     const inv = this.invoice();
-    return inv !== null && inv.status === 'Concept';
+    return inv !== null && ['Concept', 'Betaald'].includes(inv.status);
   });
 
   protected readonly canPay = computed<boolean>(() => {
     const inv = this.invoice();
-    return inv !== null && inv.status === 'Verzonden';
+    return inv !== null && ['Concept', 'Verzonden'].includes(inv.status);
   });
 
   protected readonly canVoid = computed<boolean>(() => {
@@ -86,10 +93,14 @@ export class InvoiceDetailPageComponent implements OnInit {
     this.invoiceStore.loadCompanyInfo();
   }
 
-  protected onMarkAsSent(): void {
+  protected onSendInvoice(): void {
     const inv = this.invoice();
     if (inv) {
-      this.invoiceStore.markAsSent(inv.id);
+      this.actionFeedback.set(null);
+      this.actionFeedbackType.set(null);
+      this.pendingSendInvoiceId.set(inv.id);
+      this.isSendingInvoice.set(true);
+      this.invoiceStore.sendInvoice(inv.id);
     }
   }
 
@@ -134,5 +145,31 @@ export class InvoiceDetailPageComponent implements OnInit {
 
   protected onPrint(): void {
     this.document.defaultView?.print();
+  }
+
+  constructor() {
+    effect(() => {
+      const pendingId = this.pendingSendInvoiceId();
+      if (!pendingId) {
+        return;
+      }
+
+      const errorMessage = this.error();
+      if (errorMessage) {
+        this.actionFeedback.set(errorMessage);
+        this.actionFeedbackType.set('error');
+        this.pendingSendInvoiceId.set(null);
+        this.isSendingInvoice.set(false);
+        return;
+      }
+
+      const inv = this.invoice();
+      if (inv?.id === pendingId && inv.status === 'Verzonden') {
+        this.actionFeedback.set('Factuur is succesvol verzonden.');
+        this.actionFeedbackType.set('success');
+        this.pendingSendInvoiceId.set(null);
+        this.isSendingInvoice.set(false);
+      }
+    });
   }
 }

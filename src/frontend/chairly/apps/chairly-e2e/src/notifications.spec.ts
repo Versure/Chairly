@@ -34,6 +34,17 @@ const mockNotifications = [
     retryCount: 3,
     referenceId: 'booking-3',
   },
+  {
+    id: 'notif-4',
+    type: 'InvoiceSent',
+    recipientName: 'Sanne Visser',
+    channel: 'Email',
+    status: 'Verzonden',
+    scheduledAtUtc: '2026-03-12T08:00:00Z',
+    sentAtUtc: '2026-03-12T08:00:10Z',
+    retryCount: 0,
+    referenceId: 'invoice-4',
+  },
 ];
 
 async function setupApiMocks(
@@ -72,6 +83,7 @@ test('displays notification table with correct Dutch type labels', async ({ page
   await expect(page.getByText('Bevestiging')).toBeVisible();
   await expect(page.getByText('Herinnering')).toBeVisible();
   await expect(page.getByText('Annulering')).toBeVisible();
+  await expect(page.getByText('Factuur verzonden')).toBeVisible();
 });
 
 test('displays recipient names in the table', async ({ page }) => {
@@ -81,14 +93,15 @@ test('displays recipient names in the table', async ({ page }) => {
   await expect(page.getByText('Jan de Vries')).toBeVisible();
   await expect(page.getByText('Petra Jansen')).toBeVisible();
   await expect(page.getByText('Kees Bakker')).toBeVisible();
+  await expect(page.getByText('Sanne Visser')).toBeVisible();
 });
 
 test('shows correct status badges with appropriate styling', async ({ page }) => {
   await setupApiMocks(page);
   await page.goto('/meldingen');
 
-  // All three statuses should be visible as badge text (exact match to avoid matching column headers like "Verzonden op")
-  await expect(page.getByText('Verzonden', { exact: true })).toBeVisible();
+  // "Verzonden" appears in multiple rows, so assert count instead of a strict single-locator visibility check.
+  await expect(page.getByText('Verzonden', { exact: true })).toHaveCount(2);
   await expect(page.getByText('Wachtend', { exact: true })).toBeVisible();
   await expect(page.getByText('Mislukt', { exact: true })).toBeVisible();
 });

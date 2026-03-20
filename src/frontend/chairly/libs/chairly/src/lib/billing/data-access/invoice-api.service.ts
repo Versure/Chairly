@@ -46,7 +46,7 @@ export class InvoiceApiService {
     return this.http.post<Invoice>(`${this.baseUrl}/invoices`, { bookingId });
   }
 
-  markAsSent(id: string): Observable<Invoice> {
+  sendInvoice(id: string): Observable<Invoice> {
     return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/send`, null);
   }
 
