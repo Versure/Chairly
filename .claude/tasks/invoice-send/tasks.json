@@ -1,0 +1,41 @@
+{
+  "feature": "invoice-send",
+  "specPath": ".claude/tasks/invoice-send/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Replace MarkInvoiceSent with SendInvoice command flow",
+      "status": "completed",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Queue and dispatch invoice email notification",
+      "status": "completed",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Extend notification type mappings for invoice emails",
+      "status": "completed",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Replace invoice detail action with Factuur versturen UX",
+      "status": "completed",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Update frontend notification labels and tests for invoice send",
+      "status": "completed",
+      "dependsOn": ["B3", "F1"]
+    }
+  ]
+}

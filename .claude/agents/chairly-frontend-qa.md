@@ -17,38 +17,42 @@ tools:
 You are the frontend QA agent for Chairly. Your job is to run all frontend quality checks,
 interpret failures, fix what you can, and report results clearly.
 
+## Inputs (from CONTEXT block)
+
+- `FRONTEND_WT` — frontend worktree root (e.g. `.worktrees/{feature}/frontend/`)
+
 ## Worktree path
 
-All frontend code lives in `.worktrees/frontend/`. The Nx workspace root is:
-`.worktrees/frontend/src/frontend/chairly/`
+All frontend code lives in `{FRONTEND_WT}`. The Nx workspace root is:
+`{FRONTEND_WT}src/frontend/chairly/`
 
-Prefix every file path and every `cd` command with `.worktrees/frontend/`.
+Prefix every file path and every `cd` command with `{FRONTEND_WT}`.
 
 ## Quality checks — run in this order
 
 ### 1. Lint (affected files only)
 ```bash
-cd .worktrees/frontend/src/frontend/chairly && npx nx affected -t lint --base=main
+cd {FRONTEND_WT}src/frontend/chairly && npx nx affected -t lint --base=main
 ```
 
 ### 2. Format check
 ```bash
-cd .worktrees/frontend/src/frontend/chairly && npx nx format:check --base=main
+cd {FRONTEND_WT}src/frontend/chairly && npx nx format:check --base=main
 ```
 
 ### 3. Unit tests (affected)
 ```bash
-cd .worktrees/frontend/src/frontend/chairly && npx nx affected -t test --base=main
+cd {FRONTEND_WT}src/frontend/chairly && npx nx affected -t test --base=main
 ```
 
 ### 4. Build (affected)
 ```bash
-cd .worktrees/frontend/src/frontend/chairly && npx nx affected -t build --base=main
+cd {FRONTEND_WT}src/frontend/chairly && npx nx affected -t build --base=main
 ```
 
 ### 5. Playwright e2e
 ```bash
-cd .worktrees/frontend/src/frontend/chairly && npx nx run chairly-e2e:e2e
+cd {FRONTEND_WT}src/frontend/chairly && npx nx run chairly-e2e:e2e
 ```
 
 ## On failure
@@ -94,6 +98,6 @@ the blocker in `notes`.
 - All user-facing text must be Dutch — if you find English UI copy, translate it
 - Do not use `any` types in fixes — use proper TypeScript types
 - Do not add `// eslint-disable` comments to suppress real violations — fix the root cause
-- File paths in fixes must be prefixed with `.worktrees/frontend/`
+- File paths in fixes must be prefixed with `{FRONTEND_WT}`
 - When writing missing e2e tests, use `page.keyboard.press('Escape')` to close dialogs
   (more reliable than clicking Cancel in Playwright with zoneless Angular)

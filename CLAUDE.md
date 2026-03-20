@@ -8,7 +8,7 @@ Chairly — Multi-tenant SaaS platform for salons and barbershops.
 
 - Read `docs/domain-model.md` for the domain model and ubiquitous language
 - Read `docs/adr/` for architecture decisions
-- Feature specs are in `docs/specs/`
+- Feature specs are in `.claude/tasks/{feature-name}/spec.md`
 - AI workflow docs in `docs/ai-workflow.md`
 
 ## Tech Stack
@@ -214,31 +214,9 @@ When working with a human developer interactively:
 - Wait for the human's choice before proceeding
 - You may NEVER make assumptions about technical choices
 
-## Working Method — Autonomous/Headless Mode (Ralph)
-
-When running autonomously via Ralph or in headless mode:
-- Do NOT stop to ask questions — there is no one to answer
-- Make decisions based on existing patterns in the codebase, ADRs, and specs
-- Follow conventions established in docs/ and existing code
-- Document any significant decisions in progress.txt
-- When in doubt, choose the simplest approach that follows existing patterns
-- **IMPORTANT — When ALL stories are complete (all `passes: true`), you MUST push, create a PR, wait for CI, and only then output the `<promise>COMPLETE</promise>` signal:**
-  ```bash
-  git push -u origin HEAD
-  gh pr create --title "feat({context}): {feature description}" --body "Implemented by Ralph. See prd.json for stories."
-  # Wait for CI and exit non-zero if it fails:
-  gh run watch --exit-status
-  ```
-  Replace `{context}` with the bounded context (e.g. bookings, staff) and `{feature description}` with a short summary from the PRD.
-  If `gh run watch` exits with a failure:
-  1. Run `gh run view --log-failed` to read the failure details
-  2. Fix the issue, commit the fix, push again
-  3. Run `gh run watch --exit-status` again
-  4. Only signal `<promise>COMPLETE</promise>` when CI is green
-
 ## Implementation Order
 
-1. Always read the relevant spec in `docs/specs/` before starting
+1. Always read the relevant spec in `.claude/tasks/{feature-name}/` before starting
 2. Create domain entities and value objects first
 3. Then EF Core configuration and migration
 4. Then handlers with validation

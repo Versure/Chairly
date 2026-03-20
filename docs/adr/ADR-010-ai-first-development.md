@@ -1,51 +1,61 @@
-# ADR-010: AI-First Development with Ralph
+# ADR-010: AI-First Development with Claude Code
 
 ## Status
 
-Accepted
+Accepted (revised 2026-03-20)
 
 ## Context
 
-Chairly is built by a small team where the architect/product owner defines features and an AI agent implements them. We need a structured workflow that enables autonomous AI-driven development without sacrificing code quality.
+Chairly is built by a small team where the architect/product owner defines features and an AI agent implements them. We need a structured workflow that enables AI-driven development without sacrificing code quality.
+
+Previously, we used Ralph (an autonomous agent loop) for implementation. This has been replaced by a structured Claude Code workflow with specialized agents and skills.
 
 ## Decision
 
-We adopt an **AI-first development approach** using **Ralph** (an autonomous agent loop running Claude Code) for feature implementation.
+We adopt an **AI-first development approach** using **Claude Code** with a structured agent team workflow for feature implementation.
 
-### Two Modes of Development
+### Development Mode
 
-1. **Interactive mode** — The architect works directly with Claude Code for architecture, decision-making, and setup. Claude Code asks questions and waits for decisions.
-
-2. **Autonomous mode (Ralph)** — Ralph runs Claude Code in a loop in WSL, implementing features from PRDs without human intervention. Ralph reads `CLAUDE.md`, follows established patterns, and commits working code.
+The architect works with Claude Code interactively. Claude Code orchestrates specialized agents for spec writing, implementation, review, and quality assurance.
 
 ### Workflow
 
-1. Architect writes a feature spec in `docs/specs/`
-2. Spec is converted to a `prd.json` with granular, right-sized user stories
-3. Ralph picks up the PRD and implements stories one by one
-4. Each story is implemented in a fresh Claude Code context
-5. Quality checks run after each story (build, test, lint)
-6. Architect reviews the branch and merges or requests changes
+1. Architect creates a feature spec via `/create-spec` — an interactive process where Claude Code's spec-writer agent interviews the architect and proposes decisions
+2. Spec is reviewed automatically by a spec-reviewer agent, then submitted as a PR for human review
+3. After spec PR is merged, `/implement` spawns parallel backend and frontend agents in isolated git worktrees
+4. Code is automatically reviewed by reviewer agents and validated by QA agents
+5. A PR is created for human review; rework cycles are handled via `/rework-code`
+
+### Agent Architecture
+
+- **Spec agents** — spec-writer (Opus, interactive) and spec-reviewer (Sonnet, read-only)
+- **Infrastructure agents** — infra-impl (Opus, full tools) and infra-reviewer (Sonnet, read-only)
+- **Implementation agents** — backend-impl and frontend-impl (Opus, full tools, worktree isolation)
+- **Review agents** — backend-reviewer and frontend-reviewer (Sonnet, read-only)
+- **QA agents** — chairly-backend-qa and chairly-frontend-qa (Sonnet, build/test/format)
+- **Explorer agent** — chairly-explorer (Haiku, read-only codebase lookups)
 
 ### Documentation Requirements
 
-For this workflow to succeed, the codebase must be exceptionally well-documented:
+For this workflow to succeed, the codebase must be well-documented:
 - `CLAUDE.md` contains all conventions, patterns, and instructions
 - `docs/domain-model.md` defines the ubiquitous language
 - `docs/adr/` records all architecture decisions
-- `docs/specs/` contains detailed feature specifications
+- `.claude/skills/` contains pattern references (backend slices, frontend domains, spec format)
 - Existing code serves as the primary example for new code
 
 ### Detailed Process
 
-See `docs/ai-workflow.md` for the complete Ralph workflow, PRD format, and operational procedures.
+See `docs/ai-workflow.md` for the complete workflow, agent definitions, and operational procedures.
 
 ## Consequences
 
-- **Positive:** High development velocity — Ralph can work around the clock on well-defined stories.
-- **Positive:** Consistent code quality — Ralph follows the same patterns every time (no "Friday afternoon code").
-- **Positive:** Forces excellent documentation — if it's not documented, Ralph can't follow it.
-- **Positive:** Architect focuses on high-value work (design, review) instead of boilerplate implementation.
-- **Negative:** Requires investment in documentation and spec writing upfront.
-- **Negative:** Complex or ambiguous tasks may produce poor results — story sizing is critical.
-- **Negative:** Ralph cannot make architectural decisions — it follows patterns, it doesn't create them.
+- **Positive:** High development velocity — parallel backend/frontend implementation with automated review and QA
+- **Positive:** Consistent code quality — agents follow the same patterns every time
+- **Positive:** Forces excellent documentation — agents need clear conventions to follow
+- **Positive:** Architect focuses on high-value work (design, review) instead of boilerplate
+- **Positive:** Interactive spec creation catches issues early, before implementation
+- **Positive:** Isolated worktrees prevent backend/frontend conflicts
+- **Negative:** Requires investment in documentation, spec writing, and agent definitions upfront
+- **Negative:** Complex or ambiguous tasks may produce poor results — spec quality is critical
+- **Negative:** Agents cannot make architectural decisions — they follow patterns, they don't create them

@@ -1,0 +1,293 @@
+name: Weekly Codebase Audit
+
+on:
+  schedule:
+    - cron: '0 21 * * 0'  # Sunday 21:00 UTC = 22:00 CET / 23:00 CEST
+  workflow_dispatch:       # Allow manual trigger for testing
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit-backend:
+    name: Backend Conventions Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are a backend conventions auditor for the Chairly project.
+            Read CLAUDE.md and .claude/skills/chairly-backend-slice/SKILL.md for conventions.
+
+            Scan the full backend codebase under src/backend/ for convention violations.
+
+            Check for:
+            - Missing #pragma warning disable CA1812 on internal sealed classes
+            - Missing .ConfigureAwait(false) on await calls
+            - Missing #pragma warning disable MA0026 on Guid.Empty assignments
+            - Handlers with business logic in endpoints instead of handlers
+            - Status columns instead of timestamp pairs (ADR-009)
+            - Missing TenantId on entities
+            - Missing audit fields (CreatedAtUtc, CreatedBy)
+            - Non-idempotent migrations (bare CreateTable/CreateIndex/AddColumn without IF NOT EXISTS)
+            - Missing unit tests for handlers (check if each handler in Features/ has a corresponding test)
+            - OneOf not used for failure cases in Update/Delete/GetById handlers
+
+            For each finding, determine severity:
+            - critical: Will cause runtime errors or data issues
+            - warning: Convention violation that should be fixed
+            - suggestion: Improvement opportunity
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues with the same audit label AND
+              the same file path in the body. Run: gh issue list --label "audit/backend" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/backend issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(backend): {concise title}" \
+                --label "audit/backend,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}:{line}\`\n\n## Suggested fix\n\n{fix}\n\n---\n_Found by weekly codebase audit_"
+
+  audit-frontend:
+    name: Frontend Conventions Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are a frontend conventions auditor for the Chairly project.
+            Read CLAUDE.md and .claude/skills/chairly-frontend-domain/SKILL.md for conventions.
+
+            Scan the full frontend codebase under src/frontend/chairly/libs/ for convention violations.
+
+            Check for:
+            - @Input()/@Output()/@ViewChild() decorators (should use input()/model()/viewChild())
+            - Inline template: (should use templateUrl:)
+            - Empty imports: [] (should omit property entirely)
+            - any types in TypeScript
+            - console statements in non-test files
+            - Missing explicit return types on functions
+            - Subject + ngOnDestroy pattern (should use takeUntilDestroyed)
+            - Function calls in templates (should use signals/pipes)
+            - English UI text (must be Dutch)
+            - Missing dark: Tailwind variants on light backgrounds
+            - Components directly in feature/ or ui/ (must be in subfolders)
+            - Model interfaces in util/ (must be in models/)
+            - Pipes in util/ (must be in pipes/)
+            - *ngIf/*ngFor (should use @if/@for)
+            - Missing OnPush change detection
+            - Cross-domain imports violating Sheriff boundaries
+
+            For each finding, determine severity:
+            - critical: Will cause lint/build failures
+            - warning: Convention violation that should be fixed
+            - suggestion: Improvement opportunity
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues:
+              gh issue list --label "audit/frontend" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/frontend issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(frontend): {concise title}" \
+                --label "audit/frontend,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}:{line}\`\n\n## Suggested fix\n\n{fix}\n\n---\n_Found by weekly codebase audit_"
+
+  audit-infra:
+    name: Infrastructure Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are an infrastructure auditor for the Chairly project.
+            Read CLAUDE.md for conventions.
+
+            Scan src/backend/ for infrastructure issues, focusing on:
+            - Chairly.AppHost/Program.cs (Aspire orchestration)
+            - Chairly.Api/Program.cs (service registration, middleware)
+            - Chairly.Infrastructure/ (Keycloak, messaging, persistence)
+            - appsettings.json and appsettings.Development.json
+
+            Check for:
+            - Hardcoded secrets, passwords, or connection strings in source code
+            - Missing health checks for external services
+            - DI lifetime mismatches (e.g., scoped service injected into singleton)
+            - Missing .ConfigureAwait(false) in Program.cs async code
+            - Aspire resources without data volumes (stateful containers should persist)
+            - Background services not registered with AddHostedService
+            - Missing error handling in dev seeders
+            - RabbitMQ exchanges/queues not declared idempotently
+
+            For each finding, determine severity:
+            - critical: Security risk or runtime failure
+            - warning: Configuration issue that should be fixed
+            - suggestion: Improvement opportunity
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues:
+              gh issue list --label "audit/infra" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/infra issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(infra): {concise title}" \
+                --label "audit/infra,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}:{line}\`\n\n## Suggested fix\n\n{fix}\n\n---\n_Found by weekly codebase audit_"
+
+  audit-security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are a security auditor for the Chairly project.
+            Read CLAUDE.md for conventions. This is a multi-tenant SaaS platform.
+
+            Scan src/backend/ and src/frontend/ for security issues.
+
+            Check for:
+            - Endpoints missing authorization policies (RequireOwner/RequireManager/RequireStaff)
+            - Database queries not filtering by TenantId (tenant isolation leak)
+            - Missing input validation on command/query properties
+            - SQL injection vectors (raw SQL without parameterization)
+            - XSS vectors in frontend (unsanitized user input in templates)
+            - CORS misconfiguration
+            - Secrets or API keys in source code or appsettings.json
+            - JWT validation gaps (missing issuer/audience validation)
+            - Missing rate limiting on public endpoints
+            - Tenant context bypass possibilities
+
+            For each finding, determine severity:
+            - critical: Exploitable vulnerability or data leak
+            - warning: Security weakness that should be addressed
+            - suggestion: Security hardening opportunity
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues:
+              gh issue list --label "audit/security" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/security issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(security): {concise title}" \
+                --label "audit/security,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}:{line}\`\n\n## Suggested fix\n\n{fix}\n\n---\n_Found by weekly codebase audit_"
+
+  audit-test-coverage:
+    name: Test Coverage Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are a test coverage auditor for the Chairly project.
+            Read CLAUDE.md for testing conventions.
+
+            Scan for test coverage gaps:
+
+            Backend (src/backend/):
+            - Handlers in Chairly.Api/Features/ without corresponding test files in Chairly.Tests/Features/
+            - Test files missing edge cases: validation failures, not-found scenarios, tenant isolation
+            - Missing authorization policy tests (role matrix: owner/manager/staff_member)
+            - Missing integration tests for endpoint routing
+
+            Frontend (src/frontend/chairly/):
+            - Feature pages without Playwright e2e tests in apps/chairly-e2e/src/
+            - Store files without corresponding .spec.ts files
+            - Components without unit tests
+            - E2e tests missing CRUD scenarios (list, add, edit, delete)
+
+            For each finding, determine severity:
+            - critical: Missing tests for security-sensitive code (auth, tenant isolation)
+            - warning: Missing tests for business logic
+            - suggestion: Missing tests for UI/display logic
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues:
+              gh issue list --label "audit/test-coverage" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/test-coverage issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(test-coverage): {concise title}" \
+                --label "audit/test-coverage,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}\`\n\n## What to test\n\n{test-cases}\n\n---\n_Found by weekly codebase audit_"
+
+  audit-documentation:
+    name: Documentation Drift Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --max-turns 30"
+          prompt: |
+            You are a documentation auditor for the Chairly project.
+
+            Check for documentation drift — places where docs no longer match reality.
+
+            Scan:
+            1. CLAUDE.md — verify conventions match actual code patterns
+               - Do entity naming conventions match actual entities in Chairly.Domain/Entities/?
+               - Do project names match actual .csproj files?
+               - Do frontend path aliases match tsconfig.json?
+               - Do forbidden patterns still hold? (search for violations)
+
+            2. docs/domain-model.md — verify entities listed match Chairly.Domain/Entities/
+               - Are all entities documented?
+               - Are relationships accurate?
+               - Is ubiquitous language consistent with code?
+
+            3. docs/adr/ — verify ADR decisions match implementation
+               - Do technology choices match actual packages used?
+               - Are any ADRs superseded but not marked?
+
+            4. docs/rabbitmq-topology.md — verify exchanges/queues/routing keys match code
+               - Compare documented topology with actual code in Infrastructure/Messaging/
+
+            5. .claude/skills/ — verify boilerplate patterns match actual code
+               - Do backend-slice patterns match recent Feature implementations?
+               - Do frontend-domain patterns match recent domain implementations?
+
+            For each finding, determine severity:
+            - critical: Doc says X but code does Y — will mislead agents
+            - warning: Missing or outdated documentation
+            - suggestion: Documentation improvement opportunity
+
+            IMPORTANT RULES:
+            - Maximum 5 findings. Prioritize by severity (critical first).
+            - Before creating an issue, search for existing open issues:
+              gh issue list --label "audit/documentation" --state open --json title,body
+              Skip any finding where the file path already appears in an open audit/documentation issue body.
+            - For each new finding, create a GitHub issue:
+              gh issue create \
+                --title "audit(docs): {concise title}" \
+                --label "audit/documentation,audit/{severity}" \
+                --body "## Finding\n\n{description}\n\n## File\n\n\`{file-path}:{line}\`\n\n## Suggested fix\n\n{fix}\n\n---\n_Found by weekly codebase audit_"

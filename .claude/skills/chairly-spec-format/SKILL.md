@@ -1,28 +1,17 @@
 ---
 name: chairly-spec-format
 description: >
-  Chairly feature spec format shared across agent workflows. Path selection is
-  workflow-dependent: Copilot spec-writer uses .github/tasks/{feature-name}/spec.md,
-  Claude Code uses .claude/tasks/{feature-name}/spec.md + tasks.json.
+  Chairly feature spec format for Claude Code agent workflows. Specs are written to
+  .claude/tasks/{feature-name}/spec.md + tasks.json.
 user-invocable: false
 ---
 
 # Chairly Feature Spec Format
 
-## Output location selection (critical)
+## Output location
 
-Choose output paths by workflow:
-
-- **Copilot `spec-writer` workflow**
-  - Spec: `.github/tasks/{feature-name}/spec.md`
-  - Do **not** write to `docs/specs/`
-  - Do **not** write to `.claude/tasks/` unless explicitly requested
-
-- **Claude Code workflow**
-  - Spec: `.claude/tasks/{feature-name}/spec.md`
-  - Tasks: `.claude/tasks/{feature-name}/tasks.json`
-
-When in doubt, prefer the agent-specific instruction file over this skill.
+- Spec: `.claude/tasks/{feature-name}/spec.md`
+- Tasks: `.claude/tasks/{feature-name}/tasks.json`
 
 When the Claude workflow writes a feature spec, it produces **two files** in `.claude/tasks/{feature-name}/`:
 
@@ -46,6 +35,22 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
 - Bounded context: {context}
 - Key entities involved: {Entity1}, {Entity2}
 - Ubiquitous language: use terms from docs/domain-model.md
+
+## Infrastructure Tasks (if applicable)
+
+### I1 — {Short title}
+
+{Full description of what to configure/set up. Include:}
+- Which infrastructure component (Aspire, Keycloak, RabbitMQ, SMTP, seeding)
+- Files to modify (AppHost, Program.cs, appsettings, etc.)
+- Configuration values and their sources
+- DI registration details
+- Health check requirements
+- Test cases to cover
+
+### I2 — {Short title}
+
+...
 
 ## Backend Tasks
 
@@ -103,34 +108,38 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
   "specPath": ".claude/tasks/{feature-name}/spec.md",
   "tasks": [
     {
-      "id": "B1",
-      "layer": "backend",
+      "id": "I1",
+      "layer": "infra",
       "title": "{Short title matching spec.md heading}",
       "status": "pending",
       "dependsOn": []
     },
     {
-      "id": "B2",
+      "id": "B1",
       "layer": "backend",
-      "title": "{Short title}",
+      "title": "{Short title matching spec.md heading}",
       "status": "pending",
-      "dependsOn": ["B1"]
+      "dependsOn": ["I1"]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "{Short title matching spec.md heading}",
       "status": "pending",
-      "dependsOn": ["B1", "B2"]
+      "dependsOn": ["B1"]
     }
   ]
 }
 ```
 
+Note: `I` (infra) tasks are optional. Only include them when the feature requires
+infrastructure changes (Aspire setup, Keycloak config, RabbitMQ topology, SMTP, seeding).
+Most features will only have `B` and `F` tasks.
+
 ### Schema Rules
 
-- `id` — prefix `B` for backend tasks, `F` for frontend tasks, numbered sequentially
-- `layer` — `"backend"` or `"frontend"` (lowercase, exact string — used by hook script)
+- `id` — prefix `I` for infra tasks, `B` for backend tasks, `F` for frontend tasks, numbered sequentially
+- `layer` — `"infra"`, `"backend"`, or `"frontend"` (lowercase, exact string)
 - `title` — must match the `### {id} — {title}` heading in `spec.md` exactly
 - `status` — always `"pending"` when first written; updated by agents as work progresses
 - `dependsOn` — array of task IDs that must be complete before this task starts;
@@ -141,6 +150,7 @@ Reference the bounded context (e.g. Bookings, Clients, Services).
 
 | Prefix | Layer | Example |
 |---|---|---|
+| `I` | infra | `I1`, `I2` |
 | `B` | backend | `B1`, `B2`, `B3` |
 | `F` | frontend | `F1`, `F2` |
 
@@ -164,8 +174,10 @@ Number tasks in implementation order within each layer.
 - `spec.md` is the single source of truth — all detail lives there
 - `tasks.json` is minimal — title and dependencies only; agents open `spec.md` for detail
 - Task titles in `tasks.json` must match headings in `spec.md` exactly (used for cross-referencing)
-- Spec file location (Claude workflow): `.claude/tasks/{feature-name}/spec.md`
+- Spec file location: `.claude/tasks/{feature-name}/spec.md`
 - Tasks file location: `.claude/tasks/{feature-name}/tasks.json`
 - Feature name is kebab-case matching the git branch suffix (e.g. `bookings-crud`)
 - Always include at least one backend task and one frontend task unless the feature is purely one layer
+- Infra tasks are optional — only include when the feature requires infrastructure changes
+- Backend tasks that depend on infrastructure setup must declare the relevant infra tasks in `dependsOn`
 - Frontend tasks that call the backend API must declare the relevant backend tasks in `dependsOn`
