@@ -45,8 +45,8 @@ internal static partial class KeycloakDevSeeder
             frontendClientId, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
 
         // Step 1b: Always ensure realm display name, login theme, and SMTP are set.
-        var smtpHost = configuration["Smtp:Host"];
-        var smtpPort = configuration["Smtp:Port"];
+        var smtpHost = configuration["Keycloak:SmtpHost"];
+        var smtpPort = configuration["Keycloak:SmtpPort"];
         await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, realmName, smtpHost, smtpPort, logger, ct).ConfigureAwait(false);
 
         // Step 1c: Assign realm-management roles to the admin service account (idempotent).
@@ -189,6 +189,8 @@ internal static partial class KeycloakDevSeeder
                 ["from"] = "noreply@chairly.local",
                 ["fromDisplayName"] = "Chairly",
             };
+
+            LogSmtpConfigured(logger, smtpHost, smtpPort);
         }
         else
         {
@@ -350,6 +352,9 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: realm {RealmName} settings updated (displayName=Chairly, loginTheme=chairly)")]
     private static partial void LogRealmSettingsUpdated(ILogger logger, string realmName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: configuring realm SMTP — host={SmtpHost}, port={SmtpPort}")]
+    private static partial void LogSmtpConfigured(ILogger logger, string smtpHost, string smtpPort);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Keycloak dev seed: Smtp:Host or Smtp:Port not configured — skipping SMTP setup for Keycloak realm")]
     private static partial void LogSmtpConfigMissing(ILogger logger);
