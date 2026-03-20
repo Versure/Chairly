@@ -21,12 +21,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddMediator();
 builder.Services.AddScoped<InvoiceLineItemBuilder>();
+builder.Services.AddScoped<Chairly.Api.Features.Billing.SendInvoice.IInvoicePdfGenerator, Chairly.Api.Features.Billing.SendInvoice.InvoicePdfGenerator>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 

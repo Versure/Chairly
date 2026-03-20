@@ -27,9 +27,9 @@ internal sealed class SendInvoiceHandler(ChairlyDbContext db, ITenantContext ten
             return new NotFound();
         }
 
-        if (invoice.VoidedAtUtc != null || invoice.PaidAtUtc != null)
+        if (invoice.VoidedAtUtc != null)
         {
-            return new Unprocessable("Betaalde of vervallen facturen kunnen niet worden verstuurd");
+            return new Unprocessable("Vervallen facturen kunnen niet worden verstuurd");
         }
 
         // Idempotent: if already sent, return current state

@@ -17,6 +17,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.7.0" />
     <PackageReference Include="OneOf" Version="3.0.271" />
+    <PackageReference Include="QuestPDF" Version="2026.2.4" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.48" />
   </ItemGroup>
 

@@ -76,18 +76,24 @@ internal static class EmailTemplates
         string invoiceNumber,
         DateOnly invoiceDate,
         decimal totalAmount,
-        string salonName)
+        string salonName,
+        bool isPaid = false)
     {
         var subject = $"Factuur {invoiceNumber} van {salonName}";
         var formattedInvoiceDate = invoiceDate.ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
         var formattedTotalAmount = totalAmount.ToString("C", new CultureInfo("nl-NL"));
+
+        var paidBadge = isPaid
+            ? """<p style="margin: 12px 0; padding: 8px 16px; background-color: #DEF7EC; color: #03543F; border-radius: 4px; font-weight: 600; display: inline-block;">&#10003; Deze factuur is reeds betaald.</p>"""
+            : string.Empty;
+
         var htmlBody = BuildTemplate(
             salonName,
             clientName,
-            $"Uw factuur {invoiceNumber} is verzonden.",
+            "Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.",
             formattedInvoiceDate,
-            $"Factuurnummer: {invoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}",
-            "Dank u wel voor uw bezoek.",
+            $"Factuurnummer: {invoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}{(isPaid ? "<br />" + paidBadge : string.Empty)}",
+            "Wij zien u graag terug!",
             "Factuurdatum");
 
         return (subject, htmlBody);

@@ -10,15 +10,20 @@ namespace Chairly.Tests.Features.Notifications;
 
 public class NotificationDispatcherTests
 {
+    static NotificationDispatcherTests()
+    {
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+    }
+
     private sealed class FakeEmailSender(bool shouldFail = false) : IEmailSender
     {
         public int SendCallCount { get; private set; }
-        public List<(string ToEmail, string ToName, string Subject, string HtmlBody)> SentEmails { get; } = [];
+        public List<(string ToEmail, string ToName, string Subject, string HtmlBody, EmailAttachment? Attachment)> SentEmails { get; } = [];
 
-        public Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken cancellationToken)
+        public Task SendAsync(string toEmail, string toName, string subject, string htmlBody, EmailAttachment? attachment = null, CancellationToken cancellationToken = default)
         {
             SendCallCount++;
-            SentEmails.Add((toEmail, toName, subject, htmlBody));
+            SentEmails.Add((toEmail, toName, subject, htmlBody, attachment));
 
             if (shouldFail)
             {
@@ -126,7 +131,7 @@ public class NotificationDispatcherTests
         return notification;
     }
 
-    private static Notification SeedPendingInvoiceNotification(string dbName)
+    private static Notification SeedPendingInvoiceNotification(string dbName, bool isPaid = false)
     {
         using var db = CreateDbContext(dbName);
         var now = DateTimeOffset.UtcNow;
@@ -164,7 +169,20 @@ public class NotificationDispatcherTests
             TotalAmount = 48.40m,
             CreatedAtUtc = now,
             CreatedBy = Guid.NewGuid(),
+            PaidAtUtc = isPaid ? now.AddMinutes(-10) : null,
+            PaidBy = isPaid ? Guid.NewGuid() : null,
         };
+        invoice.LineItems.Add(new InvoiceLineItem
+        {
+            Id = Guid.NewGuid(),
+            Description = "Herenknippen",
+            Quantity = 1,
+            UnitPrice = 40.00m,
+            TotalPrice = 40.00m,
+            VatPercentage = 21.00m,
+            VatAmount = 8.40m,
+            SortOrder = 0,
+        });
         db.Invoices.Add(invoice);
 
         var notification = new Notification
@@ -294,6 +312,27 @@ public class NotificationDispatcherTests
         Assert.Contains("Factuurdatum", sentEmail.HtmlBody, StringComparison.Ordinal);
         Assert.Contains("€", sentEmail.HtmlBody, StringComparison.Ordinal);
         Assert.Contains("Salon De Spiegel", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Bedankt voor uw bezoek", sentEmail.HtmlBody, StringComparison.Ordinal);
+
+        Assert.NotNull(sentEmail.Attachment);
+        Assert.Equal("Factuur-2026-0007.pdf", sentEmail.Attachment.FileName);
+        Assert.Equal("application/pdf", sentEmail.Attachment.ContentType);
+        Assert.True(sentEmail.Attachment.Content.Length > 0);
+    }
+
+    [Fact]
+    public async Task Dispatcher_InvoiceSent_PaidInvoice_ContainsPaidBadge()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingInvoiceNotification(dbName, isPaid: true);
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        Assert.Contains("reeds betaald", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.NotNull(sentEmail.Attachment);
+        Assert.True(sentEmail.Attachment.Content.Length > 0);
     }
 
     [Theory]
