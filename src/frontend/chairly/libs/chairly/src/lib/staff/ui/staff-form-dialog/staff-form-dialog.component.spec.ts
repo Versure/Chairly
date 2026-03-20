@@ -7,6 +7,7 @@ const mockStaffMember: StaffMemberResponse = {
   id: 'staff-1',
   firstName: 'Jan',
   lastName: 'de Vries',
+  email: 'jan.devries@salon.nl',
   role: 'manager',
   color: '#8b5cf6',
   photoUrl: null,
@@ -49,9 +50,13 @@ describe('StaffFormDialogComponent', () => {
     const lastNameInput = fixture.nativeElement.querySelector(
       'input[formControlName="lastName"]',
     ) as HTMLInputElement;
+    const emailInput = fixture.nativeElement.querySelector(
+      'input[formControlName="email"]',
+    ) as HTMLInputElement;
 
     expect(firstNameInput.value).toBe('');
     expect(lastNameInput.value).toBe('');
+    expect(emailInput.value).toBe('');
   });
 
   it('should pre-fill form values in edit mode', () => {
@@ -69,9 +74,13 @@ describe('StaffFormDialogComponent', () => {
     const roleSelect = fixture.nativeElement.querySelector(
       'select[formControlName="role"]',
     ) as HTMLSelectElement;
+    const emailInput = fixture.nativeElement.querySelector(
+      'input[formControlName="email"]',
+    ) as HTMLInputElement;
 
     expect(firstNameInput.value).toBe('Jan');
     expect(lastNameInput.value).toBe('de Vries');
+    expect(emailInput.value).toBe('jan.devries@salon.nl');
     expect(roleSelect.value).toBe('manager');
   });
 
@@ -106,6 +115,12 @@ describe('StaffFormDialogComponent', () => {
     lastNameInput.value = 'Bakker';
     lastNameInput.dispatchEvent(new Event('input'));
 
+    const emailInput = fixture.nativeElement.querySelector(
+      'input[formControlName="email"]',
+    ) as HTMLInputElement;
+    emailInput.value = 'anna.bakker@salon.nl';
+    emailInput.dispatchEvent(new Event('input'));
+
     fixture.detectChanges();
 
     const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
@@ -115,8 +130,37 @@ describe('StaffFormDialogComponent', () => {
     expect(emitted).toBeDefined();
     expect(emitted?.firstName).toBe('Anna');
     expect(emitted?.lastName).toBe('Bakker');
+    expect(emitted?.email).toBe('anna.bakker@salon.nl');
     expect(emitted?.role).toBe('staff_member');
     expect(emitted?.color).toBe('#6366f1');
+  });
+
+  it('should show required validation message for email', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const emailInput = fixture.nativeElement.querySelector(
+      'input[formControlName="email"]',
+    ) as HTMLInputElement;
+    emailInput.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('E-mailadres is verplicht.');
+  });
+
+  it('should show format validation message for invalid email', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const emailInput = fixture.nativeElement.querySelector(
+      'input[formControlName="email"]',
+    ) as HTMLInputElement;
+    emailInput.value = 'ongeldig';
+    emailInput.dispatchEvent(new Event('input'));
+    emailInput.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Voer een geldig e-mailadres in.');
   });
 
   it('should emit cancel event on Annuleren click', () => {

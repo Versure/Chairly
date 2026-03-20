@@ -44,6 +44,34 @@
             }
           </div>
 
+          <!-- E-mailadres -->
+          <div class="mb-4">
+            <label
+              for="sfd-email"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >E-mailadres</label
+            >
+            <input
+              id="sfd-email"
+              formControlName="email"
+              type="email"
+              placeholder="naam@salon.nl"
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500" />
+            @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">E-mailadres is verplicht.</p>
+            }
+            @if (form.controls.email.touched && form.controls.email.errors?.['email']) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                Voer een geldig e-mailadres in.
+              </p>
+            }
+            @if (form.controls.email.touched && form.controls.email.errors?.['maxlength']) {
+              <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                E-mailadres mag maximaal 256 tekens bevatten.
+              </p>
+            }
+          </div>
+
           <!-- Rol -->
           <div class="mb-4">
             <label

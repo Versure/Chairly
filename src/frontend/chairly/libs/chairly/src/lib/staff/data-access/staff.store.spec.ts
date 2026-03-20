@@ -11,6 +11,7 @@ describe('StaffStore', () => {
     id: 'staff-001',
     firstName: 'Jan',
     lastName: 'Jansen',
+    email: 'jan.jansen@salon.nl',
     role: 'staff_member',
     color: '#6366f1',
     photoUrl: null,
@@ -34,10 +35,7 @@ describe('StaffStore', () => {
     vi.clearAllMocks();
 
     TestBed.configureTestingModule({
-      providers: [
-        StaffStore,
-        { provide: StaffApiService, useValue: mockApiService },
-      ],
+      providers: [StaffStore, { provide: StaffApiService, useValue: mockApiService }],
     });
 
     store = TestBed.inject(StaffStore);

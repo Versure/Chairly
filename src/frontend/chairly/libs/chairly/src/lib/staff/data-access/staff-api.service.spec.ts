@@ -4,11 +4,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import {
-  CreateStaffMemberRequest,
-  StaffMemberResponse,
-  UpdateStaffMemberRequest,
-} from '../models';
+import { CreateStaffMemberRequest, StaffMemberResponse, UpdateStaffMemberRequest } from '../models';
 import { StaffApiService } from './staff-api.service';
 
 describe('StaffApiService', () => {
@@ -19,6 +15,7 @@ describe('StaffApiService', () => {
     id: '123e4567-e89b-12d3-a456-426614174000',
     firstName: 'Jan',
     lastName: 'de Vries',
+    email: 'jan.devries@salon.nl',
     role: 'staff_member',
     color: '#6366f1',
     photoUrl: null,
@@ -68,6 +65,7 @@ describe('StaffApiService', () => {
       const request: CreateStaffMemberRequest = {
         firstName: 'Jan',
         lastName: 'de Vries',
+        email: 'jan.devries@salon.nl',
         role: 'staff_member',
         color: '#6366f1',
         photoUrl: null,
@@ -91,12 +89,17 @@ describe('StaffApiService', () => {
       const request: UpdateStaffMemberRequest = {
         firstName: 'Jan',
         lastName: 'de Vries',
+        email: 'jan.devries@salon.nl',
         role: 'manager',
         color: '#8b5cf6',
         photoUrl: null,
         schedule: {},
       };
-      const updatedMember: StaffMemberResponse = { ...mockStaffMember, role: 'manager', color: '#8b5cf6' };
+      const updatedMember: StaffMemberResponse = {
+        ...mockStaffMember,
+        role: 'manager',
+        color: '#8b5cf6',
+      };
 
       service.update(id, request).subscribe((result) => {
         expect(result).toEqual(updatedMember);

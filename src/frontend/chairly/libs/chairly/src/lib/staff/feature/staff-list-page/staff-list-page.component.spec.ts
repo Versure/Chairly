@@ -13,6 +13,7 @@ const mockStaff: StaffMemberResponse = {
   id: 'staff-1',
   firstName: 'Jan',
   lastName: 'Jansen',
+  email: 'jan.jansen@salon.nl',
   role: 'staff_member',
   color: '#6366f1',
   photoUrl: null,
@@ -89,16 +90,16 @@ describe('StaffListPageComponent', () => {
     const request: CreateStaffMemberRequest = {
       firstName: 'Anna',
       lastName: 'Bakker',
+      email: 'anna.bakker@salon.nl',
       role: 'staff_member',
       color: '#6366f1',
       photoUrl: null,
       schedule: {},
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -114,23 +115,25 @@ describe('StaffListPageComponent', () => {
     const request: CreateStaffMemberRequest = {
       firstName: 'Anna',
       lastName: 'Bakker',
+      email: 'anna.bakker@salon.nl',
       role: 'staff_member',
       color: '#6366f1',
       photoUrl: null,
       schedule: {},
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     formDialogComponent!.saved.emit(request);
     fixture.detectChanges();
 
-    const errorEl = fixture.nativeElement.querySelector('p.text-red-600, p.text-red-400') as Element | null;
+    const errorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
     expect(errorEl).toBeTruthy();
     expect(errorEl?.textContent?.trim()).toBeTruthy();
   });

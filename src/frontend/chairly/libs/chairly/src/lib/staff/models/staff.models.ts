@@ -20,6 +20,7 @@ export interface StaffMemberResponse {
   id: string;
   firstName: string;
   lastName: string;
+  email: string;
   role: StaffRole;
   color: string;
   photoUrl: string | null;
@@ -32,6 +33,7 @@ export interface StaffMemberResponse {
 export interface CreateStaffMemberRequest {
   firstName: string;
   lastName: string;
+  email: string;
   role: StaffRole;
   color: string;
   photoUrl: string | null;
