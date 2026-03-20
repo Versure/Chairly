@@ -4,6 +4,7 @@ const mockStaffMember = {
   id: 'staff-1',
   firstName: 'Jan',
   lastName: 'Jansen',
+  email: 'jan.jansen@salon.nl',
   role: 'staff_member',
   color: '#6366f1',
   photoUrl: null,
@@ -88,6 +89,7 @@ test('filling in the form and clicking Opslaan calls POST /api/staff and shows n
   const dialog = page.locator('dialog[open]');
   await dialog.getByLabel('Voornaam').fill('Piet');
   await dialog.getByLabel('Achternaam').fill('Pietersen');
+  await dialog.getByLabel('E-mailadres').fill('piet.pietersen@salon.nl');
   await dialog.getByLabel('Rol').selectOption('staff_member');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
@@ -240,6 +242,7 @@ test('staff form validation prevents submission when required fields are empty',
   // Clear any default values in the required fields
   await dialog.getByLabel('Voornaam').fill('');
   await dialog.getByLabel('Achternaam').fill('');
+  await dialog.getByLabel('E-mailadres').fill('');
 
   // The Opslaan button should be disabled because required fields are empty
   await expect(dialog.getByRole('button', { name: 'Opslaan' })).toBeDisabled();
@@ -248,6 +251,71 @@ test('staff form validation prevents submission when required fields are empty',
   await expect(dialog).toBeVisible();
 
   await page.keyboard.press('Escape');
+});
+
+test('staff form validation shows Dutch email error for invalid format and blocks submit', async ({
+  page,
+}) => {
+  await setupApiMocks(page);
+  await page.goto('/medewerkers');
+
+  await page.getByRole('button', { name: '+ Medewerker toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByLabel('Voornaam').fill('Piet');
+  await dialog.getByLabel('Achternaam').fill('Pietersen');
+  await dialog.getByLabel('E-mailadres').fill('ongeldig');
+  await dialog.getByLabel('E-mailadres').blur();
+
+  await expect(dialog.getByText('Voer een geldig e-mailadres in.')).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Opslaan' })).toBeDisabled();
+
+  await page.keyboard.press('Escape');
+});
+
+test('create-staff API email validation error is shown in Dutch and dialog stays open', async ({
+  page,
+}) => {
+  await page.route('**/api/staff', (route) => {
+    const method = route.request().method();
+    if (method === 'GET') {
+      return route.fulfill({ json: [mockStaffMember] });
+    }
+
+    if (method === 'POST') {
+      return route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          errors: {
+            email: ['Email is required.'],
+          },
+        }),
+      });
+    }
+
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/medewerkers');
+  await page.getByRole('button', { name: '+ Medewerker toevoegen' }).click();
+
+  const dialog = page.locator('dialog[open]');
+  await expect(dialog).toBeVisible();
+
+  await dialog.getByLabel('Voornaam').fill('Piet');
+  await dialog.getByLabel('Achternaam').fill('Pietersen');
+  await dialog.getByLabel('E-mailadres').fill('piet.pietersen@salon.nl');
+  await dialog.getByRole('button', { name: 'Opslaan' }).click();
+
+  await expect(
+    dialog.getByText(
+      'Controleer het e-mailadres. Dit veld is verplicht en moet een geldig formaat hebben.',
+    ),
+  ).toBeVisible();
+  await expect(dialog).toBeVisible();
 });
 
 test('staff avatar displays initials for a staff member without photo', async ({ page }) => {

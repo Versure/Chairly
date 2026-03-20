@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -22,10 +23,11 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
     private readonly string _adminClientId;
     private readonly string _adminClientSecret;
     private readonly string _frontendClientId;
+    private readonly string? _configuredRealm;
+    private readonly Guid? _configuredTenantId;
 
-    private string? _cachedToken;
-    private DateTimeOffset _tokenExpiry = DateTimeOffset.MinValue;
-    private readonly SemaphoreSlim _tokenLock = new(1, 1);
+    private readonly ConcurrentDictionary<string, (string Token, DateTimeOffset Expiry)> _tokenCache = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _tokenLocks = new(StringComparer.Ordinal);
 
     public KeycloakAdminService(
         IHttpClientFactory httpClientFactory,
@@ -42,11 +44,17 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         _adminClientId = configuration["Keycloak:AdminClientId"]!;
         _adminClientSecret = configuration["Keycloak:AdminClientSecret"]!;
         _frontendClientId = configuration["Keycloak:ClientId"]!;
+        _configuredRealm = configuration["Keycloak:Realm"];
+        var configuredTenantId = configuration["Keycloak:TenantId"];
+        _configuredTenantId = configuredTenantId is not null && Guid.TryParse(configuredTenantId, out var tenantId)
+            ? tenantId
+            : null;
     }
 
     public async Task<string> CreateRealmAsync(Guid tenantId, string adminEmail, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var realmRepresentation = new
         {
@@ -94,7 +102,8 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
     public async Task<string> CreateUserAsync(Guid tenantId, string email, string firstName, string lastName,
         string role, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var userRepresentation = new
         {
@@ -107,7 +116,7 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         };
 
         var response = await client.PostAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users",
+            $"{_keycloakUrl}/admin/realms/{realm}/users",
             userRepresentation,
             _jsonOptions,
             ct).ConfigureAwait(false);
@@ -124,7 +133,8 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
     public async Task UpdateUserAsync(Guid tenantId, string keycloakUserId, string email,
         string firstName, string lastName, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var userRepresentation = new
         {
@@ -135,7 +145,7 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         };
 
         var response = await client.PutAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}",
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}",
             userRepresentation,
             _jsonOptions,
             ct).ConfigureAwait(false);
@@ -144,10 +154,11 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
 
     public async Task DisableUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var response = await client.PutAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}",
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}",
             new { enabled = false },
             _jsonOptions,
             ct).ConfigureAwait(false);
@@ -156,10 +167,11 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
 
     public async Task EnableUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var response = await client.PutAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}",
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}",
             new { enabled = true },
             _jsonOptions,
             ct).ConfigureAwait(false);
@@ -168,10 +180,11 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
 
     public async Task DeleteUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var response = await client.DeleteAsync(
-            new Uri($"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}"),
+            new Uri($"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}"),
             ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -179,7 +192,8 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
     public async Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password,
         bool temporary = false, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var credential = new
         {
@@ -189,19 +203,33 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         };
 
         var response = await client.PutAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}/reset-password",
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}/reset-password",
             credential,
             _jsonOptions,
             ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
+        CancellationToken ct = default)
+    {
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
+
+        var response = await client.PutAsJsonAsync(
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}/execute-actions-email",
+            actions,
+            ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         var response = await client.DeleteAsync(
-            new Uri($"{_keycloakUrl}/admin/realms/{tenantId}"),
+            new Uri($"{_keycloakUrl}/admin/realms/{realm}"),
             ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
@@ -209,11 +237,12 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
     public async Task AssignRealmRoleAsync(Guid tenantId, string keycloakUserId, string roleName,
         CancellationToken ct = default)
     {
-        var client = await GetAuthenticatedClientAsync(ct).ConfigureAwait(false);
+        var realm = ResolveRealm(tenantId);
+        var client = await GetAuthenticatedClientAsync(realm, ct).ConfigureAwait(false);
 
         // First get the role representation.
         var roleResponse = await client.GetAsync(
-            new Uri($"{_keycloakUrl}/admin/realms/{tenantId}/roles/{roleName}"),
+            new Uri($"{_keycloakUrl}/admin/realms/{realm}/roles/{roleName}"),
             ct).ConfigureAwait(false);
         roleResponse.EnsureSuccessStatusCode();
 
@@ -221,29 +250,42 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
 
         // Assign the role to the user.
         var response = await client.PostAsJsonAsync(
-            $"{_keycloakUrl}/admin/realms/{tenantId}/users/{keycloakUserId}/role-mappings/realm",
+            $"{_keycloakUrl}/admin/realms/{realm}/users/{keycloakUserId}/role-mappings/realm",
             new[] { roleJson },
             ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
     }
 
-    internal async Task<HttpClient> GetAuthenticatedClientAsync(CancellationToken ct)
+    private string ResolveRealm(Guid tenantId)
     {
-        var token = await GetTokenAsync(ct).ConfigureAwait(false);
+        if (_configuredTenantId.HasValue
+            && _configuredTenantId.Value == tenantId
+            && !string.IsNullOrWhiteSpace(_configuredRealm))
+        {
+            return _configuredRealm;
+        }
+
+        return tenantId.ToString();
+    }
+
+    internal async Task<HttpClient> GetAuthenticatedClientAsync(string realm, CancellationToken ct)
+    {
+        var token = await GetTokenAsync(realm, ct).ConfigureAwait(false);
         var client = _httpClientFactory.CreateClient("keycloak-admin");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
     }
 
-    internal async Task<string> GetTokenAsync(CancellationToken ct)
+    internal async Task<string> GetTokenAsync(string realm, CancellationToken ct)
     {
-        await _tokenLock.WaitAsync(ct).ConfigureAwait(false);
+        var realmLock = _tokenLocks.GetOrAdd(realm, static _ => new SemaphoreSlim(1, 1));
+        await realmLock.WaitAsync(ct).ConfigureAwait(false);
         try
         {
             // Return cached token if still valid (with 30s buffer).
-            if (_cachedToken is not null && DateTimeOffset.UtcNow.AddSeconds(30) < _tokenExpiry)
+            if (_tokenCache.TryGetValue(realm, out var cached) && DateTimeOffset.UtcNow.AddSeconds(30) < cached.Expiry)
             {
-                return _cachedToken;
+                return cached.Token;
             }
 
             var client = _httpClientFactory.CreateClient("keycloak-admin");
@@ -255,32 +297,35 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
             });
 
             var response = await client.PostAsync(
-                new Uri($"{_keycloakUrl}/realms/master/protocol/openid-connect/token"),
+                new Uri($"{_keycloakUrl}/realms/{realm}/protocol/openid-connect/token"),
                 tokenRequest,
                 ct).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             var tokenResponse = await response.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
-            _cachedToken = tokenResponse.GetProperty("access_token").GetString()!;
+            var token = tokenResponse.GetProperty("access_token").GetString()!;
             var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
-            _tokenExpiry = DateTimeOffset.UtcNow.AddSeconds(expiresIn);
+            _tokenCache[realm] = (token, DateTimeOffset.UtcNow.AddSeconds(expiresIn));
 
-            LogTokenObtained(_logger, expiresIn);
+            LogTokenObtained(_logger, realm, expiresIn);
 
-            return _cachedToken;
+            return token;
         }
         finally
         {
-            _tokenLock.Release();
+            realmLock.Release();
         }
     }
 
     public void Dispose()
     {
-        _tokenLock.Dispose();
+        foreach (var semaphore in _tokenLocks.Values)
+        {
+            semaphore.Dispose();
+        }
     }
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Obtained Keycloak admin token, expires in {ExpiresIn}s")]
-    private static partial void LogTokenObtained(ILogger logger, int expiresIn);
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Obtained Keycloak admin token for realm {Realm}, expires in {ExpiresIn}s")]
+    private static partial void LogTokenObtained(ILogger logger, string realm, int expiresIn);
 }
 #pragma warning restore CA1812

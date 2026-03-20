@@ -133,6 +133,50 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task CreateStaffMemberHandler_HappyPath_SendsPasswordSetupEmail()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT0);
+        Assert.True(keycloak.SendActionsEmailCalled);
+    }
+
+    [Fact]
+    public async Task CreateStaffMemberHandler_EmailSendFails_StillCreatesStaffMember()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new SendEmailFailingKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        // Staff member should still be created even if email fails.
+        Assert.True(result.IsT0);
+        var saved = await db.StaffMembers.FirstAsync();
+        Assert.NotNull(saved.KeycloakUserId);
+    }
+
+    [Fact]
     public async Task CreateStaffMemberHandler_KeycloakFails_DeletesDbRecordAndReturnsError()
     {
         await using var db = CreateDbContext();
@@ -151,6 +195,29 @@ public class StaffHandlerTests
 
         Assert.True(result.IsT1);
         Assert.IsType<KeycloakError>(result.AsT1);
+        Assert.Empty(await db.StaffMembers.ToListAsync());
+    }
+
+    [Fact]
+    public async Task CreateStaffMemberHandler_AssignRoleFails_DeletesCreatedKeycloakUserAndDbRecord()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new CreateUserThenFailAssignRoleKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT1);
+        Assert.True(keycloak.DeleteUserCalled);
+        Assert.Equal(keycloak.CreatedUserId, keycloak.DeletedUserId);
         Assert.Empty(await db.StaffMembers.ToListAsync());
     }
 
@@ -192,6 +259,46 @@ public class StaffHandlerTests
 
         Assert.False(isValid);
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Role), StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void CreateStaffMemberCommand_MissingEmail_FailsValidation()
+    {
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Jan",
+            LastName = "Bakker",
+            Email = string.Empty,
+            Role = "manager",
+            Color = "#FF0000",
+        };
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(command);
+
+        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
+
+        Assert.False(isValid);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Email), StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void CreateStaffMemberCommand_InvalidEmailFormat_FailsValidation()
+    {
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Jan",
+            LastName = "Bakker",
+            Email = "not-an-email",
+            Role = "manager",
+            Color = "#FF0000",
+        };
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(command);
+
+        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
+
+        Assert.False(isValid);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(CreateStaffMemberCommand.Email), StringComparer.Ordinal));
     }
 
     [Fact]

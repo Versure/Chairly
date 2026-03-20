@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { of, throwError } from 'rxjs';
@@ -13,6 +14,7 @@ const mockStaff: StaffMemberResponse = {
   id: 'staff-1',
   firstName: 'Jan',
   lastName: 'Jansen',
+  email: 'jan.jansen@salon.nl',
   role: 'staff_member',
   color: '#6366f1',
   photoUrl: null,
@@ -89,16 +91,16 @@ describe('StaffListPageComponent', () => {
     const request: CreateStaffMemberRequest = {
       firstName: 'Anna',
       lastName: 'Bakker',
+      email: 'anna.bakker@salon.nl',
       role: 'staff_member',
       color: '#6366f1',
       photoUrl: null,
       schedule: {},
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -114,24 +116,70 @@ describe('StaffListPageComponent', () => {
     const request: CreateStaffMemberRequest = {
       firstName: 'Anna',
       lastName: 'Bakker',
+      email: 'anna.bakker@salon.nl',
       role: 'staff_member',
       color: '#6366f1',
       photoUrl: null,
       schedule: {},
     };
 
-    const formDialogComponent =
-      fixture.debugElement.children
-        .map((de) => de.componentInstance)
-        .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
 
     expect(formDialogComponent).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     formDialogComponent!.saved.emit(request);
     fixture.detectChanges();
 
-    const errorEl = fixture.nativeElement.querySelector('p.text-red-600, p.text-red-400') as Element | null;
+    const errorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
     expect(errorEl).toBeTruthy();
     expect(errorEl?.textContent?.trim()).toBeTruthy();
+  });
+
+  it('shows Dutch email validation message when create returns 400 with email errors', () => {
+    mockApi.create = vi.fn().mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            error: { errors: { email: ['Email is required.'] } },
+          }),
+      ),
+    );
+
+    const request: CreateStaffMemberRequest = {
+      firstName: 'Anna',
+      lastName: 'Bakker',
+      email: 'anna.bakker@salon.nl',
+      role: 'staff_member',
+      color: '#6366f1',
+      photoUrl: null,
+      schedule: {},
+    };
+
+    const formDialogComponent = fixture.debugElement.children
+      .map((de) => de.componentInstance)
+      .find((c): c is StaffFormDialogComponent => c instanceof StaffFormDialogComponent);
+
+    expect(formDialogComponent).toBeDefined();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    formDialogComponent!.saved.emit(request);
+    fixture.detectChanges();
+
+    const formErrorEl = fixture.nativeElement.querySelector(
+      'p.text-red-600, p.text-red-400',
+    ) as Element | null;
+    const fieldErrorEl = fixture.nativeElement.querySelector(
+      'chairly-staff-form-dialog p.text-red-600, chairly-staff-form-dialog p.text-red-400',
+    ) as Element | null;
+    expect(formErrorEl?.textContent?.trim()).toBe(
+      'Controleer de ingevulde gegevens en probeer het opnieuw.',
+    );
+    expect(fieldErrorEl?.textContent?.trim()).toBe(
+      'Controleer het e-mailadres. Dit veld is verplicht en moet een geldig formaat hebben.',
+    );
   });
 });

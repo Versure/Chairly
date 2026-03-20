@@ -32,16 +32,30 @@ public class KeycloakAdminServiceTests : IDisposable
         }
     }
 
-    private static IConfiguration CreateConfiguration()
+    private static IConfiguration CreateConfiguration(
+        string? realm = null,
+        Guid? tenantId = null)
     {
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Keycloak:Url"] = KeycloakUrl,
+            ["Keycloak:AdminClientId"] = AdminClientId,
+            ["Keycloak:AdminClientSecret"] = AdminClientSecret,
+            ["Keycloak:ClientId"] = FrontendClientId,
+        };
+
+        if (!string.IsNullOrWhiteSpace(realm))
+        {
+            values["Keycloak:Realm"] = realm;
+        }
+
+        if (tenantId.HasValue)
+        {
+            values["Keycloak:TenantId"] = tenantId.Value.ToString();
+        }
+
         return new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["Keycloak:Url"] = KeycloakUrl,
-                ["Keycloak:AdminClientId"] = AdminClientId,
-                ["Keycloak:AdminClientSecret"] = AdminClientSecret,
-                ["Keycloak:ClientId"] = FrontendClientId,
-            })
+            .AddInMemoryCollection(values)
             .Build();
     }
 
@@ -127,11 +141,11 @@ public class KeycloakAdminServiceTests : IDisposable
         using var service = CreateService(handler);
 
         // First call - should fetch token
-        await service.GetTokenAsync(CancellationToken.None);
+        await service.GetTokenAsync("chairly", CancellationToken.None);
         Assert.Equal(1, tokenRequestCount);
 
         // Second call - should use cached token
-        await service.GetTokenAsync(CancellationToken.None);
+        await service.GetTokenAsync("chairly", CancellationToken.None);
         Assert.Equal(1, tokenRequestCount);
     }
 
@@ -160,15 +174,171 @@ public class KeycloakAdminServiceTests : IDisposable
         using var service = CreateService(handler);
 
         // First call - should fetch token
-        await service.GetTokenAsync(CancellationToken.None);
+        await service.GetTokenAsync("chairly", CancellationToken.None);
         Assert.Equal(1, tokenRequestCount);
 
         // Second call - token is within 30s of expiry (10s < 30s), should refresh
-        await service.GetTokenAsync(CancellationToken.None);
+        await service.GetTokenAsync("chairly", CancellationToken.None);
         Assert.Equal(2, tokenRequestCount);
     }
 
-    private KeycloakAdminService CreateService(DelegateHttpMessageHandler handler)
+    [Fact]
+    public async Task GetTokenAsync_RequestsTokenFromSpecifiedRealm()
+    {
+        string? capturedTokenRealm = null;
+
+        using var handler = new DelegateHttpMessageHandler((request, _) =>
+        {
+            var uri = request.RequestUri!.ToString();
+
+            if (uri.Contains("/protocol/openid-connect/token", StringComparison.Ordinal))
+            {
+                // Extract realm from URL: /realms/{realm}/protocol/openid-connect/token
+                var realmStart = uri.IndexOf("/realms/", StringComparison.Ordinal) + "/realms/".Length;
+                var realmEnd = uri.IndexOf("/protocol", StringComparison.Ordinal);
+                capturedTokenRealm = uri[realmStart..realmEnd];
+
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(CreateTokenResponseJson(), System.Text.Encoding.UTF8, "application/json"),
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+
+        using var service = CreateService(handler);
+
+        await service.GetTokenAsync("chairly", CancellationToken.None);
+
+        Assert.Equal("chairly", capturedTokenRealm);
+    }
+
+    [Fact]
+    public async Task GetTokenAsync_CachesTokensPerRealm()
+    {
+        var tokenRequestCount = 0;
+
+        using var handler = new DelegateHttpMessageHandler((request, _) =>
+        {
+            var uri = request.RequestUri!.ToString();
+
+            if (uri.Contains("/protocol/openid-connect/token", StringComparison.Ordinal))
+            {
+                tokenRequestCount++;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(CreateTokenResponseJson(expiresIn: 300), System.Text.Encoding.UTF8, "application/json"),
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+
+        using var service = CreateService(handler);
+
+        // Request token for realm A
+        await service.GetTokenAsync("realm-a", CancellationToken.None);
+        Assert.Equal(1, tokenRequestCount);
+
+        // Request token for realm A again - should be cached
+        await service.GetTokenAsync("realm-a", CancellationToken.None);
+        Assert.Equal(1, tokenRequestCount);
+
+        // Request token for realm B - should trigger a new token request
+        await service.GetTokenAsync("realm-b", CancellationToken.None);
+        Assert.Equal(2, tokenRequestCount);
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_UsesConfiguredRealmWhenTenantMatches()
+    {
+        var tenantId = Guid.NewGuid();
+        const string configuredRealm = "chairly";
+        var expectedUserId = Guid.NewGuid().ToString();
+        var capturedUris = new List<string>();
+
+        using var handler = new DelegateHttpMessageHandler(async (request, _) =>
+        {
+            var uri = request.RequestUri!.ToString();
+            capturedUris.Add(uri);
+
+            if (uri.Contains("/protocol/openid-connect/token", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(CreateTokenResponseJson(), System.Text.Encoding.UTF8, "application/json"),
+                };
+            }
+
+            if (uri.Contains($"/admin/realms/{configuredRealm}/users", StringComparison.Ordinal)
+                && request.Method == HttpMethod.Post)
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.Created);
+                response.Headers.Location = new Uri($"{KeycloakUrl}/admin/realms/{configuredRealm}/users/{expectedUserId}");
+                await Task.CompletedTask.ConfigureAwait(false);
+                return response;
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var service = CreateService(handler, CreateConfiguration(configuredRealm, tenantId));
+
+        var userId = await service.CreateUserAsync(tenantId, "test@example.com", "Jan", "Jansen", "owner");
+
+        Assert.Equal(expectedUserId, userId);
+        Assert.Contains(capturedUris, uri => uri.Contains($"/admin/realms/{configuredRealm}/users", StringComparison.Ordinal));
+        Assert.DoesNotContain(capturedUris, uri => uri.Contains($"/admin/realms/{tenantId}/users", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_AcquiresTokenFromResolvedRealmNotMaster()
+    {
+        var tenantId = Guid.NewGuid();
+        const string configuredRealm = "chairly";
+        var expectedUserId = Guid.NewGuid().ToString();
+        var capturedTokenRealms = new List<string>();
+
+        using var handler = new DelegateHttpMessageHandler(async (request, _) =>
+        {
+            var uri = request.RequestUri!.ToString();
+
+            if (uri.Contains("/protocol/openid-connect/token", StringComparison.Ordinal))
+            {
+                var realmStart = uri.IndexOf("/realms/", StringComparison.Ordinal) + "/realms/".Length;
+                var realmEnd = uri.IndexOf("/protocol", StringComparison.Ordinal);
+                capturedTokenRealms.Add(uri[realmStart..realmEnd]);
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(CreateTokenResponseJson(), System.Text.Encoding.UTF8, "application/json"),
+                };
+            }
+
+            if (uri.Contains($"/admin/realms/{configuredRealm}/users", StringComparison.Ordinal)
+                && request.Method == HttpMethod.Post)
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.Created);
+                response.Headers.Location = new Uri($"{KeycloakUrl}/admin/realms/{configuredRealm}/users/{expectedUserId}");
+                await Task.CompletedTask.ConfigureAwait(false);
+                return response;
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+
+        using var service = CreateService(handler, CreateConfiguration(configuredRealm, tenantId));
+
+        await service.CreateUserAsync(tenantId, "test@example.com", "Jan", "Jansen", "owner");
+
+        // Token must be acquired from the configured realm, never from master
+        Assert.Single(capturedTokenRealms);
+        Assert.Equal(configuredRealm, capturedTokenRealms[0]);
+        Assert.DoesNotContain("master", capturedTokenRealms);
+    }
+
+    private KeycloakAdminService CreateService(DelegateHttpMessageHandler handler, IConfiguration? configuration = null)
     {
         var httpClient = new HttpClient(handler, disposeHandler: false);
         _disposables.Add(httpClient);
@@ -176,7 +346,7 @@ public class KeycloakAdminServiceTests : IDisposable
 
         return new KeycloakAdminService(
             factory,
-            CreateConfiguration(),
+            configuration ?? CreateConfiguration(),
             NullLogger<KeycloakAdminService>.Instance);
     }
 

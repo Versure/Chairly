@@ -44,8 +44,13 @@ internal static partial class KeycloakDevSeeder
         await CreateRealmAsync(httpClientFactory, token, keycloakUrl, realmName,
             frontendClientId, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
 
-        // Step 1b: Always ensure realm display name and login theme are set.
-        await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
+        // Step 1b: Always ensure realm display name, login theme, and SMTP are set.
+        var smtpHost = configuration["Keycloak:SmtpHost"];
+        var smtpPort = configuration["Keycloak:SmtpPort"];
+        await UpdateRealmSettingsAsync(httpClientFactory, token, keycloakUrl, realmName, smtpHost, smtpPort, logger, ct).ConfigureAwait(false);
+
+        // Step 1c: Assign realm-management roles to the admin service account (idempotent).
+        await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, realmName, adminClientId, logger, ct).ConfigureAwait(false);
 
         // Step 2: Create user (skip if already exists).
         var userId = await CreateUserAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
@@ -168,15 +173,35 @@ internal static partial class KeycloakDevSeeder
 
     private static async Task UpdateRealmSettingsAsync(
         IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
-        string realmName, ILogger logger, CancellationToken ct)
+        string realmName, string? smtpHost, string? smtpPort, ILogger logger, CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        Dictionary<string, string>? smtpServer = null;
+
+        if (!string.IsNullOrWhiteSpace(smtpHost) && !string.IsNullOrWhiteSpace(smtpPort))
+        {
+            smtpServer = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["host"] = smtpHost,
+                ["port"] = smtpPort,
+                ["from"] = "noreply@chairly.local",
+                ["fromDisplayName"] = "Chairly",
+            };
+
+            LogSmtpConfigured(logger, smtpHost, smtpPort);
+        }
+        else
+        {
+            LogSmtpConfigMissing(logger);
+        }
 
         var settings = new
         {
             displayName = "Chairly",
             loginTheme = "chairly",
+            smtpServer,
         };
 
         var response = await client.PutAsJsonAsync(
@@ -254,6 +279,71 @@ internal static partial class KeycloakDevSeeder
         LogRoleAssigned(logger, DefaultRole, DefaultEmail);
     }
 
+    private static async Task AssignServiceAccountRolesAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        string realmName, string adminClientId, ILogger logger, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // 1. Get the realm-management client UUID.
+        var realmMgmtResponse = await client.GetAsync(
+            new Uri($"{keycloakUrl}/admin/realms/{realmName}/clients?clientId=realm-management"), ct).ConfigureAwait(false);
+        realmMgmtResponse.EnsureSuccessStatusCode();
+        var realmMgmtClients = await realmMgmtResponse.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+        var realmMgmtClientUuid = realmMgmtClients[0].GetProperty("id").GetString()!;
+
+        // 2. Get the chairly-admin client UUID.
+        var adminClientResponse = await client.GetAsync(
+            new Uri($"{keycloakUrl}/admin/realms/{realmName}/clients?clientId={adminClientId}"), ct).ConfigureAwait(false);
+        adminClientResponse.EnsureSuccessStatusCode();
+        var adminClients = await adminClientResponse.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+        var adminClientUuid = adminClients[0].GetProperty("id").GetString()!;
+
+        // 3. Get the service account user for the admin client.
+        var serviceAccountResponse = await client.GetAsync(
+            new Uri($"{keycloakUrl}/admin/realms/{realmName}/clients/{adminClientUuid}/service-account-user"), ct).ConfigureAwait(false);
+        serviceAccountResponse.EnsureSuccessStatusCode();
+        var serviceAccountUser = await serviceAccountResponse.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+        var serviceAccountUserId = serviceAccountUser.GetProperty("id").GetString()!;
+
+        // 4. Get available client roles from realm-management and filter for the ones we need.
+        var rolesResponse = await client.GetAsync(
+            new Uri($"{keycloakUrl}/admin/realms/{realmName}/clients/{realmMgmtClientUuid}/roles"), ct).ConfigureAwait(false);
+        rolesResponse.EnsureSuccessStatusCode();
+        var allRoles = await rolesResponse.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+
+        var requiredRoleNames = new HashSet<string>(StringComparer.Ordinal) { "manage-users", "manage-realm" };
+        var rolesToAssign = new List<JsonElement>();
+
+        foreach (var role in allRoles.EnumerateArray())
+        {
+            var roleName = role.GetProperty("name").GetString();
+            if (roleName is not null && requiredRoleNames.Contains(roleName))
+            {
+                rolesToAssign.Add(role);
+            }
+        }
+
+        if (rolesToAssign.Count == 0)
+        {
+            return;
+        }
+
+        // 5. Assign the roles to the service account user.
+        var assignResponse = await client.PostAsJsonAsync(
+            $"{keycloakUrl}/admin/realms/{realmName}/users/{serviceAccountUserId}/role-mappings/clients/{realmMgmtClientUuid}",
+            rolesToAssign, ct).ConfigureAwait(false);
+
+        // 409 Conflict means roles are already assigned — that's fine.
+        if (assignResponse.StatusCode != System.Net.HttpStatusCode.Conflict)
+        {
+            assignResponse.EnsureSuccessStatusCode();
+        }
+
+        LogServiceAccountRolesAssigned(logger, adminClientId, realmName);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: created realm {RealmName}")]
     private static partial void LogRealmCreated(ILogger logger, string realmName);
 
@@ -262,6 +352,12 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: realm {RealmName} settings updated (displayName=Chairly, loginTheme=chairly)")]
     private static partial void LogRealmSettingsUpdated(ILogger logger, string realmName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: configuring realm SMTP — host={SmtpHost}, port={SmtpPort}")]
+    private static partial void LogSmtpConfigured(ILogger logger, string smtpHost, string smtpPort);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Keycloak dev seed: Smtp:Host or Smtp:Port not configured — skipping SMTP setup for Keycloak realm")]
+    private static partial void LogSmtpConfigMissing(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: created user {Email}")]
     private static partial void LogUserCreated(ILogger logger, string email);
@@ -274,6 +370,9 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: assigned role '{Role}' to {Email}")]
     private static partial void LogRoleAssigned(ILogger logger, string role, string email);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: assigned realm-management roles (manage-users, manage-realm) to service account {AdminClientId} in realm {RealmName}")]
+    private static partial void LogServiceAccountRolesAssigned(ILogger logger, string adminClientId, string realmName);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed complete. Login: {Email} / {Password}")]
     private static partial void LogSeedComplete(ILogger logger, string email, string password);

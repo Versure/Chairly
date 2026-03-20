@@ -32,6 +32,7 @@
 <!-- Staff form dialog (create and edit) -->
 <chairly-staff-form-dialog
   [staffMember]="selectedStaff()"
+  [apiError]="apiEmailError()"
   (saved)="onSave($event)"
   (cancelled)="onCancelled()" />
 
