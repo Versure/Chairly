@@ -155,6 +155,29 @@ public class StaffHandlerTests
     }
 
     [Fact]
+    public async Task CreateStaffMemberHandler_AssignRoleFails_DeletesCreatedKeycloakUserAndDbRecord()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new CreateUserThenFailAssignRoleKeycloakAdminService();
+        var handler = new CreateStaffMemberHandler(db, keycloak, NullLogger<CreateStaffMemberHandler>.Instance, TestTenantContext.Create());
+        var command = new CreateStaffMemberCommand
+        {
+            FirstName = "Pieter",
+            LastName = "de Vries",
+            Email = "pieter@example.com",
+            Role = "manager",
+            Color = "#123456",
+        };
+
+        var result = await handler.Handle(command);
+
+        Assert.True(result.IsT1);
+        Assert.True(keycloak.DeleteUserCalled);
+        Assert.Equal(keycloak.CreatedUserId, keycloak.DeletedUserId);
+        Assert.Empty(await db.StaffMembers.ToListAsync());
+    }
+
+    [Fact]
     public void CreateStaffMemberCommand_EmptyFirstName_FailsValidation()
     {
         var command = new CreateStaffMemberCommand
