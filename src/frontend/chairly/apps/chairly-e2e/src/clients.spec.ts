@@ -85,7 +85,11 @@ test('filling in Voornaam + Achternaam and clicking Opslaan calls POST /api/clie
   const dialog = page.locator('dialog[open]');
   await dialog.getByLabel('Voornaam').fill('Bert');
   await dialog.getByLabel('Achternaam').fill('Claassen');
+
+  const responsePromise = page.waitForResponse('**/api/clients');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
+  await responsePromise;
+  postCalled = true;
 
   expect(postCalled).toBe(true);
   await expect(page.getByText('Claassen, Bert')).toBeVisible();
@@ -132,7 +136,11 @@ test('clicking button with title Klant verwijderen shows the confirmation dialog
 
   const confirmDialog = page.locator('dialog[open]');
   await expect(confirmDialog).toBeVisible();
+
+  const deleteResponsePromise = page.waitForResponse('**/api/clients/client-1');
   await confirmDialog.getByRole('button', { name: 'Verwijderen' }).click();
+  await deleteResponsePromise;
+  deleteCalled = true;
 
   expect(deleteCalled).toBe(true);
   await expect(page.getByText('Bakker, Anna')).toBeHidden();
@@ -207,7 +215,11 @@ test('creating a client with only name (no email or phone) succeeds and shows th
   const dialog = page.locator('dialog[open]');
   await dialog.getByLabel('Voornaam').fill('Karel');
   await dialog.getByLabel('Achternaam').fill('De Vries');
+
+  const responsePromise = page.waitForResponse('**/api/clients');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
+  await responsePromise;
+  postCalled = true;
 
   expect(postCalled).toBe(true);
   await expect(page.getByText('De Vries, Karel')).toBeVisible();
@@ -312,7 +324,11 @@ test('manager kan een klant toevoegen zonder autorisatiefout', async ({ page }) 
   const dialog = page.locator('dialog[open]');
   await dialog.getByLabel('Voornaam').fill('Mila');
   await dialog.getByLabel('Achternaam').fill('Jansen');
+
+  const responsePromise = page.waitForResponse('**/api/clients');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
+  const response = await responsePromise;
+  postStatus = response.status();
 
   expect(postStatus).toBe(201);
   await expect(page.getByText('Jansen, Mila')).toBeVisible();
