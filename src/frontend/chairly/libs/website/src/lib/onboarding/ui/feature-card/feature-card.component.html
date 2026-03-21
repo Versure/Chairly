@@ -1,0 +1,21 @@
+<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+  <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50">
+    <svg
+      class="h-6 w-6 text-primary-600"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+    </svg>
+  </div>
+  @if (title()) {
+    <h3 class="mb-2 text-lg font-semibold text-gray-900">{{ title() }}</h3>
+  }
+  @if (description()) {
+    <p class="text-sm text-gray-600">{{ description() }}</p>
+  }
+</div>
