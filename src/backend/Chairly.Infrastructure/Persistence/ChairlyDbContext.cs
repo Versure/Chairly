@@ -20,7 +20,9 @@ public class ChairlyDbContext(DbContextOptions<ChairlyDbContext> options) : DbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ChairlyDbContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(ChairlyDbContext).Assembly,
+            type => type.Namespace?.Contains("Website", StringComparison.Ordinal) != true);
         base.OnModelCreating(modelBuilder);
     }
 }
