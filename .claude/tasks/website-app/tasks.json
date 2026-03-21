@@ -1,0 +1,157 @@
+{
+  "feature": "website-app",
+  "specPath": ".claude/tasks/website-app/spec.md",
+  "tasks": [
+    {
+      "id": "I1",
+      "layer": "infra",
+      "title": "Website database container in Aspire AppHost",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "I2",
+      "layer": "infra",
+      "title": "WebsiteDbContext and EF configuration",
+      "status": "pending",
+      "dependsOn": [
+        "I1",
+        "B1"
+      ]
+    },
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "DemoRequest and SignUpRequest domain entities",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Submit demo request endpoint",
+      "status": "pending",
+      "dependsOn": [
+        "B1",
+        "I2"
+      ]
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Submit sign-up request endpoint",
+      "status": "pending",
+      "dependsOn": [
+        "B1",
+        "I2"
+      ]
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "Onboarding endpoint registration and admin email configuration",
+      "status": "pending",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Nx app scaffold and workspace configuration for chairly-website",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Website library scaffold (libs/website)",
+      "status": "pending",
+      "dependsOn": [
+        "F1"
+      ]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Onboarding models and API service",
+      "status": "pending",
+      "dependsOn": [
+        "F2",
+        "B3"
+      ]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Landing page component",
+      "status": "pending",
+      "dependsOn": [
+        "F2",
+        "F8"
+      ]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Demo request page component",
+      "status": "pending",
+      "dependsOn": [
+        "F3",
+        "F8"
+      ]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Sign-up page component",
+      "status": "pending",
+      "dependsOn": [
+        "F3",
+        "F8"
+      ]
+    },
+    {
+      "id": "F7",
+      "layer": "frontend",
+      "title": "Confirmation page component",
+      "status": "pending",
+      "dependsOn": [
+        "F2",
+        "F8"
+      ]
+    },
+    {
+      "id": "F8",
+      "layer": "frontend",
+      "title": "Presentational UI components (header, footer, hero, feature card)",
+      "status": "pending",
+      "dependsOn": [
+        "F2"
+      ]
+    },
+    {
+      "id": "F9",
+      "layer": "frontend",
+      "title": "Routing configuration",
+      "status": "pending",
+      "dependsOn": [
+        "F4",
+        "F5",
+        "F6",
+        "F7"
+      ]
+    },
+    {
+      "id": "F10",
+      "layer": "frontend",
+      "title": "Playwright e2e tests for website app",
+      "status": "pending",
+      "dependsOn": [
+        "F9",
+        "B4"
+      ]
+    }
+  ]
+}
