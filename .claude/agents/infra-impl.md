@@ -89,6 +89,15 @@ backend worktree.
 
 ## Implementation guidelines
 
+### Adding a new DbContext (e.g. WebsiteDbContext)
+1. Place EF configurations in a separate namespace subfolder (e.g. `Configurations/Website/`)
+2. Add a namespace filter to the EXISTING `ChairlyDbContext.ApplyConfigurationsFromAssembly()` to
+   EXCLUDE the new namespace — otherwise EF Core will auto-discover the new configs and report
+   `PendingModelChangesWarning` on `ChairlyDbContext`
+3. In the new DbContext, filter `ApplyConfigurationsFromAssembly()` to INCLUDE only its own namespace
+4. See `chairly-backend-slice/SKILL.md` § "Multiple DbContexts" for the exact code pattern
+5. Add `DbSet<>` properties ONLY on the correct DbContext — never on both
+
 ### Adding a new external service (e.g. Redis, S3)
 1. Add container resource in `Chairly.AppHost/Program.cs`
 2. Add `.WithReference()` to the API project resource

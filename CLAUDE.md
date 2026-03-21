@@ -35,12 +35,11 @@ The backend uses a hybrid VSA approach with thin shared layers.
 Chairly.Api/Features/{Context}/{UseCase}/
   ├── {UseCase}Command.cs or {UseCase}Query.cs
   ├── {UseCase}Handler.cs
-  ├── {UseCase}Endpoint.cs
-  └── {UseCase}Validator.cs
+  └── {UseCase}Endpoint.cs
 ```
 
 **Rules:**
-- Each slice contains everything for one use case: command/query, handler, validator, endpoint
+- Each slice contains everything for one use case: command/query, handler, endpoint
 - Slices in the same bounded context may reference each other
 - Slices across bounded contexts must NOT reference each other — use domain events or shared contracts
 - Business logic lives in handlers, NEVER in endpoints
@@ -57,12 +56,12 @@ Interfaces: `IRequest<TResponse>`, `IRequestHandler<TRequest, TResponse>`, `IMed
 - Commands: `Create{Entity}Command`, `Update{Entity}Command`, `Delete{Entity}Command`
 - Queries: `Get{Entity}Query`, `Get{Entities}ListQuery`
 - Handlers: `{CommandOrQuery}Handler`
-- Validators: `{CommandOrQuery}Validator`
 - Endpoints: `{CommandOrQuery}Endpoint`
 
 **Patterns:**
 - Use OneOf for the result pattern (no exceptions for business logic)
-- Data Annotations + manual validation for input validation
+- Data Annotations on commands/queries for input validation — validated automatically by `ValidationBehavior` pipeline (no separate validator files)
+- Side effects (email, messaging) via domain event publishers — handlers must NEVER call `IEmailSender` or external services directly (see `IBookingEventPublisher` pattern)
 - Entity configurations in separate `IEntityTypeConfiguration<T>` classes
 - All endpoints via Minimal APIs, grouped per feature in extension methods
 - Timestamps instead of status columns (see ADR-009):
@@ -168,9 +167,11 @@ src/frontend/chairly/
 
 The dark theme is activated by `data-theme="dark"` on the `<html>` element (managed by `ThemeService`).
 
+- **CRITICAL:** Every `tailwind.css` file must include `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));` — without this, OS-level dark mode will partially activate `dark:` variants, causing unreadable text (dark text on dark backgrounds).
 - Global CSS overrides in `tailwind.css` cover standard Tailwind classes: `bg-white`, `bg-gray-50`, `text-gray-*`, `border-gray-*`, form inputs.
 - **Custom/brand color classes (`bg-primary-*`, `bg-accent-*`) have NO global dark override.** Always add an explicit `dark:` Tailwind variant in the template when using these classes (e.g. `bg-primary-50 dark:bg-slate-800`).
 - When adding any light-mode background color to a component, always pair it with a `dark:` variant. Missing a `dark:` on a custom color will cause a light block in dark mode.
+- Text contrast: use `text-gray-700` or darker for body text on light backgrounds — never use `text-gray-500` or `text-gray-600` for main content text (insufficient contrast).
 
 ## Native `<dialog>` Pattern
 
@@ -256,6 +257,8 @@ If `npx nx format:check` fails, auto-fix with `npx nx format --base=main` then v
 - No hardcoded strings for configuration
 - No status enum columns — use timestamp pairs (ADR-009)
 - No cross-domain imports in the frontend without going through `shared/`
+- No separate `*Validator.cs` files — validation is handled by Data Annotations on commands + `ValidationBehavior` pipeline
+- No direct `IEmailSender` calls in handlers — use domain event publishers for all side effects
 - No MediatR NuGet package — use the custom mediator
 - No `@Input()`/`@Output()`/`@ViewChild()` decorators — use signal-based APIs (`input()`, `model()`, `viewChild()`, `OutputEmitterRef`)
 - No `Subject` + `ngOnDestroy` for subscription cleanup — use `takeUntilDestroyed(destroyRef)` with an injected `DestroyRef`
