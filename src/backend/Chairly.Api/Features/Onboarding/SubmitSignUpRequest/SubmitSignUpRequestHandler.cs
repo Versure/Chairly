@@ -1,17 +1,18 @@
-using Chairly.Api.Features.Notifications.Infrastructure;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Domain.Entities;
+using Chairly.Domain.Events;
+using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Onboarding.SubmitSignUpRequest;
 
-internal sealed class SubmitSignUpRequestHandler(
+internal sealed partial class SubmitSignUpRequestHandler(
     WebsiteDbContext db,
-    IEmailSender emailSender,
-    IOptions<OnboardingSettings> onboardingSettings) : IRequestHandler<SubmitSignUpRequestCommand, SubmitSignUpRequestResponse>
+    IOnboardingEventPublisher eventPublisher,
+    ILogger<SubmitSignUpRequestHandler> logger) : IRequestHandler<SubmitSignUpRequestCommand, SubmitSignUpRequestResponse>
 {
     public async Task<SubmitSignUpRequestResponse> Handle(SubmitSignUpRequestCommand command, CancellationToken cancellationToken = default)
     {
@@ -53,26 +54,32 @@ internal sealed class SubmitSignUpRequestHandler(
         db.SignUpRequests.Add(entity);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var adminEmail = onboardingSettings.Value.AdminEmail;
-        var htmlBody = $"""
-            <h2>Nieuwe aanmelding</h2>
-            <p><strong>Salonnaam:</strong> {entity.SalonName}</p>
-            <p><strong>Eigenaar:</strong> {entity.OwnerFirstName} {entity.OwnerLastName}</p>
-            <p><strong>E-mail:</strong> {entity.Email}</p>
-            <p><strong>Telefoon:</strong> {entity.PhoneNumber ?? "-"}</p>
-            """;
-
-        await emailSender.SendAsync(
-            adminEmail,
-            "Chairly Admin",
-            $"Nieuwe aanmelding: {entity.SalonName}",
-            htmlBody,
-            cancellationToken: cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await eventPublisher.PublishSignUpRequestSubmittedAsync(
+                new SignUpRequestSubmittedEvent(
+                    entity.Id,
+                    entity.SalonName,
+                    entity.OwnerFirstName,
+                    entity.OwnerLastName,
+                    entity.Email,
+                    entity.PhoneNumber),
+                cancellationToken).ConfigureAwait(false);
+        }
+#pragma warning disable CA1031 // Best-effort event publishing; sign-up request is already persisted
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogEventPublishFailed(logger, entity.Id, ex);
+        }
 
         return ToResponse(entity);
     }
 
     private static SubmitSignUpRequestResponse ToResponse(SignUpRequest entity) =>
         new(entity.Id, entity.SalonName, entity.OwnerFirstName, entity.OwnerLastName, entity.Email, entity.CreatedAtUtc);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to publish event for sign-up request {SignUpRequestId}; notification may be delayed")]
+    private static partial void LogEventPublishFailed(ILogger logger, Guid signUpRequestId, Exception exception);
 }
 #pragma warning restore CA1812

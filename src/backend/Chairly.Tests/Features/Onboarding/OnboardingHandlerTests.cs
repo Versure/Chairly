@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Chairly.Api.Features.Onboarding;
 using Chairly.Api.Features.Onboarding.SubmitDemoRequest;
 using Chairly.Api.Features.Onboarding.SubmitSignUpRequest;
 using Chairly.Domain.Entities;
+using Chairly.Domain.Events;
+using Chairly.Infrastructure.Messaging;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Chairly.Tests.Features.Onboarding;
 
@@ -19,19 +20,14 @@ public class OnboardingHandlerTests
         return new WebsiteDbContext(options);
     }
 
-    private static IOptions<OnboardingSettings> CreateSettings()
-    {
-        return Options.Create(new OnboardingSettings { AdminEmail = "admin@test.nl" });
-    }
-
     // --- SubmitDemoRequest tests ---
 
     [Fact]
     public async Task SubmitDemoRequestHandler_HappyPath_CreatesDemoRequest()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitDemoRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitDemoRequestHandler(db, eventPublisher, NullLogger<SubmitDemoRequestHandler>.Instance);
         var command = new SubmitDemoRequestCommand
         {
             ContactName = "Jan de Vries",
@@ -52,11 +48,11 @@ public class OnboardingHandlerTests
     }
 
     [Fact]
-    public async Task SubmitDemoRequestHandler_HappyPath_SendsNotificationEmail()
+    public async Task SubmitDemoRequestHandler_HappyPath_PublishesDomainEvent()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitDemoRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitDemoRequestHandler(db, eventPublisher, NullLogger<SubmitDemoRequestHandler>.Instance);
         var command = new SubmitDemoRequestCommand
         {
             ContactName = "Jan de Vries",
@@ -66,9 +62,9 @@ public class OnboardingHandlerTests
 
         await handler.Handle(command);
 
-        Assert.Single(emailSender.SentEmails);
-        Assert.Equal("admin@test.nl", emailSender.SentEmails[0].ToEmail);
-        Assert.Contains("Nieuwe demo-aanvraag: Salon Mooi", emailSender.SentEmails[0].Subject, StringComparison.Ordinal);
+        Assert.Single(eventPublisher.DemoRequestEvents);
+        Assert.Equal("Salon Mooi", eventPublisher.DemoRequestEvents[0].SalonName);
+        Assert.Equal("jan@salonmooi.nl", eventPublisher.DemoRequestEvents[0].Email);
     }
 
     [Fact]
@@ -115,8 +111,8 @@ public class OnboardingHandlerTests
     public async Task SubmitSignUpRequestHandler_HappyPath_CreatesSignUpRequest()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitSignUpRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitSignUpRequestHandler(db, eventPublisher, NullLogger<SubmitSignUpRequestHandler>.Instance);
         var command = new SubmitSignUpRequestCommand
         {
             SalonName = "Salon Mooi",
@@ -137,11 +133,11 @@ public class OnboardingHandlerTests
     }
 
     [Fact]
-    public async Task SubmitSignUpRequestHandler_HappyPath_SendsNotificationEmail()
+    public async Task SubmitSignUpRequestHandler_HappyPath_PublishesDomainEvent()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitSignUpRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitSignUpRequestHandler(db, eventPublisher, NullLogger<SubmitSignUpRequestHandler>.Instance);
         var command = new SubmitSignUpRequestCommand
         {
             SalonName = "Salon Mooi",
@@ -152,17 +148,17 @@ public class OnboardingHandlerTests
 
         await handler.Handle(command);
 
-        Assert.Single(emailSender.SentEmails);
-        Assert.Equal("admin@test.nl", emailSender.SentEmails[0].ToEmail);
-        Assert.Contains("Nieuwe aanmelding: Salon Mooi", emailSender.SentEmails[0].Subject, StringComparison.Ordinal);
+        Assert.Single(eventPublisher.SignUpRequestEvents);
+        Assert.Equal("Salon Mooi", eventPublisher.SignUpRequestEvents[0].SalonName);
+        Assert.Equal("jan@salonmooi.nl", eventPublisher.SignUpRequestEvents[0].Email);
     }
 
     [Fact]
     public async Task SubmitSignUpRequestHandler_DuplicatePendingEmail_ReturnsSilentSuccess()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitSignUpRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitSignUpRequestHandler(db, eventPublisher, NullLogger<SubmitSignUpRequestHandler>.Instance);
 
         // Create an existing pending sign-up request
         db.SignUpRequests.Add(new SignUpRequest
@@ -191,16 +187,16 @@ public class OnboardingHandlerTests
         Assert.Equal("Salon Mooi", result.SalonName);
         // Should NOT create a duplicate record
         Assert.Equal(1, await db.SignUpRequests.CountAsync());
-        // Should NOT send a notification email
-        Assert.Empty(emailSender.SentEmails);
+        // Should NOT publish a domain event
+        Assert.Empty(eventPublisher.SignUpRequestEvents);
     }
 
     [Fact]
     public async Task SubmitSignUpRequestHandler_PreviouslyRejected_CreatesNewRequest()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitSignUpRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitSignUpRequestHandler(db, eventPublisher, NullLogger<SubmitSignUpRequestHandler>.Instance);
 
         // Create a rejected sign-up request with the same email
         db.SignUpRequests.Add(new SignUpRequest
@@ -227,15 +223,15 @@ public class OnboardingHandlerTests
 
         // Should create a new record (previous was rejected, not pending)
         Assert.Equal(2, await db.SignUpRequests.CountAsync());
-        Assert.Single(emailSender.SentEmails);
+        Assert.Single(eventPublisher.SignUpRequestEvents);
     }
 
     [Fact]
     public async Task SubmitSignUpRequestHandler_PreviouslyProvisioned_CreatesNewRequest()
     {
         await using var db = CreateDbContext();
-        var emailSender = new SpyEmailSender();
-        var handler = new SubmitSignUpRequestHandler(db, emailSender, CreateSettings());
+        var eventPublisher = new SpyOnboardingEventPublisher();
+        var handler = new SubmitSignUpRequestHandler(db, eventPublisher, NullLogger<SubmitSignUpRequestHandler>.Instance);
 
         // Create a provisioned sign-up request with the same email
         db.SignUpRequests.Add(new SignUpRequest
@@ -261,7 +257,7 @@ public class OnboardingHandlerTests
         var result = await handler.Handle(command);
 
         Assert.Equal(2, await db.SignUpRequests.CountAsync());
-        Assert.Single(emailSender.SentEmails);
+        Assert.Single(eventPublisher.SignUpRequestEvents);
     }
 
     [Fact]
@@ -305,20 +301,23 @@ public class OnboardingHandlerTests
         Assert.Contains(results, r => r.MemberNames.Contains(nameof(SubmitSignUpRequestCommand.Email), StringComparer.Ordinal));
     }
 
-    // --- Spy email sender for testing ---
+    // --- Spy event publisher for testing ---
 
-    private sealed class SpyEmailSender : Chairly.Api.Features.Notifications.Infrastructure.IEmailSender
+    private sealed class SpyOnboardingEventPublisher : IOnboardingEventPublisher
     {
-        public List<SentEmail> SentEmails { get; } = [];
+        public List<DemoRequestSubmittedEvent> DemoRequestEvents { get; } = [];
+        public List<SignUpRequestSubmittedEvent> SignUpRequestEvents { get; } = [];
 
-        public Task SendAsync(string toEmail, string toName, string subject, string htmlBody,
-            Chairly.Api.Features.Notifications.Infrastructure.EmailAttachment? attachment = null,
-            CancellationToken cancellationToken = default)
+        public Task PublishDemoRequestSubmittedAsync(DemoRequestSubmittedEvent domainEvent, CancellationToken cancellationToken = default)
         {
-            SentEmails.Add(new SentEmail(toEmail, toName, subject, htmlBody));
+            DemoRequestEvents.Add(domainEvent);
             return Task.CompletedTask;
         }
 
-        internal sealed record SentEmail(string ToEmail, string ToName, string Subject, string HtmlBody);
+        public Task PublishSignUpRequestSubmittedAsync(SignUpRequestSubmittedEvent domainEvent, CancellationToken cancellationToken = default)
+        {
+            SignUpRequestEvents.Add(domainEvent);
+            return Task.CompletedTask;
+        }
     }
 }
