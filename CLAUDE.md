@@ -35,8 +35,7 @@ The backend uses a hybrid VSA approach with thin shared layers.
 Chairly.Api/Features/{Context}/{UseCase}/
   ├── {UseCase}Command.cs or {UseCase}Query.cs
   ├── {UseCase}Handler.cs
-  ├── {UseCase}Endpoint.cs
-  └── {UseCase}Validator.cs
+  └── {UseCase}Endpoint.cs
 ```
 
 **Rules:**
