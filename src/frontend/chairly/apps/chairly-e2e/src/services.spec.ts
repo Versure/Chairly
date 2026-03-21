@@ -359,9 +359,10 @@ test('creating a service with a category shows the category name in the table ro
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
-  expect(postCalled).toBe(true);
-
   // Verify the category name "Knippen" appears in the new row's category cell
+  // (awaiting this first ensures the POST has completed before checking postCalled)
   const damesknippen = page.getByRole('row').filter({ hasText: 'Damesknippen' });
   await expect(damesknippen.getByRole('cell', { name: 'Knippen', exact: true })).toBeVisible();
+
+  expect(postCalled).toBe(true);
 });

@@ -3,6 +3,7 @@ using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Config;
 using Chairly.Api.Features.Notifications;
+using Chairly.Api.Features.Onboarding;
 using Chairly.Api.Features.Services;
 using Chairly.Api.Features.Settings;
 using Chairly.Api.Features.Staff;
@@ -36,12 +37,17 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ChairlyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ChairlyDb")));
 
+builder.Services.AddDbContext<WebsiteDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("WebsiteDb")));
+
 builder.AddRabbitMQClient("messaging");
 builder.Services.AddScoped<IBookingEventPublisher, BookingEventPublisher>();
 builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.BookingEventConsumer>();
 builder.Services.Configure<Chairly.Api.Features.Notifications.Infrastructure.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<Chairly.Api.Features.Notifications.Infrastructure.IEmailSender, Chairly.Api.Features.Notifications.Infrastructure.SmtpEmailSender>();
 builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.NotificationDispatcher>();
+builder.Services.Configure<OnboardingSettings>(builder.Configuration.GetSection("Onboarding"));
+builder.Services.AddScoped<IOnboardingEventPublisher, Chairly.Api.Features.Onboarding.OnboardingEventPublisher>();
 
 // Tenant context: scoped TenantContext resolved via ITenantContext interface.
 builder.Services.AddScoped<TenantContext>();
@@ -143,6 +149,7 @@ app.MapSettingsEndpoints();
 app.MapNotificationEndpoints();
 app.MapConfigEndpoints();
 app.MapTenantEndpoints();
+app.MapOnboardingEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts
@@ -232,6 +239,73 @@ if (runMigrations)
         // Truly close the non-pooled TCP connection, releasing any remaining
         // session-level advisory locks even if unlock failed above.
         await lockConn.DisposeAsync().ConfigureAwait(false);
+    }
+}
+
+// Website database migrations — same advisory-lock pattern with a different lock key (1_000_000_002).
+if (runMigrations)
+{
+    var websiteMigrationLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Chairly.WebsiteMigrations");
+    var websiteStoppingToken = app.Lifetime.ApplicationStopping;
+
+    var websiteConnString = app.Configuration.GetConnectionString("WebsiteDb")!;
+
+    var websiteLockConnString = websiteConnString.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)
+        ? websiteConnString
+        : websiteConnString + ";Pooling=false";
+
+    var websiteLockConn = new Npgsql.NpgsqlConnection(websiteLockConnString);
+    try
+    {
+        await websiteLockConn.OpenAsync(websiteStoppingToken).ConfigureAwait(false);
+
+        var websiteLockCmd = websiteLockConn.CreateCommand();
+        try
+        {
+            websiteLockCmd.CommandText = "SELECT pg_advisory_lock(1000000002)";
+            await websiteLockCmd.ExecuteNonQueryAsync(websiteStoppingToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await websiteLockCmd.DisposeAsync().ConfigureAwait(false);
+        }
+
+        MigrationLog.ApplyingWebsiteMigrations(websiteMigrationLogger);
+
+        var websiteMigrateScope = app.Services.CreateAsyncScope();
+        try
+        {
+            var websiteDb = websiteMigrateScope.ServiceProvider.GetRequiredService<WebsiteDbContext>();
+            await websiteDb.Database.MigrateAsync(websiteStoppingToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            await websiteMigrateScope.DisposeAsync().ConfigureAwait(false);
+        }
+
+        MigrationLog.WebsiteMigrationsApplied(websiteMigrationLogger);
+
+        try
+        {
+            var websiteUnlockCmd = websiteLockConn.CreateCommand();
+            try
+            {
+                websiteUnlockCmd.CommandText = "SELECT pg_advisory_unlock(1000000002)";
+                await websiteUnlockCmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+            finally
+            {
+                await websiteUnlockCmd.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        catch (Npgsql.NpgsqlException)
+        {
+            // Connection already broken — disposing the connection releases the lock.
+        }
+    }
+    finally
+    {
+        await websiteLockConn.DisposeAsync().ConfigureAwait(false);
     }
 }
 
