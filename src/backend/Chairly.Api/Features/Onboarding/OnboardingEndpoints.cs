@@ -1,5 +1,5 @@
-using Chairly.Api.Features.Onboarding.SubmitDemoRequest;
-using Chairly.Api.Features.Onboarding.SubmitSignUpRequest;
+using Chairly.Api.Features.Onboarding.CreateSubscription;
+using Chairly.Api.Features.Onboarding.GetSubscriptionPlans;
 
 namespace Chairly.Api.Features.Onboarding;
 
@@ -7,8 +7,8 @@ internal static class OnboardingEndpoints
 {
     public static IEndpointRouteBuilder MapOnboardingEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapSubmitDemoRequest();
-        app.MapSubmitSignUpRequest();
+        app.MapCreateSubscription();
+        app.MapGetSubscriptionPlans();
         return app;
     }
 }
