@@ -1,19 +1,19 @@
 using Chairly.Api.Shared.Mediator;
 
-namespace Chairly.Api.Features.Onboarding.SubmitDemoRequest;
+namespace Chairly.Api.Features.Onboarding.CreateSubscription;
 
-internal static class SubmitDemoRequestEndpoint
+internal static class CreateSubscriptionEndpoint
 {
-    public static void MapSubmitDemoRequest(this IEndpointRouteBuilder app)
+    public static void MapCreateSubscription(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/onboarding/demo-requests", async (
-            SubmitDemoRequestCommand command,
+        app.MapPost("/api/onboarding/subscriptions", async (
+            CreateSubscriptionCommand command,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
             var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
             return result.Match(
-                response => Results.Created($"/api/onboarding/demo-requests/{response.Id}", response),
+                response => Results.Created($"/api/onboarding/subscriptions/{response.Id}", response),
                 unprocessable => Results.UnprocessableEntity(new { message = unprocessable.Message }));
         }).AllowAnonymous();
     }
