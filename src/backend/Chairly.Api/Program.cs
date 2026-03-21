@@ -47,6 +47,7 @@ builder.Services.Configure<Chairly.Api.Features.Notifications.Infrastructure.Smt
 builder.Services.AddScoped<Chairly.Api.Features.Notifications.Infrastructure.IEmailSender, Chairly.Api.Features.Notifications.Infrastructure.SmtpEmailSender>();
 builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.NotificationDispatcher>();
 builder.Services.Configure<OnboardingSettings>(builder.Configuration.GetSection("Onboarding"));
+builder.Services.AddScoped<IOnboardingEventPublisher, Chairly.Api.Features.Onboarding.OnboardingEventPublisher>();
 
 // Tenant context: scoped TenantContext resolved via ITenantContext interface.
 builder.Services.AddScoped<TenantContext>();
