@@ -1,0 +1,186 @@
+<chairly-web-header />
+
+<main class="flex-1">
+  <!-- Hero/heading -->
+  <section
+    class="bg-gradient-to-br from-primary-50 to-primary-100 py-16 dark:from-slate-900 dark:to-slate-800 sm:py-20">
+    <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+      <h1
+        class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
+        Kies het plan dat bij uw salon past
+      </h1>
+      <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-700 dark:text-slate-300">
+        Alle plannen bevatten dezelfde functionaliteiten. U betaalt alleen voor het aantal
+        medewerkers.
+      </p>
+
+      <!-- Billing cycle toggle -->
+      <div class="mt-8 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          [class.bg-primary-600]="billingCycle() === 'monthly'"
+          [class.text-white]="billingCycle() === 'monthly'"
+          [class.bg-white]="billingCycle() !== 'monthly'"
+          [class.text-gray-700]="billingCycle() !== 'monthly'"
+          [class.dark:bg-primary-500]="billingCycle() === 'monthly'"
+          [class.dark:bg-slate-700]="billingCycle() !== 'monthly'"
+          [class.dark:text-slate-300]="billingCycle() !== 'monthly'"
+          [class.shadow-sm]="true"
+          (click)="toggleBillingCycle('monthly')">
+          Maandelijks
+        </button>
+        <button
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          [class.bg-primary-600]="billingCycle() === 'annual'"
+          [class.text-white]="billingCycle() === 'annual'"
+          [class.bg-white]="billingCycle() !== 'annual'"
+          [class.text-gray-700]="billingCycle() !== 'annual'"
+          [class.dark:bg-primary-500]="billingCycle() === 'annual'"
+          [class.dark:bg-slate-700]="billingCycle() !== 'annual'"
+          [class.dark:text-slate-300]="billingCycle() !== 'annual'"
+          [class.shadow-sm]="true"
+          (click)="toggleBillingCycle('annual')">
+          Jaarlijks (10% korting)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Plan cards -->
+  <section class="bg-gray-50 py-16 dark:bg-slate-900 sm:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      @if (isLoading()) {
+        <p class="text-center text-gray-700 dark:text-slate-300">Laden...</p>
+      } @else {
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <!-- Trial card -->
+          <chairly-web-pricing-card
+            [plan]="trialPlan"
+            [billingCycle]="billingCycle()"
+            [isTrial]="true"
+            (selectPlan)="onSelectTrial()" />
+
+          @for (plan of plans(); track plan.slug) {
+            <chairly-web-pricing-card
+              [plan]="plan"
+              [billingCycle]="billingCycle()"
+              [highlighted]="plan.slug === 'team'"
+              (selectPlan)="onSelectPlan(plan)" />
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Feature comparison table -->
+  <section class="bg-white py-16 dark:bg-slate-800 sm:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <h2
+        class="mb-8 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+        Vergelijk plannen
+      </h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-slate-600">
+              <th class="pb-4 pr-6 font-medium text-gray-900 dark:text-white">Functionaliteit</th>
+              <th class="pb-4 pr-6 text-center font-medium text-gray-900 dark:text-white">
+                Starter
+              </th>
+              <th class="pb-4 pr-6 text-center font-medium text-gray-900 dark:text-white">Team</th>
+              <th class="pb-4 text-center font-medium text-gray-900 dark:text-white">Salon</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+              <td class="py-4 pr-6 text-gray-700 dark:text-slate-300">Boekingen beheren</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 text-center text-green-500">&#10003;</td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+              <td class="py-4 pr-6 text-gray-700 dark:text-slate-300">Klantenbeheer</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 text-center text-green-500">&#10003;</td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+              <td class="py-4 pr-6 text-gray-700 dark:text-slate-300">Facturatie</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 text-center text-green-500">&#10003;</td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-slate-700">
+              <td class="py-4 pr-6 text-gray-700 dark:text-slate-300">Automatische meldingen</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 pr-6 text-center text-green-500">&#10003;</td>
+              <td class="py-4 text-center text-green-500">&#10003;</td>
+            </tr>
+            <tr>
+              <td class="py-4 pr-6 text-gray-700 dark:text-slate-300">Aantal medewerkers</td>
+              <td class="py-4 pr-6 text-center font-medium text-gray-900 dark:text-white">1</td>
+              <td class="py-4 pr-6 text-center font-medium text-gray-900 dark:text-white">5</td>
+              <td class="py-4 text-center font-medium text-gray-900 dark:text-white">15</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-gray-50 py-16 dark:bg-slate-900 sm:py-20">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <h2
+        class="mb-8 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+        Veelgestelde vragen
+      </h2>
+
+      <div class="space-y-6">
+        <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Hoe werkt de gratis proefperiode?
+          </h3>
+          <p class="mt-2 text-sm text-gray-700 dark:text-slate-300">
+            U kunt Chairly 30 dagen gratis uitproberen met het Starter-plan. Geen betaalgegevens
+            nodig.
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Kan ik van plan wisselen?
+          </h3>
+          <p class="mt-2 text-sm text-gray-700 dark:text-slate-300">
+            Ja, u kunt op elk moment upgraden of downgraden.
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Hoe werkt de facturatie?
+          </h3>
+          <p class="mt-2 text-sm text-gray-700 dark:text-slate-300">
+            Bij een maandabonnement betaalt u elke maand. Bij een jaarabonnement betaalt u vooruit
+            voor 12 maanden met 10% korting.
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-slate-800">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+            Kan ik mijn abonnement opzeggen?
+          </h3>
+          <p class="mt-2 text-sm text-gray-700 dark:text-slate-300">
+            Ja, u kunt op elk moment opzeggen. Uw account blijft actief tot het einde van de
+            betaalperiode.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<chairly-web-footer />

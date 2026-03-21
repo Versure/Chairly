@@ -33,17 +33,25 @@ describe('LandingPageComponent', () => {
     expect(cards.length).toBe(4);
   });
 
-  it('should have navigation links to demo and sign-up pages', () => {
+  it('should have navigation links to pricing and subscribe pages', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const links = compiled.querySelectorAll('a');
     const hrefs = Array.from(links).map((link) => link.getAttribute('href'));
-    expect(hrefs).toContain('/demo-aanvragen');
-    expect(hrefs).toContain('/aanmelden');
+    expect(hrefs).toContain('/prijzen');
+    expect(hrefs.some((href) => href?.startsWith('/abonneren'))).toBe(true);
   });
 
   it('should render the "Waarom Chairly?" section', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Waarom Chairly?');
+  });
+
+  it('should render pricing summary section', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Eenvoudige, transparante prijzen');
+    expect(compiled.textContent).toContain('Starter');
+    expect(compiled.textContent).toContain('Team');
+    expect(compiled.textContent).toContain('Salon');
   });
 
   it('should render social proof section with statistics', () => {

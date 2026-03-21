@@ -5,8 +5,7 @@ namespace Chairly.Infrastructure.Persistence;
 
 public class WebsiteDbContext(DbContextOptions<WebsiteDbContext> options) : DbContext(options)
 {
-    public DbSet<DemoRequest> DemoRequests => Set<DemoRequest>();
-    public DbSet<SignUpRequest> SignUpRequests => Set<SignUpRequest>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
