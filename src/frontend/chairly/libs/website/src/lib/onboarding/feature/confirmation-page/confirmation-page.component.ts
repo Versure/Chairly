@@ -21,16 +21,12 @@ export class ConfirmationPageComponent {
     this.route.queryParamMap.pipe(map((params) => params.get('type'))),
   );
 
-  protected readonly isDemo = computed(() => this.type() === 'demo');
-  protected readonly isSignUp = computed(() => this.type() === 'aanmelding');
+  protected readonly isSubscription = computed(() => this.type() === 'abonnement');
 
-  protected readonly heading = computed(() =>
-    this.isDemo() ? 'Bedankt voor uw aanvraag!' : 'Bedankt voor uw aanmelding!',
-  );
+  protected readonly heading = computed(() => 'Bedankt voor uw aanmelding!');
 
-  protected readonly message = computed(() =>
-    this.isDemo()
-      ? 'Wij hebben uw demo-aanvraag ontvangen en nemen zo snel mogelijk contact met u op.'
-      : 'Wij verwerken uw aanvraag zo snel mogelijk. U ontvangt een e-mail zodra uw omgeving klaar is.',
+  protected readonly message = computed(
+    () =>
+      'Wij verwerken uw aanvraag zo snel mogelijk. U ontvangt een e-mail zodra uw omgeving klaar is.',
   );
 }
