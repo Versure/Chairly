@@ -16,4 +16,5 @@ export class HeroSectionComponent {
   readonly primaryCtaLink = input.required<string>();
   readonly secondaryCtaLabel = input.required<string>();
   readonly secondaryCtaLink = input.required<string>();
+  readonly primaryCtaQueryParams = input<Record<string, string>>({});
 }

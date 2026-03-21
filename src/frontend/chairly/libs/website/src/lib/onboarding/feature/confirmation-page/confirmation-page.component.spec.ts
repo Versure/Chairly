@@ -28,26 +28,25 @@ describe('ConfirmationPageComponent', () => {
   }
 
   it('should create', () => {
-    const fixture = createComponent('demo');
+    const fixture = createComponent('abonnement');
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should display demo confirmation when type=demo', () => {
-    const fixture = createComponent('demo');
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Bedankt voor uw aanvraag!');
-    expect(compiled.textContent).toContain('Wij hebben uw demo-aanvraag ontvangen');
-  });
-
-  it('should display sign-up confirmation when type=aanmelding', () => {
-    const fixture = createComponent('aanmelding');
+  it('should display subscription confirmation when type=abonnement', () => {
+    const fixture = createComponent('abonnement');
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Bedankt voor uw aanmelding!');
     expect(compiled.textContent).toContain('Wij verwerken uw aanvraag zo snel mogelijk');
   });
 
+  it('should display generic confirmation for unknown type', () => {
+    const fixture = createComponent('onbekend');
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Bedankt voor uw aanmelding!');
+  });
+
   it('should have a link back to home page', () => {
-    const fixture = createComponent('demo');
+    const fixture = createComponent('abonnement');
     const compiled = fixture.nativeElement as HTMLElement;
     const links = compiled.querySelectorAll('a');
     const homeLink = Array.from(links).find((link) =>

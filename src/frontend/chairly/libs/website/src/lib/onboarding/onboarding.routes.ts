@@ -6,12 +6,12 @@ export const onboardingRoutes: Routes = [
     loadComponent: () => import('./feature').then((m) => m.LandingPageComponent),
   },
   {
-    path: 'demo-aanvragen',
-    loadComponent: () => import('./feature').then((m) => m.DemoRequestPageComponent),
+    path: 'prijzen',
+    loadComponent: () => import('./feature').then((m) => m.PricingPageComponent),
   },
   {
-    path: 'aanmelden',
-    loadComponent: () => import('./feature').then((m) => m.SignUpPageComponent),
+    path: 'abonneren',
+    loadComponent: () => import('./feature').then((m) => m.SubscribePageComponent),
   },
   {
     path: 'bevestiging',
