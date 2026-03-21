@@ -422,6 +422,102 @@ public class {Entity}HandlerTests
 
 ---
 
+## Validation
+
+Validation is handled automatically by the `ValidationBehavior` pipeline behavior in the custom mediator.
+It calls `Validator.TryValidateObject()` on every command/query before the handler runs.
+
+**Rules:**
+- Use Data Annotation attributes on command/query properties (`[Required]`, `[MaxLength]`, `[EmailAddress]`, `[Range]`, etc.)
+- Do NOT create separate `*Validator.cs` files — the pipeline handles validation via Data Annotations
+- The pipeline throws `ValidationException` with grouped errors, which the exception middleware maps to 422
+- For complex cross-field validation, add `IValidatableObject` to the command
+
+---
+
+## Domain Events (Side Effects)
+
+When a handler needs to trigger side effects (send emails, publish messages, update external systems),
+use the domain events pattern instead of calling services directly in the handler.
+
+**Pattern (see `ConfirmBookingHandler` and `IBookingEventPublisher` for reference):**
+
+1. Define a domain event record in `Chairly.Domain/Events/`:
+```csharp
+namespace Chairly.Domain.Events;
+
+public sealed record {Entity}{Action}Event(Guid Id, /* relevant fields */);
+```
+
+2. Define a publisher interface in `Chairly.Infrastructure/Messaging/`:
+```csharp
+namespace Chairly.Infrastructure.Messaging;
+
+public interface I{Context}EventPublisher
+{
+    Task Publish{Entity}{Action}Async({Entity}{Action}Event domainEvent, CancellationToken cancellationToken);
+}
+```
+
+3. Implement the publisher in `Chairly.Api/Features/{Context}/`:
+```csharp
+// Sends emails, publishes to RabbitMQ, etc.
+// Best-effort: catch exceptions, log, and continue (entity is already persisted)
+```
+
+4. In the handler, inject the publisher and call it AFTER `SaveChangesAsync`:
+```csharp
+await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+try
+{
+    await eventPublisher.Publish{Entity}{Action}Async(
+        new {Entity}{Action}Event(entity.Id, ...),
+        cancellationToken).ConfigureAwait(false);
+}
+catch (Exception ex)
+{
+    // Log and continue — entity is already persisted
+    Log.{Action}EventFailed(logger, entity.Id, ex);
+}
+```
+
+**Rules:**
+- Handlers must NEVER call `IEmailSender`, `ISmtpService`, or external APIs directly
+- All side effects go through domain event publishers
+- Event publishing is best-effort: exceptions are caught and logged, not re-thrown
+- Register the publisher in `Program.cs` DI
+
+---
+
+## Multiple DbContexts
+
+When adding a second `DbContext` (e.g. `WebsiteDbContext` alongside `ChairlyDbContext`), EF Core
+configuration classes from the same assembly must be explicitly filtered.
+
+**Problem:** `ApplyConfigurationsFromAssembly()` discovers ALL `IEntityTypeConfiguration<T>`
+implementations in the assembly, regardless of which `DbContext` they belong to. This causes
+`PendingModelChangesWarning` on the wrong context.
+
+**Solution:** Filter configurations by namespace:
+
+```csharp
+// In ChairlyDbContext — exclude Website configurations:
+modelBuilder.ApplyConfigurationsFromAssembly(
+    typeof(ChairlyDbContext).Assembly,
+    t => t.Namespace != null && !t.Namespace.Contains("Website", StringComparison.Ordinal));
+
+// In WebsiteDbContext — include ONLY Website configurations:
+modelBuilder.ApplyConfigurationsFromAssembly(
+    typeof(WebsiteDbContext).Assembly,
+    t => t.Namespace != null && t.Namespace.Contains("Website", StringComparison.Ordinal));
+```
+
+Place Website-specific configurations in a `Configurations/Website/` subfolder so the namespace
+filter works reliably.
+
+---
+
 ## Pragma Reference
 
 | Pragma | When to use |

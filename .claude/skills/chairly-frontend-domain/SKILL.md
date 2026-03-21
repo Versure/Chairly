@@ -165,6 +165,43 @@ define search/filter endpoints if the list is too large for a simple dropdown.
 
 ---
 
+## Dark Mode
+
+The dark theme is activated by `data-theme="dark"` on `<html>` (managed by `ThemeService`).
+
+**Rules:**
+- Every `tailwind.css` file must include `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`
+  — this prevents OS dark mode from partially activating `dark:` variants without the app's theme control
+- Standard Tailwind classes (`bg-white`, `bg-gray-*`, `text-gray-*`) have global dark overrides in `tailwind.css`
+- Custom/brand colors (`bg-primary-*`, `bg-accent-*`) have NO global override — always add an explicit
+  `dark:` variant in the template (e.g. `bg-primary-50 dark:bg-slate-800`)
+- When adding any light-mode background, always pair with a `dark:` variant
+- Text contrast: use `text-gray-700` or darker for body text on light backgrounds (never `text-gray-500`
+  or `text-gray-600` for main content — insufficient contrast)
+
+---
+
+## Page Layout — Sticky Footer
+
+Pages with header + footer must use flex column layout to prevent the footer from floating
+when content is shorter than the viewport:
+
+```scss
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+```
+
+```html
+<app-header />
+<main class="flex-1"><!-- content --></main>
+<app-footer />
+```
+
+---
+
 ## Forbidden
 
 - No `any` types

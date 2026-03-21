@@ -169,6 +169,24 @@ Number tasks in implementation order within each layer.
 
 ---
 
+## Special: Marketing / Landing Pages
+
+When a feature includes a public-facing marketing or landing page, the spec must include:
+
+- **Content sections:** List all content sections with their Dutch headings and purpose
+  (hero, features/USPs, social proof, CTA, etc.)
+- **Distinct visuals:** When multiple items of the same type are shown (e.g. feature cards, USPs),
+  each item MUST have a visually distinct representation (different icon, image, or illustration).
+  Specify which icon/visual to use for each item — do not leave this to the implementer.
+- **SEO requirements:** meta title, description, keywords (in Dutch), Open Graph tags, `lang="nl"`,
+  proper heading hierarchy (h1 → h2 → h3)
+- **Marketing copy depth:** Include enough content to be convincing — not just feature names, but
+  benefit descriptions, social proof with placeholder stats, and clear CTAs
+- **Text contrast:** Specify that all text must have sufficient contrast against its background
+  (WCAG AA minimum). Body text should use `text-gray-700` or darker on light backgrounds.
+
+---
+
 ## Rules
 
 - `spec.md` is the single source of truth — all detail lives there

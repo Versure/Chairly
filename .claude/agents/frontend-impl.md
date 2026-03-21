@@ -52,6 +52,45 @@ All files for this feature go under:
 
 Where `{domain}` is the bounded context name (e.g. `bookings`, `clients`, `staff`).
 
+## Scaffolding a new Angular app
+
+When creating a completely new Angular app in the Nx workspace (not adding to the existing chairly app):
+
+### Checklist — must not be skipped:
+1. Copy `tailwind.css` from the existing `apps/chairly/src/tailwind.css` as a starting point
+2. **CRITICAL:** Include `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));`
+   in the new app's `tailwind.css` — without this, OS-level dark mode will partially activate
+   Tailwind `dark:` variants (dark backgrounds) while text colors remain dark, making text unreadable
+3. Copy all global dark mode CSS overrides from the main app's `tailwind.css` (the `@layer base`
+   rules for `bg-white`, `bg-gray-*`, `text-gray-*`, `border-gray-*`, form inputs)
+4. Update `@source` directives to point at the new app's template files
+5. Copy the ESLint config from the equivalent existing app (e.g. copy `apps/chairly-e2e/eslint.config.mjs`
+   for e2e apps, `apps/chairly/eslint.config.mjs` for main apps) to ensure consistency
+
+### Page layout — sticky footer pattern:
+Every page layout that has a header and footer must use this structure to prevent
+the footer from floating halfway up the screen when content is short:
+
+```scss
+// In the page/layout component SCSS:
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+```
+
+```html
+<!-- In the template: -->
+<chairly-web-header />
+<main class="flex-1">
+  <!-- page content -->
+</main>
+<chairly-web-footer />
+```
+
+The `flex-1` on `<main>` ensures the content area expands to push the footer to the bottom.
+
 ## Implementation order
 
 ### 1. Models (`models/{entity}.models.ts`)

@@ -94,6 +94,8 @@ Follow patterns from `chairly-backend-slice/SKILL.md`:
 - `.ConfigureAwait(false)` on every `await`
 - `TenantConstants.DefaultTenantId` for tenant ID
 - OneOf for failure cases (Update, Delete, Get by ID); direct return for Create and List
+- Validation via Data Annotations on commands — do NOT create separate `*Validator.cs` files
+- Side effects (email, messaging) via domain event publishers — NEVER call `IEmailSender` directly in handlers
 
 ### 4. Response record
 
