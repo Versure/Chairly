@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+/* Explicit source paths for Tailwind v4 content scanning in Nx monorepo.
+   Paths are relative to this file (apps/chairly-website/src/tailwind.css). */
+@source '../../../libs/website/src/**/*.{html,ts}';
+@source '../**/*.{html,ts}';
+
+@theme {
+  /* Primary: soft muted violet (desaturated, less vivid than standard violet) */
+  --color-primary-50: #f5f4fb;
+  --color-primary-100: #ede9fa;
+  --color-primary-200: #dbd5f5;
+  --color-primary-300: #c3b9ed;
+  --color-primary-400: #a99bdf;
+  --color-primary-500: #8f7fcf;
+  --color-primary-600: #7362b8;
+  --color-primary-700: #5e4e9a;
+  --color-primary-800: #4d3f7f;
+  --color-primary-900: #3f3367;
+  --color-primary-950: #251e3d;
+
+  /* Accent: soft dusty rose (muted pink, less vivid than hot pink) */
+  --color-accent-50: #fdf2f8;
+  --color-accent-100: #fce7f3;
+  --color-accent-200: #f9cfe8;
+  --color-accent-300: #f4a8d4;
+  --color-accent-400: #e87db9;
+  --color-accent-500: #d45e9e;
+  --color-accent-600: #b94686;
+  --color-accent-700: #9a346d;
+  --color-accent-800: #7d2b5a;
+  --color-accent-900: #68244b;
+  --color-accent-950: #3e1330;
+}

@@ -15,6 +15,10 @@ export const sheriffConfig: SheriffConfig = {
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
       'settings/<layer>': ['domain:settings', 'layer:<layer>'],
     },
+    'libs/website/src': ['website-lib'],
+    'libs/website/src/lib': {
+      'onboarding/<layer>': ['domain:onboarding', 'layer:<layer>'],
+    },
     'libs/shared/src': ['shared'],
     'libs/shared/src/lib': {
       ui: ['shared', 'layer:ui'],
@@ -25,7 +29,7 @@ export const sheriffConfig: SheriffConfig = {
 
   depRules: {
     // App (root) can depend on any library barrel or shared
-    root: ['chairly-lib', 'shared'],
+    root: ['chairly-lib', 'website-lib', 'shared'],
 
     // chairly-lib barrel re-exports from domain layers
     'chairly-lib': [
@@ -38,6 +42,9 @@ export const sheriffConfig: SheriffConfig = {
       'domain:staff',
       'shared',
     ],
+
+    // website-lib barrel re-exports from domain layers
+    'website-lib': ['domain:onboarding', 'shared'],
 
     // Domain isolation: domains cannot depend on each other
     'domain:*': [sameTag, 'shared'],
