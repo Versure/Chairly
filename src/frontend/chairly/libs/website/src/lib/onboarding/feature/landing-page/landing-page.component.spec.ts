@@ -40,4 +40,29 @@ describe('LandingPageComponent', () => {
     expect(hrefs).toContain('/demo-aanvragen');
     expect(hrefs).toContain('/aanmelden');
   });
+
+  it('should render the "Waarom Chairly?" section', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Waarom Chairly?');
+  });
+
+  it('should render social proof section with statistics', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Vertrouwd door salons in heel Nederland');
+    expect(compiled.textContent).toContain('500+');
+    expect(compiled.textContent).toContain('50.000+');
+    expect(compiled.textContent).toContain('98%');
+  });
+
+  it('should render CTA section', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Klaar om te starten?');
+  });
+
+  it('should wrap main content in a flex-1 element for sticky footer', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const mainElement = compiled.querySelector('main');
+    expect(mainElement).toBeTruthy();
+    expect(mainElement?.classList.contains('flex-1')).toBe(true);
+  });
 });
