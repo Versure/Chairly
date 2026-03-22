@@ -18,6 +18,13 @@ internal sealed partial class TenantContextMiddleware(RequestDelegate next, ILog
             return;
         }
 
+        // Platform admin requests (admin portal) are not tenant-scoped — skip tenant resolution.
+        if (httpContext.User.IsInRole("platform_admin"))
+        {
+            await next(httpContext).ConfigureAwait(false);
+            return;
+        }
+
         var tenantContext = httpContext.RequestServices.GetRequiredService<TenantContext>();
         var configuration = httpContext.RequestServices.GetRequiredService<IConfiguration>();
 
