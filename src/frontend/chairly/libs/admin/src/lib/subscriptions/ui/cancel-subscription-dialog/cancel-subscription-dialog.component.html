@@ -1,0 +1,47 @@
+<dialog
+  #dialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none flex items-center justify-center border-0 bg-black/50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Abonnement annuleren</h2>
+    <p class="text-gray-700 dark:text-gray-300 mb-4">Geef een reden op voor de annulering.</p>
+    <div class="mb-6">
+      <label
+        for="cancellation-reason"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Reden <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        id="cancellation-reason"
+        [formControl]="reasonControl"
+        rows="4"
+        class="w-full rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+        placeholder="Voer de reden voor annulering in..."></textarea>
+      @if (reasonControl.hasError('required') && reasonControl.touched) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Reden is verplicht.</p>
+      }
+      @if (reasonControl.hasError('maxlength')) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Maximaal 1000 tekens.</p>
+      }
+    </div>
+    <div class="flex justify-end gap-3">
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+        [disabled]="isSubmitting()"
+        (click)="onCancel()">
+        Annuleren
+      </button>
+      <button
+        type="button"
+        class="rounded-md bg-red-600 dark:bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50"
+        [disabled]="isSubmitting() || reasonControl.invalid"
+        (click)="onConfirm()">
+        @if (isSubmitting()) {
+          Bezig...
+        } @else {
+          Annuleren
+        }
+      </button>
+    </div>
+  </div>
+</dialog>

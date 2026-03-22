@@ -1,0 +1,16 @@
+{
+  "name": "chairly-admin-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/chairly-admin-e2e/src",
+  "implicitDependencies": ["chairly-admin"],
+  "targets": {
+    "e2e-ui": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx playwright test --ui",
+        "cwd": "apps/chairly-admin-e2e"
+      }
+    }
+  }
+}

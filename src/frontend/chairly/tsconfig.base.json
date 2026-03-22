@@ -17,6 +17,7 @@
     "paths": {
       "@org/chairly-lib": ["libs/chairly/src/index.ts"],
       "@org/shared-lib": ["libs/shared/src/index.ts"],
+      "@org/admin-lib": ["libs/admin/src/index.ts"],
       "@org/website-lib": ["libs/website/src/index.ts"]
     }
   },
