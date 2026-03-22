@@ -1,0 +1,168 @@
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Abonnementen</h1>
+      @if (!isLoading()) {
+        <span
+          class="inline-flex items-center rounded-full bg-gray-100 dark:bg-slate-700 px-2.5 py-0.5 text-sm font-medium text-gray-800 dark:text-gray-200">
+          {{ totalCount() }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+    <div class="flex-1">
+      <input
+        type="text"
+        class="w-full rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 placeholder-gray-500 dark:placeholder-gray-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+        placeholder="Zoeken op salonnaam, e-mail, naam..."
+        [value]="searchValue()"
+        (input)="onSearchInput($event)" />
+    </div>
+    <div class="flex gap-3">
+      <select
+        class="rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+        [value]="statusFilter()"
+        (change)="onStatusChange($event)">
+        <option value="">Alle statussen</option>
+        <option value="pending">In afwachting</option>
+        <option value="trial">Proefperiode</option>
+        <option value="provisioned">Actief</option>
+        <option value="cancelled">Geannuleerd</option>
+      </select>
+      <select
+        class="rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400"
+        [value]="planFilter()"
+        (change)="onPlanChange($event)">
+        <option value="">Alle plannen</option>
+        <option value="starter">Starter</option>
+        <option value="team">Team</option>
+        <option value="salon">Salon</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Table -->
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-12">
+      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+    </div>
+  } @else if (items().length === 0) {
+    <div class="flex items-center justify-center py-12">
+      <p class="text-gray-500 dark:text-gray-400">Geen abonnementen gevonden.</p>
+    </div>
+  } @else {
+    <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-slate-700">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+        <thead class="bg-gray-50 dark:bg-slate-800">
+          <tr>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Salonnaam
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Eigenaar
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              E-mail
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Plan
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Status
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Aangemaakt
+            </th>
+            <th
+              class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Acties
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+          @for (item of items(); track item.id) {
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700">
+              <td
+                class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                {{ item.salonName }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                {{ item.ownerName }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                {{ item.email }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                {{ item.plan | titlecase }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm">
+                @let badge = item.status | subscriptionStatusBadge;
+                <span
+                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  [class]="badge.cssClass">
+                  {{ badge.label }}
+                </span>
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                {{ item.createdAtUtc | date: 'd MMM y' }}
+              </td>
+              <td class="whitespace-nowrap px-4 py-3 text-sm">
+                <a
+                  [routerLink]="['/abonnementen', item.id]"
+                  class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+                  Bekijken
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <div class="flex items-center gap-2">
+        <label for="page-size" class="text-sm text-gray-700 dark:text-gray-300">Per pagina:</label>
+        <select
+          id="page-size"
+          class="rounded-md border border-gray-300 dark:border-slate-600 px-2 py-1 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
+          [value]="pageSize()"
+          (change)="onPageSizeChange($event)">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          [disabled]="page() <= 1"
+          (click)="onPreviousPage()">
+          Vorige
+        </button>
+        <span class="text-sm text-gray-700 dark:text-gray-300">
+          Pagina {{ page() }} van {{ totalPages() }}
+        </span>
+        <button
+          type="button"
+          class="rounded-md border border-gray-300 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          [disabled]="page() >= totalPages()"
+          (click)="onNextPage()">
+          Volgende
+        </button>
+      </div>
+    </div>
+  }
+</div>

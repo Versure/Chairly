@@ -15,6 +15,11 @@ export const sheriffConfig: SheriffConfig = {
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
       'settings/<layer>': ['domain:settings', 'layer:<layer>'],
     },
+    'libs/admin/src': ['admin-lib'],
+    'libs/admin/src/lib': {
+      layout: ['admin-layout'],
+      'subscriptions/<layer>': ['domain:subscriptions-admin', 'layer:<layer>'],
+    },
     'libs/website/src': ['website-lib'],
     'libs/website/src/lib': {
       'onboarding/<layer>': ['domain:onboarding', 'layer:<layer>'],
@@ -29,7 +34,7 @@ export const sheriffConfig: SheriffConfig = {
 
   depRules: {
     // App (root) can depend on any library barrel or shared
-    root: ['chairly-lib', 'website-lib', 'shared'],
+    root: ['chairly-lib', 'website-lib', 'admin-lib', 'shared'],
 
     // chairly-lib barrel re-exports from domain layers
     'chairly-lib': [
@@ -42,6 +47,15 @@ export const sheriffConfig: SheriffConfig = {
       'domain:staff',
       'shared',
     ],
+
+    // admin-lib barrel re-exports from domain layers
+    'admin-lib': ['domain:subscriptions-admin', 'admin-layout', 'shared'],
+
+    // admin-layout can import shared
+    'admin-layout': ['shared'],
+
+    // subscriptions-admin domain
+    'domain:subscriptions-admin': [sameTag, 'admin-layout', 'shared'],
 
     // website-lib barrel re-exports from domain layers
     'website-lib': ['domain:onboarding', 'shared'],
