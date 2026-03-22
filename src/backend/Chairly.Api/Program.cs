@@ -1,3 +1,4 @@
+using Chairly.Api.Features.Admin;
 using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
@@ -31,6 +32,7 @@ builder.AddServiceDefaults();
 builder.Services.AddMediator();
 builder.Services.AddScoped<InvoiceLineItemBuilder>();
 builder.Services.AddScoped<Chairly.Api.Features.Billing.SendInvoice.IInvoicePdfGenerator, Chairly.Api.Features.Billing.SendInvoice.InvoicePdfGenerator>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
@@ -59,9 +61,17 @@ var requireHttpsMetadata = !keycloakUrl.StartsWith("http://", StringComparison.O
 var jwksCache = new KeycloakJwksCache(requireHttpsMetadata);
 builder.Services.AddSingleton(jwksCache);
 var keycloakClientId = builder.Configuration["Keycloak:ClientId"];
-var validAudiences = string.IsNullOrWhiteSpace(keycloakClientId)
-    ? new[] { "account" }
-    : new[] { "account", keycloakClientId };
+var adminPortalClientId = builder.Configuration["Keycloak:AdminPortalClientId"];
+var validAudiences = new List<string> { "account" };
+if (!string.IsNullOrWhiteSpace(keycloakClientId))
+{
+    validAudiences.Add(keycloakClientId);
+}
+
+if (!string.IsNullOrWhiteSpace(adminPortalClientId))
+{
+    validAudiences.Add(adminPortalClientId);
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -70,7 +80,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidAudiences = validAudiences,
+            ValidAudiences = validAudiences.ToArray(),
             IssuerValidator = (issuer, _, _) =>
             {
                 if (issuer.StartsWith(keycloakUrl + "/realms/", StringComparison.Ordinal))
@@ -93,6 +103,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("RequireOwner", p => p.RequireRole("owner"));
     options.AddPolicy("RequireManager", p => p.RequireRole("owner", "manager"));
     options.AddPolicy("RequireStaff", p => p.RequireRole("owner", "manager", "staff_member"));
+    options.AddPolicy("RequirePlatformAdmin", p => p.RequireRole("platform_admin"));
 });
 
 // Claims transformation: map Keycloak realm_access roles to ClaimTypes.Role.
@@ -150,6 +161,7 @@ app.MapNotificationEndpoints();
 app.MapConfigEndpoints();
 app.MapTenantEndpoints();
 app.MapOnboardingEndpoints();
+app.MapAdminEndpoints();
 
 // Rollout model: startup migrations are safe for single-leader and rolling deployments.
 // A PostgreSQL advisory lock (key 1_000_000_001) serialises concurrent migration attempts

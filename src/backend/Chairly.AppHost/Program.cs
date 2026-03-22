@@ -74,6 +74,8 @@ builder.AddProject<Projects.Chairly_Api>("api")
     .WithEnvironment("Keycloak__AdminPassword", keycloakAdminPassword)
     .WithEnvironment("Keycloak__TenantId", defaultTenantId)
     .WithEnvironment("Keycloak__AdminClientSecret", keycloakAdminClientSecret)
+    .WithEnvironment("Keycloak__AdminPortalRealm", "chairly-admin")
+    .WithEnvironment("Keycloak__AdminPortalClientId", "chairly-admin-portal")
     // MailDev SMTP endpoint as seen from Docker containers (Keycloak realm SMTP config).
     // Uses the Docker network hostname ("maildev") and internal target port (1025),
     // not the host-mapped endpoint, because Keycloak runs inside Docker.
