@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 
-import { AuthStore } from '@org/shared-lib';
+import { AuthStore, PageHeaderComponent } from '@org/shared-lib';
 
 import { DashboardStore } from '../../data-access';
 import { DashboardBookingListComponent, DashboardStatsComponent } from '../../ui';
@@ -9,7 +9,7 @@ import { DashboardBookingListComponent, DashboardStatsComponent } from '../../ui
   selector: 'chairly-dashboard-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DashboardStatsComponent, DashboardBookingListComponent],
+  imports: [DashboardStatsComponent, DashboardBookingListComponent, PageHeaderComponent],
   templateUrl: './dashboard-page.component.html',
 })
 export class DashboardPageComponent implements OnInit {
