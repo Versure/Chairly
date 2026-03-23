@@ -52,6 +52,9 @@ internal static partial class KeycloakDevSeeder
         // Step 1c: Assign realm-management roles to the admin service account (idempotent).
         await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, realmName, adminClientId, logger, ct).ConfigureAwait(false);
 
+        // Step 5: Seed admin realm for the admin portal (always, before tenant user check).
+        await SeedAdminRealmAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
+
         // Step 2: Create user (skip if already exists).
         var userId = await CreateUserAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
 
@@ -69,9 +72,6 @@ internal static partial class KeycloakDevSeeder
         await AssignRoleAsync(httpClientFactory, token, keycloakUrl, realmName, userId, logger, ct).ConfigureAwait(false);
 
         LogSeedComplete(logger, DefaultEmail, DefaultPassword);
-
-        // Step 5: Seed admin realm for the admin portal.
-        await SeedAdminRealmAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
     }
 
     private const string AdminRealmName = "chairly-admin";
