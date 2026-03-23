@@ -9,13 +9,15 @@
 
   @if (store.dashboard(); as dashboard) {
     <!-- Stat cards row -->
-    <chairly-dashboard-stats
-      [todaysBookingsCount]="dashboard.todaysBookingsCount"
-      [newClientsThisWeek]="dashboard.newClientsThisWeek"
-      [revenueThisWeek]="dashboard.revenueThisWeek"
-      [revenueThisMonth]="dashboard.revenueThisMonth"
-      [isOwner]="authStore.isOwner()"
-      [isManager]="authStore.isManager()" />
+    <div class="mb-6">
+      <chairly-dashboard-stats
+        [todaysBookingsCount]="dashboard.todaysBookingsCount"
+        [newClientsThisWeek]="dashboard.newClientsThisWeek"
+        [revenueThisWeek]="dashboard.revenueThisWeek"
+        [revenueThisMonth]="dashboard.revenueThisMonth"
+        [isOwner]="authStore.isOwner()"
+        [isManager]="authStore.isManager()" />
+    </div>
 
     <!-- Two-column layout for booking lists -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
