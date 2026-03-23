@@ -1,30 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ENV_FILE="$REPO_ROOT/.env"
 PROJECT="src/backend/Chairly.AppHost/Chairly.AppHost.csproj"
 
-echo "Setting user-secrets for Chairly.AppHost..."
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Error: .env file not found at $ENV_FILE"
+  echo "Copy .env.example to .env and fill in the secret values:"
+  echo "  cp .env.example .env"
+  exit 1
+fi
 
-# Aspire parameters (used by builder.AddParameter)
-dotnet user-secrets set "Parameters:rabbitmq-user" "chairly" --project "$PROJECT"
-dotnet user-secrets set "Parameters:rabbitmq-password" "chairly" --project "$PROJECT"
-dotnet user-secrets set "Parameters:keycloak-admin-password" "admin" --project "$PROJECT"
-dotnet user-secrets set "Parameters:keycloak-admin-client-secret" "chairly-admin-secret" --project "$PROJECT"
+# Parse .env file: skip comments and blank lines, read KEY=VALUE pairs
+set -a
+while IFS='=' read -r key value; do
+  # Skip comments and empty lines
+  [[ -z "$key" || "$key" =~ ^# ]] && continue
+  # Trim whitespace
+  key="$(echo "$key" | xargs)"
+  value="$(echo "$value" | xargs)"
+  # Skip placeholder values
+  if [[ "$value" == "<"*">" ]]; then
+    echo "WARNING: Skipping $key — still has placeholder value. Update your .env file."
+    continue
+  fi
+  # Convert env var format (double underscore) to config format (colon)
+  config_key="${key//__/:}"
+  dotnet user-secrets set "$config_key" "$value" --project "$PROJECT"
+done < "$ENV_FILE"
+set +a
 
-# Application configuration (used by builder.Configuration[...])
-dotnet user-secrets set "Chairly:DefaultRealm" "chairly" --project "$PROJECT"
-dotnet user-secrets set "Chairly:DefaultTenantId" "00000000-0000-0000-0000-000000000001" --project "$PROJECT"
-
-# SMTP
-dotnet user-secrets set "Smtp:FromAddress" "noreply@chairly.local" --project "$PROJECT"
-dotnet user-secrets set "Smtp:FromName" "Chairly" --project "$PROJECT"
-
-# Keycloak
-dotnet user-secrets set "Keycloak:ClientId" "chairly-frontend" --project "$PROJECT"
-dotnet user-secrets set "Keycloak:AdminClientId" "chairly-admin" --project "$PROJECT"
-dotnet user-secrets set "Keycloak:AdminPortalRealm" "chairly-admin" --project "$PROJECT"
-dotnet user-secrets set "Keycloak:AdminPortalClientId" "chairly-admin-portal" --project "$PROJECT"
-dotnet user-secrets set "Keycloak:SmtpHost" "maildev" --project "$PROJECT"
-dotnet user-secrets set "Keycloak:SmtpPort" "1025" --project "$PROJECT"
-
+echo ""
 echo "Done. All user-secrets configured for local development."
+echo "Run the AppHost with: dotnet run --project $PROJECT"
