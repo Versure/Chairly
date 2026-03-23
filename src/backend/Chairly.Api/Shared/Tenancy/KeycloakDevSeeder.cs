@@ -53,7 +53,7 @@ internal static partial class KeycloakDevSeeder
         await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, realmName, adminClientId, logger, ct).ConfigureAwait(false);
 
         // Step 5: Seed admin realm for the admin portal (always, before tenant user check).
-        await SeedAdminRealmAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
+        await SeedAdminRealmAsync(httpClientFactory, token, keycloakUrl, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
 
         // Step 2: Create user (skip if already exists).
         var userId = await CreateUserAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
@@ -84,10 +84,13 @@ internal static partial class KeycloakDevSeeder
 
     private static async Task SeedAdminRealmAsync(
         IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
-        ILogger logger, CancellationToken ct)
+        string adminClientId, string adminClientSecret, ILogger logger, CancellationToken ct)
     {
         // Step 5a: Create admin realm (skip if already exists).
-        await CreateAdminRealmAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
+        await CreateAdminRealmAsync(httpClientFactory, token, keycloakUrl, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
+
+        // Step 5a2: Assign realm-management roles to admin service account in admin realm (idempotent).
+        await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, AdminRealmName, adminClientId, logger, ct).ConfigureAwait(false);
 
         // Step 5b: Create admin user (skip if already exists).
         var adminUserId = await CreateAdminUserAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
@@ -110,7 +113,7 @@ internal static partial class KeycloakDevSeeder
 
     private static async Task CreateAdminRealmAsync(
         IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
-        ILogger logger, CancellationToken ct)
+        string adminClientId, string adminClientSecret, ILogger logger, CancellationToken ct)
     {
         using var client = httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -131,6 +134,16 @@ internal static partial class KeycloakDevSeeder
                     directAccessGrantsEnabled = false,
                     redirectUris = new[] { "*" },
                     webOrigins = new[] { "*" },
+                },
+                new
+                {
+                    clientId = adminClientId,
+                    publicClient = false,
+                    serviceAccountsEnabled = true,
+                    standardFlowEnabled = false,
+                    directAccessGrantsEnabled = false,
+                    clientAuthenticatorType = "client-secret",
+                    secret = adminClientSecret,
                 },
             },
             roles = new
