@@ -1,0 +1,37 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <!-- Boekingen vandaag -->
+  <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Boekingen vandaag</p>
+    <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{{ todaysBookingsCount() }}</p>
+  </div>
+
+  <!-- Nieuwe klanten -->
+  @if (isOwner() || isManager()) {
+    <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Nieuwe klanten</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+        {{ newClientsThisWeek() }}
+      </p>
+    </div>
+  }
+
+  <!-- Omzet deze week -->
+  @if (isOwner()) {
+    <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Omzet deze week</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+        {{ revenueThisWeek() | currency: 'EUR' }}
+      </p>
+    </div>
+  }
+
+  <!-- Omzet deze maand -->
+  @if (isOwner()) {
+    <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Omzet deze maand</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+        {{ revenueThisMonth() | currency: 'EUR' }}
+      </p>
+    </div>
+  }
+</div>

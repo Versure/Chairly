@@ -5,6 +5,18 @@ async function setupAllApiMocks(page: import('@playwright/test').Page): Promise<
   await page.route('**/api/service-categories', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/staff', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/clients', (route) => route.fulfill({ json: [] }));
+  await page.route('**/api/dashboard', (route) =>
+    route.fulfill({
+      json: {
+        todaysBookingsCount: 0,
+        todaysBookings: [],
+        upcomingBookings: [],
+        newClientsThisWeek: 0,
+        revenueThisWeek: 0,
+        revenueThisMonth: 0,
+      },
+    }),
+  );
 }
 
 test.describe('Collapsible sidebar navigation', () => {
@@ -105,11 +117,11 @@ test.describe('Navigation icons', () => {
 });
 
 test.describe('Cross-cutting navigation and theme', () => {
-  test('navigating to / redirects to /diensten', async ({ page }) => {
+  test('navigating to / redirects to /dashboard', async ({ page }) => {
     await setupAllApiMocks(page);
     await page.goto('/');
 
-    await expect(page).toHaveURL(/\/diensten/);
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test('all nav links navigate to correct pages', async ({ page }) => {
