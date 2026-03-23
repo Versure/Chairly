@@ -8,6 +8,7 @@ using Chairly.Api.Features.Admin.UpdateSubscriptionPlan;
 using Chairly.Api.Features.Config.GetAdminConfig;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
+using Chairly.Infrastructure.Keycloak;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,16 @@ public class AdminSubscriptionHandlerTests
             .Options;
         return new WebsiteDbContext(options);
     }
+
+    private static IConfiguration CreateConfiguration() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal)
+            {
+                ["Keycloak:Url"] = "http://localhost:8080",
+                ["Keycloak:AdminPortalRealm"] = "chairly-admin",
+                ["Keycloak:AdminPortalClientId"] = "chairly-admin-portal",
+            })
+            .Build();
 
     private static Subscription CreateTestSubscription(WebsiteDbContext db, Action<Subscription>? configure = null)
     {
@@ -63,14 +74,7 @@ public class AdminSubscriptionHandlerTests
     [Fact]
     public async Task GetAdminConfigHandler_ReturnsConfigValues()
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.Ordinal)
-            {
-                ["Keycloak:Url"] = "http://localhost:8080",
-                ["Keycloak:AdminPortalRealm"] = "chairly-admin",
-                ["Keycloak:AdminPortalClientId"] = "chairly-admin-portal",
-            })
-            .Build();
+        var config = CreateConfiguration();
         var handler = new GetAdminConfigHandler(config);
 
         var result = await handler.Handle(new GetAdminConfigQuery());
@@ -254,7 +258,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new GetAdminSubscriptionHandler(db);
+        var handler = new GetAdminSubscriptionHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new GetAdminSubscriptionQuery(entity.Id));
 
@@ -270,7 +274,7 @@ public class AdminSubscriptionHandlerTests
     public async Task GetAdminSubscriptionHandler_NonExistentId_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new GetAdminSubscriptionHandler(db);
+        var handler = new GetAdminSubscriptionHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new GetAdminSubscriptionQuery(Guid.NewGuid()));
 
@@ -283,7 +287,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.TrialEndsAtUtc = DateTimeOffset.UtcNow.AddDays(30); s.BillingCycle = null; });
-        var handler = new GetAdminSubscriptionHandler(db);
+        var handler = new GetAdminSubscriptionHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new GetAdminSubscriptionQuery(entity.Id));
 
@@ -292,21 +296,39 @@ public class AdminSubscriptionHandlerTests
         Assert.True(response.IsTrial);
     }
 
+    [Fact]
+    public async Task GetAdminSubscriptionHandler_WithCreatedBy_ResolvesDisplayName()
+    {
+        await using var db = CreateDbContext();
+        var userId = Guid.NewGuid();
+        var entity = CreateTestSubscription(db, s => s.CreatedBy = userId);
+        var fakeKeycloak = new FakeKeycloakAdminService();
+        fakeKeycloak.SetDisplayName(userId, "Admin User");
+        var handler = new GetAdminSubscriptionHandler(db, fakeKeycloak, CreateConfiguration());
+
+        var result = await handler.Handle(new GetAdminSubscriptionQuery(entity.Id));
+
+        var response = result.AsT0;
+        Assert.Equal("Admin User", response.CreatedByName);
+    }
+
     // --- ProvisionSubscription ---
 
     [Fact]
-    public async Task ProvisionSubscriptionHandler_PendingSubscription_SetsProvisionedAtUtcAndBy()
+    public async Task ProvisionSubscriptionHandler_PendingSubscription_SetsProvisionedAtUtcAndByName()
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
         var adminId = Guid.NewGuid();
-        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor(adminId));
+        var fakeKeycloak = new FakeKeycloakAdminService();
+        fakeKeycloak.SetDisplayName(adminId, "Admin Piet");
+        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor(adminId), fakeKeycloak, CreateConfiguration());
 
         var result = await handler.Handle(new ProvisionSubscriptionCommand { Id = entity.Id });
 
         var response = result.AsT0;
         Assert.NotNull(response.ProvisionedAtUtc);
-        Assert.Equal(adminId, response.ProvisionedBy);
+        Assert.Equal("Admin Piet", response.ProvisionedByName);
         Assert.Equal("provisioned", response.Status);
     }
 
@@ -315,7 +337,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.ProvisionedAtUtc = DateTimeOffset.UtcNow; s.ProvisionedBy = Guid.NewGuid(); });
-        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor());
+        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor(), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new ProvisionSubscriptionCommand { Id = entity.Id });
 
@@ -327,7 +349,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.CancelledAtUtc = DateTimeOffset.UtcNow; s.CancellationReason = "Test"; });
-        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor());
+        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor(), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new ProvisionSubscriptionCommand { Id = entity.Id });
 
@@ -338,7 +360,7 @@ public class AdminSubscriptionHandlerTests
     public async Task ProvisionSubscriptionHandler_NonExistent_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor());
+        var handler = new ProvisionSubscriptionHandler(db, CreateMockHttpContextAccessor(), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new ProvisionSubscriptionCommand { Id = Guid.NewGuid() });
 
@@ -354,13 +376,15 @@ public class AdminSubscriptionHandlerTests
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
         var adminId = Guid.NewGuid();
-        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(adminId));
+        var fakeKeycloak = new FakeKeycloakAdminService();
+        fakeKeycloak.SetDisplayName(adminId, "Admin Karel");
+        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(adminId), fakeKeycloak, CreateConfiguration());
 
         var result = await handler.Handle(new CancelSubscriptionCommand { Id = entity.Id, CancellationReason = "Niet betaald" });
 
         var response = result.AsT0;
         Assert.NotNull(response.CancelledAtUtc);
-        Assert.Equal(adminId, response.CancelledBy);
+        Assert.Equal("Admin Karel", response.CancelledByName);
         Assert.Equal("Niet betaald", response.CancellationReason);
         Assert.Equal("cancelled", response.Status);
     }
@@ -370,7 +394,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.ProvisionedAtUtc = DateTimeOffset.UtcNow; });
-        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(Guid.NewGuid()));
+        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(Guid.NewGuid()), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new CancelSubscriptionCommand { Id = entity.Id, CancellationReason = "Opzeggen" });
 
@@ -383,7 +407,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.CancelledAtUtc = DateTimeOffset.UtcNow; s.CancellationReason = "Already"; });
-        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor());
+        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new CancelSubscriptionCommand { Id = entity.Id, CancellationReason = "Again" });
 
@@ -394,7 +418,7 @@ public class AdminSubscriptionHandlerTests
     public async Task CancelSubscriptionHandler_NonExistent_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor());
+        var handler = new CancelSubscriptionHandler(db, CreateMockHttpContextAccessor(), new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new CancelSubscriptionCommand { Id = Guid.NewGuid(), CancellationReason = "Test" });
 
@@ -421,7 +445,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "team", BillingCycle = "Monthly" });
 
@@ -434,7 +458,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "starter", BillingCycle = "Annual" });
 
@@ -447,7 +471,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "salon", BillingCycle = "Annual" });
 
@@ -461,7 +485,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.TrialEndsAtUtc = DateTimeOffset.UtcNow.AddDays(30); s.BillingCycle = null; });
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "starter", BillingCycle = "Monthly" });
 
@@ -476,7 +500,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db, s => { s.CancelledAtUtc = DateTimeOffset.UtcNow; s.CancellationReason = "Test"; });
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "team", BillingCycle = "Monthly" });
 
@@ -488,7 +512,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "enterprise", BillingCycle = "Monthly" });
 
@@ -500,7 +524,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "starter", BillingCycle = "Weekly" });
 
@@ -512,7 +536,7 @@ public class AdminSubscriptionHandlerTests
     {
         await using var db = CreateDbContext();
         var entity = CreateTestSubscription(db);
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = entity.Id, Plan = "starter", BillingCycle = null });
 
@@ -523,7 +547,7 @@ public class AdminSubscriptionHandlerTests
     public async Task UpdateSubscriptionPlanHandler_NonExistent_ReturnsNotFound()
     {
         await using var db = CreateDbContext();
-        var handler = new UpdateSubscriptionPlanHandler(db);
+        var handler = new UpdateSubscriptionPlanHandler(db, new FakeKeycloakAdminService(), CreateConfiguration());
 
         var result = await handler.Handle(new UpdateSubscriptionPlanCommand { Id = Guid.NewGuid(), Plan = "starter", BillingCycle = "Monthly" });
 
@@ -558,5 +582,115 @@ public class AdminSubscriptionHandlerTests
     {
         var s = new Subscription { CreatedAtUtc = DateTimeOffset.UtcNow, CancelledAtUtc = DateTimeOffset.UtcNow };
         Assert.Equal("cancelled", AdminSubscriptionMapper.DeriveStatus(s));
+    }
+
+    [Fact]
+    public void ToDetailResponse_WithNameMap_ResolvesNames()
+    {
+        var userId = Guid.NewGuid();
+        var s = new Subscription
+        {
+            Id = Guid.NewGuid(),
+            SalonName = "Test",
+            OwnerFirstName = "Jan",
+            OwnerLastName = "Jansen",
+            Email = "jan@test.nl",
+            Plan = SubscriptionPlan.Starter,
+            BillingCycle = BillingCycle.Monthly,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = userId,
+        };
+        var nameMap = new Dictionary<Guid, string> { [userId] = "Jan Admin" };
+
+        var response = AdminSubscriptionMapper.ToDetailResponse(s, nameMap);
+
+        Assert.Equal("Jan Admin", response.CreatedByName);
+    }
+
+    [Fact]
+    public void ToDetailResponse_WithoutNameMap_FallsBackToGuidString()
+    {
+        var userId = Guid.NewGuid();
+        var s = new Subscription
+        {
+            Id = Guid.NewGuid(),
+            SalonName = "Test",
+            OwnerFirstName = "Jan",
+            OwnerLastName = "Jansen",
+            Email = "jan@test.nl",
+            Plan = SubscriptionPlan.Starter,
+            BillingCycle = BillingCycle.Monthly,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = userId,
+        };
+
+        var response = AdminSubscriptionMapper.ToDetailResponse(s);
+
+        Assert.Equal(userId.ToString(), response.CreatedByName);
+    }
+
+    [Fact]
+    public void ToDetailResponse_NullUserId_ReturnsNullName()
+    {
+        var s = new Subscription
+        {
+            Id = Guid.NewGuid(),
+            SalonName = "Test",
+            OwnerFirstName = "Jan",
+            OwnerLastName = "Jansen",
+            Email = "jan@test.nl",
+            Plan = SubscriptionPlan.Starter,
+            BillingCycle = BillingCycle.Monthly,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+
+        var response = AdminSubscriptionMapper.ToDetailResponse(s);
+
+        Assert.Null(response.CreatedByName);
+        Assert.Null(response.ProvisionedByName);
+        Assert.Null(response.CancelledByName);
+    }
+
+    // --- FakeKeycloakAdminService ---
+
+    private sealed class FakeKeycloakAdminService : IKeycloakAdminService
+    {
+        private readonly Dictionary<Guid, string> _displayNames = [];
+
+        internal void SetDisplayName(Guid userId, string displayName) =>
+            _displayNames[userId] = displayName;
+
+        public Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default) =>
+            Task.FromResult(Guid.TryParse(userId, out var id) && _displayNames.TryGetValue(id, out var name) ? name : (string?)null);
+
+        public Task<string> CreateRealmAsync(Guid tenantId, string adminEmail, CancellationToken ct = default) =>
+            Task.FromResult(tenantId.ToString());
+
+        public Task<string> CreateUserAsync(Guid tenantId, string email, string firstName, string lastName, string role, CancellationToken ct = default) =>
+            Task.FromResult(Guid.NewGuid().ToString());
+
+        public Task UpdateUserAsync(Guid tenantId, string keycloakUserId, string email, string firstName, string lastName, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task DisableUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task EnableUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task DeleteUserAsync(Guid tenantId, string keycloakUserId, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task AssignRealmRoleAsync(Guid tenantId, string keycloakUserId, string roleName, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task SetPasswordAsync(Guid tenantId, string keycloakUserId, string password, bool temporary = false, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default) =>
+            Task.CompletedTask;
     }
 }

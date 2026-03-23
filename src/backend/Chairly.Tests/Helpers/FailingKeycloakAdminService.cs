@@ -38,4 +38,7 @@ internal sealed class FailingKeycloakAdminService : IKeycloakAdminService
     public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
         CancellationToken ct = default)
         => throw new HttpRequestException("Keycloak unreachable");
+
+    public Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default)
+        => throw new HttpRequestException("Keycloak unreachable");
 }

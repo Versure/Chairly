@@ -1,15 +1,20 @@
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Results;
 using Chairly.Domain.Enums;
+using Chairly.Infrastructure.Keycloak;
 using Chairly.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using OneOf;
 using OneOf.Types;
 
 #pragma warning disable CA1812
 namespace Chairly.Api.Features.Admin.UpdateSubscriptionPlan;
 
-internal sealed class UpdateSubscriptionPlanHandler(WebsiteDbContext db) : IRequestHandler<UpdateSubscriptionPlanCommand, OneOf<AdminSubscriptionDetailResponse, NotFound, Unprocessable>>
+internal sealed class UpdateSubscriptionPlanHandler(
+    WebsiteDbContext db,
+    IKeycloakAdminService keycloakAdmin,
+    IConfiguration configuration) : IRequestHandler<UpdateSubscriptionPlanCommand, OneOf<AdminSubscriptionDetailResponse, NotFound, Unprocessable>>
 {
     public async Task<OneOf<AdminSubscriptionDetailResponse, NotFound, Unprocessable>> Handle(UpdateSubscriptionPlanCommand command, CancellationToken cancellationToken = default)
     {
@@ -65,7 +70,42 @@ internal sealed class UpdateSubscriptionPlanHandler(WebsiteDbContext db) : IRequ
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return AdminSubscriptionMapper.ToDetailResponse(entity);
+        var nameMap = await ResolveUserNamesAsync(entity, cancellationToken).ConfigureAwait(false);
+        return AdminSubscriptionMapper.ToDetailResponse(entity, nameMap);
+    }
+
+    private async Task<Dictionary<Guid, string>> ResolveUserNamesAsync(Domain.Entities.Subscription entity, CancellationToken ct)
+    {
+        var realm = configuration["Keycloak:AdminPortalRealm"] ?? "chairly-admin";
+        var userIds = new HashSet<Guid>();
+
+        if (entity.CreatedBy.HasValue)
+        {
+            userIds.Add(entity.CreatedBy.Value);
+        }
+
+        if (entity.ProvisionedBy.HasValue)
+        {
+            userIds.Add(entity.ProvisionedBy.Value);
+        }
+
+        if (entity.CancelledBy.HasValue)
+        {
+            userIds.Add(entity.CancelledBy.Value);
+        }
+
+        var nameMap = new Dictionary<Guid, string>();
+
+        foreach (var userId in userIds)
+        {
+            var displayName = await keycloakAdmin.GetUserDisplayNameAsync(realm, userId.ToString(), ct).ConfigureAwait(false);
+            if (displayName is not null)
+            {
+                nameMap[userId] = displayName;
+            }
+        }
+
+        return nameMap;
     }
 }
 #pragma warning restore CA1812

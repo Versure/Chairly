@@ -69,4 +69,7 @@ internal sealed class NullKeycloakAdminService : IKeycloakAdminService
         SendActionsEmailCalled = true;
         return Task.CompletedTask;
     }
+
+    public Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default)
+        => Task.FromResult<string?>(null);
 }

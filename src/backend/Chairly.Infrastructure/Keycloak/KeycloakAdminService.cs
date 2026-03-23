@@ -256,6 +256,39 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(realmName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId);
+
+        try
+        {
+            var client = await GetAuthenticatedClientAsync(realmName, ct).ConfigureAwait(false);
+            var response = await client.GetAsync(
+                new Uri($"{_keycloakUrl}/admin/realms/{realmName}/users/{userId}"),
+                ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                LogUserLookupFailed(_logger, userId, realmName, (int)response.StatusCode);
+                return null;
+            }
+
+            var user = await response.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+            var firstName = user.TryGetProperty("firstName", out var fn) ? fn.GetString() : null;
+            var lastName = user.TryGetProperty("lastName", out var ln) ? ln.GetString() : null;
+
+            return string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName)
+                ? user.TryGetProperty("username", out var un) ? un.GetString() : null
+                : $"{firstName} {lastName}".Trim();
+        }
+        catch (HttpRequestException ex)
+        {
+            LogUserLookupException(_logger, userId, realmName, ex);
+            return null;
+        }
+    }
+
     private string ResolveRealm(Guid tenantId)
     {
         if (_configuredTenantId.HasValue
@@ -327,5 +360,11 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Obtained Keycloak admin token for realm {Realm}, expires in {ExpiresIn}s")]
     private static partial void LogTokenObtained(ILogger logger, string realm, int expiresIn);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to look up user {UserId} in realm {Realm}: HTTP {StatusCode}")]
+    private static partial void LogUserLookupFailed(ILogger logger, string userId, string realm, int statusCode);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Exception looking up user {UserId} in realm {Realm}")]
+    private static partial void LogUserLookupException(ILogger logger, string userId, string realm, Exception ex);
 }
 #pragma warning restore CA1812

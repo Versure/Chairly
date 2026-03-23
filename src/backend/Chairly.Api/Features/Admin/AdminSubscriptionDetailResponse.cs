@@ -13,9 +13,9 @@ internal sealed record AdminSubscriptionDetailResponse(
     string Status,
     DateTimeOffset? TrialEndsAtUtc,
     DateTimeOffset CreatedAtUtc,
-    Guid? CreatedBy,
+    string? CreatedByName,
     DateTimeOffset? ProvisionedAtUtc,
-    Guid? ProvisionedBy,
+    string? ProvisionedByName,
     DateTimeOffset? CancelledAtUtc,
-    Guid? CancelledBy,
+    string? CancelledByName,
     string? CancellationReason);
