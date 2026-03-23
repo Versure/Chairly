@@ -78,6 +78,30 @@ Manages client information and history.
 - At least one contact method (email or phone) should be provided
 - Client can be soft-deleted (not removed, to preserve booking history)
 
+- **Recipe** (Entity)
+  - `Id` (Guid)
+  - `TenantId` (Guid)
+  - `BookingId` (Guid) — the booking this recipe was created for
+  - `ClientId` (Guid)
+  - `StaffMemberId` (Guid)
+  - `Title` (string)
+  - `Notes` (string, optional)
+  - `Products` (List\<RecipeProduct\>)
+  - `CreatedAtUtc` (DateTimeOffset), `CreatedBy` (Guid)
+  - `UpdatedAtUtc` (DateTimeOffset, optional), `UpdatedBy` (Guid, optional)
+
+- **RecipeProduct** (Value Object)
+  - `Id` (Guid)
+  - `Name` (string)
+  - `Brand` (string, optional)
+  - `Quantity` (string, optional)
+  - `SortOrder` (int)
+
+**Business Rules (Recipes):**
+- A recipe is linked to a specific completed booking
+- Records what products and techniques were used during a visit
+- Staff can review a client's recipe history before their next booking
+
 ---
 
 ### 3. Staff
@@ -130,6 +154,7 @@ The catalog of services a salon offers.
   - `Description` (string, optional)
   - `Duration` (TimeSpan)
   - `Price` (decimal)
+  - `VatRate` (decimal) — VAT percentage applied to this service
   - `CategoryId` (Guid, optional)
   - `IsActive` (bool)
   - `SortOrder` (int)
@@ -227,6 +252,81 @@ Handles sending reminders and confirmations via email or SMS.
 
 ---
 
+### 7. Settings
+
+Per-tenant configuration for company information and VAT.
+
+**Entities:**
+
+- **TenantSettings** (Entity — one per tenant)
+  - `Id` (Guid)
+  - `TenantId` (Guid)
+  - `CompanyName` (string, optional)
+  - `CompanyEmail` (string, optional)
+  - `Street` (string, optional)
+  - `HouseNumber` (string, optional)
+  - `PostalCode` (string, optional)
+  - `City` (string, optional)
+  - `CompanyPhone` (string, optional)
+  - `IbanNumber` (string, optional)
+  - `VatNumber` (string, optional)
+  - `PaymentPeriodDays` (int, optional)
+  - `CreatedAtUtc` (DateTimeOffset), `CreatedBy` (Guid)
+  - `UpdatedAtUtc` (DateTimeOffset, optional), `UpdatedBy` (Guid, optional)
+
+- **VatSettings** (Entity — one per tenant)
+  - `Id` (Guid)
+  - `TenantId` (Guid)
+  - `DefaultVatRate` (decimal) — defaults to 21%
+  - `CreatedAtUtc` (DateTimeOffset), `CreatedBy` (Guid)
+  - `UpdatedAtUtc` (DateTimeOffset, optional), `UpdatedBy` (Guid, optional)
+
+**Business Rules:**
+- Only the Owner can manage tenant settings
+- Company information is used on invoices (name, address, VAT number, IBAN)
+- Default VAT rate is applied to new services unless overridden per service
+
+---
+
+### 8. Onboarding & Subscriptions
+
+Manages salon sign-up and subscription lifecycle. Stored in a separate **Website database** (not tenant-scoped).
+
+**Entities:**
+
+- **Subscription** (Aggregate Root)
+  - `Id` (Guid)
+  - `SalonName` (string)
+  - `OwnerFirstName` (string)
+  - `OwnerLastName` (string)
+  - `Email` (string)
+  - `PhoneNumber` (string, optional)
+  - `Plan` (SubscriptionPlan)
+  - `BillingCycle` (BillingCycle, optional)
+  - `TrialEndsAtUtc` (DateTimeOffset, optional)
+  - `CreatedAtUtc` (DateTimeOffset), `CreatedBy` (Guid, optional)
+  - `ProvisionedAtUtc` (DateTimeOffset, optional), `ProvisionedBy` (Guid, optional)
+  - `CancelledAtUtc` (DateTimeOffset, optional), `CancelledBy` (Guid, optional)
+  - `CancellationReason` (string, optional)
+
+**Derived Status (no status column — derived from timestamps):**
+- **Pending**: `CreatedAtUtc` is set, no other timestamps
+- **Active**: `ProvisionedAtUtc` is set, `CancelledAtUtc` is null
+- **Trial**: `TrialEndsAtUtc` is set and in the future
+- **Cancelled**: `CancelledAtUtc` is set
+
+**Enums:**
+
+- **SubscriptionPlan**: `Starter`, `Team`, `Salon`
+- **BillingCycle**: `Monthly`, `Annual`
+
+**Business Rules:**
+- A subscription represents a salon's sign-up via the public website
+- Provisioning creates the tenant (Keycloak realm, database, owner account)
+- Only platform admins can provision, update plan, or cancel subscriptions
+
+---
+
 ## Cross-Cutting: Identity & Multi-Tenancy
 
 Identity and tenancy are **not** a separate bounded context but a cross-cutting concern handled at the infrastructure level.
@@ -244,6 +344,10 @@ Tenant (cross-cutting)
   ├── StaffMember (1..N)
   │     └── WorkingHoursEntry (0..N)
   ├── Client (0..N)
+  │     └── Recipe (0..N)
+  │           ├── → Booking (N:1)
+  │           ├── → StaffMember (N:1)
+  │           └── RecipeProduct (0..N)
   ├── Service (1..N)
   │     └── ServiceCategory (0..N)
   ├── Booking (0..N)
@@ -255,8 +359,13 @@ Tenant (cross-cutting)
   │     ├── → Booking (1:1)
   │     ├── → Client (N:1)
   │     └── InvoiceLineItem (1..N)
-  └── Notification (0..N)
-        └── → Booking (N:1)
+  ├── Notification (0..N)
+  │     └── → Booking (N:1)
+  ├── TenantSettings (1:1)
+  └── VatSettings (1:1)
+
+Subscription (separate database — not tenant-scoped)
+  └── → Tenant (1:1, created on provisioning)
 ```
 
 ---
@@ -273,7 +382,11 @@ Tenant (cross-cutting)
 | **Service** | A specific offering from the salon catalog (e.g. "Men's Haircut", "Full Color"). |
 | **Service Category** | A grouping of services (e.g. "Haircuts", "Coloring", "Treatments"). |
 | **Invoice** | A billing document generated from a completed booking. |
+| **Recipe** | A record of products and techniques used during a client's visit, linked to a specific booking. |
 | **Working Hours** | The recurring weekly schedule defining when a staff member is available. |
+| **Tenant Settings** | Per-tenant company information (name, address, IBAN, VAT number) used on invoices and communications. |
+| **VAT Settings** | Per-tenant default VAT rate configuration. |
+| **Subscription** | A salon's sign-up record, tracking plan, billing cycle, and provisioning status. Stored in the website database. |
 | **Owner** | The staff role with full admin access to a tenant. One per tenant. |
 | **Manager** | A staff role that can manage staff and schedules but not billing or tenant settings. |
 | **No-Show** | A booking where the client did not arrive. Tracked as a booking status. |
@@ -292,4 +405,9 @@ Tenant (cross-cutting)
 | View all bookings | Yes | Yes | No |
 | View own bookings | Yes | Yes | Yes |
 | Manage billing/invoices | Yes | No | No |
+| Manage recipes | Yes | Yes | Yes |
 | View reports/dashboard | Yes | Yes | No |
+
+### Platform Admin
+
+A separate role outside of tenant scope. Platform admins access the **Admin Portal** to manage subscriptions (provision, update plan, cancel). They authenticate via a dedicated Keycloak realm (`chairly-admin`).

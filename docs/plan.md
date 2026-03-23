@@ -86,18 +86,20 @@ GitHub Actions workflow on every PR:
 
 ### 2.2 — Feature Roadmap (Implementation Order)
 
-| # | Feature | Why this order |
-|---|---------|----------------|
-| 1 | **Tenant & Auth Setup** | Foundation: multi-tenancy + authentication |
-| 2 | **Staff Management** | Who works there? Needed for everything that follows |
-| 3 | **Service Catalog** | What does the salon offer? |
-| 4 | **Client Management** | Who are the clients? |
-| 5 | **Booking Management** | Core feature — everything comes together here |
-| 6 | **Calendar View** | Visual representation of bookings |
-| 7 | **Notifications** | Booking confirmations, reminders (RabbitMQ + email) |
-| 8 | **Billing & Invoicing** | Invoicing after bookings |
-| 9 | **Dashboard & Reporting** | Revenue, occupancy, popular services |
-| 10 | **Client Portal** | Clients can book themselves (public-facing) |
+| # | Feature | Status | Notes |
+|---|---------|--------|-------|
+| 1 | **Tenant & Auth Setup** | Done | Multi-tenancy, Keycloak realm-per-tenant, JWT auth, role guards |
+| 2 | **Staff Management** | Done | CRUD, working hours/shift schedule, Keycloak user provisioning, activate/deactivate |
+| 3 | **Service Catalog** | Done | Services + categories, VAT rate per service, sort order, active toggle |
+| 4 | **Client Management** | Done | CRUD, detail page with booking/recipe/invoice history |
+| 5 | **Booking Management** | Done | Full lifecycle (create, edit, confirm, start, complete, cancel, no-show), list + schedule view |
+| 6 | **Recipes** | Done | Per-booking recipe with products, linked to client history |
+| 7 | **Notifications** | Done | Domain events via RabbitMQ, email dispatch, notification log |
+| 8 | **Billing & Invoicing** | Done | Invoice generation, line items, send/pay/void, VAT, PDF, regenerate |
+| 9 | **Settings** | Done | Company info + VAT settings (owner only) |
+| 10 | **Onboarding & Subscriptions** | Done | Public website with sign-up, admin portal for subscription management |
+| 11 | **Dashboard & Reporting** | Not started | Revenue, occupancy, popular services |
+| 12 | **Booking Widget** | Not started | Embeddable widget for salon websites — clients can self-book |
 
 ---
 
