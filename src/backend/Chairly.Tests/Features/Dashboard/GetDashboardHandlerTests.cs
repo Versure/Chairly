@@ -452,17 +452,43 @@ public class GetDashboardHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ManagerRole_RevenueThisWeek_ReturnsNull()
+    public async Task Handle_ManagerRole_RevenueThisWeek_ReturnsSumOfPaidInvoices()
     {
         await using var db = CreateDbContext();
         var tenantContext = TestTenantContext.Create();
         tenantContext.UserRole = "manager";
         CreateTestStaffMember(db, tenantContext.UserId.ToString());
 
+        CreateTestInvoice(db, 80m, paidAtUtc: WeekStart().AddHours(1));
+        CreateTestInvoice(db, 40m, paidAtUtc: WeekStart().AddDays(1));
+
         var handler = new GetDashboardHandler(db, tenantContext);
         var result = await handler.Handle(new GetDashboardQuery());
 
-        Assert.Null(result.RevenueThisWeek);
+        Assert.NotNull(result.RevenueThisWeek);
+        Assert.Equal(120m, result.RevenueThisWeek);
+    }
+
+    [Fact]
+    public async Task Handle_ManagerRole_RevenueThisMonth_ReturnsSumOfPaidInvoices()
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        tenantContext.UserRole = "manager";
+        CreateTestStaffMember(db, tenantContext.UserId.ToString());
+
+        var monthStart = new DateTimeOffset(
+            new DateTime(DateTimeOffset.UtcNow.Year, DateTimeOffset.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            TimeSpan.Zero);
+
+        CreateTestInvoice(db, 150m, paidAtUtc: monthStart.AddHours(1));
+        CreateTestInvoice(db, 250m, paidAtUtc: monthStart.AddDays(3));
+
+        var handler = new GetDashboardHandler(db, tenantContext);
+        var result = await handler.Handle(new GetDashboardQuery());
+
+        Assert.NotNull(result.RevenueThisMonth);
+        Assert.Equal(400m, result.RevenueThisMonth);
     }
 
     [Fact]
@@ -501,11 +527,11 @@ public class GetDashboardHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NonOwnerRole_RevenueThisMonth_ReturnsNull()
+    public async Task Handle_StaffMemberRole_RevenueThisMonth_ReturnsNull()
     {
         await using var db = CreateDbContext();
         var tenantContext = TestTenantContext.Create();
-        tenantContext.UserRole = "manager";
+        tenantContext.UserRole = "staff_member";
         CreateTestStaffMember(db, tenantContext.UserId.ToString());
 
         var handler = new GetDashboardHandler(db, tenantContext);
