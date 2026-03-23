@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.5734" branch-rate="0.5672999999999999" version="1.9" timestamp="1774289921" lines-covered="3593" lines-valid="6266" branches-covered="623" branches-valid="1098">
+<coverage line-rate="0.5734" branch-rate="0.5672999999999999" version="1.9" timestamp="1774294890" lines-covered="3594" lines-valid="6267" branches-covered="623" branches-valid="1098">
   <sources>
     <source>/home/jreuvers/projects/Chairly/.worktrees/dashboard/backend/src/backend/</source>
   </sources>
@@ -5116,124 +5116,126 @@
             <line number="17" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Shared.Tenancy.KeycloakRoleClaimTransformer" filename="Chairly.Api/Shared/Tenancy/KeycloakRoleClaimTransformer.cs" line-rate="0.7931" branch-rate="0.625" complexity="16">
+        <class name="Chairly.Api.Shared.Tenancy.KeycloakRoleClaimTransformer" filename="Chairly.Api/Shared/Tenancy/KeycloakRoleClaimTransformer.cs" line-rate="0.8" branch-rate="0.625" complexity="16">
           <methods>
-            <method name="TransformAsync" signature="(System.Security.Claims.ClaimsPrincipal)" line-rate="0.7931" branch-rate="0.625" complexity="16">
+            <method name="TransformAsync" signature="(System.Security.Claims.ClaimsPrincipal)" line-rate="0.8" branch-rate="0.625" complexity="16">
               <lines>
-                <line number="11" hits="3" branch="False" />
-                <line number="12" hits="3" branch="False" />
-                <line number="14" hits="3" branch="True" condition-coverage="50% (1/2)">
+                <line number="11" hits="4" branch="False" />
+                <line number="12" hits="4" branch="False" />
+                <line number="14" hits="4" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="34" type="jump" coverage="50%" />
                   </conditions>
                 </line>
                 <line number="15" hits="0" branch="False" />
                 <line number="16" hits="0" branch="False" />
-                <line number="19" hits="3" branch="True" condition-coverage="50% (1/2)">
+                <line number="19" hits="4" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="61" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="20" hits="3" branch="True" condition-coverage="50% (1/2)">
+                <line number="20" hits="4" branch="True" condition-coverage="50% (1/2)">
                   <conditions>
                     <condition number="81" type="jump" coverage="50%" />
                   </conditions>
                 </line>
                 <line number="21" hits="0" branch="False" />
                 <line number="22" hits="0" branch="False" />
-                <line number="26" hits="3" branch="False" />
-                <line number="27" hits="3" branch="False" />
-                <line number="28" hits="2" branch="True" condition-coverage="50% (2/4)">
+                <line number="26" hits="4" branch="False" />
+                <line number="27" hits="4" branch="False" />
+                <line number="28" hits="3" branch="True" condition-coverage="50% (2/4)">
                   <conditions>
                     <condition number="139" type="jump" coverage="50%" />
                     <condition number="161" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="29" hits="2" branch="False" />
+                <line number="29" hits="3" branch="False" />
                 <line number="30" hits="0" branch="False" />
                 <line number="31" hits="0" branch="False" />
-                <line number="34" hits="12" branch="True" condition-coverage="100% (2/2)">
+                <line number="34" hits="3" branch="False" />
+                <line number="35" hits="17" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
-                    <condition number="274" type="jump" coverage="100%" />
+                    <condition number="276" type="jump" coverage="100%" />
                   </conditions>
                 </line>
-                <line number="35" hits="3" branch="False" />
-                <line number="36" hits="3" branch="False" />
-                <line number="37" hits="3" branch="True" condition-coverage="75% (3/4)">
+                <line number="36" hits="4" branch="False" />
+                <line number="37" hits="4" branch="False" />
+                <line number="38" hits="4" branch="True" condition-coverage="75% (3/4)">
                   <conditions>
-                    <condition number="218" type="jump" coverage="50%" />
-                    <condition number="243" type="jump" coverage="100%" />
+                    <condition number="226" type="jump" coverage="50%" />
+                    <condition number="248" type="jump" coverage="100%" />
                   </conditions>
                 </line>
-                <line number="38" hits="2" branch="False" />
-                <line number="39" hits="2" branch="False" />
-                <line number="40" hits="2" branch="False" />
+                <line number="39" hits="3" branch="False" />
+                <line number="40" hits="3" branch="False" />
                 <line number="41" hits="3" branch="False" />
-                <line number="42" hits="2" branch="False" />
-                <line number="43" hits="1" branch="False" />
+                <line number="42" hits="4" branch="False" />
+                <line number="43" hits="3" branch="False" />
                 <line number="44" hits="1" branch="False" />
-                <line number="46" hits="1" branch="False" />
-                <line number="48" hits="3" branch="False" />
-                <line number="49" hits="3" branch="False" />
+                <line number="45" hits="1" branch="False" />
+                <line number="47" hits="1" branch="False" />
+                <line number="49" hits="4" branch="False" />
+                <line number="50" hits="4" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="11" hits="3" branch="False" />
-            <line number="12" hits="3" branch="False" />
-            <line number="14" hits="3" branch="True" condition-coverage="50% (1/2)">
+            <line number="11" hits="4" branch="False" />
+            <line number="12" hits="4" branch="False" />
+            <line number="14" hits="4" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="34" type="jump" coverage="50%" />
               </conditions>
             </line>
             <line number="15" hits="0" branch="False" />
             <line number="16" hits="0" branch="False" />
-            <line number="19" hits="3" branch="True" condition-coverage="50% (1/2)">
+            <line number="19" hits="4" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="61" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="20" hits="3" branch="True" condition-coverage="50% (1/2)">
+            <line number="20" hits="4" branch="True" condition-coverage="50% (1/2)">
               <conditions>
                 <condition number="81" type="jump" coverage="50%" />
               </conditions>
             </line>
             <line number="21" hits="0" branch="False" />
             <line number="22" hits="0" branch="False" />
-            <line number="26" hits="3" branch="False" />
-            <line number="27" hits="3" branch="False" />
-            <line number="28" hits="2" branch="True" condition-coverage="50% (2/4)">
+            <line number="26" hits="4" branch="False" />
+            <line number="27" hits="4" branch="False" />
+            <line number="28" hits="3" branch="True" condition-coverage="50% (2/4)">
               <conditions>
                 <condition number="139" type="jump" coverage="50%" />
                 <condition number="161" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="29" hits="2" branch="False" />
+            <line number="29" hits="3" branch="False" />
             <line number="30" hits="0" branch="False" />
             <line number="31" hits="0" branch="False" />
-            <line number="34" hits="12" branch="True" condition-coverage="100% (2/2)">
+            <line number="34" hits="3" branch="False" />
+            <line number="35" hits="17" branch="True" condition-coverage="100% (2/2)">
               <conditions>
-                <condition number="274" type="jump" coverage="100%" />
+                <condition number="276" type="jump" coverage="100%" />
               </conditions>
             </line>
-            <line number="35" hits="3" branch="False" />
-            <line number="36" hits="3" branch="False" />
-            <line number="37" hits="3" branch="True" condition-coverage="75% (3/4)">
+            <line number="36" hits="4" branch="False" />
+            <line number="37" hits="4" branch="False" />
+            <line number="38" hits="4" branch="True" condition-coverage="75% (3/4)">
               <conditions>
-                <condition number="218" type="jump" coverage="50%" />
-                <condition number="243" type="jump" coverage="100%" />
+                <condition number="226" type="jump" coverage="50%" />
+                <condition number="248" type="jump" coverage="100%" />
               </conditions>
             </line>
-            <line number="38" hits="2" branch="False" />
-            <line number="39" hits="2" branch="False" />
-            <line number="40" hits="2" branch="False" />
+            <line number="39" hits="3" branch="False" />
+            <line number="40" hits="3" branch="False" />
             <line number="41" hits="3" branch="False" />
-            <line number="42" hits="2" branch="False" />
-            <line number="43" hits="1" branch="False" />
+            <line number="42" hits="4" branch="False" />
+            <line number="43" hits="3" branch="False" />
             <line number="44" hits="1" branch="False" />
-            <line number="46" hits="1" branch="False" />
-            <line number="48" hits="3" branch="False" />
-            <line number="49" hits="3" branch="False" />
+            <line number="45" hits="1" branch="False" />
+            <line number="47" hits="1" branch="False" />
+            <line number="49" hits="4" branch="False" />
+            <line number="50" hits="4" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Shared.Tenancy.TenantContext" filename="Chairly.Api/Shared/Tenancy/TenantContext.cs" line-rate="1" branch-rate="1" complexity="3">
