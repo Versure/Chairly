@@ -108,7 +108,7 @@ test.describe('Subscription Detail - Trial', () => {
       .filter({ visible: true })
       .first()
       .click();
-    await expect(page.getByText('Abonnement annuleren')).toBeVisible();
+    await expect(page.locator('dialog[open] h2')).toContainText('Abonnement annuleren');
     await page.keyboard.press('Escape');
   });
 });
@@ -283,7 +283,7 @@ test.describe('Subscription Detail - Confirm Flows', () => {
       .filter({ visible: true })
       .first()
       .click();
-    await expect(page.getByText('Abonnement annuleren')).toBeVisible();
+    await expect(page.locator('dialog[open] h2')).toContainText('Abonnement annuleren');
 
     // Fill in the reason
     await page.locator('dialog[open] textarea').fill('Klant wil opzeggen');
