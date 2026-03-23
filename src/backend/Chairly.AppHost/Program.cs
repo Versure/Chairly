@@ -48,8 +48,10 @@ var keycloak = builder.AddContainer("keycloak", "quay.io/keycloak/keycloak", "26
 var keycloakEndpoint = keycloak.GetEndpoint("http");
 
 // Default realm for local development — human-readable name used in Keycloak URLs.
-var defaultRealm = "chairly";
-var defaultTenantId = "00000000-0000-0000-0000-000000000001";
+var defaultRealm = builder.Configuration["Chairly:DefaultRealm"]
+    ?? throw new InvalidOperationException("Chairly:DefaultRealm is not configured. Run: dotnet user-secrets set \"Chairly:DefaultRealm\" \"chairly\"");
+var defaultTenantId = builder.Configuration["Chairly:DefaultTenantId"]
+    ?? throw new InvalidOperationException("Chairly:DefaultTenantId is not configured. Run: dotnet user-secrets set \"Chairly:DefaultTenantId\" \"00000000-0000-0000-0000-000000000001\"");
 
 // Keycloak Admin API service account credentials.
 var keycloakAdminClientSecret = builder.AddParameter("keycloak-admin-client-secret", secret: true);
@@ -65,22 +67,30 @@ builder.AddProject<Projects.Chairly_Api>("api")
     .WaitFor(keycloak)
     .WithEnvironment("Smtp__Host", smtpEndpoint.Property(EndpointProperty.Host))
     .WithEnvironment("Smtp__Port", smtpEndpoint.Property(EndpointProperty.Port))
-    .WithEnvironment("Smtp__FromAddress", "noreply@chairly.local")
-    .WithEnvironment("Smtp__FromName", "Chairly")
+    .WithEnvironment("Smtp__FromAddress", builder.Configuration["Smtp:FromAddress"]
+        ?? throw new InvalidOperationException("Smtp:FromAddress is not configured. Run: dotnet user-secrets set \"Smtp:FromAddress\" \"noreply@chairly.local\""))
+    .WithEnvironment("Smtp__FromName", builder.Configuration["Smtp:FromName"]
+        ?? throw new InvalidOperationException("Smtp:FromName is not configured. Run: dotnet user-secrets set \"Smtp:FromName\" \"Chairly\""))
     .WithEnvironment("Keycloak__Url", keycloakEndpoint)
     .WithEnvironment("Keycloak__Realm", defaultRealm)
-    .WithEnvironment("Keycloak__ClientId", "chairly-frontend")
-    .WithEnvironment("Keycloak__AdminClientId", "chairly-admin")
+    .WithEnvironment("Keycloak__ClientId", builder.Configuration["Keycloak:ClientId"]
+        ?? throw new InvalidOperationException("Keycloak:ClientId is not configured. Run: dotnet user-secrets set \"Keycloak:ClientId\" \"chairly-frontend\""))
+    .WithEnvironment("Keycloak__AdminClientId", builder.Configuration["Keycloak:AdminClientId"]
+        ?? throw new InvalidOperationException("Keycloak:AdminClientId is not configured. Run: dotnet user-secrets set \"Keycloak:AdminClientId\" \"chairly-admin\""))
     .WithEnvironment("Keycloak__AdminPassword", keycloakAdminPassword)
     .WithEnvironment("Keycloak__TenantId", defaultTenantId)
     .WithEnvironment("Keycloak__AdminClientSecret", keycloakAdminClientSecret)
-    .WithEnvironment("Keycloak__AdminPortalRealm", "chairly-admin")
-    .WithEnvironment("Keycloak__AdminPortalClientId", "chairly-admin-portal")
+    .WithEnvironment("Keycloak__AdminPortalRealm", builder.Configuration["Keycloak:AdminPortalRealm"]
+        ?? throw new InvalidOperationException("Keycloak:AdminPortalRealm is not configured. Run: dotnet user-secrets set \"Keycloak:AdminPortalRealm\" \"chairly-admin\""))
+    .WithEnvironment("Keycloak__AdminPortalClientId", builder.Configuration["Keycloak:AdminPortalClientId"]
+        ?? throw new InvalidOperationException("Keycloak:AdminPortalClientId is not configured. Run: dotnet user-secrets set \"Keycloak:AdminPortalClientId\" \"chairly-admin-portal\""))
     // MailDev SMTP endpoint as seen from Docker containers (Keycloak realm SMTP config).
     // Uses the Docker network hostname ("maildev") and internal target port (1025),
     // not the host-mapped endpoint, because Keycloak runs inside Docker.
-    .WithEnvironment("Keycloak__SmtpHost", "maildev")
-    .WithEnvironment("Keycloak__SmtpPort", "1025")
+    .WithEnvironment("Keycloak__SmtpHost", builder.Configuration["Keycloak:SmtpHost"]
+        ?? throw new InvalidOperationException("Keycloak:SmtpHost is not configured. Run: dotnet user-secrets set \"Keycloak:SmtpHost\" \"maildev\""))
+    .WithEnvironment("Keycloak__SmtpPort", builder.Configuration["Keycloak:SmtpPort"]
+        ?? throw new InvalidOperationException("Keycloak:SmtpPort is not configured. Run: dotnet user-secrets set \"Keycloak:SmtpPort\" \"1025\""))
     .WithUrlForEndpoint("http", ep => new ResourceUrlAnnotation { Url = "/scalar", DisplayText = "Scalar" });
 
 builder.Build().Run();
