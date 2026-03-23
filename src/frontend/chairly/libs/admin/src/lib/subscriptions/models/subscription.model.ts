@@ -32,11 +32,11 @@ export interface AdminSubscriptionDetail {
   status: string;
   trialEndsAtUtc: string | null;
   createdAtUtc: string;
-  createdBy: string | null;
+  createdByName: string | null;
   provisionedAtUtc: string | null;
-  provisionedBy: string | null;
+  provisionedByName: string | null;
   cancelledAtUtc: string | null;
-  cancelledBy: string | null;
+  cancelledByName: string | null;
   cancellationReason: string | null;
 }
 

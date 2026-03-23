@@ -19,11 +19,11 @@ const mockDetail: AdminSubscriptionDetail = {
   status: 'provisioned',
   trialEndsAtUtc: null,
   createdAtUtc: '2026-01-01T00:00:00Z',
-  createdBy: null,
+  createdByName: null,
   provisionedAtUtc: '2026-01-02T00:00:00Z',
-  provisionedBy: 'admin',
+  provisionedByName: 'admin',
   cancelledAtUtc: null,
-  cancelledBy: null,
+  cancelledByName: null,
   cancellationReason: null,
 };
 

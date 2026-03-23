@@ -126,8 +126,10 @@
               <p class="text-sm font-medium text-gray-900 dark:text-white">
                 Geactiveerd op {{ sub.provisionedAtUtc | date: 'd MMM y, HH:mm' }}
               </p>
-              @if (sub.provisionedBy) {
-                <p class="text-sm text-gray-500 dark:text-gray-400">Door {{ sub.provisionedBy }}</p>
+              @if (sub.provisionedByName) {
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Door {{ sub.provisionedByName }}
+                </p>
               }
             </div>
           </div>
@@ -140,8 +142,10 @@
               <p class="text-sm font-medium text-gray-900 dark:text-white">
                 Geannuleerd op {{ sub.cancelledAtUtc | date: 'd MMM y, HH:mm' }}
               </p>
-              @if (sub.cancelledBy) {
-                <p class="text-sm text-gray-500 dark:text-gray-400">Door {{ sub.cancelledBy }}</p>
+              @if (sub.cancelledByName) {
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Door {{ sub.cancelledByName }}
+                </p>
               }
               @if (sub.cancellationReason) {
                 <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">

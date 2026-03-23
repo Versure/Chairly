@@ -15,11 +15,11 @@ const mockPendingDetail = {
   status: 'trial',
   trialEndsAtUtc: '2026-04-15T10:00:00Z',
   createdAtUtc: '2026-01-15T10:00:00Z',
-  createdBy: null,
+  createdByName: null,
   provisionedAtUtc: null,
-  provisionedBy: null,
+  provisionedByName: null,
   cancelledAtUtc: null,
-  cancelledBy: null,
+  cancelledByName: null,
   cancellationReason: null,
 };
 
@@ -30,14 +30,14 @@ const mockProvisionedDetail = {
   trialEndsAtUtc: null,
   billingCycle: 'Monthly',
   provisionedAtUtc: '2026-01-16T10:00:00Z',
-  provisionedBy: 'admin-user-id',
+  provisionedByName: 'admin-user-id',
 };
 
 const mockCancelledDetail = {
   ...mockProvisionedDetail,
   status: 'cancelled',
   cancelledAtUtc: '2026-02-01T10:00:00Z',
-  cancelledBy: 'admin-user-id',
+  cancelledByName: 'admin-user-id',
   cancellationReason: 'Niet betaald',
 };
 
@@ -223,7 +223,7 @@ test.describe('Subscription Detail - Confirm Flows', () => {
       isTrial: false,
       trialEndsAtUtc: null,
       provisionedAtUtc: '2026-03-22T10:00:00Z',
-      provisionedBy: 'admin',
+      provisionedByName: 'admin',
     };
     await page.route(`**/api/admin/subscriptions/${subscriptionId}/provision`, (route) =>
       route.fulfill({
@@ -262,7 +262,7 @@ test.describe('Subscription Detail - Confirm Flows', () => {
       ...mockProvisionedDetail,
       status: 'cancelled',
       cancelledAtUtc: '2026-03-22T10:00:00Z',
-      cancelledBy: 'admin',
+      cancelledByName: 'admin',
       cancellationReason: 'Klant wil opzeggen',
     };
     await page.route(`**/api/admin/subscriptions/${subscriptionId}/cancel`, (route) =>
