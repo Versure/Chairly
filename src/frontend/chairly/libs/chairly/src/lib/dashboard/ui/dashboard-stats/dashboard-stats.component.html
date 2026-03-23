@@ -20,8 +20,8 @@
     }
   </div>
 
-  <!-- Financieel overzicht (alleen eigenaar) -->
-  @if (isOwner()) {
+  <!-- Financieel overzicht (eigenaar en manager) -->
+  @if (isOwner() || isManager()) {
     <div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financieel overzicht</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
