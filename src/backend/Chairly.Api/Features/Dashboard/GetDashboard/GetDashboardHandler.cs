@@ -16,14 +16,16 @@ internal sealed class GetDashboardHandler(ChairlyDbContext db, ITenantContext te
         var role = tenantContext.UserRole;
         var isStaffMember = string.Equals(role, "staff_member", StringComparison.Ordinal);
         var isOwner = string.Equals(role, "owner", StringComparison.Ordinal);
+        var isManager = string.Equals(role, "manager", StringComparison.Ordinal);
 
         var currentStaffMemberId = await ResolveStaffMemberIdAsync(cancellationToken).ConfigureAwait(false);
 
         var todaysBookingResponses = await GetTodaysBookingsAsync(isStaffMember, currentStaffMemberId, cancellationToken).ConfigureAwait(false);
         var upcomingBookingResponses = await GetUpcomingBookingsAsync(isStaffMember, currentStaffMemberId, cancellationToken).ConfigureAwait(false);
         var newClientsThisWeek = isStaffMember ? 0 : await CountNewClientsThisWeekAsync(cancellationToken).ConfigureAwait(false);
-        var revenueThisWeek = isOwner ? await GetRevenueAsync(GetWeekStart(), cancellationToken).ConfigureAwait(false) : (decimal?)null;
-        var revenueThisMonth = isOwner ? await GetRevenueAsync(GetMonthStart(), cancellationToken).ConfigureAwait(false) : (decimal?)null;
+        var canSeeRevenue = isOwner || isManager;
+        var revenueThisWeek = canSeeRevenue ? await GetRevenueAsync(GetWeekStart(), cancellationToken).ConfigureAwait(false) : (decimal?)null;
+        var revenueThisMonth = canSeeRevenue ? await GetRevenueAsync(GetMonthStart(), cancellationToken).ConfigureAwait(false) : (decimal?)null;
 
         return new DashboardResponse(
             todaysBookingResponses.Count,
