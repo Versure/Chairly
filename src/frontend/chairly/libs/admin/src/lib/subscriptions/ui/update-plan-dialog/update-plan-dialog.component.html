@@ -1,0 +1,59 @@
+<dialog
+  #dialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none flex items-center justify-center border-0 bg-black/50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plan wijzigen</h2>
+    <form [formGroup]="form" class="space-y-4 mb-6">
+      <div>
+        <label
+          for="plan-select"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Plan
+        </label>
+        <select
+          id="plan-select"
+          formControlName="plan"
+          class="w-full rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+          <option value="starter">Starter</option>
+          <option value="team">Team</option>
+          <option value="salon">Salon</option>
+        </select>
+      </div>
+      <div>
+        <label
+          for="billing-cycle-select"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Factuurperiode
+        </label>
+        <select
+          id="billing-cycle-select"
+          formControlName="billingCycle"
+          class="w-full rounded-md border border-gray-300 dark:border-slate-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400">
+          <option [ngValue]="null">Geen</option>
+          <option value="Monthly">Maandelijks</option>
+          <option value="Annual">Jaarlijks</option>
+        </select>
+      </div>
+    </form>
+    <div class="flex justify-end gap-3">
+      <button
+        type="button"
+        class="rounded-md border border-gray-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+        [disabled]="isSubmitting()"
+        (click)="onCancel()">
+        Annuleren
+      </button>
+      <button
+        type="button"
+        class="rounded-md bg-primary-600 dark:bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+        [disabled]="isSubmitting() || form.invalid"
+        (click)="onConfirm()">
+        @if (isSubmitting()) {
+          Bezig...
+        } @else {
+          Opslaan
+        }
+      </button>
+    </div>
+  </div>
+</dialog>

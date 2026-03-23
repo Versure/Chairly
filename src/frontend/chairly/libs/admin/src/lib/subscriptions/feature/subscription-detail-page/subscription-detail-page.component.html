@@ -1,0 +1,224 @@
+@if (isDetailLoading()) {
+  <div class="flex items-center justify-center py-12">
+    <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+  </div>
+} @else if (subscription(); as sub) {
+  <div class="space-y-6">
+    <!-- Back link -->
+    <a
+      routerLink="/abonnementen"
+      class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4"
+        viewBox="0 0 20 20"
+        fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+          clip-rule="evenodd" />
+      </svg>
+      Terug naar overzicht
+    </a>
+
+    <!-- Page header -->
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ sub.salonName }}</h1>
+      @let statusBadge = sub.status | subscriptionStatusBadge;
+      <span
+        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+        [class]="statusBadge.cssClass">
+        {{ statusBadge.label }}
+      </span>
+    </div>
+
+    <!-- Detail cards -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <!-- Left: Subscription info -->
+      <div
+        class="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Abonnementgegevens</h2>
+        <dl class="space-y-3">
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Plan</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ sub.plan | titlecase }}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Factuurperiode</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ sub.billingCycle | billingCycle }}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Proefperiode</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">
+              @if (sub.trialEndsAtUtc) {
+                Eindigt op {{ sub.trialEndsAtUtc | date: 'd MMM y' }}
+              } @else {
+                Geen proefperiode
+              }
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Status</dt>
+            <dd class="text-sm">
+              @let detailBadge = sub.status | subscriptionStatusBadge;
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                [class]="detailBadge.cssClass">
+                {{ detailBadge.label }}
+              </span>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Right: Contact info -->
+      <div
+        class="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Contactgegevens</h2>
+        <dl class="space-y-3">
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Salonnaam</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ sub.salonName }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Eigenaar</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ sub.ownerFirstName }} {{ sub.ownerLastName }}
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">E-mailadres</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ sub.email }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Telefoonnummer</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ sub.phoneNumber ?? 'Niet opgegeven' }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div
+      class="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tijdlijn</h2>
+      <div class="space-y-4">
+        <div class="flex items-start gap-3">
+          <div
+            class="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-gray-400 dark:bg-gray-500"></div>
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              Aangemaakt op {{ sub.createdAtUtc | date: 'd MMM y, HH:mm' }}
+            </p>
+          </div>
+        </div>
+        @if (sub.provisionedAtUtc) {
+          <div class="flex items-start gap-3">
+            <div
+              class="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-green-500 dark:bg-green-400"></div>
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                Geactiveerd op {{ sub.provisionedAtUtc | date: 'd MMM y, HH:mm' }}
+              </p>
+              @if (sub.provisionedByName) {
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Door {{ sub.provisionedByName }}
+                </p>
+              }
+            </div>
+          </div>
+        }
+        @if (sub.cancelledAtUtc) {
+          <div class="flex items-start gap-3">
+            <div
+              class="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-red-500 dark:bg-red-400"></div>
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">
+                Geannuleerd op {{ sub.cancelledAtUtc | date: 'd MMM y, HH:mm' }}
+              </p>
+              @if (sub.cancelledByName) {
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Door {{ sub.cancelledByName }}
+                </p>
+              }
+              @if (sub.cancellationReason) {
+                <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">
+                  Reden: {{ sub.cancellationReason }}
+                </p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div
+      class="rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Acties</h2>
+      @if (sub.status === 'cancelled') {
+        <p class="text-sm text-gray-500 dark:text-gray-400">Dit abonnement is geannuleerd.</p>
+      } @else if (sub.status === 'pending' || sub.status === 'trial') {
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="rounded-md bg-primary-600 dark:bg-primary-500 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 dark:hover:bg-primary-600"
+            (click)="openProvisionDialog()">
+            Activeren
+          </button>
+          <button
+            type="button"
+            class="rounded-md bg-red-600 dark:bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-600"
+            (click)="openCancelDialog()">
+            Annuleren
+          </button>
+        </div>
+      } @else if (sub.status === 'provisioned') {
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 dark:border-slate-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+            (click)="openUpdatePlanDialog()">
+            Plan wijzigen
+          </button>
+          <button
+            type="button"
+            class="rounded-md bg-red-600 dark:bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:hover:bg-red-600"
+            (click)="openCancelDialog()">
+            Annuleren
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Dialogs -->
+  <chairly-admin-provision-subscription-dialog
+    #provisionDialog
+    [salonName]="sub.salonName"
+    [isSubmitting]="isSubmitting()"
+    (confirm)="onProvisionConfirm()"
+    (cancelled)="onDialogCancel()" />
+  <chairly-admin-cancel-subscription-dialog
+    #cancelDialog
+    [isSubmitting]="isSubmitting()"
+    (confirm)="onCancelConfirm($event)"
+    (cancelled)="onDialogCancel()" />
+  <chairly-admin-update-plan-dialog
+    #updatePlanDialog
+    [currentPlan]="sub.plan"
+    [currentBillingCycle]="sub.billingCycle"
+    [isSubmitting]="isSubmitting()"
+    (confirm)="onUpdatePlanConfirm($event)"
+    (cancelled)="onDialogCancel()" />
+} @else {
+  <div class="flex items-center justify-center py-12">
+    <p class="text-gray-500 dark:text-gray-400">Abonnement niet gevonden.</p>
+  </div>
+}

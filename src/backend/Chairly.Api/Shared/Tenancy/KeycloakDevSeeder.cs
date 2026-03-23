@@ -52,6 +52,9 @@ internal static partial class KeycloakDevSeeder
         // Step 1c: Assign realm-management roles to the admin service account (idempotent).
         await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, realmName, adminClientId, logger, ct).ConfigureAwait(false);
 
+        // Step 5: Seed admin realm for the admin portal (always, before tenant user check).
+        await SeedAdminRealmAsync(httpClientFactory, token, keycloakUrl, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
+
         // Step 2: Create user (skip if already exists).
         var userId = await CreateUserAsync(httpClientFactory, token, keycloakUrl, realmName, logger, ct).ConfigureAwait(false);
 
@@ -69,6 +72,166 @@ internal static partial class KeycloakDevSeeder
         await AssignRoleAsync(httpClientFactory, token, keycloakUrl, realmName, userId, logger, ct).ConfigureAwait(false);
 
         LogSeedComplete(logger, DefaultEmail, DefaultPassword);
+    }
+
+    private const string AdminRealmName = "chairly-admin";
+    private const string AdminPortalClientId = "chairly-admin-portal";
+    private const string AdminRoleName = "platform_admin";
+    private const string AdminEmail = "admin@chairly.local";
+    private const string AdminPassword = "ChairlyAdmin123!";
+    private const string AdminFirstName = "Platform";
+    private const string AdminLastName = "Admin";
+
+    private static async Task SeedAdminRealmAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        string adminClientId, string adminClientSecret, ILogger logger, CancellationToken ct)
+    {
+        // Step 5a: Create admin realm (skip if already exists).
+        await CreateAdminRealmAsync(httpClientFactory, token, keycloakUrl, adminClientId, adminClientSecret, logger, ct).ConfigureAwait(false);
+
+        // Step 5a2: Assign realm-management roles to admin service account in admin realm (idempotent).
+        await AssignServiceAccountRolesAsync(httpClientFactory, token, keycloakUrl, AdminRealmName, adminClientId, logger, ct).ConfigureAwait(false);
+
+        // Step 5b: Create admin user (skip if already exists).
+        var adminUserId = await CreateAdminUserAsync(httpClientFactory, token, keycloakUrl, logger, ct).ConfigureAwait(false);
+
+        if (adminUserId is null)
+        {
+            LogAdminSeedComplete(logger, AdminEmail, AdminPassword);
+            return;
+        }
+
+        // Step 5c: Set admin user password.
+        await SetAdminPasswordAsync(httpClientFactory, token, keycloakUrl, adminUserId, ct).ConfigureAwait(false);
+        LogPasswordSet(logger, AdminEmail);
+
+        // Step 5d: Assign platform_admin role.
+        await AssignAdminRoleAsync(httpClientFactory, token, keycloakUrl, adminUserId, logger, ct).ConfigureAwait(false);
+
+        LogAdminSeedComplete(logger, AdminEmail, AdminPassword);
+    }
+
+    private static async Task CreateAdminRealmAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        string adminClientId, string adminClientSecret, ILogger logger, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var realm = new
+        {
+            realm = AdminRealmName,
+            displayName = "Chairly Admin",
+            loginTheme = "chairly",
+            enabled = true,
+            clients = new object[]
+            {
+                new
+                {
+                    clientId = AdminPortalClientId,
+                    publicClient = true,
+                    standardFlowEnabled = true,
+                    directAccessGrantsEnabled = false,
+                    redirectUris = new[] { "*" },
+                    webOrigins = new[] { "*" },
+                },
+                new
+                {
+                    clientId = adminClientId,
+                    publicClient = false,
+                    serviceAccountsEnabled = true,
+                    standardFlowEnabled = false,
+                    directAccessGrantsEnabled = false,
+                    clientAuthenticatorType = "client-secret",
+                    secret = adminClientSecret,
+                },
+            },
+            roles = new
+            {
+                realm = new object[]
+                {
+                    new { name = AdminRoleName },
+                },
+            },
+        };
+
+        var response = await client.PostAsJsonAsync($"{keycloakUrl}/admin/realms", realm, _jsonOptions, ct).ConfigureAwait(false);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            LogRealmAlreadyExists(logger, AdminRealmName);
+            return;
+        }
+
+        response.EnsureSuccessStatusCode();
+        LogRealmCreated(logger, AdminRealmName);
+    }
+
+    private static async Task<string?> CreateAdminUserAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        ILogger logger, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var user = new
+        {
+            username = AdminEmail,
+            email = AdminEmail,
+            firstName = AdminFirstName,
+            lastName = AdminLastName,
+            enabled = true,
+        };
+
+        var response = await client.PostAsJsonAsync(
+            $"{keycloakUrl}/admin/realms/{AdminRealmName}/users", user, _jsonOptions, ct).ConfigureAwait(false);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            LogUserAlreadyExists(logger, AdminEmail);
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        LogUserCreated(logger, AdminEmail);
+
+        var location = response.Headers.Location?.ToString()
+            ?? throw new InvalidOperationException("Keycloak did not return a Location header for admin user.");
+        return location[(location.LastIndexOf('/') + 1)..];
+    }
+
+    private static async Task SetAdminPasswordAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        string userId, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var credential = new { type = "password", value = AdminPassword, temporary = false };
+
+        var response = await client.PutAsJsonAsync(
+            $"{keycloakUrl}/admin/realms/{AdminRealmName}/users/{userId}/reset-password",
+            credential, _jsonOptions, ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task AssignAdminRoleAsync(
+        IHttpClientFactory httpClientFactory, string token, string keycloakUrl,
+        string userId, ILogger logger, CancellationToken ct)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var roleResponse = await client.GetAsync(
+            new Uri($"{keycloakUrl}/admin/realms/{AdminRealmName}/roles/{AdminRoleName}"), ct).ConfigureAwait(false);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleJson = await roleResponse.Content.ReadFromJsonAsync<JsonElement>(ct).ConfigureAwait(false);
+
+        var response = await client.PostAsJsonAsync(
+            $"{keycloakUrl}/admin/realms/{AdminRealmName}/users/{userId}/role-mappings/realm",
+            new[] { roleJson }, ct).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        LogRoleAssigned(logger, AdminRoleName, AdminEmail);
     }
 
     private static async Task<string> GetAdminTokenAsync(
@@ -376,6 +539,9 @@ internal static partial class KeycloakDevSeeder
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed complete. Login: {Email} / {Password}")]
     private static partial void LogSeedComplete(ILogger logger, string email, string password);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Keycloak dev seed: admin realm seed complete. Login: {Email} / {Password}")]
+    private static partial void LogAdminSeedComplete(ILogger logger, string email, string password);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Keycloak admin API not ready (attempt {Attempt}/{MaxAttempts}), retrying...")]
     private static partial void LogKeycloakNotReady(ILogger logger, int attempt, int maxAttempts);

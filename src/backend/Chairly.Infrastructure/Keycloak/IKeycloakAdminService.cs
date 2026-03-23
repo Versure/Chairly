@@ -26,4 +26,6 @@ public interface IKeycloakAdminService
         CancellationToken ct = default);
 
     Task DeleteRealmAsync(Guid tenantId, CancellationToken ct = default);
+
+    Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default);
 }
