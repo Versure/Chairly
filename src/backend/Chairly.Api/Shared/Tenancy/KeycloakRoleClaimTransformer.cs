@@ -31,12 +31,13 @@ internal sealed class KeycloakRoleClaimTransformer : IClaimsTransformation
                 return Task.FromResult(principal);
             }
 
+            var roleClaimType = identity.RoleClaimType;
             foreach (var role in rolesElement.EnumerateArray())
             {
                 var roleValue = role.GetString();
-                if (roleValue is not null && !identity.HasClaim(ClaimTypes.Role, roleValue))
+                if (roleValue is not null && !identity.HasClaim(roleClaimType, roleValue))
                 {
-                    identity.AddClaim(new Claim(ClaimTypes.Role, roleValue));
+                    identity.AddClaim(new Claim(roleClaimType, roleValue));
                 }
             }
         }
