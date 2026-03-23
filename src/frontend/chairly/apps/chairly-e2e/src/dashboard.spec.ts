@@ -93,7 +93,9 @@ test.describe('Dashboard', () => {
   test('shows "Boekingen vandaag" stat card', async ({ page }) => {
     await setupDashboardMock(page);
     await page.goto('/dashboard');
-    await expect(page.getByRole('paragraph').filter({ hasText: 'Boekingen vandaag' }).first()).toBeVisible();
+    await expect(
+      page.getByRole('paragraph').filter({ hasText: 'Boekingen vandaag' }).first(),
+    ).toBeVisible();
   });
 
   test('shows "Boekingen vandaag" section heading', async ({ page }) => {

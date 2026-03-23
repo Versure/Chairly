@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { DashboardBooking } from '../../models';
 import { DashboardBookingStatusPipe, JoinPipe } from '../../pipes';
@@ -8,7 +9,7 @@ import { DashboardBookingStatusPipe, JoinPipe } from '../../pipes';
   selector: 'chairly-dashboard-booking-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DashboardBookingStatusPipe, JoinPipe],
+  imports: [DatePipe, DashboardBookingStatusPipe, JoinPipe, RouterLink],
   templateUrl: './dashboard-booking-list.component.html',
 })
 export class DashboardBookingListComponent {
