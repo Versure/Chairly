@@ -21,7 +21,7 @@ internal static class AdminSubscriptionMapper
     internal static string GetPlanSlug(SubscriptionPlan plan) =>
         _planSlugs[plan];
 
-    internal static AdminSubscriptionDetailResponse ToDetailResponse(Subscription entity) =>
+    internal static AdminSubscriptionDetailResponse ToDetailResponse(Subscription entity, IReadOnlyDictionary<Guid, string>? nameMap = null) =>
         new(
             entity.Id,
             entity.SalonName,
@@ -35,12 +35,24 @@ internal static class AdminSubscriptionMapper
             DeriveStatus(entity),
             entity.TrialEndsAtUtc,
             entity.CreatedAtUtc,
-            entity.CreatedBy,
+            ResolveName(entity.CreatedBy, nameMap),
             entity.ProvisionedAtUtc,
-            entity.ProvisionedBy,
+            ResolveName(entity.ProvisionedBy, nameMap),
             entity.CancelledAtUtc,
-            entity.CancelledBy,
+            ResolveName(entity.CancelledBy, nameMap),
             entity.CancellationReason);
+
+    private static string? ResolveName(Guid? userId, IReadOnlyDictionary<Guid, string>? nameMap)
+    {
+        if (userId is null)
+        {
+            return null;
+        }
+
+        return nameMap is not null && nameMap.TryGetValue(userId.Value, out var name)
+            ? name
+            : userId.Value.ToString();
+    }
 
     internal static AdminSubscriptionListItem ToListItem(Subscription entity) =>
         new(

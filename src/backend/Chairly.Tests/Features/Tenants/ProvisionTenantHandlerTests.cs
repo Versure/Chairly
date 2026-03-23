@@ -132,5 +132,8 @@ public class ProvisionTenantHandlerTests
         public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
             CancellationToken ct = default)
             => Task.CompletedTask;
+
+        public Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default)
+            => Task.FromResult<string?>(null);
     }
 }

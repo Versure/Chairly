@@ -16,14 +16,14 @@ internal sealed class GetAdminSubscriptionsListHandler(WebsiteDbContext db) : IR
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var search = query.Search.Trim();
-#pragma warning disable CA1862 // EF Core Npgsql translates StringComparison.OrdinalIgnoreCase to ILIKE
+#pragma warning disable CA1304, CA1311, CA1862, MA0011 // EF Core translates parameterless ToLower() to SQL lower(); CultureInfo overloads are not translatable
+            var search = query.Search.Trim().ToLower();
             queryable = queryable.Where(s =>
-                s.SalonName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                s.Email.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                s.OwnerFirstName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                s.OwnerLastName.Contains(search, StringComparison.OrdinalIgnoreCase));
-#pragma warning restore CA1862
+                s.SalonName.ToLower().Contains(search) ||
+                s.Email.ToLower().Contains(search) ||
+                s.OwnerFirstName.ToLower().Contains(search) ||
+                s.OwnerLastName.ToLower().Contains(search));
+#pragma warning restore CA1304, CA1311, CA1862, MA0011
         }
 
         if (!string.IsNullOrWhiteSpace(query.Status))

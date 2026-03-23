@@ -40,4 +40,7 @@ internal sealed class SendEmailFailingKeycloakAdminService : IKeycloakAdminServi
     public Task SendActionsEmailAsync(Guid tenantId, string keycloakUserId, string[] actions,
         CancellationToken ct = default)
         => throw new HttpRequestException("SMTP not configured");
+
+    public Task<string?> GetUserDisplayNameAsync(string realmName, string userId, CancellationToken ct = default)
+        => Task.FromResult<string?>(null);
 }
