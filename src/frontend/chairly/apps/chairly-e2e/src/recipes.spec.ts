@@ -233,8 +233,8 @@ test('editing a recipe title and saving calls PUT and refreshes the list', async
   await dialog.getByLabel('Titel behandeling').fill('Gedeeltelijke kleuring');
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
-  expect(putCalled).toBe(true);
   await expect(page.getByText('Gedeeltelijke kleuring')).toBeVisible();
+  expect(putCalled).toBe(true);
 });
 
 test('completed booking without recipe shows Recept toevoegen button', async ({ page }) => {
