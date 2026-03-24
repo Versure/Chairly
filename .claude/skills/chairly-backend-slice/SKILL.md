@@ -2,7 +2,9 @@
 name: chairly-backend-slice
 description: >
   Chairly backend patterns. Use when implementing VSA slices, handlers,
-  EF Core entities, configurations, or tests in the Chairly backend.
+  EF Core entities, configurations, or tests in the Chairly backend. Also use when
+  creating endpoints, commands, queries, migrations, domain events, response records,
+  or any .NET backend code in this project.
 user-invocable: false
 ---
 
@@ -439,82 +441,16 @@ It calls `Validator.TryValidateObject()` on every command/query before the handl
 
 When a handler needs to trigger side effects (send emails, publish messages, update external systems),
 use the domain events pattern instead of calling services directly in the handler.
+Handlers must NEVER call `IEmailSender`, `ISmtpService`, or external APIs directly.
 
-**Pattern (see `ConfirmBookingHandler` and `IBookingEventPublisher` for reference):**
-
-1. Define a domain event record in `Chairly.Domain/Events/`:
-```csharp
-namespace Chairly.Domain.Events;
-
-public sealed record {Entity}{Action}Event(Guid Id, /* relevant fields */);
-```
-
-2. Define a publisher interface in `Chairly.Infrastructure/Messaging/`:
-```csharp
-namespace Chairly.Infrastructure.Messaging;
-
-public interface I{Context}EventPublisher
-{
-    Task Publish{Entity}{Action}Async({Entity}{Action}Event domainEvent, CancellationToken cancellationToken);
-}
-```
-
-3. Implement the publisher in `Chairly.Api/Features/{Context}/`:
-```csharp
-// Sends emails, publishes to RabbitMQ, etc.
-// Best-effort: catch exceptions, log, and continue (entity is already persisted)
-```
-
-4. In the handler, inject the publisher and call it AFTER `SaveChangesAsync`:
-```csharp
-await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-try
-{
-    await eventPublisher.Publish{Entity}{Action}Async(
-        new {Entity}{Action}Event(entity.Id, ...),
-        cancellationToken).ConfigureAwait(false);
-}
-catch (Exception ex)
-{
-    // Log and continue — entity is already persisted
-    Log.{Action}EventFailed(logger, entity.Id, ex);
-}
-```
-
-**Rules:**
-- Handlers must NEVER call `IEmailSender`, `ISmtpService`, or external APIs directly
-- All side effects go through domain event publishers
-- Event publishing is best-effort: exceptions are caught and logged, not re-thrown
-- Register the publisher in `Program.cs` DI
+See `references/domain-events.md` in this skill folder for the full pattern and boilerplate.
 
 ---
 
 ## Multiple DbContexts
 
-When adding a second `DbContext` (e.g. `WebsiteDbContext` alongside `ChairlyDbContext`), EF Core
-configuration classes from the same assembly must be explicitly filtered.
-
-**Problem:** `ApplyConfigurationsFromAssembly()` discovers ALL `IEntityTypeConfiguration<T>`
-implementations in the assembly, regardless of which `DbContext` they belong to. This causes
-`PendingModelChangesWarning` on the wrong context.
-
-**Solution:** Filter configurations by namespace:
-
-```csharp
-// In ChairlyDbContext — exclude Website configurations:
-modelBuilder.ApplyConfigurationsFromAssembly(
-    typeof(ChairlyDbContext).Assembly,
-    t => t.Namespace != null && !t.Namespace.Contains("Website", StringComparison.Ordinal));
-
-// In WebsiteDbContext — include ONLY Website configurations:
-modelBuilder.ApplyConfigurationsFromAssembly(
-    typeof(WebsiteDbContext).Assembly,
-    t => t.Namespace != null && t.Namespace.Contains("Website", StringComparison.Ordinal));
-```
-
-Place Website-specific configurations in a `Configurations/Website/` subfolder so the namespace
-filter works reliably.
+When adding a second `DbContext`, configuration classes must be filtered by namespace.
+See `references/multiple-dbcontexts.md` in this skill folder for the full pattern.
 
 ---
 
