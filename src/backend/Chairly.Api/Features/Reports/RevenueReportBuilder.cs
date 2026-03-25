@@ -46,7 +46,7 @@ internal static class RevenueReportBuilder
             .Where(t => t.TenantId == tenantContext.TenantId)
             .Select(t => t.CompanyName)
             .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false) ?? "Onbekend";
+            .ConfigureAwait(false) ?? string.Empty;
 
         var rows = invoices
             .Select(i => new RevenueReportRow(
