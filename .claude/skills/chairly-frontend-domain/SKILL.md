@@ -3,6 +3,8 @@ name: chairly-frontend-domain
 description: >
   Chairly frontend domain patterns. Use when implementing Angular domain features:
   API services, NgRx SignalStore, smart components, models, routes, and barrel exports.
+  Also use when creating Angular components, pages, stores, services, or any frontend
+  code within domain libraries in this project.
 user-invocable: false
 ---
 
@@ -40,9 +42,9 @@ libs/chairly/src/lib/{domain}/
 
 ## Quick Reference
 
-- API service boilerplate → see `service-boilerplate.md` in this skill folder
-- NgRx SignalStore boilerplate → see `store-boilerplate.md` in this skill folder
-- Smart component boilerplate → see `component-boilerplate.md` in this skill folder
+- API service boilerplate → see `references/service-boilerplate.md` in this skill folder
+- NgRx SignalStore boilerplate → see `references/store-boilerplate.md` in this skill folder
+- Smart component boilerplate → see `references/component-boilerplate.md` in this skill folder
 
 ---
 

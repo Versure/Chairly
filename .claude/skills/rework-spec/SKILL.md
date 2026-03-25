@@ -3,7 +3,8 @@ name: rework-spec
 description: >
   Rework a feature spec based on PR review comments. Fetches comments via gh CLI,
   spawns spec-writer agent to apply fixes, and pushes to the spec branch.
-  Usage: /rework-spec {PR#}
+  Usage: /rework-spec {PR#}. Use this skill when the user wants to address PR feedback
+  on a spec, fix review comments on a spec PR, or update a spec based on reviewer suggestions.
 user-invocable: true
 ---
 
@@ -55,6 +56,11 @@ gh api "repos/${REPO}/issues/{PR_NUMBER}/comments" --jq '.[] | "**" + .user.logi
 ```
 
 Combine all comments into `ALL_COMMENTS`.
+
+**If `ALL_COMMENTS` is empty** (no review comments found), report to the user:
+> No review comments found on PR #{PR_NUMBER}. Nothing to rework.
+
+Then return to `main` and stop — do not proceed further.
 
 ---
 

@@ -2,7 +2,8 @@
 name: chairly-spec-format
 description: >
   Chairly feature spec format for Claude Code agent workflows. Specs are written to
-  .claude/tasks/{feature-name}/spec.md + tasks.json.
+  .claude/tasks/{feature-name}/spec.md + tasks.json. Use when writing, reviewing, or
+  validating feature specs, task breakdowns, or planning implementation tasks for Chairly features.
 user-invocable: false
 ---
 

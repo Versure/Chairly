@@ -14,12 +14,14 @@ All paths are relative to the repo root (main checkout).
 
 ## Step 1 — Commit any uncommitted changes in worktrees
 
+Only process worktrees for active layers (determined in Step 0d).
+
 ```bash
-# Backend worktree
+# Backend worktree (if HAS_BACKEND or HAS_INFRA)
 cd {BACKEND_WT} && git add -A
 git diff --cached --quiet || git commit -m "feat({FEATURE_NAME}): backend implementation"
 
-# Frontend worktree
+# Frontend worktree (if HAS_FRONTEND)
 cd {FRONTEND_WT} && git add -A
 git diff --cached --quiet || git commit -m "feat({FEATURE_NAME}): frontend implementation"
 ```
@@ -27,7 +29,10 @@ git diff --cached --quiet || git commit -m "feat({FEATURE_NAME}): frontend imple
 ## Step 2 — Push worktree branches
 
 ```bash
+# If HAS_BACKEND or HAS_INFRA:
 cd {BACKEND_WT} && git push -u origin impl/{FEATURE_NAME}-backend
+
+# If HAS_FRONTEND:
 cd {FRONTEND_WT} && git push -u origin impl/{FEATURE_NAME}-frontend
 ```
 
@@ -36,10 +41,10 @@ cd {FRONTEND_WT} && git push -u origin impl/{FEATURE_NAME}-frontend
 ```bash
 git checkout feat/{FEATURE_NAME}
 
-# Merge backend branch
+# If HAS_BACKEND or HAS_INFRA:
 git merge --no-ff impl/{FEATURE_NAME}-backend -m "chore: merge backend implementation"
 
-# Merge frontend branch
+# If HAS_FRONTEND:
 git merge --no-ff impl/{FEATURE_NAME}-frontend -m "chore: merge frontend implementation"
 ```
 
@@ -64,16 +69,19 @@ gh pr create \
 
 ## Changes
 
-**Backend:**
-- {list each B task title}
+{Include only sections for active layers:}
 
-**Frontend:**
+**Backend:** (if HAS_BACKEND or HAS_INFRA)
+- {list each B/I task title}
+
+**Frontend:** (if HAS_FRONTEND)
 - {list each F task title}
 
 ## Quality gates
 
-- Backend: build, tests, format
-- Frontend: lint, tests, build, e2e
+{List only gates that were run:}
+- Backend: build, tests, format (if HAS_BACKEND or HAS_INFRA)
+- Frontend: lint, tests, build, e2e (if HAS_FRONTEND)
 
 ## Notes
 

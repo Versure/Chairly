@@ -2,7 +2,10 @@
 name: implement
 description: >
   Orchestrate a full feature implementation. Creates worktrees, spawns backend + frontend
-  impl agents, runs review and QA, merges and creates PR. Usage: /implement {feature-name}
+  impl agents, runs review and QA, merges and creates PR. Usage: /implement {feature-name}.
+  Use this skill when the user wants to build a feature, implement a spec, code a new feature,
+  develop functionality, or says things like "build this", "implement this", "code this feature",
+  or "start development on...".
 user-invocable: true
 ---
 
@@ -46,43 +49,62 @@ git rev-parse --abbrev-ref HEAD
 If not `main`, abort:
 > Error: /implement must be run from the main branch. Run `git checkout main && git pull origin main` first.
 
-### 0d — Set up git branches and worktrees
+### 0d — Determine active layers
+
+Read `TASKS_PATH` and check which layers have tasks:
+
+```
+HAS_INFRA    = any task where "layer": "infra"
+HAS_BACKEND  = any task where "layer": "backend"
+HAS_FRONTEND = any task where "layer": "frontend"
+```
+
+Log which layers are active:
+> `[Layer detection] infra: {yes/no} | backend: {yes/no} | frontend: {yes/no}`
+
+### 0e — Set up git branches and worktrees
 
 ```bash
 # Create feature branch if it doesn't exist
 git rev-parse --verify "feat/{FEATURE_NAME}" >/dev/null 2>&1 \
   || git branch "feat/{FEATURE_NAME}"
 
-# Remove stale worktrees
+mkdir -p ".worktrees/{FEATURE_NAME}"
+```
+
+**Only create worktrees for active layers:**
+
+If `HAS_BACKEND` or `HAS_INFRA` (infra work happens in the backend worktree):
+```bash
 [ -d ".worktrees/{FEATURE_NAME}/backend" ] \
   && (git worktree remove --force ".worktrees/{FEATURE_NAME}/backend" 2>/dev/null || rm -rf ".worktrees/{FEATURE_NAME}/backend") \
   || true
-[ -d ".worktrees/{FEATURE_NAME}/frontend" ] \
-  && (git worktree remove --force ".worktrees/{FEATURE_NAME}/frontend" 2>/dev/null || rm -rf ".worktrees/{FEATURE_NAME}/frontend") \
-  || true
-
-# Create worktrees
-mkdir -p ".worktrees/{FEATURE_NAME}"
 git rev-parse --verify "impl/{FEATURE_NAME}-backend" >/dev/null 2>&1 \
   && git worktree add ".worktrees/{FEATURE_NAME}/backend" "impl/{FEATURE_NAME}-backend" \
   || git worktree add -b "impl/{FEATURE_NAME}-backend" ".worktrees/{FEATURE_NAME}/backend" "feat/{FEATURE_NAME}"
+```
 
+If `HAS_FRONTEND`:
+```bash
+[ -d ".worktrees/{FEATURE_NAME}/frontend" ] \
+  && (git worktree remove --force ".worktrees/{FEATURE_NAME}/frontend" 2>/dev/null || rm -rf ".worktrees/{FEATURE_NAME}/frontend") \
+  || true
 git rev-parse --verify "impl/{FEATURE_NAME}-frontend" >/dev/null 2>&1 \
   && git worktree add ".worktrees/{FEATURE_NAME}/frontend" "impl/{FEATURE_NAME}-frontend" \
   || git worktree add -b "impl/{FEATURE_NAME}-frontend" ".worktrees/{FEATURE_NAME}/frontend" "feat/{FEATURE_NAME}"
 ```
 
-Log: `[Step 0 done] Feature: {FEATURE_NAME} | Branch: feat/{FEATURE_NAME} | Worktrees ready`
+Log: `[Step 0 done] Feature: {FEATURE_NAME} | Branch: feat/{FEATURE_NAME} | Worktrees: {active layers}`
 
 ---
 
-## Phase 0.5 — Infrastructure implementation (if infra tasks exist)
+## Phase 0.5 — Infrastructure implementation (run if `HAS_INFRA`)
 
-Read `TASKS_PATH`. If there are tasks where `"layer": "infra"`, run this phase first.
-If there are no infra tasks, skip directly to Phase 1.
+Skip this phase if `HAS_INFRA` is false.
 
-**Infra tasks run before backend/frontend** because they set up services that backend
-code depends on (Aspire resources, Keycloak config, RabbitMQ topology, etc.).
+**NOTE:** Infra work modifies the backend worktree (`BACKEND_WT`). There is no separate
+infra worktree. Infra tasks run before backend/frontend because they set up services
+that backend code depends on (Aspire resources, Keycloak config, RabbitMQ topology, etc.).
 
 1. Read `.claude/skills/implement/phase-infra.md`
 2. Spawn **infra-impl** agent (`subagent_type: infra-impl`) with that content, appending:
@@ -107,11 +129,14 @@ BACKEND_WT:   {BACKEND_WT}
 
 ---
 
-## Phase 1 — Implementation (backend + frontend in parallel)
+## Phase 1 — Implementation (active layers in parallel)
 
-Read `TASKS_PATH` to get the task lists. Spawn both implementation agents **in the same response**:
+If `HAS_BACKEND` and `HAS_FRONTEND` are both false (infra-only feature), skip to Phase 2.
 
-**Backend:**
+Read `TASKS_PATH` to get the task lists. Spawn implementation agents **in the same response**
+for all active layers:
+
+**Backend** (skip if `HAS_BACKEND` is false):
 1. Read `.claude/skills/implement/phase-backend.md`
 2. Spawn **backend-impl** agent (`subagent_type: backend-impl`) with that content, appending:
 ```
@@ -122,7 +147,7 @@ BACKEND_WT:     {BACKEND_WT}
 Backend tasks:  {list each backend task as "B1 — {title}"}
 ```
 
-**Frontend:**
+**Frontend** (skip if `HAS_FRONTEND` is false):
 1. Read `.claude/skills/implement/phase-frontend.md`
 2. Spawn **frontend-impl** agent (`subagent_type: frontend-impl`) with that content, appending:
 ```
@@ -133,15 +158,15 @@ FRONTEND_WT:    {FRONTEND_WT}
 Frontend tasks: {list each frontend task as "F1 — {title}"}
 ```
 
-Wait for both to complete.
+Wait for all spawned agents to complete.
 
 ---
 
-## Phase 2 — Code review (both reviewers in parallel)
+## Phase 2 — Code review (active layers in parallel)
 
-Spawn both review agents **in the same response**:
+Spawn review agents **in the same response** for active layers only:
 
-**Backend reviewer:**
+**Backend reviewer** (run if `HAS_BACKEND` or `HAS_INFRA`):
 1. Read `.claude/skills/implement/phase-backend-review.md`
 2. Spawn **backend-reviewer** agent (`subagent_type: backend-reviewer`) with content, appending:
 ```
@@ -150,7 +175,7 @@ SPEC_PATH:    {SPEC_PATH}
 BACKEND_WT:   {BACKEND_WT}
 ```
 
-**Frontend reviewer:**
+**Frontend reviewer** (skip if `HAS_FRONTEND` is false):
 1. Read `.claude/skills/implement/phase-frontend-review.md`
 2. Spawn **frontend-reviewer** agent (`subagent_type: frontend-reviewer`) with content, appending:
 ```
@@ -159,36 +184,36 @@ SPEC_PATH:    {SPEC_PATH}
 FRONTEND_WT:  {FRONTEND_WT}
 ```
 
-Wait for both.
+Wait for all spawned reviewers.
 
 ### Fix cycle (if findings exist)
 
-If a reviewer returned issues, spawn fix agents (parallel if both need fixes):
-- **Backend fix**: same prompt as Phase 1 + append findings under `--- FIX PASS ---`
-- **Frontend fix**: same prompt as Phase 1 + append findings under `--- FIX PASS ---`
-- **Infra fix**: same prompt as Phase 0.5 + append findings under `--- FIX PASS ---`
+If a reviewer returned issues, spawn fix agents (parallel if multiple need fixes):
+- **Backend fix** (if backend review had findings): same prompt as Phase 1 + append findings under `--- FIX PASS ---`
+- **Frontend fix** (if frontend review had findings): same prompt as Phase 1 + append findings under `--- FIX PASS ---`
+- **Infra fix** (if infra review had findings): same prompt as Phase 0.5 + append findings under `--- FIX PASS ---`
 
 After fixes, run **one re-review pass**. Do not loop again — accept and proceed.
 
 ---
 
-## Phase 3 — Quality checks (both QA agents in parallel)
+## Phase 3 — Quality checks (active layers in parallel)
 
-Spawn both QA agents **in the same response**:
+Spawn QA agents **in the same response** for active layers only:
 
-**Backend QA:** Spawn `chairly-backend-qa` agent, appending:
+**Backend QA** (run if `HAS_BACKEND` or `HAS_INFRA`): Spawn `chairly-backend-qa` agent, appending:
 ```
 --- CONTEXT ---
 BACKEND_WT: {BACKEND_WT}
 ```
 
-**Frontend QA:** Spawn `chairly-frontend-qa` agent, appending:
+**Frontend QA** (skip if `HAS_FRONTEND` is false): Spawn `chairly-frontend-qa` agent, appending:
 ```
 --- CONTEXT ---
 FRONTEND_WT: {FRONTEND_WT}
 ```
 
-Parse `BACKEND-QA-RESULT` and `FRONTEND-QA-RESULT`.
+Parse QA results for each active layer.
 
 ### QA fix cycle
 

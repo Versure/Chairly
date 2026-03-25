@@ -22,7 +22,7 @@ Multi-tenant SaaS platform for salons and barbershops. Built with .NET 10, Angul
 
 ## Development Workflow
 
-Chairly uses an AI-first development workflow powered by Claude Code. Features are built through four slash commands:
+Chairly uses an AI-first development workflow powered by Claude Code. Features are built through slash commands:
 
 ### 1. Create a Spec
 
@@ -69,6 +69,44 @@ After the spec PR is merged to main:
 
 Fetches PR review comments, categorizes by layer, spawns fix agents, runs QA, pushes fixes.
 
+### 5. Quick Bug Fix
+
+```bash
+/fix manager can't see revenue on dashboard
+```
+
+Skips the spec PR cycle for small, well-understood bugs:
+- Investigates the codebase to identify root cause
+- Creates a `fix/{name}` branch with isolated worktrees
+- Spawns fix agents for affected layers (backend/frontend)
+- Runs QA, commits, and creates a PR
+
+Use `/fix` for small bugs (1-4 tasks). Use `/create-spec` + `/implement` for larger changes.
+
+### 6. Review Changes
+
+```bash
+/review                    # Review current branch
+/review feat/my-feature    # Review a specific branch
+```
+
+Standalone code review that works outside the `/implement` workflow:
+- Detects which layers changed (backend/frontend/infra)
+- Spawns appropriate reviewer agents in parallel
+- Presents a unified report with findings
+- Optionally spawns fix agents to address issues
+
+### 7. Repository Cleanup
+
+```bash
+/cleanup
+```
+
+Housekeeping tasks:
+- Prunes local branches that have been merged into `main`
+- Removes orphaned task files with missing specs
+- Cleans stale git worktrees
+
 ### Workflow Diagram
 
 ```
@@ -85,6 +123,10 @@ Fetches PR review comments, categorizes by layer, spawns fix agents, runs QA, pu
                                             human review + merge
                                                       │
 /rework-code ◄────────────────────────────────────────┘
+
+/fix ─────────► backend-impl + frontend-impl ──► QA ──► fix PR
+/review ──────► backend-reviewer + frontend-reviewer ──► report
+/cleanup ─────► prune branches, tasks, worktrees
 ```
 
 ## Agents
@@ -111,6 +153,9 @@ Fetches PR review comments, categorizes by layer, spawns fix agents, runs QA, pu
 | `/implement {name}` | Implement a merged spec |
 | `/rework-spec {PR#}` | Fix spec from PR review comments |
 | `/rework-code {PR#}` | Fix code from PR review comments |
+| `/fix {description}` | Quick bug fix without spec cycle |
+| `/review [branch]` | Standalone code review |
+| `/cleanup` | Prune branches, tasks, and worktrees |
 
 ## Quality Checks
 

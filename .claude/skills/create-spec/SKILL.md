@@ -2,7 +2,10 @@
 name: create-spec
 description: >
   Create a feature spec with interactive spec-writer agent, automated review,
-  and PR creation on a spec/{feature} branch. Usage: /create-spec {name} [--issue N]
+  and PR creation on a spec/{feature} branch. Usage: /create-spec {name} [--issue N].
+  Use this skill whenever the user wants to plan a feature, write requirements, create a spec,
+  break down a feature into tasks, or says things like "let's spec out...", "I need a spec for...",
+  "plan the implementation of...", or "write up requirements for...".
 user-invocable: true
 ---
 
@@ -97,8 +100,10 @@ If `status: pass`:
 # Create spec directory if needed
 mkdir -p ".claude/tasks/{FEATURE_NAME}"
 
-# Create and switch to spec branch
-git checkout -b "spec/{FEATURE_NAME}"
+# Create and switch to spec branch (handle existing branch)
+git rev-parse --verify "spec/{FEATURE_NAME}" >/dev/null 2>&1 \
+  && git checkout "spec/{FEATURE_NAME}" \
+  || git checkout -b "spec/{FEATURE_NAME}"
 
 # Stage spec files
 git add ".claude/tasks/{FEATURE_NAME}/"
