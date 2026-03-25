@@ -45,6 +45,7 @@ export class RecipeFormComponent {
 
   protected readonly isSaving = signal<boolean>(false);
   protected readonly errorMessage = signal<string | null>(null);
+  private readonly activeRecipe = signal<Recipe | null>(null);
 
   protected readonly form = new FormGroup({
     title: new FormControl('', {
@@ -60,6 +61,7 @@ export class RecipeFormComponent {
 
   open(recipe?: Recipe | null): void {
     const recipeData = recipe !== undefined ? recipe : this.existingRecipe();
+    this.activeRecipe.set(recipeData ?? null);
     this.errorMessage.set(null);
     this.isSaving.set(false);
 
@@ -145,7 +147,7 @@ export class RecipeFormComponent {
       };
     });
 
-    const recipeData = this.existingRecipe();
+    const recipeData = this.activeRecipe();
     if (recipeData) {
       this.recipesApi
         .updateRecipe(recipeData.id, {

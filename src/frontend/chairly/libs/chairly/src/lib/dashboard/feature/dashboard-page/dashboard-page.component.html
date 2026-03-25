@@ -1,0 +1,43 @@
+<div class="flex min-h-screen flex-col bg-gray-50 dark:bg-slate-900">
+  <!-- Page header -->
+  <chairly-page-header title="Dashboard" />
+
+  <!-- Content -->
+  <div class="flex-1 overflow-auto p-6">
+    <!-- Loading state -->
+    @if (store.loading()) {
+      <p class="text-gray-500 dark:text-gray-400">Laden...</p>
+    }
+
+    @if (store.dashboard(); as dashboard) {
+      <!-- Stat cards row -->
+      <div class="mb-6">
+        <chairly-dashboard-stats
+          [todaysBookingsCount]="dashboard.todaysBookingsCount"
+          [newClientsThisWeek]="dashboard.newClientsThisWeek"
+          [revenueThisWeek]="dashboard.revenueThisWeek"
+          [revenueThisMonth]="dashboard.revenueThisMonth"
+          [isOwner]="authStore.isOwner()"
+          [isManager]="authStore.isManager()" />
+      </div>
+
+      <!-- Two-column layout for booking lists -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <chairly-dashboard-booking-list
+          [title]="'Boekingen vandaag'"
+          [bookings]="dashboard.todaysBookings"
+          [emptyMessage]="'Geen boekingen vandaag'" />
+
+        <chairly-dashboard-booking-list
+          [title]="'Aankomende boekingen'"
+          [bookings]="dashboard.upcomingBookings"
+          [emptyMessage]="'Geen aankomende boekingen'" />
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (store.error(); as error) {
+      <p class="text-red-600 dark:text-red-400">{{ error }}</p>
+    }
+  </div>
+</div>

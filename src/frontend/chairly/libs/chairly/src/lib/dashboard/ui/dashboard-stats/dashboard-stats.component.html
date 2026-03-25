@@ -1,0 +1,48 @@
+<div class="space-y-6">
+  <!-- Algemene statistieken -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Boekingen vandaag -->
+    <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Boekingen vandaag</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+        {{ todaysBookingsCount() }}
+      </p>
+    </div>
+
+    <!-- Nieuwe klanten -->
+    @if (isOwner() || isManager()) {
+      <div class="rounded-lg bg-white dark:bg-slate-800 p-6 shadow">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Nieuwe klanten</p>
+        <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+          {{ newClientsThisWeek() }}
+        </p>
+      </div>
+    }
+  </div>
+
+  <!-- Financieel overzicht (eigenaar en manager) -->
+  @if (isOwner() || isManager()) {
+    <div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financieel overzicht</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Omzet deze week -->
+        <div
+          class="rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 p-6 shadow">
+          <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">Omzet deze week</p>
+          <p class="mt-2 text-3xl font-bold text-emerald-900 dark:text-emerald-100">
+            {{ revenueThisWeek() | currency: 'EUR' }}
+          </p>
+        </div>
+
+        <!-- Omzet deze maand -->
+        <div
+          class="rounded-lg bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 p-6 shadow">
+          <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">Omzet deze maand</p>
+          <p class="mt-2 text-3xl font-bold text-emerald-900 dark:text-emerald-100">
+            {{ revenueThisMonth() | currency: 'EUR' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -53,4 +53,21 @@ public class KeycloakRoleClaimTransformerTests
 
         Assert.Single(roleClaims);
     }
+
+    [Fact]
+    public async Task TransformAsync_CustomRoleClaimType_IsInRoleReturnsTrue()
+    {
+        // JsonWebTokenHandler sets RoleClaimType to "role" (not ClaimTypes.Role).
+        // Verify that IsInRole works after transformation in this scenario.
+        var transformer = new KeycloakRoleClaimTransformer();
+        var identity = new ClaimsIdentity(
+        [
+            new Claim("realm_access", """{"roles":["manager"]}"""),
+        ], "Bearer", nameType: ClaimsIdentity.DefaultNameClaimType, roleType: "role");
+        var principal = new ClaimsPrincipal(identity);
+
+        var transformed = await transformer.TransformAsync(principal);
+
+        Assert.True(transformed.IsInRole("manager"));
+    }
 }

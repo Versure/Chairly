@@ -3,6 +3,7 @@ using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Config;
+using Chairly.Api.Features.Dashboard;
 using Chairly.Api.Features.Notifications;
 using Chairly.Api.Features.Onboarding;
 using Chairly.Api.Features.Services;
@@ -151,6 +152,7 @@ app.UseMiddleware<TenantContextMiddleware>();
 
 app.MapBillingEndpoints();
 app.MapBookingEndpoints();
+app.MapDashboardEndpoints();
 app.MapServiceCategoryEndpoints();
 app.MapServiceEndpoints();
 app.MapStaffEndpoints();
