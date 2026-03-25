@@ -10,7 +10,7 @@ Revenue report feature for accountants. Salon Owners and Managers can generate w
 
 - **Bounded context:** Reports (new, backend + frontend), Billing (extended with PaymentMethod)
 - **Key entities:** Invoice, InvoiceLineItem, TenantSettings
-- **New enum:** PaymentMethod (Cash, Pin, BankTransfer)
+- **New enum:** PaymentMethod (Cash, Pin, BankTransfer) — required on Invoice
 - **Ubiquitous language:**
   - **Invoice** — a billing document generated from a completed booking
   - **Revenue Report** — an accountant-focused summary of paid invoices for a given period
@@ -40,16 +40,16 @@ public enum PaymentMethod
 
 Add after `PaidBy`:
 ```csharp
-public PaymentMethod? PaymentMethod { get; set; }
+public PaymentMethod PaymentMethod { get; set; }
 ```
 
-Nullable because invoices that are not yet paid have no payment method, and existing paid invoices in the database will have `null` (unknown/legacy).
+Required field. Since we are not yet in production, the migration will set all existing invoices to `Pin`. Unpaid invoices will also carry a default value (`Pin`) which gets overwritten when the invoice is marked as paid.
 
 **EF Configuration** — update `InvoiceConfiguration.cs`:
 
 ```csharp
 builder.Property(i => i.PaymentMethod)
-    .IsRequired(false)
+    .IsRequired()
     .HasConversion<string>()
     .HasMaxLength(20);
 ```
@@ -64,14 +64,17 @@ DO $$ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'Invoices' AND column_name = 'PaymentMethod'
   ) THEN
-    ALTER TABLE "Invoices" ADD COLUMN "PaymentMethod" text;
+    ALTER TABLE "Invoices" ADD COLUMN "PaymentMethod" text NOT NULL DEFAULT 'Pin';
   END IF;
 END $$;
+
+-- Set all existing invoices to Pin (safe since we are not yet in production)
+UPDATE "Invoices" SET "PaymentMethod" = 'Pin' WHERE "PaymentMethod" IS NULL;
 ```
 
 **Test cases:**
 - Migration applies cleanly on empty database
-- Existing invoices retain `null` PaymentMethod after migration
+- Existing invoices have `PaymentMethod = 'Pin'` after migration
 - PaymentMethod stores as string (Cash, Pin, BankTransfer)
 
 ---
@@ -126,14 +129,14 @@ Ensure the endpoint's authorization uses `RequireManager` policy so both Owners 
 
 **Update `InvoiceResponse`:**
 
-Add `PaymentMethod` field (string, nullable):
+Add `PaymentMethod` field (string, required):
 ```csharp
-string? PaymentMethod
+string PaymentMethod
 ```
 
-**Update `InvoiceMapper.ToResponse`** to include `invoice.PaymentMethod?.ToString()`.
+**Update `InvoiceMapper.ToResponse`** to include `invoice.PaymentMethod.ToString()`.
 
-**Update `InvoiceSummaryResponse`** to include `string? PaymentMethod` as well.
+**Update `InvoiceSummaryResponse`** to include `string PaymentMethod` as well.
 
 **Test cases:**
 - MarkInvoicePaid with valid PaymentMethod sets `PaidAtUtc`, `PaidBy`, and `PaymentMethod`
@@ -183,7 +186,7 @@ internal sealed record RevenueReportRow(
     string InvoiceNumber,
     decimal TotalAmount,
     decimal VatAmount,
-    string? PaymentMethod);
+    string PaymentMethod);
 
 // RevenueReportDailyTotal.cs
 internal sealed record RevenueReportDailyTotal(
@@ -222,7 +225,7 @@ internal sealed record RevenueReportGrandTotal(
 4. Load salon name from `TenantSettings.CompanyName` (fallback to `"Onbekend"`)
 5. Map to `RevenueReportRow` (one per invoice):
    - `VatAmount` = `invoice.TotalVatAmount`
-   - `PaymentMethod` = `invoice.PaymentMethod?.ToString()`
+   - `PaymentMethod` = `invoice.PaymentMethod.ToString()`
 6. Group rows by date for `DailyTotals`
 7. Calculate `GrandTotal` from all rows
 
@@ -386,7 +389,7 @@ export interface MarkInvoicePaidRequest {
 
 Add `paymentMethod` to `Invoice` and `InvoiceSummary`:
 ```typescript
-paymentMethod?: PaymentMethod;
+paymentMethod: PaymentMethod;
 ```
 
 **Update `InvoiceApiService`:**
@@ -420,8 +423,7 @@ After selection, call `invoiceStore.markAsPaid(id, paymentMethod)`.
 
 **Display payment method** on the invoice detail page in the metadata section:
 - Label: "Betaalmethode"
-- Show only when `invoice.paymentMethod` is set (i.e. invoice is paid)
-- Display the Dutch label from `paymentMethodLabels` (imported from `@org/shared-lib`)
+- Always display the Dutch label from `paymentMethodLabels` (imported from `@org/shared-lib`), since all invoices have a payment method
 
 **Test cases:**
 - MarkAsPaid sends payment method in request body
@@ -467,7 +469,7 @@ export interface RevenueReportRow {
   invoiceNumber: string;
   totalAmount: number;
   vatAmount: number;
-  paymentMethod: PaymentMethod | null;
+  paymentMethod: PaymentMethod;
 }
 
 export interface RevenueReportDailyTotal {
@@ -494,7 +496,7 @@ export interface RevenueReport {
 }
 ```
 
-Note: `RevenueReportRow.paymentMethod` uses `PaymentMethod | null` (the typed union from `@org/shared-lib`), NOT `string | null`. This ensures type consistency with the `PaymentMethod` type defined in F1. The type lives in `shared/` because it is used across two domains (billing and reports), and Sheriff rules prohibit cross-domain imports.
+Note: `RevenueReportRow.paymentMethod` uses the `PaymentMethod` type (from `@org/shared-lib`), NOT `string`. This ensures type consistency with the `PaymentMethod` type defined in F1. The type lives in `shared/` because it is used across two domains (billing and reports), and Sheriff rules prohibit cross-domain imports.
 
 **API Service** (`report-api.service.ts`):
 
@@ -610,7 +612,7 @@ Page header: "Omzetrapport"
 **Payment method display:**
 - Import `paymentMethodLabels` from `@org/shared-lib`
 - Show Dutch labels: Contant, Pin, Overboeking
-- Show "-" for `null` (legacy invoices without payment method)
+- All invoices have a payment method, so no null fallback is needed
 
 **Dark mode:** All custom colors must have `dark:` variants. Document card uses `bg-white dark:bg-slate-800`.
 
@@ -769,7 +771,7 @@ Update existing billing e2e tests to account for the new payment method flow:
 ## Acceptance Criteria
 
 - [ ] `PaymentMethod` enum exists with Cash, Pin, BankTransfer values
-- [ ] Invoice entity has nullable `PaymentMethod` field, stored as string
+- [ ] Invoice entity has required `PaymentMethod` field, stored as string
 - [ ] `POST /api/invoices/{id}/pay` requires `paymentMethod` in the request body
 - [ ] `POST /api/invoices/{id}/pay` uses `RequireManager` policy (Owner + Manager can mark as paid)
 - [ ] "Mark as paid" UI shows payment method selection dialog
@@ -793,7 +795,7 @@ Update existing billing e2e tests to account for the new payment method flow:
 - [ ] `ActivatedRoute.queryParams` uses `takeUntilDestroyed(destroyRef)` with injected `DestroyRef`
 - [ ] `DOCUMENT` token used via `inject(DOCUMENT)` for DOM access (no global `document`)
 - [ ] `PaymentMethod` type and `paymentMethodLabels` are in `libs/shared/src/lib/models/payment-method.model.ts`
-- [ ] `RevenueReportRow.paymentMethod` uses `PaymentMethod | null` type (not `string | null`)
+- [ ] `RevenueReportRow.paymentMethod` uses `PaymentMethod` type (not `string`)
 - [ ] All backend quality checks pass (`dotnet build`, `dotnet test`, `dotnet format`)
 - [ ] All frontend quality checks pass (`lint`, `format:check`, `test`, `build`)
 - [ ] Playwright e2e tests pass
@@ -809,4 +811,4 @@ Update existing billing e2e tests to account for the new payment method flow:
 - Multi-period comparison / charts / graphs
 - Custom date range (only full week or full month)
 - Revenue per staff member or per service breakdown
-- Historical migration of payment methods for existing paid invoices
+- Per-invoice payment method migration (all existing invoices are set to Pin in the migration)
