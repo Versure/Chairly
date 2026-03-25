@@ -1,0 +1,83 @@
+{
+  "feature": "report",
+  "specPath": ".claude/tasks/report/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Add PaymentMethod enum and extend Invoice entity",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Update MarkInvoicePaid to accept PaymentMethod",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "GetRevenueReport query and handler",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "Revenue report PDF generator",
+      "status": "pending",
+      "dependsOn": ["B3"]
+    },
+    {
+      "id": "B5",
+      "layer": "backend",
+      "title": "GetRevenueReportPdf endpoint",
+      "status": "pending",
+      "dependsOn": ["B3", "B4"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add PaymentMethod to billing models and update mark-as-paid flow",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Reports domain scaffolding (models, service, store)",
+      "status": "pending",
+      "dependsOn": ["B3"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Revenue report page component",
+      "status": "pending",
+      "dependsOn": ["F1", "F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Reports route registration and navigation",
+      "status": "pending",
+      "dependsOn": ["F2", "F3"]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Playwright e2e tests for revenue report",
+      "status": "pending",
+      "dependsOn": ["F3", "F4"]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Update billing e2e tests for payment method",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    }
+  ]
+}
