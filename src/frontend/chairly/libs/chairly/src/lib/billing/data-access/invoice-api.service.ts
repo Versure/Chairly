@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { Observable } from 'rxjs';
 
-import { API_BASE_URL } from '@org/shared-lib';
+import { API_BASE_URL, PaymentMethod } from '@org/shared-lib';
 
 import {
   AddLineItemRequest,
@@ -50,8 +50,8 @@ export class InvoiceApiService {
     return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/send`, null);
   }
 
-  markAsPaid(id: string): Observable<Invoice> {
-    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/pay`, null);
+  markAsPaid(id: string, paymentMethod: PaymentMethod): Observable<Invoice> {
+    return this.http.post<Invoice>(`${this.baseUrl}/invoices/${id}/pay`, { paymentMethod });
   }
 
   voidInvoice(id: string): Observable<Invoice> {

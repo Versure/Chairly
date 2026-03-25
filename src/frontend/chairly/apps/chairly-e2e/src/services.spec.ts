@@ -249,8 +249,8 @@ test('clicking Status wijzigen toggles an active service to Inactief', async ({ 
 
   await page.locator('button[title="Status wijzigen"]').first().click();
 
-  expect(toggled).toBe(true);
   await expect(page.getByText('Inactief')).toBeVisible();
+  expect(toggled).toBe(true);
 });
 
 test('edit dialog pre-fills all fields (Naam, Omschrijving, Duur, Prijs, Categorie) and saves changes', async ({

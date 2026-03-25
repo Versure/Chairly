@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   OnInit,
   signal,
@@ -11,7 +12,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { LoadingIndicatorComponent } from '@org/shared-lib';
+import { LoadingIndicatorComponent, PaymentMethod, paymentMethodLabels } from '@org/shared-lib';
 
 import { InvoiceStore } from '../../data-access';
 import { AddLineItemRequest, CompanyInfo, Invoice } from '../../models';
@@ -39,6 +40,11 @@ export class InvoiceDetailPageComponent implements OnInit {
   private readonly document = inject(DOCUMENT);
 
   private readonly lineItemDialog = viewChild<LineItemFormDialogComponent>('lineItemDialog');
+  private readonly paymentMethodDialog =
+    viewChild<ElementRef<HTMLDialogElement>>('paymentMethodDialog');
+
+  protected readonly paymentMethodLabels = paymentMethodLabels;
+  protected readonly selectedPaymentMethod = signal<PaymentMethod>('Pin');
 
   protected readonly invoice = computed<Invoice | null>(() => this.invoiceStore.selectedInvoice());
   protected readonly company = computed<CompanyInfo | null>(() => this.invoiceStore.companyInfo());
@@ -105,9 +111,31 @@ export class InvoiceDetailPageComponent implements OnInit {
   }
 
   protected onMarkAsPaid(): void {
+    this.selectedPaymentMethod.set('Pin');
+    const dialogEl = this.paymentMethodDialog()?.nativeElement;
+    if (dialogEl) {
+      this.document.body.style.overflow = 'hidden';
+      dialogEl.showModal();
+    }
+  }
+
+  protected onConfirmPaymentMethod(): void {
     const inv = this.invoice();
     if (inv) {
-      this.invoiceStore.markAsPaid(inv.id);
+      this.invoiceStore.markAsPaid(inv.id, this.selectedPaymentMethod());
+    }
+    this.closePaymentMethodDialog();
+  }
+
+  protected onPaymentMethodChange(method: PaymentMethod): void {
+    this.selectedPaymentMethod.set(method);
+  }
+
+  protected closePaymentMethodDialog(): void {
+    const dialogEl = this.paymentMethodDialog()?.nativeElement;
+    if (dialogEl) {
+      dialogEl.close();
+      this.document.body.style.overflow = '';
     }
   }
 

@@ -335,12 +335,11 @@ test('clicking Recept toevoegen opens recipe form, saves, and shows in Behandelg
   await dialog.getByLabel('Merk').fill('Redken');
   await dialog.getByLabel('Hoeveelheid').fill('20 ml');
 
-  // Save
+  // Save — wait for the visual result first (guarantees the POST route was called)
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
 
-  expect(postCalled).toBe(true);
-  // Verify the new recipe appears in Behandelgeschiedenis
   await expect(page.getByText('Knippen standaard')).toBeVisible();
+  expect(postCalled).toBe(true);
 });
 
 test('Terug naar klanten link navigates back to the clients list', async ({ page }) => {
