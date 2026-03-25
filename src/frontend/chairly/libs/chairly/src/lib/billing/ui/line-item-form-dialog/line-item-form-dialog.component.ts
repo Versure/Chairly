@@ -22,6 +22,7 @@ export type LineItemDialogMode = 'surcharge' | 'discount';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   templateUrl: './line-item-form-dialog.component.html',
+  styleUrl: './line-item-form-dialog.component.scss',
 })
 export class LineItemFormDialogComponent {
   readonly saved: OutputEmitterRef<AddLineItemRequest> = output<AddLineItemRequest>();

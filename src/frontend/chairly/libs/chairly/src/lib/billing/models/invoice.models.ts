@@ -1,4 +1,10 @@
+import { PaymentMethod } from '@org/shared-lib';
+
 export type InvoiceStatus = 'Concept' | 'Verzonden' | 'Betaald' | 'Vervallen';
+
+export interface MarkInvoicePaidRequest {
+  paymentMethod: PaymentMethod;
+}
 
 export interface ClientSnapshot {
   fullName: string;
@@ -44,6 +50,7 @@ export interface Invoice {
   subTotalAmount: number;
   totalVatAmount: number;
   totalAmount: number;
+  paymentMethod: PaymentMethod;
   status: InvoiceStatus;
   lineItems: InvoiceLineItem[];
   createdAtUtc: string;
@@ -62,6 +69,7 @@ export interface InvoiceSummary {
   subTotalAmount: number;
   totalVatAmount: number;
   totalAmount: number;
+  paymentMethod: PaymentMethod;
   status: InvoiceStatus;
   createdAtUtc: string;
   sentAtUtc?: string;

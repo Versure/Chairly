@@ -7,4 +7,5 @@ export type {
   InvoiceLineItem,
   InvoiceStatus,
   InvoiceSummary,
+  MarkInvoicePaidRequest,
 } from './invoice.models';
