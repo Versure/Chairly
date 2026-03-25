@@ -79,9 +79,9 @@ internal sealed class RevenueReportPdfGenerator : IRevenueReportPdfGenerator
             {
                 columns.RelativeColumn(1.5f); // Datum
                 columns.RelativeColumn(2);    // Factuurnummer
+                columns.RelativeColumn(1.5f); // Betaalmethode
                 columns.RelativeColumn(1.5f); // Bedrag (incl. BTW)
                 columns.RelativeColumn(1.5f); // BTW
-                columns.RelativeColumn(1.5f); // Betaalmethode
             });
 
             table.Header(header =>
@@ -90,12 +90,12 @@ internal sealed class RevenueReportPdfGenerator : IRevenueReportPdfGenerator
                     .Text("Datum").SemiBold().FontSize(9);
                 header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).Padding(4)
                     .Text("Factuurnummer").SemiBold().FontSize(9);
+                header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).Padding(4)
+                    .Text("Betaalmethode").SemiBold().FontSize(9);
                 header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).Padding(4).AlignRight()
                     .Text("Bedrag (incl. BTW)").SemiBold().FontSize(9);
                 header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).Padding(4).AlignRight()
                     .Text("BTW").SemiBold().FontSize(9);
-                header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten1).Padding(4)
-                    .Text("Betaalmethode").SemiBold().FontSize(9);
             });
 
             var rowsByDate = data.Rows
@@ -108,9 +108,9 @@ internal sealed class RevenueReportPdfGenerator : IRevenueReportPdfGenerator
                 {
                     ComposeDataCell(table, row.Date.ToString("dd-MM-yyyy", _dutchCulture));
                     ComposeDataCell(table, row.InvoiceNumber);
+                    ComposeDataCell(table, FormatPaymentMethod(row.PaymentMethod));
                     ComposeDataCell(table, row.TotalAmount.ToString("C", _dutchCulture), alignRight: true);
                     ComposeDataCell(table, row.VatAmount.ToString("C", _dutchCulture), alignRight: true);
-                    ComposeDataCell(table, FormatPaymentMethod(row.PaymentMethod));
                 }
 
                 var dailyTotal = data.DailyTotals.FirstOrDefault(d => d.Date == dateGroup.Key);
@@ -118,18 +118,18 @@ internal sealed class RevenueReportPdfGenerator : IRevenueReportPdfGenerator
                 {
                     ComposeSubtotalCell(table, $"Subtotaal {dateGroup.Key.ToString("dd-MM-yyyy", _dutchCulture)}");
                     ComposeSubtotalCell(table, string.Empty);
+                    ComposeSubtotalCell(table, $"{dailyTotal.InvoiceCount} facturen");
                     ComposeSubtotalCell(table, dailyTotal.TotalAmount.ToString("C", _dutchCulture), alignRight: true);
                     ComposeSubtotalCell(table, dailyTotal.VatAmount.ToString("C", _dutchCulture), alignRight: true);
-                    ComposeSubtotalCell(table, $"{dailyTotal.InvoiceCount} facturen");
                 }
             }
 
             // Grand total row
             ComposeGrandTotalCell(table, "Totaal");
             ComposeGrandTotalCell(table, string.Empty);
+            ComposeGrandTotalCell(table, $"{data.GrandTotal.InvoiceCount} facturen");
             ComposeGrandTotalCell(table, data.GrandTotal.TotalAmount.ToString("C", _dutchCulture), alignRight: true);
             ComposeGrandTotalCell(table, data.GrandTotal.VatAmount.ToString("C", _dutchCulture), alignRight: true);
-            ComposeGrandTotalCell(table, $"{data.GrandTotal.InvoiceCount} facturen");
         });
     }
 
