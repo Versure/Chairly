@@ -273,7 +273,7 @@ public class RevenueReportHandlerTests
     }
 
     [Fact]
-    public async Task GetRevenueReportHandler_NoTenantSettings_ReturnsOnbekend()
+    public async Task GetRevenueReportHandler_NoTenantSettings_ReturnsEmptyString()
     {
         await using var db = CreateDbContext();
         var tenantContext = TestTenantContext.Create();
@@ -282,7 +282,7 @@ public class RevenueReportHandlerTests
         var result = await handler.Handle(new GetRevenueReportQuery("week", new DateOnly(2026, 3, 23)));
 
         var report = result.AsT0;
-        Assert.Equal("Onbekend", report.SalonName);
+        Assert.Equal(string.Empty, report.SalonName);
     }
 
     [Fact]
