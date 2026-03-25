@@ -11,7 +11,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { paymentMethodLabels } from '@org/shared-lib';
+import { PageHeaderComponent, paymentMethodLabels } from '@org/shared-lib';
 
 import { ReportStore } from '../../data-access';
 import { PeriodType, RevenueReportDailyTotal, RevenueReportRow } from '../../models';
@@ -26,7 +26,7 @@ interface DayGroup {
   selector: 'chairly-revenue-report-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, PageHeaderComponent],
   templateUrl: './revenue-report-page.component.html',
   styleUrl: './revenue-report-page.component.scss',
 })
