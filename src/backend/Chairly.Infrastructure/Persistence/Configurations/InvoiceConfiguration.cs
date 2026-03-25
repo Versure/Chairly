@@ -27,6 +27,11 @@ internal sealed class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.TotalVatAmount).HasPrecision(18, 2);
         builder.Property(i => i.TotalAmount).HasPrecision(18, 2);
 
+        builder.Property(i => i.PaymentMethod)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         builder.Property(i => i.CreatedBy).IsRequired();
         builder.Property(i => i.SentBy).IsRequired(false);
         builder.Property(i => i.PaidBy).IsRequired(false);

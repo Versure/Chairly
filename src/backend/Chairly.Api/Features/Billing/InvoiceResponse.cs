@@ -13,6 +13,7 @@ internal sealed record InvoiceResponse(
     decimal TotalVatAmount,
     decimal TotalAmount,
     string Status,
+    string PaymentMethod,
     IReadOnlyList<InvoiceLineItemResponse> LineItems,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? SentAtUtc,

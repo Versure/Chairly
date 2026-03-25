@@ -8,10 +8,13 @@ internal static class MarkInvoicePaidEndpoint
     {
         group.MapPost("/{id:guid}/pay", async (
             Guid id,
+            MarkInvoicePaidRequest request,
             IMediator mediator,
             CancellationToken cancellationToken) =>
         {
-            var result = await mediator.Send(new MarkInvoicePaidCommand(id), cancellationToken).ConfigureAwait(false);
+            var result = await mediator.Send(
+                new MarkInvoicePaidCommand(id, request.PaymentMethod),
+                cancellationToken).ConfigureAwait(false);
             return result.Match(
                 invoice => Results.Ok(invoice),
                 _ => Results.NotFound(),
