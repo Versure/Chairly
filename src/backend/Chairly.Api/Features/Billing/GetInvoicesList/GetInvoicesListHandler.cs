@@ -37,6 +37,7 @@ internal sealed class GetInvoicesListHandler(ChairlyDbContext db, ITenantContext
                 x.Invoice.VoidedAtUtc != null ? "Vervallen" :
                 x.Invoice.PaidAtUtc != null ? "Betaald" :
                 x.Invoice.SentAtUtc != null ? "Verzonden" : "Concept",
+                x.Invoice.PaymentMethod.ToString(),
                 x.Invoice.CreatedAtUtc, x.Invoice.SentAtUtc, x.Invoice.PaidAtUtc, x.Invoice.VoidedAtUtc))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);

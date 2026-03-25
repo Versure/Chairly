@@ -11,6 +11,7 @@ internal sealed record InvoiceSummaryResponse(
     decimal TotalVatAmount,
     decimal TotalAmount,
     string Status,
+    string PaymentMethod,
     DateTimeOffset CreatedAtUtc,
     DateTimeOffset? SentAtUtc,
     DateTimeOffset? PaidAtUtc,
