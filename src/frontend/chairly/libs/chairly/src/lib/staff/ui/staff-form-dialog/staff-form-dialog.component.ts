@@ -36,6 +36,7 @@ export class StaffFormDialogComponent {
 
   readonly saved: OutputEmitterRef<CreateStaffMemberRequest> = output<CreateStaffMemberRequest>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
+  readonly resetPassword: OutputEmitterRef<void> = output<void>();
 
   private readonly document = inject(DOCUMENT);
   private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');

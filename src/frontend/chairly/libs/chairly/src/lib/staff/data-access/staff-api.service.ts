@@ -5,11 +5,7 @@ import { Observable } from 'rxjs';
 
 import { API_BASE_URL } from '@org/shared-lib';
 
-import {
-  CreateStaffMemberRequest,
-  StaffMemberResponse,
-  UpdateStaffMemberRequest,
-} from '../models';
+import { CreateStaffMemberRequest, StaffMemberResponse, UpdateStaffMemberRequest } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class StaffApiService {
@@ -34,5 +30,9 @@ export class StaffApiService {
 
   reactivate(id: string): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/staff/${id}/reactivate`, null);
+  }
+
+  resetPassword(id: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/staff/${id}/reset-password`, null);
   }
 }

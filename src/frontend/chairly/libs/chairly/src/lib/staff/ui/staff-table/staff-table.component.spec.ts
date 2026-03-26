@@ -194,4 +194,30 @@ describe('StaffTableComponent', () => {
     ) as NodeListOf<HTMLTableRowElement>;
     expect(rows[0].classList.contains('opacity-60')).toBe(false);
   });
+
+  it('should emit resetPassword event when "Reset wachtwoord" button is clicked', () => {
+    let emitted: StaffMemberResponse | undefined;
+    component.resetPassword.subscribe((m) => {
+      emitted = m;
+    });
+
+    const resetButton = fixture.nativeElement.querySelector(
+      '[title="Wachtwoord resetten"]',
+    ) as HTMLButtonElement;
+    resetButton.click();
+    fixture.detectChanges();
+
+    expect(emitted?.id).toBe('1');
+  });
+
+  it('should not render "Reset wachtwoord" button for inactive members', () => {
+    const rows = fixture.nativeElement.querySelectorAll(
+      'tbody tr',
+    ) as NodeListOf<HTMLTableRowElement>;
+    const inactiveRow = rows[2];
+    const resetButton = inactiveRow.querySelector(
+      '[title="Wachtwoord resetten"]',
+    ) as HTMLButtonElement | null;
+    expect(resetButton).toBeNull();
+  });
 });

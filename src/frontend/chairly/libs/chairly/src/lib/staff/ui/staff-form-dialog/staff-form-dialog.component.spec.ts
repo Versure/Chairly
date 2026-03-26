@@ -176,6 +176,55 @@ describe('StaffFormDialogComponent', () => {
     );
   });
 
+  it('should emit resetPassword event when "Reset wachtwoord" link is clicked in edit mode', () => {
+    let emitted = false;
+    component.resetPassword.subscribe(() => {
+      emitted = true;
+    });
+
+    fixture.componentRef.setInput('staffMember', mockStaffMember);
+    fixture.detectChanges();
+    component.open();
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button[type="button"]'),
+    ) as HTMLButtonElement[];
+    const resetButton = buttons.find(
+      (b) => b.textContent?.trim() === 'Reset wachtwoord',
+    ) as HTMLButtonElement;
+    expect(resetButton).toBeTruthy();
+    resetButton.click();
+    fixture.detectChanges();
+
+    expect(emitted).toBe(true);
+  });
+
+  it('should not show "Reset wachtwoord" link in add mode (staffMember is null)', () => {
+    component.open();
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button[type="button"]'),
+    ) as HTMLButtonElement[];
+    const resetButton = buttons.find((b) => b.textContent?.trim() === 'Reset wachtwoord');
+    expect(resetButton).toBeUndefined();
+  });
+
+  it('should not show "Reset wachtwoord" link when staffMember is inactive', () => {
+    const inactiveMember: StaffMemberResponse = { ...mockStaffMember, isActive: false };
+    fixture.componentRef.setInput('staffMember', inactiveMember);
+    fixture.detectChanges();
+    component.open();
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button[type="button"]'),
+    ) as HTMLButtonElement[];
+    const resetButton = buttons.find((b) => b.textContent?.trim() === 'Reset wachtwoord');
+    expect(resetButton).toBeUndefined();
+  });
+
   it('should emit cancel event on Annuleren click', () => {
     let cancelled = false;
     component.cancelled.subscribe(() => {
