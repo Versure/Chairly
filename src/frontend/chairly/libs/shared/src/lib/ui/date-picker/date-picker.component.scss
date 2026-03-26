@@ -141,7 +141,7 @@ span.flatpickr-weekday {
   gap: 0.375rem;
   width: 100%;
   padding: 0.5rem 1rem;
-  background: #4f46e5;
+  background: #7362b8;
   color: #fff;
   font-size: 0.875rem;
   font-weight: 500;
@@ -151,16 +151,20 @@ span.flatpickr-weekday {
   border-top: 1px solid #e5e7eb;
   border-radius: 0 0 0.5rem 0.5rem;
 
+  svg {
+    fill: #fff;
+  }
+
   &:hover {
-    background: #4338ca;
+    background: #5e4e9a;
   }
 
   &.darkTheme {
-    background: #4f46e5;
+    background: #7362b8;
     color: #fff;
 
     &:hover {
-      background: #4338ca;
+      background: #5e4e9a;
     }
   }
 }
