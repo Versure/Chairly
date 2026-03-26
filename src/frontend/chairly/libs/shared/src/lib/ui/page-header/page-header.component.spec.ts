@@ -46,7 +46,7 @@ describe('PageHeaderComponent', () => {
 
   it('should have consistent min-height class', () => {
     const rootDiv = fixture.nativeElement.querySelector('div') as HTMLDivElement;
-    expect(rootDiv.classList.contains('min-h-[4rem]')).toBe(true);
+    expect(rootDiv.classList.contains('min-h-[4.25rem]')).toBe(true);
   });
 
   describe('with projected action content', () => {
