@@ -135,7 +135,10 @@ span.flatpickr-weekday {
 
 /* Confirm button (confirmDate plugin) */
 .flatpickr-confirm {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
   width: 100%;
   padding: 0.5rem 1rem;
   background: #4f46e5;
@@ -193,6 +196,15 @@ span.flatpickr-weekday {
     .flatpickr-monthDropdown-months,
     input.cur-year {
       color: #fff;
+    }
+
+    .flatpickr-monthDropdown-months {
+      background: #1e293b;
+
+      option {
+        background: #1e293b;
+        color: #fff;
+      }
     }
   }
 
