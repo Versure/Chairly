@@ -311,6 +311,7 @@ test('back link navigates to invoice list', async ({ page }) => {
 test('invoice detail page shows company information in header', async ({ page }) => {
   await setupInvoiceDetailMocks(page);
   await page.goto('/facturen/inv-1');
+  await page.waitForURL(/\/facturen\/inv-1/);
 
   await expect(page.getByText('Salon Chairly')).toBeVisible();
   await expect(page.getByText('info@chairly.nl')).toBeVisible();
