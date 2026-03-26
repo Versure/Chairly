@@ -131,6 +131,42 @@ public class RevenueReportHandlerTests
     }
 
     [Fact]
+    public async Task GetRevenueReportHandler_YearPeriod_ReturnsCorrectBoundaries()
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        CreateTenantSettings(db, "Salon Test");
+
+        var handler = new GetRevenueReportHandler(db, tenantContext);
+        var result = await handler.Handle(new GetRevenueReportQuery("year", new DateOnly(2026, 6, 15)));
+
+        var report = result.AsT0;
+        Assert.Equal(new DateOnly(2026, 1, 1), report.PeriodStart);
+        Assert.Equal(new DateOnly(2026, 12, 31), report.PeriodEnd);
+        Assert.Equal("year", report.PeriodType);
+    }
+
+    [Fact]
+    public async Task GetRevenueReportHandler_YearPeriod_ReturnsInvoicesForFullYear()
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        CreateTenantSettings(db, "Salon Test");
+
+        CreatePaidInvoice(db, new DateOnly(2026, 1, 15), "2026-0001", 65.00m, 11.30m);
+        CreatePaidInvoice(db, new DateOnly(2026, 6, 20), "2026-0002", 120.00m, 20.83m);
+        CreatePaidInvoice(db, new DateOnly(2026, 12, 31), "2026-0003", 45.00m, 7.82m);
+
+        var handler = new GetRevenueReportHandler(db, tenantContext);
+        var result = await handler.Handle(new GetRevenueReportQuery("year", new DateOnly(2026, 3, 1)));
+
+        var report = result.AsT0;
+        Assert.Equal(3, report.Rows.Count);
+        Assert.Equal(230.00m, report.GrandTotal.TotalAmount);
+        Assert.Equal(3, report.GrandTotal.InvoiceCount);
+    }
+
+    [Fact]
     public async Task GetRevenueReportHandler_InvalidPeriod_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
@@ -140,7 +176,7 @@ public class RevenueReportHandlerTests
         var result = await handler.Handle(new GetRevenueReportQuery("quarter", new DateOnly(2026, 3, 25)));
 
         Assert.True(result.IsT1);
-        Assert.Equal("Ongeldige periode. Gebruik 'week' of 'month'.", result.AsT1.Message);
+        Assert.Equal("Ongeldige periode. Gebruik 'week', 'month' of 'year'.", result.AsT1.Message);
     }
 
     [Fact]
@@ -321,6 +357,23 @@ public class RevenueReportHandlerTests
     }
 
     [Fact]
+    public async Task GetRevenueReportPdfHandler_YearPeriod_ReturnsNonEmptyByteArray()
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        CreateTenantSettings(db, "Salon Test");
+        CreatePaidInvoice(db, new DateOnly(2026, 6, 15), "2026-0001", 65.00m, 11.30m);
+
+        var pdfGenerator = new RevenueReportPdfGenerator();
+        var handler = new GetRevenueReportPdfHandler(db, tenantContext, pdfGenerator);
+        var result = await handler.Handle(new GetRevenueReportPdfQuery("year", new DateOnly(2026, 6, 15)));
+
+        var pdf = result.AsT0;
+        Assert.NotEmpty(pdf);
+        Assert.True(pdf.Length > 0);
+    }
+
+    [Fact]
     public async Task GetRevenueReportPdfHandler_InvalidPeriod_ReturnsUnprocessable()
     {
         await using var db = CreateDbContext();
@@ -353,6 +406,29 @@ public class RevenueReportHandlerTests
                 new RevenueReportDailyTotal(new DateOnly(2026, 3, 24), 45.00m, 7.82m, 1),
             ],
             new RevenueReportGrandTotal(110.00m, 19.12m, 2));
+
+        var pdf = generator.Generate(data);
+
+        Assert.NotEmpty(pdf);
+        Assert.True(pdf.Length > 100);
+    }
+
+    [Fact]
+    public void RevenueReportPdfGenerator_YearPeriod_ProducesNonEmptyByteArray()
+    {
+        var generator = new RevenueReportPdfGenerator();
+        var data = new RevenueReportResponse(
+            "year",
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 12, 31),
+            "Kapsalon Test",
+            [
+                new RevenueReportRow(new DateOnly(2026, 3, 23), "2026-0042", 65.00m, 11.30m, "Pin"),
+            ],
+            [
+                new RevenueReportDailyTotal(new DateOnly(2026, 3, 23), 65.00m, 11.30m, 1),
+            ],
+            new RevenueReportGrandTotal(65.00m, 11.30m, 1));
 
         var pdf = generator.Generate(data);
 

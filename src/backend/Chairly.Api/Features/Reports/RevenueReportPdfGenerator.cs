@@ -199,6 +199,11 @@ internal sealed class RevenueReportPdfGenerator : IRevenueReportPdfGenerator
             return $"Week {weekNumber}: {data.PeriodStart.ToString("d MMMM", _dutchCulture)} - {data.PeriodEnd.ToString("d MMMM yyyy", _dutchCulture)}";
         }
 
+        if (string.Equals(data.PeriodType, "year", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"Jaar {data.PeriodStart.Year}";
+        }
+
         return data.PeriodStart.ToString("MMMM yyyy", _dutchCulture);
     }
 

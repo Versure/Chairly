@@ -15,7 +15,8 @@ internal static class RevenueReportBuilder
         {
             "week" => CalculateWeekPeriod(date),
             "month" => CalculateMonthPeriod(date),
-            _ => new Unprocessable("Ongeldige periode. Gebruik 'week' of 'month'."),
+            "year" => CalculateYearPeriod(date),
+            _ => new Unprocessable("Ongeldige periode. Gebruik 'week', 'month' of 'year'."),
         };
     }
 
@@ -95,6 +96,13 @@ internal static class RevenueReportBuilder
     {
         var firstDay = new DateOnly(date.Year, date.Month, 1);
         var lastDay = firstDay.AddMonths(1).AddDays(-1);
+        return (firstDay, lastDay);
+    }
+
+    private static (DateOnly PeriodStart, DateOnly PeriodEnd) CalculateYearPeriod(DateOnly date)
+    {
+        var firstDay = new DateOnly(date.Year, 1, 1);
+        var lastDay = new DateOnly(date.Year, 12, 31);
         return (firstDay, lastDay);
     }
 }
