@@ -1,0 +1,62 @@
+{
+  "feature": "date-time-picker",
+  "specPath": ".claude/tasks/date-time-picker/spec.md",
+  "tasks": [
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Install Flatpickr and configure styles",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Create shared `<chairly-date-picker>` component",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Unit tests for DatePickerComponent",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Update booking list page (date filter)",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Update booking form dialog (datetime input)",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Update invoice list page (date range filters)",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F7",
+      "layer": "frontend",
+      "title": "Update shift schedule editor (time inputs)",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F8",
+      "layer": "frontend",
+      "title": "Update existing e2e tests",
+      "status": "pending",
+      "dependsOn": ["F4", "F5", "F6", "F7"]
+    }
+  ]
+}
