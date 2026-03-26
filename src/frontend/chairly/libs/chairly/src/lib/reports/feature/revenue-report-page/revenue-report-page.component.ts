@@ -45,11 +45,21 @@ export class RevenueReportPageComponent implements OnInit {
   protected readonly isDownloading = computed(() => this.reportStore.isDownloading());
 
   protected readonly periodLabel = computed<string>(() => {
+    const period = this.selectedPeriod();
+    const date = this.selectedDate();
     const report = this.report();
-    if (!report) {
-      return '';
+
+    if (period === 'year') {
+      const d = new Date(date);
+      return `${d.getFullYear()}`;
     }
-    if (report.periodType === 'week') {
+
+    if (period === 'month') {
+      return this.formatMonthYear(date);
+    }
+
+    // For week, prefer the report's period boundaries when available and matching
+    if (report && report.periodType === 'week') {
       const start = new Date(report.periodStart);
       const weekNumber = this.getIsoWeekNumber(start);
       const startStr = this.formatShortDate(report.periodStart);
@@ -57,11 +67,16 @@ export class RevenueReportPageComponent implements OnInit {
       const year = start.getFullYear();
       return `Week ${weekNumber}: ${startStr} - ${endStr} ${year}`;
     }
-    if (report.periodType === 'year') {
-      const d = new Date(report.periodStart);
-      return `${d.getFullYear()}`;
-    }
-    return this.formatMonthYear(report.periodStart);
+
+    // Fallback: compute week label from selected date
+    const d = new Date(date);
+    const weekNumber = this.getIsoWeekNumber(d);
+    const monday = this.getWeekStart(d);
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    const startStr = this.formatShortDate(this.toDateString(monday));
+    const endStr = this.formatShortDate(this.toDateString(sunday));
+    return `Week ${weekNumber}: ${startStr} - ${endStr} ${d.getFullYear()}`;
   });
 
   protected readonly dayGroups = computed<DayGroup[]>(() => {
@@ -135,6 +150,13 @@ export class RevenueReportPageComponent implements OnInit {
 
   protected onDownloadPdf(): void {
     this.reportStore.downloadPdf(this.selectedPeriod(), this.selectedDate());
+  }
+
+  private getWeekStart(date: Date): Date {
+    const d = new Date(date);
+    const day = d.getDay() || 7; // Convert Sunday (0) to 7
+    d.setDate(d.getDate() - day + 1); // Set to Monday
+    return d;
   }
 
   private getIsoWeekNumber(date: Date): number {
