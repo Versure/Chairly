@@ -67,10 +67,9 @@ describe('LandingPageComponent', () => {
     expect(compiled.textContent).toContain('Klaar om te starten?');
   });
 
-  it('should wrap main content in a flex-1 element for sticky footer', () => {
+  it('should not contain header or footer (provided by layout)', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const mainElement = compiled.querySelector('main');
-    expect(mainElement).toBeTruthy();
-    expect(mainElement?.classList.contains('flex-1')).toBe(true);
+    expect(compiled.querySelector('chairly-web-header')).toBeFalsy();
+    expect(compiled.querySelector('chairly-web-footer')).toBeFalsy();
   });
 });
