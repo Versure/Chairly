@@ -124,6 +124,7 @@ internal static partial class KeycloakDevSeeder
             displayName = "Chairly Admin",
             loginTheme = "chairly",
             enabled = true,
+            resetPasswordAllowed = true,
             clients = new object[]
             {
                 new
@@ -288,6 +289,7 @@ internal static partial class KeycloakDevSeeder
             displayName = "Chairly",
             loginTheme = "chairly",
             enabled = true,
+            resetPasswordAllowed = true,
             clients = new object[]
             {
                 new
@@ -364,6 +366,7 @@ internal static partial class KeycloakDevSeeder
         {
             displayName = "Chairly",
             loginTheme = "chairly",
+            resetPasswordAllowed = true,
             smtpServer,
         };
 
