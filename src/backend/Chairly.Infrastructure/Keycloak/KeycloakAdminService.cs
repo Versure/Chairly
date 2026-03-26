@@ -60,6 +60,7 @@ internal sealed partial class KeycloakAdminService : IKeycloakAdminService, IDis
         {
             realm = tenantId.ToString(),
             enabled = true,
+            resetPasswordAllowed = true,
             clients = new object[]
             {
                 new

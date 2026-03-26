@@ -3,6 +3,7 @@ using Chairly.Api.Features.Staff.CreateStaffMember;
 using Chairly.Api.Features.Staff.DeactivateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
 using Chairly.Api.Features.Staff.ReactivateStaffMember;
+using Chairly.Api.Features.Staff.ResetStaffPassword;
 using Chairly.Api.Features.Staff.UpdateStaffMember;
 using Chairly.Api.Shared.Results;
 using Chairly.Domain.Entities;
@@ -564,5 +565,67 @@ public class StaffHandlerTests
         // DB should still be reactivated even when Keycloak fails.
         var response = result.AsT0;
         Assert.True(response.IsActive);
+    }
+
+    [Fact]
+    public async Task ResetStaffPasswordHandler_HappyPath_ReturnsSuccess()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.KeycloakUserId = "kc-user-reset";
+        await db.SaveChangesAsync();
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ResetStaffPasswordHandler(db, keycloak, NullLogger<ResetStaffPasswordHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new ResetStaffPasswordCommand(existing.Id));
+
+        Assert.True(result.IsT0);
+        Assert.True(keycloak.SendActionsEmailCalled);
+    }
+
+    [Fact]
+    public async Task ResetStaffPasswordHandler_NotFound_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ResetStaffPasswordHandler(db, keycloak, NullLogger<ResetStaffPasswordHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new ResetStaffPasswordCommand(Guid.NewGuid()));
+
+        Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task ResetStaffPasswordHandler_NoKeycloakUserId_ReturnsNotFound()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        // KeycloakUserId is null by default
+
+        var keycloak = new NullKeycloakAdminService();
+        var handler = new ResetStaffPasswordHandler(db, keycloak, NullLogger<ResetStaffPasswordHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new ResetStaffPasswordCommand(existing.Id));
+
+        Assert.IsType<NotFound>(result.AsT1);
+        Assert.False(keycloak.SendActionsEmailCalled);
+    }
+
+    [Fact]
+    public async Task ResetStaffPasswordHandler_KeycloakFails_StillReturnsSuccess()
+    {
+        await using var db = CreateDbContext();
+        var existing = CreateTestStaffMember(db);
+        existing.KeycloakUserId = "kc-user-fail-reset";
+        await db.SaveChangesAsync();
+
+        var keycloak = new FailingKeycloakAdminService();
+        var handler = new ResetStaffPasswordHandler(db, keycloak, NullLogger<ResetStaffPasswordHandler>.Instance, TestTenantContext.Create());
+
+        var result = await handler.Handle(new ResetStaffPasswordCommand(existing.Id));
+
+        // Should still return Success even when Keycloak is unreachable.
+        Assert.True(result.IsT0);
     }
 }
