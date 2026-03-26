@@ -35,6 +35,7 @@ internal sealed class MarkInvoicePaidHandler(ChairlyDbContext db, ITenantContext
         {
             invoice.PaidAtUtc = DateTimeOffset.UtcNow;
             invoice.PaidBy = tenantContext.UserId;
+            invoice.PaymentMethod = command.PaymentMethod;
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }

@@ -14,6 +14,7 @@ export const sheriffConfig: SheriffConfig = {
       'billing/<layer>': ['domain:billing', 'layer:<layer>'],
       'dashboard/<layer>': ['domain:dashboard', 'layer:<layer>'],
       'notifications/<layer>': ['domain:notifications', 'layer:<layer>'],
+      'reports/<layer>': ['domain:reports', 'layer:<layer>'],
       'settings/<layer>': ['domain:settings', 'layer:<layer>'],
     },
     'libs/admin/src': ['admin-lib'],
@@ -29,6 +30,7 @@ export const sheriffConfig: SheriffConfig = {
     'libs/shared/src/lib': {
       ui: ['shared', 'layer:ui'],
       'data-access': ['shared', 'layer:data-access'],
+      models: ['shared'],
       util: ['shared', 'layer:util'],
     },
   },
@@ -44,6 +46,7 @@ export const sheriffConfig: SheriffConfig = {
       'domain:clients',
       'domain:dashboard',
       'domain:notifications',
+      'domain:reports',
       'domain:services',
       'domain:settings',
       'domain:staff',
@@ -83,7 +86,7 @@ export const sheriffConfig: SheriffConfig = {
     'layer:ui': ['layer:models', 'layer:pipes', 'layer:util', 'shared'],
     'layer:data-access': ['layer:models', 'layer:util', 'shared'],
     'layer:pipes': ['layer:models', 'layer:util'],
-    'layer:models': noDependencies,
+    'layer:models': ['shared'],
     'layer:util': noDependencies,
 
     // Shared can only depend on other shared

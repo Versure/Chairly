@@ -996,7 +996,7 @@ public class InvoiceHandlerTests
         var invoice = CreateTestInvoice(db);
         var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
+        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.Pin));
 
         var response = result.AsT0;
         Assert.Equal("Betaald", response.Status);
@@ -1012,7 +1012,7 @@ public class InvoiceHandlerTests
         await db.SaveChangesAsync();
         var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
+        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.Pin));
 
         var response = result.AsT0;
         Assert.Equal("Betaald", response.Status);
@@ -1027,7 +1027,7 @@ public class InvoiceHandlerTests
         await db.SaveChangesAsync();
         var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id));
+        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.Pin));
 
         Assert.True(result.IsT2);
         Assert.Equal("Vervallen factuur kan niet als betaald worden gemarkeerd", result.AsT2.Message);
@@ -1039,10 +1039,50 @@ public class InvoiceHandlerTests
         await using var db = CreateDbContext();
         var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
 
-        var result = await handler.Handle(new MarkInvoicePaidCommand(Guid.NewGuid()));
+        var result = await handler.Handle(new MarkInvoicePaidCommand(Guid.NewGuid(), Chairly.Domain.Enums.PaymentMethod.Pin));
 
         Assert.True(result.IsT1);
         Assert.IsType<NotFound>(result.AsT1);
+    }
+
+    [Fact]
+    public async Task MarkInvoicePaidHandler_WithCash_StoresPaymentMethodCorrectly()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
+
+        await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.Cash));
+
+        var entity = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
+        Assert.Equal(Chairly.Domain.Enums.PaymentMethod.Cash, entity.PaymentMethod);
+    }
+
+    [Fact]
+    public async Task MarkInvoicePaidHandler_WithBankTransfer_StoresPaymentMethodCorrectly()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
+
+        await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.BankTransfer));
+
+        var entity = await db.Invoices.FirstAsync(i => i.Id == invoice.Id);
+        Assert.Equal(Chairly.Domain.Enums.PaymentMethod.BankTransfer, entity.PaymentMethod);
+    }
+
+    [Fact]
+    public async Task MarkInvoicePaidHandler_ResponseIncludesPaymentMethod()
+    {
+        await using var db = CreateDbContext();
+        var invoice = CreateTestInvoice(db);
+        var handler = new MarkInvoicePaidHandler(db, TestTenantContext.Create());
+
+        var result = await handler.Handle(new MarkInvoicePaidCommand(invoice.Id, Chairly.Domain.Enums.PaymentMethod.Pin));
+
+        var response = result.AsT0;
+        Assert.False(string.IsNullOrEmpty(response.PaymentMethod));
+        Assert.Equal("Pin", response.PaymentMethod);
     }
 
     // ── VoidInvoice ─────────────────────────────────────────────────

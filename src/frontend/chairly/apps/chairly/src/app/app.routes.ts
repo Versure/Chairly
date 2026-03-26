@@ -35,6 +35,11 @@ export const appRoutes: Route[] = [
         loadChildren: () => import('@org/chairly-lib').then((m) => m.billingRoutes),
       },
       {
+        path: 'rapporten',
+        canActivate: [roleGuard('manager')],
+        loadChildren: () => import('@org/chairly-lib').then((m) => m.reportsRoutes),
+      },
+      {
         path: 'medewerkers',
         loadChildren: () => import('@org/chairly-lib').then((m) => m.staffRoutes),
       },

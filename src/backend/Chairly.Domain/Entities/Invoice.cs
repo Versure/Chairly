@@ -1,3 +1,5 @@
+using Chairly.Domain.Enums;
+
 namespace Chairly.Domain.Entities;
 
 public class Invoice
@@ -22,6 +24,7 @@ public class Invoice
     public Guid? SentBy { get; set; }
     public DateTimeOffset? PaidAtUtc { get; set; }
     public Guid? PaidBy { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
     public DateTimeOffset? VoidedAtUtc { get; set; }
     public Guid? VoidedBy { get; set; }
 }

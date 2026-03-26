@@ -3,6 +3,7 @@ export { bookingsRoutes } from './lib/bookings/bookings.routes';
 export { clientsRoutes } from './lib/clients/clients.routes';
 export { dashboardRoutes } from './lib/dashboard/dashboard.routes';
 export { notificationsRoutes } from './lib/notifications/notifications.routes';
+export { reportsRoutes } from './lib/reports/reports.routes';
 export { servicesRoutes } from './lib/services/services.routes';
 export { settingsRoutes } from './lib/settings/settings.routes';
 export { staffRoutes } from './lib/staff/staff.routes';

@@ -4,6 +4,8 @@ import { inject } from '@angular/core';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { take } from 'rxjs';
 
+import { PaymentMethod } from '@org/shared-lib';
+
 import {
   AddLineItemRequest,
   CompanyInfo,
@@ -82,6 +84,7 @@ function replaceInvoiceSummary(invoices: InvoiceSummary[], updated: Invoice): In
           subTotalAmount: updated.subTotalAmount,
           totalVatAmount: updated.totalVatAmount,
           totalAmount: updated.totalAmount,
+          paymentMethod: updated.paymentMethod,
           status: updated.status,
           createdAtUtc: updated.createdAtUtc,
           sentAtUtc: updated.sentAtUtc,
@@ -143,9 +146,9 @@ export const InvoiceStore = signalStore(
           });
       },
 
-      markAsPaid(id: string): void {
+      markAsPaid(id: string, paymentMethod: PaymentMethod): void {
         invoiceApi
-          .markAsPaid(id)
+          .markAsPaid(id, paymentMethod)
           .pipe(take(1))
           .subscribe({
             next: (updated) =>

@@ -226,6 +226,11 @@ namespace Chairly.Infrastructure.Migrations
                     b.Property<Guid?>("PaidBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<DateTimeOffset?>("SentAtUtc")
                         .HasColumnType("timestamp with time zone");
 

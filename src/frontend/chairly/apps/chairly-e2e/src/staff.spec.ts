@@ -144,8 +144,8 @@ test('clicking Medewerker deactiveren shows confirmation; confirming calls PATCH
   await expect(confirmDialog).toBeVisible();
   await confirmDialog.getByRole('button', { name: 'Deactiveren' }).click();
 
-  expect(patchCalled).toBe(true);
   await expect(page.getByText('Inactief')).toBeVisible();
+  expect(patchCalled).toBe(true);
 });
 
 test('Medewerkers nav link is visible in the sidebar and clicking it navigates to /medewerkers', async ({

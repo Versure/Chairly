@@ -8,6 +8,7 @@ const mockInvoiceSummary = {
   clientId: 'cl-1',
   clientFullName: 'Jan de Vries',
   totalAmount: 65,
+  paymentMethod: 'Pin',
   status: 'Concept',
   createdAtUtc: '2026-03-10T10:00:00Z',
   sentAtUtc: null,
@@ -184,28 +185,17 @@ test('clicking Factuur versturen updates status badge to Verzonden', async ({ pa
   ).toBeVisible();
 });
 
-test('clicking Markeer als betaald updates status badge to Betaald', async ({ page }) => {
+test('clicking Markeer als betaald opens payment method dialog', async ({ page }) => {
   const sentInvoice = {
     ...mockInvoiceDetail,
     status: 'Verzonden',
     sentAtUtc: '2026-03-10T12:00:00Z',
-  };
-  const paidInvoice = {
-    ...sentInvoice,
-    status: 'Betaald',
-    paidAtUtc: '2026-03-10T14:00:00Z',
   };
 
   await setupCompanyInfoMock(page);
   await page.route('**/api/invoices/inv-1', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: sentInvoice });
-    }
-    return route.fulfill({ status: 404, body: '' });
-  });
-  await page.route('**/api/invoices/inv-1/pay', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({ json: paidInvoice });
     }
     return route.fulfill({ status: 404, body: '' });
   });
@@ -217,15 +207,63 @@ test('clicking Markeer als betaald updates status badge to Betaald', async ({ pa
   });
 
   await page.goto('/facturen/inv-1');
-  await expect(
-    page.locator('span.rounded-full').getByText('Verzonden', { exact: true }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Markeer als betaald' }).click();
+
+  await expect(page.getByText('Betaalmethode selecteren')).toBeVisible();
+  await expect(page.getByText('Contant')).toBeVisible();
+  await expect(page.locator('dialog').getByText('Pin')).toBeVisible();
+  await expect(page.getByText('Overboeking')).toBeVisible();
+
+  await page.keyboard.press('Escape');
+});
+
+test('mark as paid with selected payment method updates status', async ({ page }) => {
+  const sentInvoice = {
+    ...mockInvoiceDetail,
+    status: 'Verzonden',
+    sentAtUtc: '2026-03-10T12:00:00Z',
+  };
+  const paidInvoice = {
+    ...sentInvoice,
+    status: 'Betaald',
+    paymentMethod: 'Pin',
+    paidAtUtc: '2026-03-10T14:00:00Z',
+  };
+
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: sentInvoice });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices/inv-1/pay', async (route) => {
+    if (route.request().method() === 'POST') {
+      const body = route.request().postDataJSON();
+      if (body.paymentMethod === 'Pin') {
+        return route.fulfill({ json: paidInvoice });
+      }
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
 
   await page.getByRole('button', { name: 'Markeer als betaald' }).click();
+  await expect(page.getByText('Betaalmethode selecteren')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Bevestigen' }).click();
 
   await expect(
     page.locator('span.rounded-full').getByText('Betaald', { exact: true }),
   ).toBeVisible();
+  await expect(page.getByText('Betaalmethode:')).toBeVisible();
 });
 
 test('paid invoice hides void button but shows send button', async ({ page }) => {
@@ -273,6 +311,7 @@ test('back link navigates to invoice list', async ({ page }) => {
 test('invoice detail page shows company information in header', async ({ page }) => {
   await setupInvoiceDetailMocks(page);
   await page.goto('/facturen/inv-1');
+  await page.waitForURL(/\/facturen\/inv-1/);
 
   await expect(page.getByText('Salon Chairly')).toBeVisible();
   await expect(page.getByText('info@chairly.nl')).toBeVisible();
@@ -346,6 +385,7 @@ const mockGeneratedInvoice = {
   bookingId: 'booking-1',
   clientId: 'cl-1',
   clientFullName: 'Jan de Vries',
+  paymentMethod: 'Pin',
   clientSnapshot: {
     fullName: 'Jan de Vries',
     email: 'jan@example.com',
@@ -611,4 +651,52 @@ test('clicking Factuur opnieuw genereren updates line items', async ({ page }) =
   await page.getByRole('button', { name: 'Factuur opnieuw genereren' }).click();
 
   await expect(page.getByText('Haarkleuring')).toBeVisible();
+});
+
+// --- F6: Mark as paid button visibility per role ---
+
+const mockSentInvoiceForRoleTest = {
+  ...mockInvoiceDetail,
+  status: 'Verzonden',
+  sentAtUtc: '2026-03-10T12:00:00Z',
+};
+
+test('mark as paid button visible for Owner', async ({ page }) => {
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockSentInvoiceForRoleTest });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByRole('button', { name: 'Markeer als betaald' })).toBeVisible();
+});
+
+test('mark as paid button visible for Manager', async ({ page }) => {
+  await setupCompanyInfoMock(page);
+  await page.route('**/api/invoices/inv-1', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: mockSentInvoiceForRoleTest });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/api/invoices', (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({ json: [mockInvoiceSummary] });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  await page.goto('/facturen/inv-1');
+
+  await expect(page.getByRole('button', { name: 'Markeer als betaald' })).toBeVisible();
 });
