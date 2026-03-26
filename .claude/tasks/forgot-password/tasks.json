@@ -1,0 +1,48 @@
+{
+  "feature": "forgot-password",
+  "specPath": ".claude/tasks/forgot-password/spec.md",
+  "tasks": [
+    {
+      "id": "I1",
+      "layer": "infra",
+      "title": "Enable \"Forgot password\" on Keycloak realm",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Reset password endpoint for manager-triggered flow",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Add reset password method to staff API service",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Add reset password button to staff table and form dialog",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Wire up reset password flow in staff list page",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Playwright e2e tests for reset password flow",
+      "status": "pending",
+      "dependsOn": ["F3"]
+    }
+  ]
+}
