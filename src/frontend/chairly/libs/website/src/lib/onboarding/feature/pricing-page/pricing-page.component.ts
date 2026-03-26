@@ -12,12 +12,12 @@ import { Router } from '@angular/router';
 
 import { OnboardingApiService } from '../../data-access';
 import { SubscriptionPlanInfo } from '../../models';
-import { FooterComponent, HeaderComponent, PricingCardComponent } from '../../ui';
+import { PricingCardComponent } from '../../ui';
 
 @Component({
   selector: 'chairly-web-pricing-page',
   standalone: true,
-  imports: [HeaderComponent, FooterComponent, PricingCardComponent],
+  imports: [PricingCardComponent],
   templateUrl: './pricing-page.component.html',
   styleUrl: './pricing-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -14,12 +14,12 @@ import { map } from 'rxjs';
 
 import { OnboardingApiService } from '../../data-access';
 import { CreateSubscriptionPayload, SubscriptionPlanInfo } from '../../models';
-import { FooterComponent, HeaderComponent, SubscribeFormComponent } from '../../ui';
+import { SubscribeFormComponent } from '../../ui';
 
 @Component({
   selector: 'chairly-web-subscribe-page',
   standalone: true,
-  imports: [HeaderComponent, FooterComponent, SubscribeFormComponent],
+  imports: [SubscribeFormComponent],
   templateUrl: './subscribe-page.component.html',
   styleUrl: './subscribe-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
