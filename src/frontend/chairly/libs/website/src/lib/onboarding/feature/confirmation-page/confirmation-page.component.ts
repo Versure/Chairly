@@ -4,12 +4,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { map } from 'rxjs';
 
-import { FooterComponent, HeaderComponent } from '../../ui';
-
 @Component({
   selector: 'chairly-web-confirmation-page',
   standalone: true,
-  imports: [RouterLink, HeaderComponent, FooterComponent],
+  imports: [RouterLink],
   templateUrl: './confirmation-page.component.html',
   styleUrl: './confirmation-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
