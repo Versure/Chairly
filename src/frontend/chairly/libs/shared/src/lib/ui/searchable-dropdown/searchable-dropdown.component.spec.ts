@@ -32,6 +32,10 @@ describe('SearchableDropdownComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should render input with autocomplete="off" to prevent browser autocomplete', () => {
+    expect(inputEl.getAttribute('autocomplete')).toBe('off');
+  });
+
   it('should render input with default placeholder', () => {
     expect(inputEl.placeholder).toBe('Zoeken...');
   });
