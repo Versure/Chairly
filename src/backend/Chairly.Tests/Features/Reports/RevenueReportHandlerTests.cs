@@ -166,6 +166,23 @@ public class RevenueReportHandlerTests
         Assert.Equal(3, report.GrandTotal.InvoiceCount);
     }
 
+    [Theory]
+    [InlineData("Year", "year")]
+    [InlineData("MONTH", "month")]
+    [InlineData("Week", "week")]
+    public async Task GetRevenueReportHandler_CaseInsensitivePeriod_ReturnsReport(string period, string expectedNormalized)
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        CreateTenantSettings(db, "Salon Test");
+
+        var handler = new GetRevenueReportHandler(db, tenantContext);
+        var result = await handler.Handle(new GetRevenueReportQuery(period, new DateOnly(2026, 3, 25)));
+
+        var report = result.AsT0;
+        Assert.Equal(expectedNormalized, report.PeriodType);
+    }
+
     [Fact]
     public async Task GetRevenueReportHandler_InvalidPeriod_ReturnsUnprocessable()
     {
@@ -371,6 +388,26 @@ public class RevenueReportHandlerTests
         var pdf = result.AsT0;
         Assert.NotEmpty(pdf);
         Assert.True(pdf.Length > 0);
+    }
+
+    [Theory]
+    [InlineData("Year")]
+    [InlineData("YEAR")]
+    [InlineData("Week")]
+    [InlineData("Month")]
+    public async Task GetRevenueReportPdfHandler_CaseInsensitivePeriod_ReturnsNonEmptyByteArray(string period)
+    {
+        await using var db = CreateDbContext();
+        var tenantContext = TestTenantContext.Create();
+        CreateTenantSettings(db, "Salon Test");
+        CreatePaidInvoice(db, new DateOnly(2026, 3, 23), "2026-0001", 65.00m, 11.30m);
+
+        var pdfGenerator = new RevenueReportPdfGenerator();
+        var handler = new GetRevenueReportPdfHandler(db, tenantContext, pdfGenerator);
+        var result = await handler.Handle(new GetRevenueReportPdfQuery(period, new DateOnly(2026, 3, 23)));
+
+        var pdf = result.AsT0;
+        Assert.NotEmpty(pdf);
     }
 
     [Fact]

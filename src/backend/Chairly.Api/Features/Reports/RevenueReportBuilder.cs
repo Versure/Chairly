@@ -11,11 +11,11 @@ internal static class RevenueReportBuilder
 {
     public static OneOf<(DateOnly PeriodStart, DateOnly PeriodEnd), Unprocessable> CalculatePeriod(string period, DateOnly date)
     {
-        return period switch
+        return period.ToUpperInvariant() switch
         {
-            "week" => CalculateWeekPeriod(date),
-            "month" => CalculateMonthPeriod(date),
-            "year" => CalculateYearPeriod(date),
+            "WEEK" => CalculateWeekPeriod(date),
+            "MONTH" => CalculateMonthPeriod(date),
+            "YEAR" => CalculateYearPeriod(date),
             _ => new Unprocessable("Ongeldige periode. Gebruik 'week', 'month' of 'year'."),
         };
     }
@@ -73,14 +73,27 @@ internal static class RevenueReportBuilder
             rows.Sum(r => r.VatAmount),
             rows.Count);
 
+        var normalizedPeriod = NormalizePeriod(period);
+
         return new RevenueReportResponse(
-            period,
+            normalizedPeriod,
             periodStart,
             periodEnd,
             salonName,
             rows,
             dailyTotals,
             grandTotal);
+    }
+
+    private static string NormalizePeriod(string period)
+    {
+        return period.ToUpperInvariant() switch
+        {
+            "WEEK" => "week",
+            "MONTH" => "month",
+            "YEAR" => "year",
+            _ => period,
+        };
     }
 
     private static (DateOnly PeriodStart, DateOnly PeriodEnd) CalculateWeekPeriod(DateOnly date)
