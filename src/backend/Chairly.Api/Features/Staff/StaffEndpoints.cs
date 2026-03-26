@@ -2,6 +2,7 @@ using Chairly.Api.Features.Staff.CreateStaffMember;
 using Chairly.Api.Features.Staff.DeactivateStaffMember;
 using Chairly.Api.Features.Staff.GetStaffList;
 using Chairly.Api.Features.Staff.ReactivateStaffMember;
+using Chairly.Api.Features.Staff.ResetStaffPassword;
 using Chairly.Api.Features.Staff.UpdateStaffMember;
 
 namespace Chairly.Api.Features.Staff;
@@ -22,6 +23,7 @@ internal static class StaffEndpoints
         writeGroup.MapUpdateStaffMember();
         writeGroup.MapDeactivateStaffMember();
         writeGroup.MapReactivateStaffMember();
+        writeGroup.MapResetStaffPassword();
 
         return app;
     }
