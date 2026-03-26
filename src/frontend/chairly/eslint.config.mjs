@@ -86,10 +86,10 @@ export default [
     files: ['**/*.html'],
     rules: {
       // Angular 17+ signals must be called in templates (title(), mySignal()).
-    // The no-call-expression rule does not support signal detection, so it is
-    // disabled. The CLAUDE.md "no function calls in templates" convention still
-    // applies in code review — signals and pipes are the approved alternatives.
-    '@angular-eslint/template/no-call-expression': 'off',
+      // The no-call-expression rule does not support signal detection, so it is
+      // disabled. The CLAUDE.md "no function calls in templates" convention still
+      // applies in code review — signals and pipes are the approved alternatives.
+      '@angular-eslint/template/no-call-expression': 'off',
       '@angular-eslint/template/prefer-self-closing-tags': 'error',
       '@angular-eslint/template/button-has-type': 'error',
       '@angular-eslint/template/no-any': 'error',
@@ -228,6 +228,9 @@ export default [
       'no-console': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       'max-lines': 'off',
+      // Test host components use inline templates and don't need OnPush
+      '@angular-eslint/component-max-inline-declarations': 'off',
+      '@angular-eslint/prefer-on-push-component-change-detection': 'off',
     },
   },
 

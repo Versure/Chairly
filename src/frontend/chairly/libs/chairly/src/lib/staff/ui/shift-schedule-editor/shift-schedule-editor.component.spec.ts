@@ -33,8 +33,8 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', initialSchedule);
     fixture.detectChanges();
 
-    // Initially 1 block = 2 time inputs
-    let timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
+    // Initially 1 block = 2 date-picker components
+    let timeInputs = fixture.nativeElement.querySelectorAll('chairly-date-picker');
     expect(timeInputs.length).toBe(2);
 
     // Click "+ Dienst toevoegen"
@@ -47,8 +47,8 @@ describe('ShiftScheduleEditorComponent', () => {
     addButton.click();
     fixture.detectChanges();
 
-    // Now 2 blocks = 4 time inputs
-    timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
+    // Now 2 blocks = 4 date-picker components
+    timeInputs = fixture.nativeElement.querySelectorAll('chairly-date-picker');
     expect(timeInputs.length).toBe(4);
   });
 
@@ -62,8 +62,8 @@ describe('ShiftScheduleEditorComponent', () => {
     fixture.componentRef.setInput('schedule', initialSchedule);
     fixture.detectChanges();
 
-    // Initially 2 blocks = 4 time inputs
-    let timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
+    // Initially 2 blocks = 4 date-picker components
+    let timeInputs = fixture.nativeElement.querySelectorAll('chairly-date-picker');
     expect(timeInputs.length).toBe(4);
 
     // Click first remove button (×)
@@ -74,8 +74,8 @@ describe('ShiftScheduleEditorComponent', () => {
     removeButton.click();
     fixture.detectChanges();
 
-    // Now 1 block = 2 time inputs
-    timeInputs = fixture.nativeElement.querySelectorAll('input[type="time"]');
+    // Now 1 block = 2 date-picker components
+    timeInputs = fixture.nativeElement.querySelectorAll('chairly-date-picker');
     expect(timeInputs.length).toBe(2);
   });
 
