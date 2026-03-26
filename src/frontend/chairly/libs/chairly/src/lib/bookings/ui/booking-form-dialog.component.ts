@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import { DropdownOption, SearchableDropdownComponent } from '@org/shared-lib';
+import { DatePickerComponent, DropdownOption, SearchableDropdownComponent } from '@org/shared-lib';
 
 import {
   Booking,
@@ -33,7 +33,7 @@ export interface BookingFormSaveEvent {
   selector: 'chairly-booking-form-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, SearchableDropdownComponent, SetHasPipe],
+  imports: [DatePickerComponent, ReactiveFormsModule, SearchableDropdownComponent, SetHasPipe],
   templateUrl: './booking-form-dialog.component.html',
 })
 export class BookingFormDialogComponent {
@@ -53,8 +53,10 @@ export class BookingFormDialogComponent {
   readonly saved: OutputEmitterRef<BookingFormSaveEvent> = output<BookingFormSaveEvent>();
   readonly cancelled: OutputEmitterRef<void> = output<void>();
 
+  protected readonly today = new Date().toISOString().split('T')[0];
+
   private readonly document = inject(DOCUMENT);
-  private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
+  private readonly dialogEl = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
 
   protected readonly form = new FormGroup({
     clientId: new FormControl('', {
@@ -97,12 +99,12 @@ export class BookingFormDialogComponent {
       this.selectedServiceIds.set(new Set<string>());
     }
     this.document.body.style.overflow = 'hidden';
-    this.dialogRef().nativeElement.showModal();
+    this.dialogEl().nativeElement.showModal();
   }
 
   close(): void {
     this.document.body.style.overflow = '';
-    this.dialogRef().nativeElement.close();
+    this.dialogEl().nativeElement.close();
   }
 
   protected onServiceToggle(serviceId: string, event: Event): void {
@@ -147,13 +149,14 @@ export class BookingFormDialogComponent {
     this.cancelled.emit();
   }
 
-  /** Format a Date as YYYY-MM-DDTHH:mm using local timezone (for datetime-local input). */
+  /** Format a Date as YYYY-MM-DDTHH:mm:ss using local timezone (for Flatpickr datetime parsing). */
   private toLocalDateTimeString(date: Date): string {
     const y = date.getFullYear();
     const mo = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     const h = String(date.getHours()).padStart(2, '0');
     const mi = String(date.getMinutes()).padStart(2, '0');
-    return `${y}-${mo}-${d}T${h}:${mi}`;
+    const s = String(date.getSeconds()).padStart(2, '0');
+    return `${y}-${mo}-${d}T${h}:${mi}:${s}`;
   }
 }

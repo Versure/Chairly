@@ -1,4 +1,5 @@
 import { expect, test } from './fixtures';
+import { selectFlatpickrDateTime } from './helpers/flatpickr.helper';
 
 const mockClients = [
   { id: 'client-1', firstName: 'Jan', lastName: 'Jansen' },
@@ -86,7 +87,7 @@ test('clicking Nieuwe boeking opens the booking form dialog with searchable drop
 
   await expect(dialog.getByLabel('Klant')).toBeVisible();
   await expect(dialog.getByLabel('Medewerker')).toBeVisible();
-  await expect(dialog.getByLabel('Datum & tijd')).toBeVisible();
+  await expect(dialog.getByText('Datum & tijd')).toBeVisible();
   await expect(dialog.getByText('Diensten')).toBeVisible();
   await expect(dialog.getByLabel('Notities')).toBeVisible();
 
@@ -168,7 +169,7 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   await staffInput.fill('Kees');
   await dialog.locator('ul li').filter({ hasText: 'Kees Bakker' }).click();
 
-  await dialog.getByLabel('Datum & tijd').fill('2026-03-10T11:00');
+  await selectFlatpickrDateTime(page, dialog.getByLabel('Datum & tijd'), 28, '11', '00');
   await dialog.getByLabel('Damesknippen').check();
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();
