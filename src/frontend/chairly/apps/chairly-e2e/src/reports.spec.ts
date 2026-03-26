@@ -98,6 +98,15 @@ test('period toggle switches between week and month', async ({ page }) => {
   await expect(page).toHaveURL(/periode=month/);
 });
 
+test('period toggle switches to year', async ({ page }) => {
+  await setupReportMocks(page);
+  await page.goto('/rapporten?periode=week&datum=2026-03-23');
+
+  await page.getByRole('button', { name: 'Jaar' }).click();
+
+  await expect(page).toHaveURL(/periode=year/);
+});
+
 test('payment methods display in Dutch', async ({ page }) => {
   await setupReportMocks(page);
   await page.goto('/rapporten?periode=week&datum=2026-03-23');

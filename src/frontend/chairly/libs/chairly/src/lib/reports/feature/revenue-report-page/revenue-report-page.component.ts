@@ -57,6 +57,10 @@ export class RevenueReportPageComponent implements OnInit {
       const year = start.getFullYear();
       return `Week ${weekNumber}: ${startStr} - ${endStr} ${year}`;
     }
+    if (report.periodType === 'year') {
+      const d = new Date(report.periodStart);
+      return `${d.getFullYear()}`;
+    }
     return this.formatMonthYear(report.periodStart);
   });
 
@@ -103,6 +107,8 @@ export class RevenueReportPageComponent implements OnInit {
     const date = new Date(this.selectedDate());
     if (this.selectedPeriod() === 'week') {
       date.setDate(date.getDate() - 7);
+    } else if (this.selectedPeriod() === 'year') {
+      date.setFullYear(date.getFullYear() - 1);
     } else {
       date.setMonth(date.getMonth() - 1);
     }
@@ -116,6 +122,8 @@ export class RevenueReportPageComponent implements OnInit {
     const date = new Date(this.selectedDate());
     if (this.selectedPeriod() === 'week') {
       date.setDate(date.getDate() + 7);
+    } else if (this.selectedPeriod() === 'year') {
+      date.setFullYear(date.getFullYear() + 1);
     } else {
       date.setMonth(date.getMonth() + 1);
     }
