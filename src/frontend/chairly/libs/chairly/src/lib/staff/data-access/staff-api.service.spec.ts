@@ -145,4 +145,22 @@ describe('StaffApiService', () => {
       expect(completed).toBe(true);
     });
   });
+
+  describe('resetPassword()', () => {
+    it('should POST /api/staff/{id}/reset-password', () => {
+      const id = '123e4567-e89b-12d3-a456-426614174000';
+      let completed = false;
+
+      service.resetPassword(id).subscribe(() => {
+        completed = true;
+      });
+
+      const req = httpTesting.expectOne(`/api/staff/${id}/reset-password`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toBeNull();
+      req.flush(null);
+
+      expect(completed).toBe(true);
+    });
+  });
 });

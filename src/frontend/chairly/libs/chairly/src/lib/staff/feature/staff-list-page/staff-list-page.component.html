@@ -10,6 +10,14 @@
     </button>
   </chairly-page-header>
 
+  <!-- Reset password success banner -->
+  @if (resetPasswordSuccess()) {
+    <div
+      class="mx-6 mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+      {{ resetPasswordSuccess() }}
+    </div>
+  }
+
   <!-- Mutation error -->
   @if (mutationError()) {
     <p class="px-6 pt-3 text-sm text-red-600 dark:text-red-400">{{ mutationError() }}</p>
@@ -23,6 +31,7 @@
       <chairly-staff-table
         [staffMembers]="staffMembers()"
         (edit)="onEdit($event)"
+        (resetPassword)="onResetPassword($event)"
         (deactivate)="onDeactivate($event)"
         (reactivate)="onReactivate($event)" />
     }
@@ -34,7 +43,8 @@
   [staffMember]="selectedStaff()"
   [apiError]="apiEmailError()"
   (saved)="onSave($event)"
-  (cancelled)="onCancelled()" />
+  (cancelled)="onCancelled()"
+  (resetPassword)="onResetPasswordFromFormDialog()" />
 
 <!-- Deactivate confirmation dialog -->
 <chairly-confirmation-dialog
@@ -43,3 +53,12 @@
   message="Weet je zeker dat je deze medewerker wilt deactiveren?"
   confirmLabel="Deactiveren"
   (confirmed)="onConfirmDeactivate()" />
+
+<!-- Reset password confirmation dialog -->
+<chairly-confirmation-dialog
+  #resetPasswordDialog
+  title="Wachtwoord resetten"
+  message="Weet je zeker dat je een wachtwoord-reset e-mail wilt versturen naar deze medewerker?"
+  confirmLabel="Versturen"
+  cancelLabel="Annuleren"
+  (confirmed)="onConfirmResetPassword()" />

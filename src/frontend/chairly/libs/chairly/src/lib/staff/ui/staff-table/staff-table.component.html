@@ -60,6 +60,15 @@
               @if (member.isActive) {
                 <button
                   type="button"
+                  class="inline-flex items-center rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-100 active:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 dark:hover:border-gray-500 dark:active:bg-gray-800"
+                  title="Wachtwoord resetten"
+                  (click)="resetPassword.emit(member)">
+                  Reset wachtwoord
+                </button>
+              }
+              @if (member.isActive) {
+                <button
+                  type="button"
                   class="inline-flex items-center rounded border border-yellow-200 bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 transition-colors hover:border-yellow-300 hover:bg-yellow-100 active:bg-yellow-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-1 dark:bg-yellow-700 dark:border-yellow-600 dark:text-white dark:hover:bg-yellow-600 dark:hover:border-yellow-500 dark:active:bg-yellow-800"
                   title="Medewerker deactiveren"
                   (click)="deactivate.emit(member)">

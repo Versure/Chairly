@@ -23,6 +23,7 @@ export class StaffTableComponent {
     input.required<StaffMemberResponse[]>();
 
   readonly edit: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();
+  readonly resetPassword: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();
   readonly deactivate: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();
   readonly reactivate: OutputEmitterRef<StaffMemberResponse> = output<StaffMemberResponse>();
 }

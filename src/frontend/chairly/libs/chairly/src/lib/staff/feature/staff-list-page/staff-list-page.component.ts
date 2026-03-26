@@ -10,6 +10,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { switchMap, tap, timer } from 'rxjs';
+
 import {
   ConfirmationDialogComponent,
   LoadingIndicatorComponent,
@@ -41,8 +43,11 @@ export class StaffListPageComponent implements OnInit {
   private readonly formDialogRef = viewChild.required(StaffFormDialogComponent);
   private readonly deactivateDialogRef =
     viewChild.required<ConfirmationDialogComponent>('deactivateDialog');
+  private readonly resetPasswordDialogRef =
+    viewChild.required<ConfirmationDialogComponent>('resetPasswordDialog');
 
   protected readonly selectedStaff = signal<StaffMemberResponse | null>(null);
+  protected readonly resetPasswordSuccess = signal<string | null>(null);
   protected readonly staffMembers = this.store.staffMembers;
   protected readonly isLoading = this.store.isLoading;
   protected readonly mutationError = signal<string | null>(null);
@@ -207,5 +212,50 @@ export class StaffListPageComponent implements OnInit {
   protected onCancelled(): void {
     this.selectedStaff.set(null);
     this.apiEmailError.set(null);
+  }
+
+  protected onResetPassword(member: StaffMemberResponse): void {
+    this.selectedStaff.set(member);
+    this.resetPasswordSuccess.set(null);
+    this.resetPasswordDialogRef().open();
+  }
+
+  protected onResetPasswordFromFormDialog(): void {
+    const member = this.selectedStaff();
+    if (!member) return;
+    this.resetPasswordSuccess.set(null);
+    this.formDialogRef().close();
+    this.resetPasswordDialogRef().open();
+  }
+
+  protected onConfirmResetPassword(): void {
+    const member = this.selectedStaff();
+    if (!member) return;
+
+    const message = `Wachtwoord-reset e-mail is verstuurd naar ${member.firstName} ${member.lastName}.`;
+
+    this.staffApi
+      .resetPassword(member.id)
+      .pipe(
+        tap(() => {
+          this.resetPasswordSuccess.set(message);
+          this.selectedStaff.set(null);
+        }),
+        switchMap(() => timer(5000)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: () => {
+          if (this.resetPasswordSuccess() === message) {
+            this.resetPasswordSuccess.set(null);
+          }
+        },
+        error: () => {
+          this.mutationError.set(
+            'Er is een fout opgetreden bij het versturen van de wachtwoord-reset e-mail.',
+          );
+          this.selectedStaff.set(null);
+        },
+      });
   }
 }
