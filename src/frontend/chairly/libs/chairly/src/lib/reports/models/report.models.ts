@@ -1,6 +1,6 @@
 import { PaymentMethod } from '@org/shared-lib';
 
-export type PeriodType = 'week' | 'month';
+export type PeriodType = 'week' | 'month' | 'year';
 
 export interface RevenueReportRow {
   date: string;
