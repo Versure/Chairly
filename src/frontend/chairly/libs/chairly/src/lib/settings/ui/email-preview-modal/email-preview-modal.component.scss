@@ -1,0 +1,4 @@
+dialog:not([open]) {
+  display: none !important;
+  pointer-events: none !important;
+}

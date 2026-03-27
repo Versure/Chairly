@@ -57,13 +57,6 @@ const mockPreviewResponse = {
 async function setupEmailTemplateMocks(page: import('@playwright/test').Page): Promise<void> {
   let templates = [...defaultTemplates];
 
-  await page.route('**/api/notifications/email-templates/preview', (route) => {
-    if (route.request().method() === 'POST') {
-      return route.fulfill({ json: mockPreviewResponse });
-    }
-    return route.fulfill({ status: 404, body: '' });
-  });
-
   await page.route('**/api/notifications/email-templates/*', (route) => {
     const url = route.request().url();
     const method = route.request().method();
@@ -106,6 +99,14 @@ async function setupEmailTemplateMocks(page: import('@playwright/test').Page): P
   await page.route('**/api/notifications/email-templates', (route) => {
     if (route.request().method() === 'GET') {
       return route.fulfill({ json: templates });
+    }
+    return route.fulfill({ status: 404, body: '' });
+  });
+
+  // Registered last so it takes priority (Playwright uses LIFO matching)
+  await page.route('**/api/notifications/email-templates/preview', (route) => {
+    if (route.request().method() === 'POST') {
+      return route.fulfill({ json: mockPreviewResponse });
     }
     return route.fulfill({ status: 404, body: '' });
   });
@@ -169,7 +170,7 @@ test('after saving, list shows Aangepast badge', async ({ page }) => {
 
   await page.getByRole('link', { name: 'Terug naar overzicht' }).click();
   await expect(page).toHaveURL(/\/instellingen\/email-templates$/);
-  await expect(page.getByText('Aangepast')).toBeVisible();
+  await expect(page.getByText('Aangepast', { exact: true })).toBeVisible();
 });
 
 test('re-opening edit page shows previously saved custom subject', async ({ page }) => {
@@ -225,7 +226,7 @@ test('reset template shows confirmation and returns to Standaard badge', async (
 
   // Confirm the dialog
   await expect(page.getByText('Weet u zeker dat u dit template wilt herstellen')).toBeVisible();
-  await page.getByRole('button', { name: 'Herstellen' }).click();
+  await page.getByRole('button', { name: 'Herstellen', exact: true }).click();
 
   // Should navigate back to list
   await expect(page).toHaveURL(/\/instellingen\/email-templates$/);
