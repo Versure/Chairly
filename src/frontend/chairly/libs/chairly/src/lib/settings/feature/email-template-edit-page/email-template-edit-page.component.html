@@ -1,0 +1,135 @@
+<div class="p-6">
+  <div class="mb-4">
+    <a
+      routerLink="/instellingen/email-templates"
+      class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+      &larr; Terug naar overzicht
+    </a>
+  </div>
+
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{{ pageTitle() }}</h1>
+
+  @if (isLoading()) {
+    <chairly-loading-indicator />
+  } @else if (template(); as tmpl) {
+    @if (saveSuccess()) {
+      <div class="mb-4 rounded-md bg-green-50 p-4 dark:bg-green-900/30">
+        <p class="text-sm font-medium text-green-800 dark:text-green-200">Template opgeslagen</p>
+      </div>
+    }
+
+    @if (saveError(); as error) {
+      <div class="mb-4 rounded-md bg-red-50 p-4 dark:bg-red-900/30">
+        <p class="text-sm font-medium text-red-800 dark:text-red-200">{{ error }}</p>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="space-y-5">
+      <div>
+        <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Onderwerp
+        </label>
+        <input
+          id="subject"
+          type="text"
+          formControlName="subject"
+          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
+          maxlength="500" />
+        <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
+          Beschikbare variabelen:
+          @for (ph of tmpl.availablePlaceholders; track ph; let last = $last) {
+            <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-700">{{
+              '{' + ph + '}'
+            }}</code>
+            @if (!last) {
+              <span>, </span>
+            }
+          }
+        </p>
+      </div>
+
+      <div>
+        <label for="mainMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Hoofdbericht
+        </label>
+        <textarea
+          id="mainMessage"
+          formControlName="mainMessage"
+          rows="4"
+          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
+          maxlength="2000"></textarea>
+        <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
+          Beschikbare variabelen:
+          @for (ph of tmpl.availablePlaceholders; track ph; let last = $last) {
+            <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-700">{{
+              '{' + ph + '}'
+            }}</code>
+            @if (!last) {
+              <span>, </span>
+            }
+          }
+        </p>
+      </div>
+
+      <div>
+        <label
+          for="closingMessage"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Afsluitbericht
+        </label>
+        <textarea
+          id="closingMessage"
+          formControlName="closingMessage"
+          rows="3"
+          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
+          maxlength="1000"></textarea>
+        <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
+          Beschikbare variabelen:
+          @for (ph of tmpl.availablePlaceholders; track ph; let last = $last) {
+            <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-slate-700">{{
+              '{' + ph + '}'
+            }}</code>
+            @if (!last) {
+              <span>, </span>
+            }
+          }
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-2">
+        <button
+          type="submit"
+          [disabled]="form.invalid || isSaving()"
+          class="rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 dark:bg-primary-500 dark:hover:bg-primary-600">
+          Opslaan
+        </button>
+        <button
+          type="button"
+          [disabled]="isLoadingPreview()"
+          class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600"
+          (click)="onPreview()">
+          Voorbeeld bekijken
+        </button>
+        <button
+          type="button"
+          class="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-slate-600"
+          (click)="onResetRequest()">
+          Standaardwaarden herstellen
+        </button>
+      </div>
+    </form>
+  }
+</div>
+
+<chairly-email-preview-modal
+  #previewModal
+  [subject]="preview()?.subject ?? ''"
+  [htmlBody]="preview()?.htmlBody ?? ''" />
+
+<chairly-confirmation-dialog
+  #resetDialog
+  title="Standaardwaarden herstellen"
+  message="Weet u zeker dat u dit template wilt herstellen naar de standaardwaarden? Uw aanpassingen gaan verloren."
+  confirmLabel="Herstellen"
+  [isDestructive]="true"
+  (confirmed)="onConfirmReset()" />
