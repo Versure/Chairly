@@ -24,9 +24,7 @@ async function openFlatpickr(page: Page, inputLocator: Locator): Promise<void> {
     const wrapper = el.closest('.flatpickr-wrapper');
     if (!wrapper) return;
     const hiddenInput = wrapper.querySelector<HTMLInputElement>('input[type="hidden"]');
-    /* eslint-disable @typescript-eslint/no-explicit-any */
     const fp = (hiddenInput as any)?._flatpickr;
-    /* eslint-enable @typescript-eslint/no-explicit-any */
     if (fp) fp.open();
   });
 

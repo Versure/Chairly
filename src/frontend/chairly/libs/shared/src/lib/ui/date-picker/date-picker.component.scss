@@ -151,8 +151,8 @@ span.flatpickr-weekday {
   border-top: 1px solid #e5e7eb;
   border-radius: 0 0 0.5rem 0.5rem;
 
-  svg {
-    fill: #fff;
+  svg path {
+    fill: #fff !important;
   }
 
   &:hover {
@@ -275,11 +275,11 @@ span.flatpickr-weekday {
   }
 
   .flatpickr-confirm {
-    background: #6366f1;
+    background: #8f7fcf;
     border-top-color: #475569;
 
     &:hover {
-      background: #4f46e5;
+      background: #7362b8;
     }
   }
 }
