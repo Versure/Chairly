@@ -31,6 +31,7 @@ export const sheriffConfig: SheriffConfig = {
       ui: ['shared', 'layer:ui'],
       'data-access': ['shared', 'layer:data-access'],
       models: ['shared'],
+      pipes: ['shared', 'layer:pipes'],
       util: ['shared', 'layer:util'],
     },
   },
