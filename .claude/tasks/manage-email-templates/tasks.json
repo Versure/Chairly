@@ -1,0 +1,111 @@
+{
+  "feature": "manage-email-templates",
+  "specPath": ".claude/tasks/manage-email-templates/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "EmailTemplate entity, EF configuration, and migration",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "Default template values helper",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "Get email templates list endpoint",
+      "status": "pending",
+      "dependsOn": ["B1", "B2"]
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "Update email template endpoint",
+      "status": "pending",
+      "dependsOn": ["B1", "B2"]
+    },
+    {
+      "id": "B5",
+      "layer": "backend",
+      "title": "Reset email template endpoint",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B6",
+      "layer": "backend",
+      "title": "Preview email template endpoint",
+      "status": "pending",
+      "dependsOn": ["B1", "B2"]
+    },
+    {
+      "id": "B7",
+      "layer": "backend",
+      "title": "Update NotificationDispatcher to use custom templates",
+      "status": "pending",
+      "dependsOn": ["B1", "B2"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Email template models",
+      "status": "pending",
+      "dependsOn": ["B3", "B4", "B5", "B6"]
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Email template API service methods",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Email template store",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Template type label pipe (shared)",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Email templates list page (smart component)",
+      "status": "pending",
+      "dependsOn": ["F3", "F4"]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Email template edit page (smart component)",
+      "status": "pending",
+      "dependsOn": ["F3", "F4", "F7"]
+    },
+    {
+      "id": "F7",
+      "layer": "frontend",
+      "title": "Email preview modal (presentational component)",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F8",
+      "layer": "frontend",
+      "title": "Playwright e2e tests",
+      "status": "pending",
+      "dependsOn": ["F5", "F6", "F7"]
+    }
+  ]
+}
