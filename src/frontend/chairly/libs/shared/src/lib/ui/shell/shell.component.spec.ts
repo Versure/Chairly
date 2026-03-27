@@ -126,8 +126,42 @@ describe('ShellComponent auth behavior', () => {
     expect(facturenLink).toBeUndefined();
   });
 
-  it('hides "Instellingen" nav item when user role is not owner', async () => {
+  it('shows "Instellingen" nav item when user role is manager', async () => {
     const keycloakServiceMock = createKeycloakMock('Manager', 'User', ['manager']);
+    const { fixture } = await setupTestBed(keycloakServiceMock);
+    fixture.detectChanges();
+
+    const authStore = TestBed.inject(AuthStore);
+    authStore.loadUserProfile();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const nativeElement: HTMLElement = fixture.nativeElement;
+    const navLinks = Array.from(nativeElement.querySelectorAll('a'));
+    const instellingenLink = navLinks.find((a) => a.textContent?.trim().includes('Instellingen'));
+
+    expect(instellingenLink).toBeTruthy();
+  });
+
+  it('shows "Instellingen" nav item when user role is owner', async () => {
+    const keycloakServiceMock = createKeycloakMock('Owner', 'User', ['owner']);
+    const { fixture } = await setupTestBed(keycloakServiceMock);
+    fixture.detectChanges();
+
+    const authStore = TestBed.inject(AuthStore);
+    authStore.loadUserProfile();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const nativeElement: HTMLElement = fixture.nativeElement;
+    const navLinks = Array.from(nativeElement.querySelectorAll('a'));
+    const instellingenLink = navLinks.find((a) => a.textContent?.trim().includes('Instellingen'));
+
+    expect(instellingenLink).toBeTruthy();
+  });
+
+  it('hides "Instellingen" nav item when user role is staff_member', async () => {
+    const keycloakServiceMock = createKeycloakMock('Staff', 'Member', ['staff_member']);
     const { fixture } = await setupTestBed(keycloakServiceMock);
     fixture.detectChanges();
 
