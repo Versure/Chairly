@@ -13,6 +13,7 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './email-preview-modal.component.html',
+  styleUrl: './email-preview-modal.component.scss',
 })
 export class EmailPreviewModalComponent {
   readonly subject = input<string>('');
