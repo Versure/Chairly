@@ -99,7 +99,7 @@ internal static class EmailTemplates
         return (subject, htmlBody);
     }
 
-    private static string BuildTemplate(
+    internal static string BuildTemplate(
         string salonName,
         string clientName,
         string mainMessage,

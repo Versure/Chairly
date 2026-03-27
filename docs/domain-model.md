@@ -238,7 +238,21 @@ Handles sending reminders and confirmations via email or SMS.
 
 - **RecipientType**: `Client`, `StaffMember`
 - **NotificationChannel**: `Email`, `Sms`
-- **NotificationType**: `BookingConfirmation`, `BookingReminder`, `BookingCancellation`
+- **NotificationType**: `BookingConfirmation`, `BookingReminder`, `BookingCancellation`, `BookingReceived`, `InvoiceSent`
+
+- **EmailTemplate**
+  - `Id` (Guid)
+  - `TenantId` (Guid)
+  - `TemplateType` (NotificationType)
+  - `Subject` (string, max 500)
+  - `MainMessage` (string, max 2000)
+  - `ClosingMessage` (string, max 1000)
+  - `CreatedAtUtc` (DateTimeOffset)
+  - `CreatedBy` (Guid)
+  - `UpdatedAtUtc` (DateTimeOffset, optional)
+  - `UpdatedBy` (Guid, optional)
+  - Unique constraint on (TenantId, TemplateType) — at most one custom template per tenant per type
+  - When no EmailTemplate row exists for a tenant + type, the system uses hardcoded defaults
 
 **Derived Status (no status column — derived from timestamps):**
 - **Pending**: `CreatedAtUtc` is set, `SentAtUtc` and `FailedAtUtc` are null
@@ -249,6 +263,8 @@ Handles sending reminders and confirmations via email or SMS.
 - Notifications are triggered by domain events (booking created, cancelled, etc.)
 - Delivered asynchronously via RabbitMQ
 - Retry logic for failed deliveries
+- Each tenant can customize email templates (Subject, MainMessage, ClosingMessage) per NotificationType
+- System falls back to hardcoded defaults when no custom template exists
 
 ---
 
@@ -361,6 +377,7 @@ Tenant (cross-cutting)
   │     └── InvoiceLineItem (1..N)
   ├── Notification (0..N)
   │     └── → Booking (N:1)
+  ├── EmailTemplate (0..5)
   ├── TenantSettings (1:1)
   └── VatSettings (1:1)
 
