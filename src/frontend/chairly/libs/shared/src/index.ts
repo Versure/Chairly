@@ -17,6 +17,7 @@ export { paymentMethodLabels } from './lib/models';
 export type { DropdownOption } from './lib/ui';
 export {
   ConfirmationDialogComponent,
+  DatePickerComponent,
   LoadingIndicatorComponent,
   PageHeaderComponent,
   SearchableDropdownComponent,

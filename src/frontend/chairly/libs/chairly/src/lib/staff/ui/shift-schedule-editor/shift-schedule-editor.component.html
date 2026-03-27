@@ -26,17 +26,15 @@
           @for (block of row.blocks; track $index; let i = $index) {
             <div class="ml-6">
               <div class="flex items-center gap-2">
-                <input
-                  type="time"
-                  [value]="block.startTime"
-                  (change)="updateStartTime(row.key, i, $event)"
-                  class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm" />
+                <chairly-date-picker
+                  mode="time"
+                  [ngModel]="block.startTime"
+                  (ngModelChange)="onStartTimeChange(row.key, i, $event)" />
                 <span class="text-gray-500 dark:text-gray-400">–</span>
-                <input
-                  type="time"
-                  [value]="block.endTime"
-                  (change)="updateEndTime(row.key, i, $event)"
-                  class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm" />
+                <chairly-date-picker
+                  mode="time"
+                  [ngModel]="block.endTime"
+                  (ngModelChange)="onEndTimeChange(row.key, i, $event)" />
                 <button
                   type="button"
                   [attr.aria-label]="'Dienst ' + (i + 1) + ' verwijderen'"

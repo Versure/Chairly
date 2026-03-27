@@ -14,7 +14,11 @@ import { Router, RouterLink } from '@angular/router';
 
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { LoadingIndicatorComponent, PageHeaderComponent } from '@org/shared-lib';
+import {
+  DatePickerComponent,
+  LoadingIndicatorComponent,
+  PageHeaderComponent,
+} from '@org/shared-lib';
 
 import { InvoiceStore } from '../../data-access';
 import { InvoiceFilterParams, InvoiceStatus, InvoiceSummary } from '../../models';
@@ -26,6 +30,7 @@ import { InvoiceStatusBadgePipe } from '../../pipes';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CurrencyPipe,
+    DatePickerComponent,
     DatePipe,
     FormsModule,
     LoadingIndicatorComponent,
