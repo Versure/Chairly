@@ -49,7 +49,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'instellingen',
-        canActivate: [roleGuard('owner')],
+        canActivate: [roleGuard('manager')],
         loadChildren: () => import('@org/chairly-lib').then((m) => m.settingsRoutes),
       },
     ],
