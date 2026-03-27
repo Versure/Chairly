@@ -14,6 +14,7 @@ export {
 } from './lib/data-access';
 export type { PaymentMethod } from './lib/models';
 export { paymentMethodLabels } from './lib/models';
+export { TemplateTypeLabelPipe } from './lib/pipes';
 export type { DropdownOption } from './lib/ui';
 export {
   ConfirmationDialogComponent,
