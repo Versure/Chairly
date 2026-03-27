@@ -1,3 +1,4 @@
+using System.Globalization;
 using Chairly.Api.Features.Billing.SendInvoice;
 using Chairly.Domain.Entities;
 using Chairly.Domain.Enums;
@@ -136,13 +137,17 @@ internal sealed partial class NotificationDispatcher(
             .ConfigureAwait(false);
         var salonName = settings?.CompanyName ?? "Uw salon";
 
+        var customTemplate = await db.EmailTemplates
+            .FirstOrDefaultAsync(t => t.TenantId == notification.TenantId && t.TemplateType == notification.Type, cancellationToken)
+            .ConfigureAwait(false);
+
         return notification.Type switch
         {
-            NotificationType.BookingConfirmation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
-            NotificationType.BookingReminder => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
-            NotificationType.BookingCancellation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
-            NotificationType.BookingReceived => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false)),
-            NotificationType.InvoiceSent => await RenderInvoiceTemplateAsync(db, notification, clientName, salonName, cancellationToken).ConfigureAwait(false),
+            NotificationType.BookingConfirmation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, customTemplate, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingReminder => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, customTemplate, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingCancellation => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, customTemplate, cancellationToken).ConfigureAwait(false)),
+            NotificationType.BookingReceived => ToResult(await RenderBookingTemplateAsync(db, notification, clientName, salonName, customTemplate, cancellationToken).ConfigureAwait(false)),
+            NotificationType.InvoiceSent => await RenderInvoiceTemplateAsync(db, notification, clientName, salonName, customTemplate, cancellationToken).ConfigureAwait(false),
             _ => (string.Empty, string.Empty, null),
         };
 
@@ -154,6 +159,7 @@ internal sealed partial class NotificationDispatcher(
         Notification notification,
         string clientName,
         string salonName,
+        EmailTemplate? customTemplate,
         CancellationToken cancellationToken)
     {
         var booking = await db.Bookings
@@ -167,6 +173,11 @@ internal sealed partial class NotificationDispatcher(
 
         var startTime = booking?.StartTime ?? notification.ScheduledAtUtc;
 
+        if (customTemplate is not null)
+        {
+            return RenderCustomBookingTemplate(customTemplate, notification.Type, clientName, salonName, startTime, serviceSummary);
+        }
+
         return notification.Type switch
         {
             NotificationType.BookingConfirmation => EmailTemplates.BookingConfirmation(clientName, startTime, serviceSummary, salonName),
@@ -177,11 +188,42 @@ internal sealed partial class NotificationDispatcher(
         };
     }
 
+    private static (string Subject, string HtmlBody) RenderCustomBookingTemplate(
+        EmailTemplate customTemplate, NotificationType type, string clientName, string salonName,
+        DateTimeOffset startTime, string serviceSummary)
+    {
+        var dutchTime = TimeZoneInfo.ConvertTime(startTime, TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam"));
+        var formattedDate = dutchTime.ToString("dddd d MMMM yyyy 'om' HH:mm", new CultureInfo("nl-NL"));
+
+        var subject = ReplaceBookingPlaceholders(customTemplate.Subject, clientName, salonName, formattedDate, serviceSummary);
+        var mainMessage = ReplaceBookingPlaceholders(customTemplate.MainMessage, clientName, salonName, formattedDate, serviceSummary);
+        var closingMessage = ReplaceBookingPlaceholders(customTemplate.ClosingMessage, clientName, salonName, formattedDate, serviceSummary);
+
+        var dateLabel = type == NotificationType.BookingCancellation ? "Oorspronkelijke datum en tijd" : "Datum en tijd";
+        var htmlBody = EmailTemplates.BuildTemplate(
+            salonName, clientName, mainMessage, formattedDate,
+            type == NotificationType.BookingCancellation ? null : serviceSummary,
+            closingMessage, dateLabel);
+
+        return (subject, htmlBody);
+    }
+
+    private static string ReplaceBookingPlaceholders(
+        string text, string clientName, string salonName, string formattedDate, string serviceSummary)
+    {
+        return text
+            .Replace("{clientName}", clientName, StringComparison.Ordinal)
+            .Replace("{salonName}", salonName, StringComparison.Ordinal)
+            .Replace("{date}", formattedDate, StringComparison.Ordinal)
+            .Replace("{services}", serviceSummary, StringComparison.Ordinal);
+    }
+
     private static async Task<(string Subject, string HtmlBody, EmailAttachment? Attachment)> RenderInvoiceTemplateAsync(
         ChairlyDbContext db,
         Notification notification,
         string clientName,
         string salonName,
+        EmailTemplate? customTemplate,
         CancellationToken cancellationToken)
     {
         var invoice = await db.Invoices
@@ -196,14 +238,50 @@ internal sealed partial class NotificationDispatcher(
 
         var isPaid = invoice.PaidAtUtc.HasValue;
 
-        var (subject, htmlBody) = EmailTemplates.InvoiceSent(
-            clientName,
-            invoice.InvoiceNumber,
-            invoice.InvoiceDate,
-            invoice.TotalAmount,
-            salonName,
-            isPaid: isPaid);
+        var (subject, htmlBody) = customTemplate is not null
+            ? RenderCustomInvoiceTemplate(customTemplate, clientName, salonName, invoice, isPaid)
+            : EmailTemplates.InvoiceSent(clientName, invoice.InvoiceNumber, invoice.InvoiceDate, invoice.TotalAmount, salonName, isPaid: isPaid);
 
+        var attachment = GenerateInvoiceAttachment(invoice, clientName, salonName, isPaid);
+
+        return (subject, htmlBody, attachment);
+    }
+
+    private static (string Subject, string HtmlBody) RenderCustomInvoiceTemplate(
+        EmailTemplate customTemplate, string clientName, string salonName, Invoice invoice, bool isPaid)
+    {
+        var formattedInvoiceDate = invoice.InvoiceDate.ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
+        var formattedTotalAmount = invoice.TotalAmount.ToString("C", new CultureInfo("nl-NL"));
+
+        var subject = ReplaceInvoicePlaceholders(customTemplate.Subject, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
+        var mainMessage = ReplaceInvoicePlaceholders(customTemplate.MainMessage, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
+        var closingMessage = ReplaceInvoicePlaceholders(customTemplate.ClosingMessage, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
+
+        var paidBadge = isPaid
+            ? """<p style="margin: 12px 0; padding: 8px 16px; background-color: #DEF7EC; color: #03543F; border-radius: 4px; font-weight: 600; display: inline-block;">&#10003; Deze factuur is reeds betaald.</p>"""
+            : string.Empty;
+
+        var serviceSummary = $"Factuurnummer: {invoice.InvoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}{(isPaid ? "<br />" + paidBadge : string.Empty)}";
+
+        var htmlBody = EmailTemplates.BuildTemplate(
+            salonName, clientName, mainMessage, formattedInvoiceDate, serviceSummary, closingMessage, "Factuurdatum");
+
+        return (subject, htmlBody);
+    }
+
+    private static string ReplaceInvoicePlaceholders(
+        string text, string clientName, string salonName, string invoiceNumber, string invoiceDate, string totalAmount)
+    {
+        return text
+            .Replace("{clientName}", clientName, StringComparison.Ordinal)
+            .Replace("{salonName}", salonName, StringComparison.Ordinal)
+            .Replace("{invoiceNumber}", invoiceNumber, StringComparison.Ordinal)
+            .Replace("{invoiceDate}", invoiceDate, StringComparison.Ordinal)
+            .Replace("{totalAmount}", totalAmount, StringComparison.Ordinal);
+    }
+
+    private static EmailAttachment GenerateInvoiceAttachment(Invoice invoice, string clientName, string salonName, bool isPaid)
+    {
         var pdfData = new InvoicePdfData(
             invoice.InvoiceNumber,
             invoice.InvoiceDate,
@@ -216,21 +294,13 @@ internal sealed partial class NotificationDispatcher(
             invoice.LineItems
                 .OrderBy(li => li.SortOrder)
                 .Select(li => new InvoicePdfLineItem(
-                    li.Description,
-                    li.Quantity,
-                    li.UnitPrice,
-                    li.VatPercentage,
-                    li.TotalPrice))
+                    li.Description, li.Quantity, li.UnitPrice, li.VatPercentage, li.TotalPrice))
                 .ToList());
 
         var pdfGenerator = new InvoicePdfGenerator();
         var pdfBytes = pdfGenerator.Generate(pdfData);
-        var attachment = new EmailAttachment(
-            $"Factuur-{invoice.InvoiceNumber}.pdf",
-            "application/pdf",
-            pdfBytes);
 
-        return (subject, htmlBody, attachment);
+        return new EmailAttachment($"Factuur-{invoice.InvoiceNumber}.pdf", "application/pdf", pdfBytes);
     }
 
     private void HandleSendFailure(Notification notification, Exception ex)
