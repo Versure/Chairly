@@ -196,4 +196,26 @@ public class EmailTemplateTests
 
         Assert.Contains("Aangepast label", html, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void BuildTemplateFromBody_ReturnsHtmlWithBodyContent()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "Jan Smit", "<p>Uw afspraak is bevestigd.</p>");
+
+        Assert.Contains("<!DOCTYPE html>", html, StringComparison.Ordinal);
+        Assert.Contains("Mijn Salon", html, StringComparison.Ordinal);
+        Assert.Contains("Beste Jan Smit", html, StringComparison.Ordinal);
+        Assert.Contains("Uw afspraak is bevestigd.", html, StringComparison.Ordinal);
+        Assert.Contains("Met vriendelijke groet", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplateFromBody_DoesNotIncludeDateOrServiceSections()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Salon", "Jan", "<p>Simple body</p>");
+
+        // BuildTemplateFromBody should NOT contain the structured date/services table
+        Assert.DoesNotContain("Datum en tijd", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Diensten", html, StringComparison.Ordinal);
+    }
 }

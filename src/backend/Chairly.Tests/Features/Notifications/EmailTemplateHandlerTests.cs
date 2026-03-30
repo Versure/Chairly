@@ -39,8 +39,7 @@ public class EmailTemplateHandlerTests
         ChairlyDbContext db,
         NotificationType type = NotificationType.BookingConfirmation,
         string subject = "Custom Subject",
-        string mainMessage = "Custom Main",
-        string closingMessage = "Custom Closing")
+        string body = "<p>Custom Body</p>")
     {
         var template = new EmailTemplate
         {
@@ -48,8 +47,7 @@ public class EmailTemplateHandlerTests
             TenantId = TestTenantContext.DefaultTenantId,
             TemplateType = type,
             Subject = subject,
-            MainMessage = mainMessage,
-            ClosingMessage = closingMessage,
+            Body = body,
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         db.EmailTemplates.Add(template);
@@ -69,8 +67,7 @@ public class EmailTemplateHandlerTests
 
         Assert.NotNull(retrieved);
         Assert.Equal("Custom Subject", retrieved.Subject);
-        Assert.Equal("Custom Main", retrieved.MainMessage);
-        Assert.Equal("Custom Closing", retrieved.ClosingMessage);
+        Assert.Equal("<p>Custom Body</p>", retrieved.Body);
         Assert.Equal(NotificationType.BookingConfirmation, retrieved.TemplateType);
     }
 
@@ -86,8 +83,7 @@ public class EmailTemplateHandlerTests
             TenantId = TestTenantContext.DefaultTenantId,
             TemplateType = NotificationType.BookingConfirmation,
             Subject = "Duplicate",
-            MainMessage = "Duplicate",
-            ClosingMessage = "Duplicate",
+            Body = "Duplicate",
             CreatedAtUtc = DateTimeOffset.UtcNow,
         };
         db.EmailTemplates.Add(duplicate);
@@ -155,6 +151,25 @@ public class EmailTemplateHandlerTests
         Assert.Equal(expectedPlaceholders, defaults.AvailablePlaceholders);
     }
 
+    [Fact]
+    public void GetDefaults_BodyContainsPlaceholders()
+    {
+        var defaults = DefaultEmailTemplateValues.GetDefaults(NotificationType.BookingConfirmation, "Test");
+
+        Assert.Contains("{date}", defaults.Body, StringComparison.Ordinal);
+        Assert.Contains("{services}", defaults.Body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetDefaults_InvoiceSent_BodyContainsInvoicePlaceholders()
+    {
+        var defaults = DefaultEmailTemplateValues.GetDefaults(NotificationType.InvoiceSent, "Test");
+
+        Assert.Contains("{invoiceNumber}", defaults.Body, StringComparison.Ordinal);
+        Assert.Contains("{invoiceDate}", defaults.Body, StringComparison.Ordinal);
+        Assert.Contains("{totalAmount}", defaults.Body, StringComparison.Ordinal);
+    }
+
     // ==================== B3: GetEmailTemplatesList ====================
 
     [Fact]
@@ -175,7 +190,7 @@ public class EmailTemplateHandlerTests
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
-        CreateTestEmailTemplate(db, NotificationType.BookingConfirmation, "My Subject", "My Main", "My Closing");
+        CreateTestEmailTemplate(db, NotificationType.BookingConfirmation, "My Subject", "<p>My Body</p>");
         var handler = new GetEmailTemplatesListHandler(db, TestTenantContext.Create());
 
         var result = await handler.Handle(new GetEmailTemplatesListQuery());
@@ -183,8 +198,7 @@ public class EmailTemplateHandlerTests
         var confirmation = result.First(r => r.TemplateType == "BookingConfirmation");
         Assert.True(confirmation.IsCustomized);
         Assert.Equal("My Subject", confirmation.Subject);
-        Assert.Equal("My Main", confirmation.MainMessage);
-        Assert.Equal("My Closing", confirmation.ClosingMessage);
+        Assert.Equal("<p>My Body</p>", confirmation.Body);
     }
 
     [Fact]
@@ -205,7 +219,7 @@ public class EmailTemplateHandlerTests
     }
 
     [Fact]
-    public async Task GetEmailTemplatesListHandler_DefaultLabels_ReturnedWhenNoCustom()
+    public async Task GetEmailTemplatesListHandler_DefaultBody_ContainsHtml()
     {
         await using var db = CreateDbContext();
         CreateTestTenantSettings(db);
@@ -214,34 +228,8 @@ public class EmailTemplateHandlerTests
         var result = await handler.Handle(new GetEmailTemplatesListQuery());
 
         var confirmation = result.First(r => r.TemplateType == "BookingConfirmation");
-        Assert.Equal("Datum en tijd", confirmation.DateLabel);
-        Assert.Equal("Diensten", confirmation.ServicesLabel);
-
-        var cancellation = result.First(r => r.TemplateType == "BookingCancellation");
-        Assert.Equal("Oorspronkelijke datum en tijd", cancellation.DateLabel);
-        Assert.Null(cancellation.ServicesLabel);
-
-        var invoice = result.First(r => r.TemplateType == "InvoiceSent");
-        Assert.Equal("Factuurdatum", invoice.DateLabel);
-        Assert.Null(invoice.ServicesLabel);
-    }
-
-    [Fact]
-    public async Task GetEmailTemplatesListHandler_CustomLabels_ReturnedWhenDbRowExists()
-    {
-        await using var db = CreateDbContext();
-        CreateTestTenantSettings(db);
-        var template = CreateTestEmailTemplate(db);
-        template.DateLabel = "Mijn datum";
-        template.ServicesLabel = "Mijn diensten";
-        await db.SaveChangesAsync();
-        var handler = new GetEmailTemplatesListHandler(db, TestTenantContext.Create());
-
-        var result = await handler.Handle(new GetEmailTemplatesListQuery());
-
-        var confirmation = result.First(r => r.TemplateType == "BookingConfirmation");
-        Assert.Equal("Mijn datum", confirmation.DateLabel);
-        Assert.Equal("Mijn diensten", confirmation.ServicesLabel);
+        Assert.Contains("<p>", confirmation.Body, StringComparison.Ordinal);
+        Assert.Contains("{date}", confirmation.Body, StringComparison.Ordinal);
     }
 
     // ==================== B4: UpdateEmailTemplate ====================
@@ -255,8 +243,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = "New Subject",
-            MainMessage = "New Main",
-            ClosingMessage = "New Closing",
+            Body = "<p>New Body</p>",
         };
 
         var result = await handler.Handle(command);
@@ -264,6 +251,7 @@ public class EmailTemplateHandlerTests
         var response = result.AsT0;
         Assert.True(response.IsCustomized);
         Assert.Equal("New Subject", response.Subject);
+        Assert.Equal("<p>New Body</p>", response.Body);
         Assert.Equal(1, await db.EmailTemplates.CountAsync());
     }
 
@@ -277,14 +265,14 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = "Updated Subject",
-            MainMessage = "Updated Main",
-            ClosingMessage = "Updated Closing",
+            Body = "<p>Updated Body</p>",
         };
 
         var result = await handler.Handle(command);
 
         var response = result.AsT0;
         Assert.Equal("Updated Subject", response.Subject);
+        Assert.Equal("<p>Updated Body</p>", response.Body);
         Assert.Equal(1, await db.EmailTemplates.CountAsync());
 
         var entity = await db.EmailTemplates.FirstAsync();
@@ -300,8 +288,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingCancellation",
             Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
+            Body = "<p>Body</p>",
         };
 
         var result = await handler.Handle(command);
@@ -320,8 +307,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "InvalidType",
             Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
+            Body = "<p>Body</p>",
         };
 
         var result = await handler.Handle(command);
@@ -336,8 +322,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = string.Empty,
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
+            Body = "<p>Body</p>",
         };
         var results = new List<ValidationResult>();
         var context = new ValidationContext(command);
@@ -355,8 +340,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = new string('a', 501),
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
+            Body = "<p>Body</p>",
         };
         var results = new List<ValidationResult>();
         var context = new ValidationContext(command);
@@ -367,14 +351,13 @@ public class EmailTemplateHandlerTests
     }
 
     [Fact]
-    public void UpdateEmailTemplateCommand_MainMessageExceeds5000Chars_FailsValidation()
+    public void UpdateEmailTemplateCommand_BodyExceeds10000Chars_FailsValidation()
     {
         var command = new UpdateEmailTemplateCommand
         {
             TemplateType = "BookingConfirmation",
             Subject = "Subject",
-            MainMessage = new string('a', 5001),
-            ClosingMessage = "Closing",
+            Body = new string('a', 10001),
         };
         var results = new List<ValidationResult>();
         var context = new ValidationContext(command);
@@ -385,14 +368,13 @@ public class EmailTemplateHandlerTests
     }
 
     [Fact]
-    public void UpdateEmailTemplateCommand_ClosingMessageExceeds3000Chars_FailsValidation()
+    public void UpdateEmailTemplateCommand_EmptyBody_FailsValidation()
     {
         var command = new UpdateEmailTemplateCommand
         {
             TemplateType = "BookingConfirmation",
             Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = new string('a', 3001),
+            Body = string.Empty,
         };
         var results = new List<ValidationResult>();
         var context = new ValidationContext(command);
@@ -400,71 +382,7 @@ public class EmailTemplateHandlerTests
         var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
 
         Assert.False(isValid);
-    }
-
-    [Fact]
-    public void UpdateEmailTemplateCommand_DateLabelExceeds200Chars_FailsValidation()
-    {
-        var command = new UpdateEmailTemplateCommand
-        {
-            TemplateType = "BookingConfirmation",
-            Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
-            DateLabel = new string('a', 201),
-        };
-        var results = new List<ValidationResult>();
-        var context = new ValidationContext(command);
-
-        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
-
-        Assert.False(isValid);
-    }
-
-    [Fact]
-    public async Task UpdateEmailTemplateHandler_SavesCustomLabels()
-    {
-        await using var db = CreateDbContext();
-        var handler = new UpdateEmailTemplateHandler(db, TestTenantContext.Create());
-        var command = new UpdateEmailTemplateCommand
-        {
-            TemplateType = "BookingConfirmation",
-            Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
-            DateLabel = "Mijn datum",
-            ServicesLabel = "Mijn diensten",
-        };
-
-        var result = await handler.Handle(command);
-
-        var response = result.AsT0;
-        Assert.Equal("Mijn datum", response.DateLabel);
-        Assert.Equal("Mijn diensten", response.ServicesLabel);
-
-        var entity = await db.EmailTemplates.FirstAsync();
-        Assert.Equal("Mijn datum", entity.DateLabel);
-        Assert.Equal("Mijn diensten", entity.ServicesLabel);
-    }
-
-    [Fact]
-    public async Task UpdateEmailTemplateHandler_NullLabels_ReturnsDefaults()
-    {
-        await using var db = CreateDbContext();
-        var handler = new UpdateEmailTemplateHandler(db, TestTenantContext.Create());
-        var command = new UpdateEmailTemplateCommand
-        {
-            TemplateType = "BookingConfirmation",
-            Subject = "Subject",
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
-        };
-
-        var result = await handler.Handle(command);
-
-        var response = result.AsT0;
-        Assert.Equal("Datum en tijd", response.DateLabel);
-        Assert.Equal("Diensten", response.ServicesLabel);
+        Assert.Contains(results, r => r.MemberNames.Contains(nameof(UpdateEmailTemplateCommand.Body), StringComparer.Ordinal));
     }
 
     // ==================== B5: ResetEmailTemplate ====================
@@ -532,8 +450,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = "Afspraak voor {clientName} bij {salonName}",
-            MainMessage = "Beste {clientName}, uw afspraak is bevestigd.",
-            ClosingMessage = "Tot ziens bij {salonName}!",
+            Body = "<p>Beste {clientName}, uw afspraak is bevestigd op {date}.</p><p>Diensten: {services}</p>",
         };
 
         var result = await handler.Handle(command);
@@ -542,6 +459,29 @@ public class EmailTemplateHandlerTests
         Assert.Contains("Jan de Vries", response.Subject, StringComparison.Ordinal);
         Assert.Contains("Mijn Salon", response.Subject, StringComparison.Ordinal);
         Assert.DoesNotContain("{clientName}", response.Subject, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task PreviewEmailTemplateHandler_ReplacesPlaceholders_InBody()
+    {
+        await using var db = CreateDbContext();
+        CreateTestTenantSettings(db, "Mijn Salon");
+        var handler = new PreviewEmailTemplateHandler(db, TestTenantContext.Create());
+        var command = new PreviewEmailTemplateCommand
+        {
+            TemplateType = "BookingConfirmation",
+            Subject = "Test",
+            Body = "<p>{clientName} bij {salonName}, diensten: {services}</p>",
+        };
+
+        var result = await handler.Handle(command);
+
+        var response = result.AsT0;
+        Assert.Contains("Jan de Vries", response.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Mijn Salon", response.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Heren knippen, Baard trimmen", response.HtmlBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("{clientName}", response.HtmlBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("{services}", response.HtmlBody, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -554,8 +494,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = "{salonName}",
-            MainMessage = "Test",
-            ClosingMessage = "Test",
+            Body = "<p>Test</p>",
         };
 
         var result = await handler.Handle(command);
@@ -574,8 +513,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = "Test",
-            MainMessage = "Test message",
-            ClosingMessage = "Goodbye",
+            Body = "<p>Test message</p>",
         };
 
         var result = await handler.Handle(command);
@@ -594,57 +532,12 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "InvalidType",
             Subject = "Test",
-            MainMessage = "Test",
-            ClosingMessage = "Test",
+            Body = "<p>Test</p>",
         };
 
         var result = await handler.Handle(command);
 
         Assert.True(result.IsT1);
-    }
-
-    [Fact]
-    public async Task PreviewEmailTemplateHandler_CustomLabels_UsedInHtml()
-    {
-        await using var db = CreateDbContext();
-        CreateTestTenantSettings(db, "Test Salon");
-        var handler = new PreviewEmailTemplateHandler(db, TestTenantContext.Create());
-        var command = new PreviewEmailTemplateCommand
-        {
-            TemplateType = "BookingConfirmation",
-            Subject = "Test",
-            MainMessage = "Test message",
-            ClosingMessage = "Goodbye",
-            DateLabel = "Aangepast datum label",
-            ServicesLabel = "Aangepast diensten label",
-        };
-
-        var result = await handler.Handle(command);
-
-        var response = result.AsT0;
-        Assert.Contains("Aangepast datum label", response.HtmlBody, StringComparison.Ordinal);
-        Assert.Contains("Aangepast diensten label", response.HtmlBody, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task PreviewEmailTemplateHandler_NullLabels_UsesDefaults()
-    {
-        await using var db = CreateDbContext();
-        CreateTestTenantSettings(db, "Test Salon");
-        var handler = new PreviewEmailTemplateHandler(db, TestTenantContext.Create());
-        var command = new PreviewEmailTemplateCommand
-        {
-            TemplateType = "BookingConfirmation",
-            Subject = "Test",
-            MainMessage = "Test message",
-            ClosingMessage = "Goodbye",
-        };
-
-        var result = await handler.Handle(command);
-
-        var response = result.AsT0;
-        Assert.Contains("Datum en tijd", response.HtmlBody, StringComparison.Ordinal);
-        Assert.Contains("Diensten", response.HtmlBody, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -654,8 +547,7 @@ public class EmailTemplateHandlerTests
         {
             TemplateType = "BookingConfirmation",
             Subject = string.Empty,
-            MainMessage = "Main",
-            ClosingMessage = "Closing",
+            Body = "<p>Body</p>",
         };
         var results = new List<ValidationResult>();
         var context = new ValidationContext(command);
@@ -663,5 +555,48 @@ public class EmailTemplateHandlerTests
         var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
 
         Assert.False(isValid);
+    }
+
+    [Fact]
+    public void PreviewEmailTemplateCommand_EmptyBody_FailsValidation()
+    {
+        var command = new PreviewEmailTemplateCommand
+        {
+            TemplateType = "BookingConfirmation",
+            Subject = "Subject",
+            Body = string.Empty,
+        };
+        var results = new List<ValidationResult>();
+        var context = new ValidationContext(command);
+
+        var isValid = Validator.TryValidateObject(command, context, results, validateAllProperties: true);
+
+        Assert.False(isValid);
+    }
+
+    // ==================== BuildTemplateFromBody ====================
+
+    [Fact]
+    public void BuildTemplateFromBody_ReturnsValidHtmlWithContent()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "Jan Smit", "<p>Uw afspraak is bevestigd.</p>");
+
+        Assert.Contains("<!DOCTYPE html>", html, StringComparison.Ordinal);
+        Assert.Contains("Mijn Salon", html, StringComparison.Ordinal);
+        Assert.Contains("Beste Jan Smit", html, StringComparison.Ordinal);
+        Assert.Contains("Uw afspraak is bevestigd.", html, StringComparison.Ordinal);
+        Assert.Contains("Met vriendelijke groet", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplateFromBody_ContainsSalonNameInHeaderAndFooter()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Kapsalon De Knip", "Jan", "<p>Body</p>");
+
+        // Salon name should appear in header h1 and footer
+        var headerIndex = html.IndexOf("Kapsalon De Knip", StringComparison.Ordinal);
+        Assert.True(headerIndex >= 0);
+        var footerIndex = html.IndexOf("Kapsalon De Knip", headerIndex + 1, StringComparison.Ordinal);
+        Assert.True(footerIndex > headerIndex);
     }
 }

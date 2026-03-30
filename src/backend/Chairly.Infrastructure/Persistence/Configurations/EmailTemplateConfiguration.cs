@@ -22,21 +22,9 @@ internal sealed class EmailTemplateConfiguration : IEntityTypeConfiguration<Emai
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(x => x.MainMessage)
+        builder.Property(x => x.Body)
             .IsRequired()
-            .HasMaxLength(5000);
-
-        builder.Property(x => x.ClosingMessage)
-            .IsRequired()
-            .HasMaxLength(3000);
-
-        builder.Property(x => x.DateLabel)
-            .IsRequired(false)
-            .HasMaxLength(200);
-
-        builder.Property(x => x.ServicesLabel)
-            .IsRequired(false)
-            .HasMaxLength(200);
+            .HasMaxLength(10000);
 
         builder.Property(x => x.CreatedBy).IsRequired();
         builder.Property(x => x.UpdatedBy).IsRequired(false);

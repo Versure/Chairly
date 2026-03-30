@@ -8,10 +8,7 @@ public class EmailTemplate
     public Guid TenantId { get; set; }
     public NotificationType TemplateType { get; set; }
     public string Subject { get; set; } = string.Empty;
-    public string MainMessage { get; set; } = string.Empty;
-    public string ClosingMessage { get; set; } = string.Empty;
-    public string? DateLabel { get; set; }
-    public string? ServicesLabel { get; set; }
+    public string Body { get; set; } = string.Empty;
     public DateTimeOffset CreatedAtUtc { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }

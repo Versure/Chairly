@@ -31,10 +31,7 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
         if (existing is not null)
         {
             existing.Subject = command.Subject;
-            existing.MainMessage = command.MainMessage;
-            existing.ClosingMessage = command.ClosingMessage;
-            existing.DateLabel = command.DateLabel;
-            existing.ServicesLabel = command.ServicesLabel;
+            existing.Body = command.Body;
             existing.UpdatedAtUtc = DateTimeOffset.UtcNow;
             existing.UpdatedBy = tenantContext.UserId;
         }
@@ -46,10 +43,7 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
                 TenantId = tenantId,
                 TemplateType = notificationType,
                 Subject = command.Subject,
-                MainMessage = command.MainMessage,
-                ClosingMessage = command.ClosingMessage,
-                DateLabel = command.DateLabel,
-                ServicesLabel = command.ServicesLabel,
+                Body = command.Body,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
                 CreatedBy = tenantContext.UserId,
             };
@@ -63,10 +57,7 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
         return new EmailTemplateResponse(
             notificationType.ToString(),
             existing.Subject,
-            existing.MainMessage,
-            existing.ClosingMessage,
-            existing.DateLabel ?? defaults.DateLabel,
-            existing.ServicesLabel ?? defaults.ServicesLabel,
+            existing.Body,
             IsCustomized: true,
             defaults.AvailablePlaceholders);
     }

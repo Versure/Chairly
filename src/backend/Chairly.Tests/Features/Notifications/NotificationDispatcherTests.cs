@@ -368,8 +368,7 @@ public class NotificationDispatcherTests
                 TenantId = TestTenantContext.DefaultTenantId,
                 TemplateType = NotificationType.BookingConfirmation,
                 Subject = "Aangepast onderwerp voor {clientName}",
-                MainMessage = "Aangepast bericht voor {clientName} bij {salonName}.",
-                ClosingMessage = "Aangepaste afsluiting.",
+                Body = "<p>Aangepast bericht voor {clientName} bij {salonName}.</p><p>Aangepaste afsluiting.</p>",
                 CreatedAtUtc = DateTimeOffset.UtcNow,
             });
             await db.SaveChangesAsync();
@@ -412,8 +411,7 @@ public class NotificationDispatcherTests
                 TenantId = TestTenantContext.DefaultTenantId,
                 TemplateType = NotificationType.BookingConfirmation,
                 Subject = "{salonName} - afspraak {date}",
-                MainMessage = "Hallo {clientName}, diensten: {services}.",
-                ClosingMessage = "Tot ziens bij {salonName}!",
+                Body = "<p>Hallo {clientName}, diensten: {services}.</p><p>Tot ziens bij {salonName}!</p>",
                 CreatedAtUtc = DateTimeOffset.UtcNow,
             });
             await db.SaveChangesAsync();
@@ -448,8 +446,7 @@ public class NotificationDispatcherTests
                 TenantId = TestTenantContext.DefaultTenantId,
                 TemplateType = NotificationType.BookingConfirmation,
                 Subject = "Mijn eigen onderwerp",
-                MainMessage = "Mijn bericht.",
-                ClosingMessage = "Mijn afsluiting.",
+                Body = "<p>Mijn bericht.</p><p>Mijn afsluiting.</p>",
                 CreatedAtUtc = DateTimeOffset.UtcNow,
             });
             await db.SaveChangesAsync();
@@ -459,5 +456,35 @@ public class NotificationDispatcherTests
 
         Assert.Single(emailSender.SentEmails);
         Assert.Equal("Mijn eigen onderwerp", emailSender.SentEmails[0].Subject);
+    }
+
+    [Fact]
+    public async Task Dispatcher_CustomTemplate_UsesBuildTemplateFromBody()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        using (var db = CreateDbContext(dbName))
+        {
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TestTenantContext.DefaultTenantId,
+                TemplateType = NotificationType.BookingConfirmation,
+                Subject = "Test",
+                Body = "<p>Custom body content</p>",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        // BuildTemplateFromBody wraps content with greeting and footer
+        Assert.Contains("Beste Test Client", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Custom body content", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Met vriendelijke groet", sentEmail.HtmlBody, StringComparison.Ordinal);
     }
 }

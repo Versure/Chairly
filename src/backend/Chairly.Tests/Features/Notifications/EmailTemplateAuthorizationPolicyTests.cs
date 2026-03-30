@@ -151,10 +151,7 @@ public class EmailTemplateAuthorizationPolicyTests
                     new(
                         "BookingConfirmation",
                         "Subject",
-                        "Main",
-                        "Closing",
-                        "Datum en tijd",
-                        "Diensten",
+                        "<p>Body</p>",
                         false,
                         ["clientName", "salonName"]),
                 };
@@ -167,10 +164,7 @@ public class EmailTemplateAuthorizationPolicyTests
                 OneOf<EmailTemplateResponse, BadRequest> response = new EmailTemplateResponse(
                     "BookingConfirmation",
                     "Subject",
-                    "Main",
-                    "Closing",
-                    "Datum en tijd",
-                    "Diensten",
+                    "<p>Body</p>",
                     true,
                     ["clientName", "salonName"]);
 

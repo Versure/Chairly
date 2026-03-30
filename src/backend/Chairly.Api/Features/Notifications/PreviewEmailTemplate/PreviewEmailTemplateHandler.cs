@@ -29,35 +29,9 @@ internal sealed class PreviewEmailTemplateHandler(ChairlyDbContext db, ITenantCo
         var salonName = settings?.CompanyName ?? "Uw salon";
 
         var subject = ReplacePlaceholders(command.Subject, notificationType, salonName);
-        var mainMessage = ReplacePlaceholders(command.MainMessage, notificationType, salonName);
-        var closingMessage = ReplacePlaceholders(command.ClosingMessage, notificationType, salonName);
+        var body = ReplacePlaceholders(command.Body, notificationType, salonName);
 
-        var defaults = DefaultEmailTemplateValues.GetDefaults(notificationType, salonName);
-
-        var sampleDate = DateTimeOffset.Now.ToString("dddd d MMMM yyyy 'om' HH:mm", new CultureInfo("nl-NL"));
-        string? serviceSummary = null;
-        var dateLabel = command.DateLabel ?? defaults.DateLabel ?? "Datum en tijd";
-        var servicesLabel = command.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
-
-        if (notificationType == NotificationType.InvoiceSent)
-        {
-            sampleDate = DateOnly.FromDateTime(DateTime.Today).ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
-            serviceSummary = "Factuurnummer: F-2026-001<br />Totaalbedrag: " + 75.00m.ToString("C", new CultureInfo("nl-NL"));
-        }
-        else if (notificationType != NotificationType.BookingCancellation)
-        {
-            serviceSummary = "Heren knippen, Baard trimmen";
-        }
-
-        var htmlBody = EmailTemplates.BuildTemplate(
-            salonName,
-            "Jan de Vries",
-            mainMessage,
-            sampleDate,
-            serviceSummary,
-            closingMessage,
-            dateLabel,
-            servicesLabel);
+        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, "Jan de Vries", body);
 
         return new PreviewEmailTemplateResponse(subject, htmlBody);
     }

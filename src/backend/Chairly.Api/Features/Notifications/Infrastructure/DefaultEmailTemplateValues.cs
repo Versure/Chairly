@@ -6,10 +6,7 @@ internal static class DefaultEmailTemplateValues
 {
     internal sealed record TemplateDefaults(
         string Subject,
-        string MainMessage,
-        string ClosingMessage,
-        string? DateLabel,
-        string? ServicesLabel,
+        string Body,
         string[] AvailablePlaceholders);
 
     internal static TemplateDefaults GetDefaults(NotificationType type, string salonName)
@@ -18,40 +15,50 @@ internal static class DefaultEmailTemplateValues
         {
             NotificationType.BookingConfirmation => new(
                 $"Bevestiging van uw afspraak bij {salonName}",
-                "Uw afspraak is bevestigd.",
-                "Wij kijken ernaar uit u te verwelkomen!",
-                "Datum en tijd",
-                "Diensten",
+                """
+                <p>Uw afspraak is bevestigd.</p>
+                <p><strong>Datum en tijd</strong><br>{date}</p>
+                <p><strong>Diensten</strong><br>{services}</p>
+                <p>Wij kijken ernaar uit u te verwelkomen!</p>
+                """,
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.BookingReminder => new(
                 $"Herinnering: uw afspraak morgen bij {salonName}",
-                "Dit is een herinnering dat u morgen een afspraak heeft.",
-                "Wij zien u graag!",
-                "Datum en tijd",
-                "Diensten",
+                """
+                <p>Dit is een herinnering dat u morgen een afspraak heeft.</p>
+                <p><strong>Datum en tijd</strong><br>{date}</p>
+                <p><strong>Diensten</strong><br>{services}</p>
+                <p>Wij zien u graag!</p>
+                """,
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.BookingCancellation => new(
                 "Uw afspraak is geannuleerd",
-                "Uw afspraak is helaas geannuleerd.",
-                "Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.",
-                "Oorspronkelijke datum en tijd",
-                null,
+                """
+                <p>Uw afspraak is helaas geannuleerd.</p>
+                <p><strong>Oorspronkelijke datum en tijd</strong><br>{date}</p>
+                <p>Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.</p>
+                """,
                 ["clientName", "salonName", "date"]),
             NotificationType.BookingReceived => new(
                 $"Nieuwe boeking bij {salonName}",
-                "Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.",
-                "Wij nemen zo snel mogelijk contact met u op.",
-                "Datum en tijd",
-                "Diensten",
+                """
+                <p>Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.</p>
+                <p><strong>Datum en tijd</strong><br>{date}</p>
+                <p><strong>Diensten</strong><br>{services}</p>
+                <p>Wij nemen zo snel mogelijk contact met u op.</p>
+                """,
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.InvoiceSent => new(
                 $"Factuur {{invoiceNumber}} van {salonName}",
-                "Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.",
-                "Wij zien u graag terug!",
-                "Factuurdatum",
-                null,
+                """
+                <p>Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.</p>
+                <p><strong>Factuurdatum</strong><br>{invoiceDate}</p>
+                <p><strong>Factuurnummer</strong><br>{invoiceNumber}</p>
+                <p><strong>Totaalbedrag</strong><br>{totalAmount}</p>
+                <p>Wij zien u graag terug!</p>
+                """,
                 ["clientName", "salonName", "invoiceNumber", "invoiceDate", "totalAmount"]),
-            _ => new(string.Empty, string.Empty, string.Empty, null, null, []),
+            _ => new(string.Empty, string.Empty, []),
         };
     }
 }
