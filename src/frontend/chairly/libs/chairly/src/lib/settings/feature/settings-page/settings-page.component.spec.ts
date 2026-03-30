@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 
 import { NEVER, of, throwError } from 'rxjs';
 
-import { SettingsApiService } from '../../data-access';
-import { CompanyInfo, VatSettings } from '../../models';
+import { EmailTemplateApiService, SettingsApiService } from '../../data-access';
+import { CompanyInfo, EmailTemplateResponse, VatSettings } from '../../models';
 import { SettingsPageComponent } from './settings-page.component';
 
 const emptyCompanyInfo: CompanyInfo = {
@@ -37,6 +38,17 @@ const defaultVatSettings: VatSettings = {
   defaultVatRate: 21,
 };
 
+const mockTemplates: EmailTemplateResponse[] = [
+  {
+    templateType: 'BookingConfirmation',
+    subject: 'Bevestiging',
+    mainMessage: 'Uw afspraak is bevestigd.',
+    closingMessage: 'Tot ziens!',
+    isCustomized: false,
+    availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
+  },
+];
+
 describe('SettingsPageComponent', () => {
   let fixture: ComponentFixture<SettingsPageComponent>;
   let component: SettingsPageComponent;
@@ -48,15 +60,33 @@ describe('SettingsPageComponent', () => {
     updateVatSettings: vi.fn(),
   };
 
+  const mockEmailTemplateApi = {
+    getEmailTemplates: vi.fn(),
+    updateEmailTemplate: vi.fn(),
+    resetEmailTemplate: vi.fn(),
+    previewEmailTemplate: vi.fn(),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
     mockSettingsApi.getCompanyInfo.mockReturnValue(of(emptyCompanyInfo));
     mockSettingsApi.getVatSettings.mockReturnValue(of(defaultVatSettings));
+    mockEmailTemplateApi.getEmailTemplates.mockReturnValue(of(mockTemplates));
 
     await TestBed.configureTestingModule({
       imports: [SettingsPageComponent],
-      providers: [{ provide: SettingsApiService, useValue: mockSettingsApi }],
-    }).compileComponents();
+      providers: [
+        provideRouter([]),
+        { provide: SettingsApiService, useValue: mockSettingsApi },
+        { provide: EmailTemplateApiService, useValue: mockEmailTemplateApi },
+      ],
+    })
+      .overrideComponent(SettingsPageComponent, {
+        add: {
+          providers: [{ provide: EmailTemplateApiService, useValue: mockEmailTemplateApi }],
+        },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(SettingsPageComponent);
     component = fixture.componentInstance;
@@ -207,6 +237,12 @@ describe('SettingsPageComponent', () => {
     expect(headings[1].nativeElement.textContent).toContain('BTW-instellingen');
   });
 
+  it('should display E-mailtemplates section heading', () => {
+    fixture.detectChanges();
+    const headings = fixture.debugElement.queryAll(By.css('h2'));
+    expect(headings[2].nativeElement.textContent).toContain('E-mailtemplates');
+  });
+
   it('should have three VAT rate options: 0%, 9%, 21%', () => {
     fixture.detectChanges();
     const options = fixture.nativeElement.querySelectorAll(
@@ -223,5 +259,18 @@ describe('SettingsPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(
       'Het standaard BTW-tarief wordt automatisch toegepast',
     );
+  });
+
+  it('should load email templates on init', () => {
+    fixture.detectChanges();
+    expect(mockEmailTemplateApi.getEmailTemplates).toHaveBeenCalledOnce();
+  });
+
+  it('should display email template cards when templates are loaded', () => {
+    fixture.detectChanges();
+    const templateCards = fixture.nativeElement.querySelectorAll(
+      'section:last-child .rounded-lg.border',
+    );
+    expect(templateCards.length).toBe(1);
   });
 });

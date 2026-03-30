@@ -3,6 +3,8 @@ export interface EmailTemplateResponse {
   subject: string;
   mainMessage: string;
   closingMessage: string;
+  dateLabel: string | null;
+  servicesLabel: string | null;
   isCustomized: boolean;
   availablePlaceholders: string[];
 }
@@ -11,6 +13,8 @@ export interface UpdateEmailTemplateRequest {
   subject: string;
   mainMessage: string;
   closingMessage: string;
+  dateLabel: string | null;
+  servicesLabel: string | null;
 }
 
 export interface PreviewEmailTemplateRequest {
@@ -18,6 +22,8 @@ export interface PreviewEmailTemplateRequest {
   subject: string;
   mainMessage: string;
   closingMessage: string;
+  dateLabel: string | null;
+  servicesLabel: string | null;
 }
 
 export interface PreviewEmailTemplateResponse {

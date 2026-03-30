@@ -219,7 +219,7 @@
       </section>
 
       <!-- BTW-instellingen sectie -->
-      <section>
+      <section class="mb-8">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">BTW-instellingen</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Het standaard BTW-tarief wordt automatisch toegepast op diensten zonder afzonderlijk
@@ -292,6 +292,59 @@
             </button>
           </div>
         </div>
+      </section>
+
+      <!-- E-mailtemplates sectie -->
+      <section>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">E-mailtemplates</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Pas de e-mails aan die naar uw klanten worden verstuurd. Bewerk het onderwerp, het bericht
+          en de afsluiting per type e-mail.
+        </p>
+
+        @if (isLoadingTemplates()) {
+          <chairly-loading-indicator />
+        } @else if (templates().length === 0) {
+          <p class="text-gray-700 dark:text-gray-300">Geen templates gevonden.</p>
+        } @else {
+          <div class="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+            @for (template of templates(); track template.templateType) {
+              <div
+                class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-slate-800">
+                <div class="flex items-start justify-between">
+                  <div class="min-w-0 flex-1">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                      {{ template.templateType | templateTypeLabel }}
+                    </h3>
+                    <p class="mt-1 truncate text-sm text-gray-700 dark:text-gray-300">
+                      {{ template.subject }}
+                    </p>
+                  </div>
+                  <div class="ml-3 flex-shrink-0">
+                    @if (template.isCustomized) {
+                      <span
+                        class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                        Aangepast
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                        Standaard
+                      </span>
+                    }
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <a
+                    [routerLink]="['/instellingen/email-templates', template.templateType]"
+                    class="inline-flex items-center rounded-md bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600">
+                    Bewerken
+                  </a>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </section>
     }
   </div>

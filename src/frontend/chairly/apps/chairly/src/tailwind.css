@@ -109,3 +109,60 @@
 select {
   padding-right: 2rem;
 }
+
+/* Quill WYSIWYG editor dark mode overrides */
+[data-theme='dark'] .ql-toolbar.ql-snow {
+  border-color: #475569; /* slate-600 */
+  background-color: #1e293b; /* slate-800 */
+}
+
+[data-theme='dark'] .ql-container.ql-snow {
+  border-color: #475569; /* slate-600 */
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9; /* slate-100 */
+}
+
+[data-theme='dark'] .ql-editor.ql-blank::before {
+  color: #64748b; /* slate-500 */
+}
+
+[data-theme='dark'] .ql-snow .ql-stroke {
+  stroke: #cbd5e1; /* slate-300 */
+}
+
+[data-theme='dark'] .ql-snow .ql-fill {
+  fill: #cbd5e1; /* slate-300 */
+}
+
+[data-theme='dark'] .ql-snow .ql-picker-label {
+  color: #cbd5e1; /* slate-300 */
+}
+
+[data-theme='dark'] .ql-snow .ql-picker-options {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #475569; /* slate-600 */
+}
+
+[data-theme='dark'] .ql-snow .ql-picker-item {
+  color: #cbd5e1; /* slate-300 */
+}
+
+[data-theme='dark'] .ql-snow .ql-picker-item:hover {
+  color: #f1f5f9; /* slate-100 */
+}
+
+[data-theme='dark'] .ql-snow .ql-active .ql-stroke {
+  stroke: #8f7fcf; /* primary-500 */
+}
+
+[data-theme='dark'] .ql-snow .ql-active .ql-fill {
+  fill: #8f7fcf; /* primary-500 */
+}
+
+[data-theme='dark'] .ql-snow button:hover .ql-stroke {
+  stroke: #f1f5f9; /* slate-100 */
+}
+
+[data-theme='dark'] .ql-snow button:hover .ql-fill {
+  fill: #f1f5f9; /* slate-100 */
+}

@@ -12,6 +12,8 @@ const mockTemplates: EmailTemplateResponse[] = [
     subject: 'Bevestiging',
     mainMessage: 'Uw afspraak is bevestigd.',
     closingMessage: 'Tot ziens!',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -20,6 +22,8 @@ const mockTemplates: EmailTemplateResponse[] = [
     subject: 'Herinnering',
     mainMessage: 'U heeft morgen een afspraak.',
     closingMessage: 'Tot morgen!',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -99,6 +103,8 @@ describe('EmailTemplateStore', () => {
       subject: 'Nieuw onderwerp',
       mainMessage: mockTemplates[0].mainMessage,
       closingMessage: mockTemplates[0].closingMessage,
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.isSaving()).toBe(false);
@@ -119,6 +125,8 @@ describe('EmailTemplateStore', () => {
       subject: 'Nieuw onderwerp',
       mainMessage: mockTemplates[0].mainMessage,
       closingMessage: mockTemplates[0].closingMessage,
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.templates()[0].subject).toBe('Nieuw onderwerp');
@@ -135,6 +143,8 @@ describe('EmailTemplateStore', () => {
       subject: 'test',
       mainMessage: 'test',
       closingMessage: 'test',
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.saveSuccess()).toBe(true);
@@ -150,6 +160,8 @@ describe('EmailTemplateStore', () => {
       subject: 'test',
       mainMessage: 'test',
       closingMessage: 'test',
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.saveError()).toBe('save failed');
@@ -176,6 +188,8 @@ describe('EmailTemplateStore', () => {
       subject: 'test',
       mainMessage: 'test',
       closingMessage: 'test',
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.isLoadingPreview()).toBe(false);
@@ -190,6 +204,8 @@ describe('EmailTemplateStore', () => {
       subject: 'test',
       mainMessage: 'test',
       closingMessage: 'test',
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.preview()).toEqual(mockPreview);
@@ -204,6 +220,8 @@ describe('EmailTemplateStore', () => {
       subject: 'test',
       mainMessage: 'test',
       closingMessage: 'test',
+      dateLabel: null,
+      servicesLabel: null,
     });
 
     expect(store.isLoadingPreview()).toBe(false);

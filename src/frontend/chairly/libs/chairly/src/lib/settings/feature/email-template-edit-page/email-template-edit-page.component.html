@@ -1,7 +1,7 @@
 <div class="p-6">
   <div class="mb-4">
     <a
-      routerLink="/instellingen/email-templates"
+      routerLink="/instellingen"
       class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
       &larr; Terug naar overzicht
     </a>
@@ -49,15 +49,18 @@
       </div>
 
       <div>
-        <label for="mainMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label
+          id="mainMessageLabel"
+          for="mainMessage"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Hoofdbericht
         </label>
-        <textarea
+        <quill-editor
           id="mainMessage"
           formControlName="mainMessage"
-          rows="4"
-          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
-          maxlength="2000"></textarea>
+          [modules]="quillModules"
+          [styles]="{ 'min-height': '120px' }"
+          placeholder="Voer het hoofdbericht in..." />
         <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
           Beschikbare variabelen:
           @for (ph of tmpl.availablePlaceholders; track ph; let last = $last) {
@@ -73,16 +76,17 @@
 
       <div>
         <label
+          id="closingMessageLabel"
           for="closingMessage"
-          class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Afsluitbericht
         </label>
-        <textarea
+        <quill-editor
           id="closingMessage"
           formControlName="closingMessage"
-          rows="3"
-          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
-          maxlength="1000"></textarea>
+          [modules]="quillModules"
+          [styles]="{ 'min-height': '80px' }"
+          placeholder="Voer het afsluitbericht in..." />
         <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
           Beschikbare variabelen:
           @for (ph of tmpl.availablePlaceholders; track ph; let last = $last) {
@@ -95,6 +99,42 @@
           }
         </p>
       </div>
+
+      <div>
+        <label for="dateLabel" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Datumlabel
+        </label>
+        <input
+          id="dateLabel"
+          type="text"
+          formControlName="dateLabel"
+          placeholder="Datum en tijd"
+          class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
+          maxlength="200" />
+        <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
+          Laat leeg om de standaardwaarde "Datum en tijd" te gebruiken.
+        </p>
+      </div>
+
+      @if (showServicesLabel()) {
+        <div>
+          <label
+            for="servicesLabel"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Dienstenlabel
+          </label>
+          <input
+            id="servicesLabel"
+            type="text"
+            formControlName="servicesLabel"
+            placeholder="Diensten"
+            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white sm:text-sm"
+            maxlength="200" />
+          <p class="mt-1 text-xs text-gray-700 dark:text-gray-400">
+            Laat leeg om de standaardwaarde "Diensten" te gebruiken.
+          </p>
+        </div>
+      }
 
       <div class="flex flex-wrap items-center gap-3 pt-2">
         <button
