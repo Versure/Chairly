@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.5906" branch-rate="0.5854" version="1.9" timestamp="1774521298" lines-covered="3960" lines-valid="6705" branches-covered="678" branches-valid="1158">
+<coverage line-rate="0.5967" branch-rate="0.5854" version="1.9" timestamp="1774894552" lines-covered="4001" lines-valid="6705" branches-covered="678" branches-valid="1158">
   <sources>
-    <source>/home/jreuvers/projects/Chairly/.worktrees/forgot-password/backend/src/backend/</source>
+    <source>/home/jreuvers/projects/Chairly/.worktrees/settings-page-403/backend/src/backend/</source>
   </sources>
   <packages>
-    <package name="Chairly.Api" line-rate="0.5784" branch-rate="0.5818" complexity="1860">
+    <package name="Chairly.Api" line-rate="0.5847" branch-rate="0.5818" complexity="1860">
       <classes>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="10">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="10">
           <methods>
             <method name="get_Summary" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -53,7 +53,7 @@
                 <line number="55" hits="0" branch="False" />
               </lines>
             </method>
-            <method name=".ctor" signature="(System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Collections.Generic.List`1&lt;System.String&gt;,System.Collections.Generic.List`1&lt;Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlParameterComment&gt;,System.Collections.Generic.List`1&lt;Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlResponseComment&gt;)" line-rate="0" branch-rate="1" complexity="1">
+            <method name=".ctor" signature="(System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Collections.Generic.List`1&lt;System.String&gt;,System.Collections.Generic.List`1&lt;Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlParameterComment&gt;,System.Collections.Generic.List`1&lt;Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlResponseComment&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
                 <line number="46" hits="0" branch="False" />
               </lines>
@@ -72,7 +72,7 @@
             <line number="46" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlParameterComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlParameterComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="get_Name" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -84,7 +84,7 @@
             <line number="58" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlResponseComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlResponseComment" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="get_Code" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -96,7 +96,7 @@
             <line number="61" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlCommentCache" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="3">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlCommentCache" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="3">
           <methods>
             <method name="get_Cache" signature="()" line-rate="0" branch-rate="0" complexity="2">
               <lines>
@@ -166,7 +166,7 @@
             <line number="96" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__DocumentationCommentIdHelper" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="68">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__DocumentationCommentIdHelper" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="68">
           <methods>
             <method name="CreateDocumentationId" signature="(System.Type)" line-rate="0" branch-rate="0" complexity="2">
               <lines>
@@ -766,7 +766,7 @@
             <line number="359" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlCommentOperationTransformer" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="100">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlCommentOperationTransformer" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="100">
           <methods>
             <method name="TransformAsync" signature="(Microsoft.OpenApi.OpenApiOperation,Microsoft.AspNetCore.OpenApi.OpenApiOperationTransformerContext,System.Threading.CancellationToken)" line-rate="0" branch-rate="0" complexity="94">
               <lines>
@@ -1386,7 +1386,7 @@
             <line number="525" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__XmlCommentSchemaTransformer" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="34">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__XmlCommentSchemaTransformer" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="34">
           <methods>
             <method name="TransformAsync" signature="(Microsoft.OpenApi.OpenApiSchema,Microsoft.AspNetCore.OpenApi.OpenApiSchemaTransformerContext,System.Threading.CancellationToken)" line-rate="0" branch-rate="0" complexity="34">
               <lines>
@@ -1582,7 +1582,7 @@
             <line number="583" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__JsonNodeExtensions" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="2">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__JsonNodeExtensions" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="0" complexity="2">
           <methods>
             <method name="Parse" signature="(System.String)" line-rate="0" branch-rate="0" complexity="2">
               <lines>
@@ -1628,7 +1628,7 @@
             <line number="612" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__GeneratedServiceCollectionExtensions" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Microsoft.AspNetCore.OpenApi.Generated.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__GeneratedServiceCollectionExtensions" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="AddOpenApi" signature="(Microsoft.Extensions.DependencyInjection.IServiceCollection)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -1652,7 +1652,7 @@
             <line number="626" hits="0" branch="False" />
           </lines>
         </class>
-        <class name="System.Runtime.CompilerServices.&lt;OpenApiXmlCommentSupport_generated&gt;F4A4FF52AD65F10D5844D674222BBA08DA43902A4915F4538D48D84602D1030C4__InterceptsLocationAttribute" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="System.Runtime.CompilerServices.&lt;OpenApiXmlCommentSupport_generated&gt;F66CDF234BC788D4A1354DECBC9A301268786F59696CFD0F01F8A81E0985F8611__InterceptsLocationAttribute" filename="Chairly.Api/obj/Debug/net10.0/Microsoft.AspNetCore.OpenApi.SourceGenerators/Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator/OpenApiXmlCommentSupport.generated.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name=".ctor" signature="(System.Int32,System.String)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
@@ -7692,44 +7692,44 @@
             <line number="3" hits="6" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Features.Settings.SettingsEndpoints" filename="Chairly.Api/Features/Settings/SettingsEndpoints.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Chairly.Api.Features.Settings.SettingsEndpoints" filename="Chairly.Api/Features/Settings/SettingsEndpoints.cs" line-rate="1" branch-rate="1" complexity="1">
           <methods>
-            <method name="MapSettingsEndpoints" signature="(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="MapSettingsEndpoints" signature="(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="11" hits="0" branch="False" />
-                <line number="12" hits="0" branch="False" />
-                <line number="13" hits="0" branch="False" />
-                <line number="15" hits="0" branch="False" />
-                <line number="17" hits="0" branch="False" />
-                <line number="18" hits="0" branch="False" />
-                <line number="20" hits="0" branch="False" />
-                <line number="22" hits="0" branch="False" />
-                <line number="23" hits="0" branch="False" />
-                <line number="25" hits="0" branch="False" />
-                <line number="27" hits="0" branch="False" />
-                <line number="28" hits="0" branch="False" />
-                <line number="30" hits="0" branch="False" />
-                <line number="32" hits="0" branch="False" />
-                <line number="33" hits="0" branch="False" />
+                <line number="11" hits="3" branch="False" />
+                <line number="12" hits="3" branch="False" />
+                <line number="13" hits="3" branch="False" />
+                <line number="15" hits="3" branch="False" />
+                <line number="17" hits="3" branch="False" />
+                <line number="18" hits="3" branch="False" />
+                <line number="20" hits="3" branch="False" />
+                <line number="22" hits="3" branch="False" />
+                <line number="23" hits="3" branch="False" />
+                <line number="25" hits="3" branch="False" />
+                <line number="27" hits="3" branch="False" />
+                <line number="28" hits="3" branch="False" />
+                <line number="30" hits="3" branch="False" />
+                <line number="32" hits="3" branch="False" />
+                <line number="33" hits="3" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="11" hits="0" branch="False" />
-            <line number="12" hits="0" branch="False" />
-            <line number="13" hits="0" branch="False" />
-            <line number="15" hits="0" branch="False" />
-            <line number="17" hits="0" branch="False" />
-            <line number="18" hits="0" branch="False" />
-            <line number="20" hits="0" branch="False" />
-            <line number="22" hits="0" branch="False" />
-            <line number="23" hits="0" branch="False" />
-            <line number="25" hits="0" branch="False" />
-            <line number="27" hits="0" branch="False" />
-            <line number="28" hits="0" branch="False" />
-            <line number="30" hits="0" branch="False" />
-            <line number="32" hits="0" branch="False" />
-            <line number="33" hits="0" branch="False" />
+            <line number="11" hits="3" branch="False" />
+            <line number="12" hits="3" branch="False" />
+            <line number="13" hits="3" branch="False" />
+            <line number="15" hits="3" branch="False" />
+            <line number="17" hits="3" branch="False" />
+            <line number="18" hits="3" branch="False" />
+            <line number="20" hits="3" branch="False" />
+            <line number="22" hits="3" branch="False" />
+            <line number="23" hits="3" branch="False" />
+            <line number="25" hits="3" branch="False" />
+            <line number="27" hits="3" branch="False" />
+            <line number="28" hits="3" branch="False" />
+            <line number="30" hits="3" branch="False" />
+            <line number="32" hits="3" branch="False" />
+            <line number="33" hits="3" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Settings.VatSettingsResponse" filename="Chairly.Api/Features/Settings/VatSettingsResponse.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -7756,34 +7756,34 @@
             <line number="8" hits="8" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Features.Settings.UpdateVatSettings.UpdateVatSettingsEndpoint" filename="Chairly.Api/Features/Settings/UpdateVatSettings/UpdateVatSettingsEndpoint.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Chairly.Api.Features.Settings.UpdateVatSettings.UpdateVatSettingsEndpoint" filename="Chairly.Api/Features/Settings/UpdateVatSettings/UpdateVatSettingsEndpoint.cs" line-rate="0.7" branch-rate="1" complexity="1">
           <methods>
-            <method name="MapUpdateVatSettings" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="MapUpdateVatSettings" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0.7" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="0" branch="False" />
-                <line number="9" hits="0" branch="False" />
-                <line number="10" hits="0" branch="False" />
-                <line number="11" hits="0" branch="False" />
-                <line number="12" hits="0" branch="False" />
+                <line number="8" hits="3" branch="False" />
+                <line number="9" hits="3" branch="False" />
+                <line number="10" hits="3" branch="False" />
+                <line number="11" hits="3" branch="False" />
+                <line number="12" hits="3" branch="False" />
                 <line number="13" hits="0" branch="False" />
                 <line number="14" hits="0" branch="False" />
                 <line number="15" hits="0" branch="False" />
-                <line number="16" hits="0" branch="False" />
-                <line number="17" hits="0" branch="False" />
+                <line number="16" hits="3" branch="False" />
+                <line number="17" hits="3" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="0" branch="False" />
-            <line number="9" hits="0" branch="False" />
-            <line number="10" hits="0" branch="False" />
-            <line number="11" hits="0" branch="False" />
-            <line number="12" hits="0" branch="False" />
+            <line number="8" hits="3" branch="False" />
+            <line number="9" hits="3" branch="False" />
+            <line number="10" hits="3" branch="False" />
+            <line number="11" hits="3" branch="False" />
+            <line number="12" hits="3" branch="False" />
             <line number="13" hits="0" branch="False" />
             <line number="14" hits="0" branch="False" />
             <line number="15" hits="0" branch="False" />
-            <line number="16" hits="0" branch="False" />
-            <line number="17" hits="0" branch="False" />
+            <line number="16" hits="3" branch="False" />
+            <line number="17" hits="3" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Settings.UpdateVatSettings.UpdateVatSettingsHandler" filename="Chairly.Api/Features/Settings/UpdateVatSettings/UpdateVatSettingsHandler.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -7934,38 +7934,38 @@
             <line number="40" hits="16" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Features.Settings.UpdateCompanyInfo.UpdateCompanyInfoEndpoint" filename="Chairly.Api/Features/Settings/UpdateCompanyInfo/UpdateCompanyInfoEndpoint.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Chairly.Api.Features.Settings.UpdateCompanyInfo.UpdateCompanyInfoEndpoint" filename="Chairly.Api/Features/Settings/UpdateCompanyInfo/UpdateCompanyInfoEndpoint.cs" line-rate="0.5832999999999999" branch-rate="1" complexity="1">
           <methods>
-            <method name="MapUpdateCompanyInfo" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="MapUpdateCompanyInfo" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0.5832999999999999" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="0" branch="False" />
-                <line number="9" hits="0" branch="False" />
-                <line number="10" hits="0" branch="False" />
-                <line number="11" hits="0" branch="False" />
-                <line number="12" hits="0" branch="False" />
+                <line number="8" hits="3" branch="False" />
+                <line number="9" hits="3" branch="False" />
+                <line number="10" hits="3" branch="False" />
+                <line number="11" hits="3" branch="False" />
+                <line number="12" hits="3" branch="False" />
                 <line number="13" hits="0" branch="False" />
                 <line number="14" hits="0" branch="False" />
                 <line number="15" hits="0" branch="False" />
                 <line number="16" hits="0" branch="False" />
                 <line number="17" hits="0" branch="False" />
-                <line number="18" hits="0" branch="False" />
-                <line number="19" hits="0" branch="False" />
+                <line number="18" hits="3" branch="False" />
+                <line number="19" hits="3" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="0" branch="False" />
-            <line number="9" hits="0" branch="False" />
-            <line number="10" hits="0" branch="False" />
-            <line number="11" hits="0" branch="False" />
-            <line number="12" hits="0" branch="False" />
+            <line number="8" hits="3" branch="False" />
+            <line number="9" hits="3" branch="False" />
+            <line number="10" hits="3" branch="False" />
+            <line number="11" hits="3" branch="False" />
+            <line number="12" hits="3" branch="False" />
             <line number="13" hits="0" branch="False" />
             <line number="14" hits="0" branch="False" />
             <line number="15" hits="0" branch="False" />
             <line number="16" hits="0" branch="False" />
             <line number="17" hits="0" branch="False" />
-            <line number="18" hits="0" branch="False" />
-            <line number="19" hits="0" branch="False" />
+            <line number="18" hits="3" branch="False" />
+            <line number="19" hits="3" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Settings.UpdateCompanyInfo.UpdateCompanyInfoHandler" filename="Chairly.Api/Features/Settings/UpdateCompanyInfo/UpdateCompanyInfoHandler.cs" line-rate="1" branch-rate="1" complexity="2">
@@ -8086,32 +8086,32 @@
             <line number="51" hits="4" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Features.Settings.GetVatSettings.GetVatSettingsEndpoint" filename="Chairly.Api/Features/Settings/GetVatSettings/GetVatSettingsEndpoint.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Chairly.Api.Features.Settings.GetVatSettings.GetVatSettingsEndpoint" filename="Chairly.Api/Features/Settings/GetVatSettings/GetVatSettingsEndpoint.cs" line-rate="0.6666" branch-rate="1" complexity="1">
           <methods>
-            <method name="MapGetVatSettings" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="MapGetVatSettings" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0.6666" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="0" branch="False" />
-                <line number="9" hits="0" branch="False" />
-                <line number="10" hits="0" branch="False" />
-                <line number="11" hits="0" branch="False" />
+                <line number="8" hits="3" branch="False" />
+                <line number="9" hits="3" branch="False" />
+                <line number="10" hits="3" branch="False" />
+                <line number="11" hits="3" branch="False" />
                 <line number="12" hits="0" branch="False" />
                 <line number="13" hits="0" branch="False" />
                 <line number="14" hits="0" branch="False" />
-                <line number="15" hits="0" branch="False" />
-                <line number="16" hits="0" branch="False" />
+                <line number="15" hits="3" branch="False" />
+                <line number="16" hits="3" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="0" branch="False" />
-            <line number="9" hits="0" branch="False" />
-            <line number="10" hits="0" branch="False" />
-            <line number="11" hits="0" branch="False" />
+            <line number="8" hits="3" branch="False" />
+            <line number="9" hits="3" branch="False" />
+            <line number="10" hits="3" branch="False" />
+            <line number="11" hits="3" branch="False" />
             <line number="12" hits="0" branch="False" />
             <line number="13" hits="0" branch="False" />
             <line number="14" hits="0" branch="False" />
-            <line number="15" hits="0" branch="False" />
-            <line number="16" hits="0" branch="False" />
+            <line number="15" hits="3" branch="False" />
+            <line number="16" hits="3" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Settings.GetVatSettings.GetVatSettingsHandler" filename="Chairly.Api/Features/Settings/GetVatSettings/GetVatSettingsHandler.cs" line-rate="1" branch-rate="1" complexity="1">
@@ -8182,32 +8182,32 @@
             <line number="33" hits="2" branch="False" />
           </lines>
         </class>
-        <class name="Chairly.Api.Features.Settings.GetCompanyInfo.GetCompanyInfoEndpoint" filename="Chairly.Api/Features/Settings/GetCompanyInfo/GetCompanyInfoEndpoint.cs" line-rate="0" branch-rate="1" complexity="1">
+        <class name="Chairly.Api.Features.Settings.GetCompanyInfo.GetCompanyInfoEndpoint" filename="Chairly.Api/Features/Settings/GetCompanyInfo/GetCompanyInfoEndpoint.cs" line-rate="0.6666" branch-rate="1" complexity="1">
           <methods>
-            <method name="MapGetCompanyInfo" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0" branch-rate="1" complexity="1">
+            <method name="MapGetCompanyInfo" signature="(Microsoft.AspNetCore.Routing.RouteGroupBuilder)" line-rate="0.6666" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="0" branch="False" />
-                <line number="9" hits="0" branch="False" />
-                <line number="10" hits="0" branch="False" />
-                <line number="11" hits="0" branch="False" />
+                <line number="8" hits="3" branch="False" />
+                <line number="9" hits="3" branch="False" />
+                <line number="10" hits="3" branch="False" />
+                <line number="11" hits="3" branch="False" />
                 <line number="12" hits="0" branch="False" />
                 <line number="13" hits="0" branch="False" />
                 <line number="14" hits="0" branch="False" />
-                <line number="15" hits="0" branch="False" />
-                <line number="16" hits="0" branch="False" />
+                <line number="15" hits="3" branch="False" />
+                <line number="16" hits="3" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="0" branch="False" />
-            <line number="9" hits="0" branch="False" />
-            <line number="10" hits="0" branch="False" />
-            <line number="11" hits="0" branch="False" />
+            <line number="8" hits="3" branch="False" />
+            <line number="9" hits="3" branch="False" />
+            <line number="10" hits="3" branch="False" />
+            <line number="11" hits="3" branch="False" />
             <line number="12" hits="0" branch="False" />
             <line number="13" hits="0" branch="False" />
             <line number="14" hits="0" branch="False" />
-            <line number="15" hits="0" branch="False" />
-            <line number="16" hits="0" branch="False" />
+            <line number="15" hits="3" branch="False" />
+            <line number="16" hits="3" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Settings.GetCompanyInfo.GetCompanyInfoHandler" filename="Chairly.Api/Features/Settings/GetCompanyInfo/GetCompanyInfoHandler.cs" line-rate="1" branch-rate="1" complexity="2">
@@ -13636,12 +13636,12 @@
             </method>
             <method name="get_ServiceNames" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="12" hits="15" branch="False" />
+                <line number="12" hits="14" branch="False" />
               </lines>
             </method>
             <method name=".ctor" signature="(System.Guid,System.Guid,System.String,System.Guid,System.String,System.DateTimeOffset,System.DateTimeOffset,System.String,System.Collections.Generic.IReadOnlyList`1&lt;System.String&gt;)" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="3" hits="14" branch="False" />
+                <line number="3" hits="13" branch="False" />
               </lines>
             </method>
           </methods>
@@ -13654,8 +13654,8 @@
             <line number="9" hits="8" branch="False" />
             <line number="10" hits="0" branch="False" />
             <line number="11" hits="0" branch="False" />
-            <line number="12" hits="15" branch="False" />
-            <line number="3" hits="14" branch="False" />
+            <line number="12" hits="14" branch="False" />
+            <line number="3" hits="13" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Api.Features.Dashboard.DashboardEndpoints" filename="Chairly.Api/Features/Dashboard/DashboardEndpoints.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -13771,23 +13771,23 @@
             </method>
             <method name="ToBookingResponse" signature="(Chairly.Domain.Entities.Booking)" line-rate="1" branch-rate="0.5" complexity="4">
               <lines>
-                <line number="122" hits="14" branch="False" />
-                <line number="123" hits="14" branch="True" condition-coverage="50% (2/4)">
+                <line number="122" hits="13" branch="False" />
+                <line number="123" hits="13" branch="True" condition-coverage="50% (2/4)">
                   <conditions>
                     <condition number="19" type="jump" coverage="50%" />
                     <condition number="72" type="jump" coverage="50%" />
                   </conditions>
                 </line>
-                <line number="124" hits="14" branch="False" />
-                <line number="125" hits="14" branch="False" />
-                <line number="126" hits="14" branch="False" />
-                <line number="127" hits="14" branch="False" />
-                <line number="128" hits="14" branch="False" />
-                <line number="129" hits="14" branch="False" />
-                <line number="130" hits="14" branch="False" />
-                <line number="131" hits="14" branch="False" />
-                <line number="132" hits="42" branch="False" />
-                <line number="133" hits="14" branch="False" />
+                <line number="124" hits="13" branch="False" />
+                <line number="125" hits="13" branch="False" />
+                <line number="126" hits="13" branch="False" />
+                <line number="127" hits="13" branch="False" />
+                <line number="128" hits="13" branch="False" />
+                <line number="129" hits="13" branch="False" />
+                <line number="130" hits="13" branch="False" />
+                <line number="131" hits="13" branch="False" />
+                <line number="132" hits="39" branch="False" />
+                <line number="133" hits="13" branch="False" />
               </lines>
             </method>
             <method name="GetWeekStart" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -13822,23 +13822,23 @@
             <line number="117" hits="42" branch="False" />
             <line number="118" hits="42" branch="False" />
             <line number="119" hits="42" branch="False" />
-            <line number="122" hits="14" branch="False" />
-            <line number="123" hits="14" branch="True" condition-coverage="50% (2/4)">
+            <line number="122" hits="13" branch="False" />
+            <line number="123" hits="13" branch="True" condition-coverage="50% (2/4)">
               <conditions>
                 <condition number="19" type="jump" coverage="50%" />
                 <condition number="72" type="jump" coverage="50%" />
               </conditions>
             </line>
-            <line number="124" hits="14" branch="False" />
-            <line number="125" hits="14" branch="False" />
-            <line number="126" hits="14" branch="False" />
-            <line number="127" hits="14" branch="False" />
-            <line number="128" hits="14" branch="False" />
-            <line number="129" hits="14" branch="False" />
-            <line number="130" hits="14" branch="False" />
-            <line number="131" hits="14" branch="False" />
-            <line number="132" hits="42" branch="False" />
-            <line number="133" hits="14" branch="False" />
+            <line number="124" hits="13" branch="False" />
+            <line number="125" hits="13" branch="False" />
+            <line number="126" hits="13" branch="False" />
+            <line number="127" hits="13" branch="False" />
+            <line number="128" hits="13" branch="False" />
+            <line number="129" hits="13" branch="False" />
+            <line number="130" hits="13" branch="False" />
+            <line number="131" hits="13" branch="False" />
+            <line number="132" hits="39" branch="False" />
+            <line number="133" hits="13" branch="False" />
             <line number="136" hits="32" branch="False" />
             <line number="137" hits="32" branch="False" />
             <line number="138" hits="32" branch="False" />
@@ -22926,7 +22926,7 @@
           <methods>
             <method name="get_Id" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="5" hits="411" branch="False" />
+                <line number="5" hits="410" branch="False" />
               </lines>
             </method>
             <method name="get_TenantId" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -22936,22 +22936,22 @@
             </method>
             <method name="get_ClientId" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="7" hits="236" branch="False" />
+                <line number="7" hits="235" branch="False" />
               </lines>
             </method>
             <method name="get_StaffMemberId" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="211" branch="False" />
+                <line number="8" hits="210" branch="False" />
               </lines>
             </method>
             <method name="get_StartTime" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="9" hits="226" branch="False" />
+                <line number="9" hits="225" branch="False" />
               </lines>
             </method>
             <method name="get_EndTime" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="10" hits="207" branch="False" />
+                <line number="10" hits="206" branch="False" />
               </lines>
             </method>
             <method name="get_Notes" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -22981,7 +22981,7 @@
             </method>
             <method name="get_ConfirmedAtUtc" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="16" hits="73" branch="False" />
+                <line number="16" hits="72" branch="False" />
               </lines>
             </method>
             <method name="get_ConfirmedBy" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -22991,7 +22991,7 @@
             </method>
             <method name="get_StartedAtUtc" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="18" hits="96" branch="False" />
+                <line number="18" hits="95" branch="False" />
               </lines>
             </method>
             <method name="get_StartedBy" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23001,7 +23001,7 @@
             </method>
             <method name="get_CompletedAtUtc" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="20" hits="185" branch="False" />
+                <line number="20" hits="184" branch="False" />
               </lines>
             </method>
             <method name="get_CompletedBy" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23011,7 +23011,7 @@
             </method>
             <method name="get_CancelledAtUtc" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="22" hits="126" branch="False" />
+                <line number="22" hits="125" branch="False" />
               </lines>
             </method>
             <method name="get_CancelledBy" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23021,7 +23021,7 @@
             </method>
             <method name="get_NoShowAtUtc" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="24" hits="114" branch="False" />
+                <line number="24" hits="113" branch="False" />
               </lines>
             </method>
             <method name="get_NoShowBy" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23031,133 +23031,133 @@
             </method>
             <method name="get_Client" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="27" hits="42" branch="False" />
+                <line number="27" hits="39" branch="False" />
               </lines>
             </method>
             <method name="get_StaffMember" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="28" hits="42" branch="False" />
+                <line number="28" hits="39" branch="False" />
               </lines>
             </method>
             <method name="get_BookingServices" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="31" hits="355" branch="False" />
+                <line number="31" hits="354" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="5" hits="411" branch="False" />
+            <line number="5" hits="410" branch="False" />
             <line number="6" hits="185" branch="False" />
-            <line number="7" hits="236" branch="False" />
-            <line number="8" hits="211" branch="False" />
-            <line number="9" hits="226" branch="False" />
-            <line number="10" hits="207" branch="False" />
+            <line number="7" hits="235" branch="False" />
+            <line number="8" hits="210" branch="False" />
+            <line number="9" hits="225" branch="False" />
+            <line number="10" hits="206" branch="False" />
             <line number="11" hits="34" branch="False" />
             <line number="12" hits="189" branch="False" />
             <line number="13" hits="17" branch="False" />
             <line number="14" hits="24" branch="False" />
             <line number="15" hits="4" branch="False" />
-            <line number="16" hits="73" branch="False" />
+            <line number="16" hits="72" branch="False" />
             <line number="17" hits="2" branch="False" />
-            <line number="18" hits="96" branch="False" />
+            <line number="18" hits="95" branch="False" />
             <line number="19" hits="2" branch="False" />
-            <line number="20" hits="185" branch="False" />
+            <line number="20" hits="184" branch="False" />
             <line number="21" hits="57" branch="False" />
-            <line number="22" hits="126" branch="False" />
+            <line number="22" hits="125" branch="False" />
             <line number="23" hits="4" branch="False" />
-            <line number="24" hits="114" branch="False" />
+            <line number="24" hits="113" branch="False" />
             <line number="25" hits="2" branch="False" />
-            <line number="27" hits="42" branch="False" />
-            <line number="28" hits="42" branch="False" />
-            <line number="31" hits="355" branch="False" />
+            <line number="27" hits="39" branch="False" />
+            <line number="28" hits="39" branch="False" />
+            <line number="31" hits="354" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Domain.Entities.BookingExtensions" filename="Chairly.Domain/Entities/BookingExtensions.cs" line-rate="1" branch-rate="1" complexity="10">
           <methods>
             <method name="DeriveStatus" signature="(Chairly.Domain.Entities.Booking)" line-rate="1" branch-rate="1" complexity="10">
               <lines>
-                <line number="8" hits="41" branch="False" />
-                <line number="9" hits="41" branch="False" />
-                <line number="11" hits="41" branch="True" condition-coverage="100% (2/2)">
+                <line number="8" hits="40" branch="False" />
+                <line number="9" hits="40" branch="False" />
+                <line number="11" hits="40" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
                     <condition number="29" type="jump" coverage="100%" />
                   </conditions>
                 </line>
                 <line number="12" hits="2" branch="False" />
                 <line number="13" hits="2" branch="False" />
-                <line number="16" hits="39" branch="True" condition-coverage="100% (2/2)">
+                <line number="16" hits="38" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
                     <condition number="52" type="jump" coverage="100%" />
                   </conditions>
                 </line>
                 <line number="17" hits="1" branch="False" />
                 <line number="18" hits="1" branch="False" />
-                <line number="21" hits="38" branch="True" condition-coverage="100% (2/2)">
+                <line number="21" hits="37" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
                     <condition number="77" type="jump" coverage="100%" />
                   </conditions>
                 </line>
                 <line number="22" hits="2" branch="False" />
                 <line number="23" hits="2" branch="False" />
-                <line number="26" hits="36" branch="True" condition-coverage="100% (2/2)">
+                <line number="26" hits="35" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
                     <condition number="102" type="jump" coverage="100%" />
                   </conditions>
                 </line>
                 <line number="27" hits="1" branch="False" />
                 <line number="28" hits="1" branch="False" />
-                <line number="31" hits="35" branch="True" condition-coverage="100% (2/2)">
+                <line number="31" hits="34" branch="True" condition-coverage="100% (2/2)">
                   <conditions>
                     <condition number="127" type="jump" coverage="100%" />
                   </conditions>
                 </line>
                 <line number="32" hits="1" branch="False" />
                 <line number="33" hits="1" branch="False" />
-                <line number="36" hits="34" branch="False" />
-                <line number="37" hits="41" branch="False" />
+                <line number="36" hits="33" branch="False" />
+                <line number="37" hits="40" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="8" hits="41" branch="False" />
-            <line number="9" hits="41" branch="False" />
-            <line number="11" hits="41" branch="True" condition-coverage="100% (2/2)">
+            <line number="8" hits="40" branch="False" />
+            <line number="9" hits="40" branch="False" />
+            <line number="11" hits="40" branch="True" condition-coverage="100% (2/2)">
               <conditions>
                 <condition number="29" type="jump" coverage="100%" />
               </conditions>
             </line>
             <line number="12" hits="2" branch="False" />
             <line number="13" hits="2" branch="False" />
-            <line number="16" hits="39" branch="True" condition-coverage="100% (2/2)">
+            <line number="16" hits="38" branch="True" condition-coverage="100% (2/2)">
               <conditions>
                 <condition number="52" type="jump" coverage="100%" />
               </conditions>
             </line>
             <line number="17" hits="1" branch="False" />
             <line number="18" hits="1" branch="False" />
-            <line number="21" hits="38" branch="True" condition-coverage="100% (2/2)">
+            <line number="21" hits="37" branch="True" condition-coverage="100% (2/2)">
               <conditions>
                 <condition number="77" type="jump" coverage="100%" />
               </conditions>
             </line>
             <line number="22" hits="2" branch="False" />
             <line number="23" hits="2" branch="False" />
-            <line number="26" hits="36" branch="True" condition-coverage="100% (2/2)">
+            <line number="26" hits="35" branch="True" condition-coverage="100% (2/2)">
               <conditions>
                 <condition number="102" type="jump" coverage="100%" />
               </conditions>
             </line>
             <line number="27" hits="1" branch="False" />
             <line number="28" hits="1" branch="False" />
-            <line number="31" hits="35" branch="True" condition-coverage="100% (2/2)">
+            <line number="31" hits="34" branch="True" condition-coverage="100% (2/2)">
               <conditions>
                 <condition number="127" type="jump" coverage="100%" />
               </conditions>
             </line>
             <line number="32" hits="1" branch="False" />
             <line number="33" hits="1" branch="False" />
-            <line number="36" hits="34" branch="False" />
-            <line number="37" hits="41" branch="False" />
+            <line number="36" hits="33" branch="False" />
+            <line number="37" hits="40" branch="False" />
           </lines>
         </class>
         <class name="Chairly.Domain.Entities.BookingService" filename="Chairly.Domain/Entities/BookingService.cs" line-rate="0.875" branch-rate="1" complexity="8">
@@ -23179,7 +23179,7 @@
             </method>
             <method name="get_ServiceName" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="319" branch="False" />
+                <line number="8" hits="318" branch="False" />
               </lines>
             </method>
             <method name="get_Duration" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23194,7 +23194,7 @@
             </method>
             <method name="get_SortOrder" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="11" hits="231" branch="False" />
+                <line number="11" hits="230" branch="False" />
               </lines>
             </method>
             <method name="get_Booking" signature="()" line-rate="0" branch-rate="1" complexity="1">
@@ -23207,10 +23207,10 @@
             <line number="5" hits="122" branch="False" />
             <line number="6" hits="100" branch="False" />
             <line number="7" hits="188" branch="False" />
-            <line number="8" hits="319" branch="False" />
+            <line number="8" hits="318" branch="False" />
             <line number="9" hits="144" branch="False" />
             <line number="10" hits="166" branch="False" />
-            <line number="11" hits="231" branch="False" />
+            <line number="11" hits="230" branch="False" />
             <line number="13" hits="0" branch="False" />
           </lines>
         </class>
@@ -23228,12 +23228,12 @@
             </method>
             <method name="get_FirstName" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="7" hits="432" branch="False" />
+                <line number="7" hits="431" branch="False" />
               </lines>
             </method>
             <method name="get_LastName" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="8" hits="432" branch="False" />
+                <line number="8" hits="431" branch="False" />
               </lines>
             </method>
             <method name="get_Email" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23285,8 +23285,8 @@
           <lines>
             <line number="5" hits="375" branch="False" />
             <line number="6" hits="171" branch="False" />
-            <line number="7" hits="432" branch="False" />
-            <line number="8" hits="432" branch="False" />
+            <line number="7" hits="431" branch="False" />
+            <line number="8" hits="431" branch="False" />
             <line number="9" hits="133" branch="False" />
             <line number="10" hits="90" branch="False" />
             <line number="11" hits="8" branch="False" />
@@ -23846,12 +23846,12 @@
             </method>
             <method name="get_FirstName" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="10" hits="356" branch="False" />
+                <line number="10" hits="355" branch="False" />
               </lines>
             </method>
             <method name="get_LastName" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="11" hits="352" branch="False" />
+                <line number="11" hits="351" branch="False" />
               </lines>
             </method>
             <method name="get_Email" signature="()" line-rate="1" branch-rate="1" complexity="1">
@@ -23918,8 +23918,8 @@
           <lines>
             <line number="8" hits="355" branch="False" />
             <line number="9" hits="157" branch="False" />
-            <line number="10" hits="356" branch="False" />
-            <line number="11" hits="352" branch="False" />
+            <line number="10" hits="355" branch="False" />
+            <line number="11" hits="351" branch="False" />
             <line number="12" hits="200" branch="False" />
             <line number="13" hits="60" branch="False" />
             <line number="14" hits="102" branch="False" />
