@@ -4,50 +4,35 @@ const defaultTemplates = [
   {
     templateType: 'BookingConfirmation',
     subject: 'Bevestiging van uw afspraak bij Salon Mooi',
-    mainMessage: 'Uw afspraak is bevestigd.',
-    closingMessage: 'Wij kijken ernaar uit u te verwelkomen!',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Uw afspraak is bevestigd.</p><p>Wij kijken ernaar uit u te verwelkomen!</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
   {
     templateType: 'BookingReminder',
     subject: 'Herinnering: uw afspraak morgen bij Salon Mooi',
-    mainMessage: 'Dit is een herinnering dat u morgen een afspraak heeft.',
-    closingMessage: 'Wij zien u graag!',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Dit is een herinnering dat u morgen een afspraak heeft.</p><p>Wij zien u graag!</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
   {
     templateType: 'BookingCancellation',
     subject: 'Uw afspraak is geannuleerd',
-    mainMessage: 'Uw afspraak is helaas geannuleerd.',
-    closingMessage: 'Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Uw afspraak is helaas geannuleerd.</p><p>Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date'],
   },
   {
     templateType: 'BookingReceived',
     subject: 'Nieuwe boeking bij Salon Mooi',
-    mainMessage: 'Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.',
-    closingMessage: 'Wij nemen zo snel mogelijk contact met u op.',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.</p><p>Wij nemen zo snel mogelijk contact met u op.</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
   {
     templateType: 'InvoiceSent',
     subject: 'Factuur F-2026-001 van Salon Mooi',
-    mainMessage: 'Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.',
-    closingMessage: 'Wij zien u graag terug!',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.</p><p>Wij zien u graag terug!</p>',
     isCustomized: false,
     availablePlaceholders: [
       'clientName',
@@ -78,10 +63,7 @@ async function setupEmailTemplateMocks(page: import('@playwright/test').Page): P
     if (method === 'PUT' && templateType) {
       const body = route.request().postDataJSON() as {
         subject: string;
-        mainMessage: string;
-        closingMessage: string;
-        dateLabel: string | null;
-        servicesLabel: string | null;
+        body: string;
       };
       const idx = templates.findIndex((t) => t.templateType === templateType);
       if (idx !== -1) {
@@ -249,26 +231,36 @@ test('reset template shows confirmation and returns to Standaard badge', async (
   await expect(page.getByText('Standaard', { exact: true }).first()).toBeVisible();
 });
 
-test('edit page shows dateLabel field', async ({ page }) => {
+test('edit page shows placeholder buttons for booking templates', async ({ page }) => {
   await setupEmailTemplateMocks(page);
   await page.goto('/instellingen/email-templates/BookingConfirmation');
 
-  await expect(page.getByLabel('Datumlabel')).toBeVisible();
-  await expect(page.getByLabel('Datumlabel')).toHaveAttribute('placeholder', 'Datum en tijd');
+  await expect(page.getByText('Beschikbare variabelen')).toBeVisible();
+  await expect(page.getByRole('button', { name: '{clientName}' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '{salonName}' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '{date}' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '{services}' })).toBeVisible();
 });
 
-test('edit page shows servicesLabel field for booking templates', async ({ page }) => {
-  await setupEmailTemplateMocks(page);
-  await page.goto('/instellingen/email-templates/BookingConfirmation');
-
-  await expect(page.getByLabel('Dienstenlabel')).toBeVisible();
-  await expect(page.getByLabel('Dienstenlabel')).toHaveAttribute('placeholder', 'Diensten');
-});
-
-test('edit page hides servicesLabel field for InvoiceSent template', async ({ page }) => {
+test('edit page shows correct placeholder buttons for InvoiceSent template', async ({ page }) => {
   await setupEmailTemplateMocks(page);
   await page.goto('/instellingen/email-templates/InvoiceSent');
 
-  await expect(page.getByLabel('Datumlabel')).toBeVisible();
-  await expect(page.getByLabel('Dienstenlabel')).toBeHidden();
+  await expect(page.getByRole('button', { name: '{clientName}' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '{invoiceNumber}' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '{totalAmount}' })).toBeVisible();
+});
+
+test('clicking placeholder button inserts text into editor', async ({ page }) => {
+  await setupEmailTemplateMocks(page);
+  await page.goto('/instellingen/email-templates/BookingConfirmation');
+
+  // Click into the Quill editor first
+  await page.locator('.ql-editor').click();
+
+  // Click a placeholder button
+  await page.getByRole('button', { name: '{clientName}' }).click();
+
+  // Verify the placeholder text was inserted into the editor
+  await expect(page.locator('.ql-editor')).toContainText('{clientName}');
 });

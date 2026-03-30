@@ -10,20 +10,14 @@ const mockTemplates: EmailTemplateResponse[] = [
   {
     templateType: 'BookingConfirmation',
     subject: 'Bevestiging',
-    mainMessage: 'Uw afspraak is bevestigd.',
-    closingMessage: 'Tot ziens!',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>Uw afspraak is bevestigd.</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
   {
     templateType: 'BookingReminder',
     subject: 'Herinnering',
-    mainMessage: 'U heeft morgen een afspraak.',
-    closingMessage: 'Tot morgen!',
-    dateLabel: null,
-    servicesLabel: null,
+    body: '<p>U heeft morgen een afspraak.</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -101,10 +95,7 @@ describe('EmailTemplateStore', () => {
     store.loadTemplates();
     store.updateTemplate('BookingConfirmation', {
       subject: 'Nieuw onderwerp',
-      mainMessage: mockTemplates[0].mainMessage,
-      closingMessage: mockTemplates[0].closingMessage,
-      dateLabel: null,
-      servicesLabel: null,
+      body: mockTemplates[0].body,
     });
 
     expect(store.isSaving()).toBe(false);
@@ -123,10 +114,7 @@ describe('EmailTemplateStore', () => {
     store.loadTemplates();
     store.updateTemplate('BookingConfirmation', {
       subject: 'Nieuw onderwerp',
-      mainMessage: mockTemplates[0].mainMessage,
-      closingMessage: mockTemplates[0].closingMessage,
-      dateLabel: null,
-      servicesLabel: null,
+      body: mockTemplates[0].body,
     });
 
     expect(store.templates()[0].subject).toBe('Nieuw onderwerp');
@@ -141,10 +129,7 @@ describe('EmailTemplateStore', () => {
     store.loadTemplates();
     store.updateTemplate('BookingConfirmation', {
       subject: 'test',
-      mainMessage: 'test',
-      closingMessage: 'test',
-      dateLabel: null,
-      servicesLabel: null,
+      body: 'test',
     });
 
     expect(store.saveSuccess()).toBe(true);
@@ -158,10 +143,7 @@ describe('EmailTemplateStore', () => {
     store.loadTemplates();
     store.updateTemplate('BookingConfirmation', {
       subject: 'test',
-      mainMessage: 'test',
-      closingMessage: 'test',
-      dateLabel: null,
-      servicesLabel: null,
+      body: 'test',
     });
 
     expect(store.saveError()).toBe('save failed');
@@ -186,10 +168,7 @@ describe('EmailTemplateStore', () => {
     store.previewTemplate({
       templateType: 'BookingConfirmation',
       subject: 'test',
-      mainMessage: 'test',
-      closingMessage: 'test',
-      dateLabel: null,
-      servicesLabel: null,
+      body: 'test',
     });
 
     expect(store.isLoadingPreview()).toBe(false);
@@ -202,10 +181,7 @@ describe('EmailTemplateStore', () => {
     store.previewTemplate({
       templateType: 'BookingConfirmation',
       subject: 'test',
-      mainMessage: 'test',
-      closingMessage: 'test',
-      dateLabel: null,
-      servicesLabel: null,
+      body: 'test',
     });
 
     expect(store.preview()).toEqual(mockPreview);
@@ -218,10 +194,7 @@ describe('EmailTemplateStore', () => {
     store.previewTemplate({
       templateType: 'BookingConfirmation',
       subject: 'test',
-      mainMessage: 'test',
-      closingMessage: 'test',
-      dateLabel: null,
-      servicesLabel: null,
+      body: 'test',
     });
 
     expect(store.isLoadingPreview()).toBe(false);
