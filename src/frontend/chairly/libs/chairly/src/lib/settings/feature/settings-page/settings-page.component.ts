@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -8,24 +9,42 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { forkJoin } from 'rxjs';
 
-import { LoadingIndicatorComponent, PageHeaderComponent } from '@org/shared-lib';
+import {
+  LoadingIndicatorComponent,
+  PageHeaderComponent,
+  TemplateTypeLabelPipe,
+} from '@org/shared-lib';
 
-import { SettingsApiService } from '../../data-access';
-import { CompanyInfo, UpdateCompanyInfoRequest, VatSettings } from '../../models';
+import { EmailTemplateApiService, EmailTemplateStore, SettingsApiService } from '../../data-access';
+import {
+  CompanyInfo,
+  EmailTemplateResponse,
+  UpdateCompanyInfoRequest,
+  VatSettings,
+} from '../../models';
 
 @Component({
   selector: 'chairly-settings-page',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, LoadingIndicatorComponent, PageHeaderComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    LoadingIndicatorComponent,
+    PageHeaderComponent,
+    TemplateTypeLabelPipe,
+  ],
+  providers: [EmailTemplateStore, EmailTemplateApiService],
   templateUrl: './settings-page.component.html',
 })
 export class SettingsPageComponent implements OnInit {
   private readonly settingsApi = inject(SettingsApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly emailTemplateStore = inject(EmailTemplateStore);
 
   protected readonly isLoading = signal(false);
   protected readonly isSavingCompany = signal(false);
@@ -34,6 +53,13 @@ export class SettingsPageComponent implements OnInit {
   protected readonly saveCompanyError = signal<string | null>(null);
   protected readonly saveVatSuccess = signal(false);
   protected readonly saveVatError = signal<string | null>(null);
+
+  protected readonly templates = computed<EmailTemplateResponse[]>(() =>
+    this.emailTemplateStore.templates(),
+  );
+  protected readonly isLoadingTemplates = computed<boolean>(() =>
+    this.emailTemplateStore.isLoading(),
+  );
 
   protected readonly companyForm = new FormGroup({
     companyName: new FormControl<string | null>(null),
@@ -55,6 +81,7 @@ export class SettingsPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSettings();
+    this.emailTemplateStore.loadTemplates();
   }
 
   private loadSettings(): void {

@@ -52,6 +52,10 @@ export async function selectFlatpickrDate(
 /**
  * Opens a Flatpickr calendar, selects a day with specific time, and confirms.
  * For datetime mode.
+ *
+ * @param nextMonth - when true, navigates to the next month before selecting
+ *   the day. Use this when the target day may already be in the past in the
+ *   current month (e.g. when running tests near month-end).
  */
 export async function selectFlatpickrDateTime(
   page: Page,
@@ -59,8 +63,12 @@ export async function selectFlatpickrDateTime(
   day: number,
   hour: string,
   minute: string,
+  nextMonth = false,
 ): Promise<void> {
   await openFlatpickr(page, inputLocator);
+  if (nextMonth) {
+    await page.locator('.flatpickr-calendar.open .flatpickr-next-month').click();
+  }
   await page
     .locator('.flatpickr-calendar.open .flatpickr-day:not(.flatpickr-disabled)')
     .filter({ hasText: new RegExp(`^${day}$`) })

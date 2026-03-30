@@ -20,7 +20,11 @@
             "input": "apps/chairly/public"
           }
         ],
-        "styles": ["apps/chairly/src/tailwind.css", "apps/chairly/src/styles.scss"]
+        "styles": [
+          "apps/chairly/src/tailwind.css",
+          "apps/chairly/src/styles.scss",
+          "node_modules/quill/dist/quill.snow.css"
+        ]
       },
       "configurations": {
         "production": {

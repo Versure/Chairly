@@ -11,6 +11,8 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { QuillEditorComponent } from 'ngx-quill';
+
 import {
   ConfirmationDialogComponent,
   LoadingIndicatorComponent,
@@ -21,6 +23,12 @@ import { EmailTemplateApiService, EmailTemplateStore } from '../../data-access';
 import { EmailTemplateResponse } from '../../models';
 import { EmailPreviewModalComponent } from '../../ui';
 
+const TEMPLATE_TYPES_WITH_SERVICES = new Set([
+  'BookingConfirmation',
+  'BookingReminder',
+  'BookingReceived',
+]);
+
 @Component({
   selector: 'chairly-email-template-edit-page',
   standalone: true,
@@ -28,6 +36,7 @@ import { EmailPreviewModalComponent } from '../../ui';
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    QuillEditorComponent,
     ConfirmationDialogComponent,
     EmailPreviewModalComponent,
     LoadingIndicatorComponent,
@@ -55,12 +64,25 @@ export class EmailTemplateEditPageComponent implements OnInit {
   protected readonly preview = computed(() => this.store.preview());
   protected readonly isLoadingPreview = computed<boolean>(() => this.store.isLoadingPreview());
 
+  protected readonly showServicesLabel = computed<boolean>(() =>
+    TEMPLATE_TYPES_WITH_SERVICES.has(this.templateType()),
+  );
+
   private readonly templateTypeLabelPipe = new TemplateTypeLabelPipe();
   protected readonly pageTitle = computed<string>(() => {
     const type = this.templateType();
     if (!type) return 'Template bewerken';
     return `${this.templateTypeLabelPipe.transform(type)} bewerken`;
   });
+
+  protected readonly quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean'],
+    ],
+  };
 
   protected readonly form = new FormGroup({
     subject: new FormControl<string>('', {
@@ -75,6 +97,14 @@ export class EmailTemplateEditPageComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(1000)],
     }),
+    dateLabel: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(200)],
+    }),
+    servicesLabel: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(200)],
+    }),
   });
 
   constructor() {
@@ -86,6 +116,8 @@ export class EmailTemplateEditPageComponent implements OnInit {
           subject: tmpl.subject,
           mainMessage: tmpl.mainMessage,
           closingMessage: tmpl.closingMessage,
+          dateLabel: tmpl.dateLabel ?? '',
+          servicesLabel: tmpl.servicesLabel ?? '',
         });
       }
     });
@@ -113,6 +145,8 @@ export class EmailTemplateEditPageComponent implements OnInit {
       subject: this.form.value.subject ?? '',
       mainMessage: this.form.value.mainMessage ?? '',
       closingMessage: this.form.value.closingMessage ?? '',
+      dateLabel: this.form.value.dateLabel || null,
+      servicesLabel: this.showServicesLabel() ? this.form.value.servicesLabel || null : null,
     });
   }
 
@@ -122,6 +156,8 @@ export class EmailTemplateEditPageComponent implements OnInit {
       subject: this.form.value.subject ?? '',
       mainMessage: this.form.value.mainMessage ?? '',
       closingMessage: this.form.value.closingMessage ?? '',
+      dateLabel: this.form.value.dateLabel || null,
+      servicesLabel: this.showServicesLabel() ? this.form.value.servicesLabel || null : null,
     });
   }
 
@@ -135,6 +171,6 @@ export class EmailTemplateEditPageComponent implements OnInit {
 
   protected onConfirmReset(): void {
     this.store.resetTemplate(this.templateType());
-    void this.router.navigate(['/instellingen/email-templates']);
+    void this.router.navigate(['/instellingen']);
   }
 }

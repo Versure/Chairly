@@ -6,6 +6,8 @@ const defaultTemplates = [
     subject: 'Bevestiging van uw afspraak bij Salon Mooi',
     mainMessage: 'Uw afspraak is bevestigd.',
     closingMessage: 'Wij kijken ernaar uit u te verwelkomen!',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -14,6 +16,8 @@ const defaultTemplates = [
     subject: 'Herinnering: uw afspraak morgen bij Salon Mooi',
     mainMessage: 'Dit is een herinnering dat u morgen een afspraak heeft.',
     closingMessage: 'Wij zien u graag!',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -22,6 +26,8 @@ const defaultTemplates = [
     subject: 'Uw afspraak is geannuleerd',
     mainMessage: 'Uw afspraak is helaas geannuleerd.',
     closingMessage: 'Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date'],
   },
@@ -30,6 +36,8 @@ const defaultTemplates = [
     subject: 'Nieuwe boeking bij Salon Mooi',
     mainMessage: 'Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.',
     closingMessage: 'Wij nemen zo snel mogelijk contact met u op.',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
@@ -38,6 +46,8 @@ const defaultTemplates = [
     subject: 'Factuur F-2026-001 van Salon Mooi',
     mainMessage: 'Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.',
     closingMessage: 'Wij zien u graag terug!',
+    dateLabel: null,
+    servicesLabel: null,
     isCustomized: false,
     availablePlaceholders: [
       'clientName',
@@ -70,6 +80,8 @@ async function setupEmailTemplateMocks(page: import('@playwright/test').Page): P
         subject: string;
         mainMessage: string;
         closingMessage: string;
+        dateLabel: string | null;
+        servicesLabel: string | null;
       };
       const idx = templates.findIndex((t) => t.templateType === templateType);
       if (idx !== -1) {
@@ -112,16 +124,18 @@ async function setupEmailTemplateMocks(page: import('@playwright/test').Page): P
   });
 }
 
-test('navigate to /instellingen/email-templates shows page heading', async ({ page }) => {
+test('settings page shows E-mailtemplates section', async ({ page }) => {
   await setupEmailTemplateMocks(page);
-  await page.goto('/instellingen/email-templates');
+  await page.goto('/instellingen');
 
-  await expect(page.getByRole('heading', { name: 'E-mailtemplates', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'E-mailtemplates', level: 2 })).toBeVisible();
 });
 
-test('all 5 template cards are displayed with correct Dutch labels', async ({ page }) => {
+test('all 5 template cards are displayed with correct Dutch labels on settings page', async ({
+  page,
+}) => {
   await setupEmailTemplateMocks(page);
-  await page.goto('/instellingen/email-templates');
+  await page.goto('/instellingen');
 
   await expect(page.getByText('Boekingsbevestiging')).toBeVisible();
   await expect(page.getByText('Boekingsherinnering')).toBeVisible();
@@ -132,7 +146,7 @@ test('all 5 template cards are displayed with correct Dutch labels', async ({ pa
 
 test('default templates show Standaard badge', async ({ page }) => {
   await setupEmailTemplateMocks(page);
-  await page.goto('/instellingen/email-templates');
+  await page.goto('/instellingen');
 
   const badges = page.getByText('Standaard', { exact: true });
   await expect(badges.first()).toBeVisible();
@@ -140,7 +154,7 @@ test('default templates show Standaard badge', async ({ page }) => {
 
 test('clicking Bewerken navigates to edit page with pre-filled values', async ({ page }) => {
   await setupEmailTemplateMocks(page);
-  await page.goto('/instellingen/email-templates');
+  await page.goto('/instellingen');
 
   await page.getByRole('link', { name: 'Bewerken' }).first().click();
   await expect(page).toHaveURL(/\/instellingen\/email-templates\/BookingConfirmation/);
@@ -160,7 +174,7 @@ test('edit subject and save shows success banner', async ({ page }) => {
   await expect(page.getByText('Template opgeslagen')).toBeVisible();
 });
 
-test('after saving, list shows Aangepast badge', async ({ page }) => {
+test('after saving, settings page shows Aangepast badge', async ({ page }) => {
   await setupEmailTemplateMocks(page);
   await page.goto('/instellingen/email-templates/BookingConfirmation');
 
@@ -169,7 +183,7 @@ test('after saving, list shows Aangepast badge', async ({ page }) => {
   await expect(page.getByText('Template opgeslagen')).toBeVisible();
 
   await page.getByRole('link', { name: 'Terug naar overzicht' }).click();
-  await expect(page).toHaveURL(/\/instellingen\/email-templates$/);
+  await expect(page).toHaveURL(/\/instellingen$/);
   await expect(page.getByText('Aangepast', { exact: true })).toBeVisible();
 });
 
@@ -182,7 +196,7 @@ test('re-opening edit page shows previously saved custom subject', async ({ page
   await expect(page.getByText('Template opgeslagen')).toBeVisible();
 
   await page.getByRole('link', { name: 'Terug naar overzicht' }).click();
-  await expect(page).toHaveURL(/\/instellingen\/email-templates$/);
+  await expect(page).toHaveURL(/\/instellingen$/);
 
   await page.getByRole('link', { name: 'Bewerken' }).first().click();
   await expect(page).toHaveURL(/\/instellingen\/email-templates\/BookingConfirmation/);
@@ -228,9 +242,33 @@ test('reset template shows confirmation and returns to Standaard badge', async (
   await expect(page.getByText('Weet u zeker dat u dit template wilt herstellen')).toBeVisible();
   await page.getByRole('button', { name: 'Herstellen', exact: true }).click();
 
-  // Should navigate back to list
-  await expect(page).toHaveURL(/\/instellingen\/email-templates$/);
+  // Should navigate back to settings
+  await expect(page).toHaveURL(/\/instellingen$/);
 
   // Verify the Standaard badge reappears
   await expect(page.getByText('Standaard', { exact: true }).first()).toBeVisible();
+});
+
+test('edit page shows dateLabel field', async ({ page }) => {
+  await setupEmailTemplateMocks(page);
+  await page.goto('/instellingen/email-templates/BookingConfirmation');
+
+  await expect(page.getByLabel('Datumlabel')).toBeVisible();
+  await expect(page.getByLabel('Datumlabel')).toHaveAttribute('placeholder', 'Datum en tijd');
+});
+
+test('edit page shows servicesLabel field for booking templates', async ({ page }) => {
+  await setupEmailTemplateMocks(page);
+  await page.goto('/instellingen/email-templates/BookingConfirmation');
+
+  await expect(page.getByLabel('Dienstenlabel')).toBeVisible();
+  await expect(page.getByLabel('Dienstenlabel')).toHaveAttribute('placeholder', 'Diensten');
+});
+
+test('edit page hides servicesLabel field for InvoiceSent template', async ({ page }) => {
+  await setupEmailTemplateMocks(page);
+  await page.goto('/instellingen/email-templates/InvoiceSent');
+
+  await expect(page.getByLabel('Datumlabel')).toBeVisible();
+  await expect(page.getByLabel('Dienstenlabel')).toBeHidden();
 });
