@@ -31,7 +31,7 @@ internal sealed class PreviewEmailTemplateHandler(ChairlyDbContext db, ITenantCo
         var subject = ReplacePlaceholders(command.Subject, notificationType, salonName);
         var body = ReplacePlaceholders(command.Body, notificationType, salonName);
 
-        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, "Jan de Vries", body);
+        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, body);
 
         return new PreviewEmailTemplateResponse(subject, htmlBody);
     }
