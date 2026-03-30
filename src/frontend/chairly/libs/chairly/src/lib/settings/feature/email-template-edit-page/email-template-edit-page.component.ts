@@ -68,6 +68,8 @@ export class EmailTemplateEditPageComponent implements OnInit {
 
   protected readonly quillModules = {
     toolbar: [
+      [{ font: [] }],
+      [{ color: [] }, { background: [] }],
       ['bold', 'italic', 'underline'],
       [{ list: 'ordered' }, { list: 'bullet' }],
       ['link'],
