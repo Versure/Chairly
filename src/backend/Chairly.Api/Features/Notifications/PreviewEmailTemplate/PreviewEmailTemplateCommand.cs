@@ -15,11 +15,17 @@ internal sealed class PreviewEmailTemplateCommand : IRequest<OneOf<PreviewEmailT
     public string Subject { get; set; } = string.Empty;
 
     [Required]
-    [MaxLength(2000)]
+    [MaxLength(5000)]
     public string MainMessage { get; set; } = string.Empty;
 
     [Required]
-    [MaxLength(1000)]
+    [MaxLength(3000)]
     public string ClosingMessage { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? DateLabel { get; set; }
+
+    [MaxLength(200)]
+    public string? ServicesLabel { get; set; }
 }
 #pragma warning restore CA1812

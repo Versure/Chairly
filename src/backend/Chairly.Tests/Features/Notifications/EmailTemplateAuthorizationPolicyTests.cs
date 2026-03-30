@@ -153,6 +153,8 @@ public class EmailTemplateAuthorizationPolicyTests
                         "Subject",
                         "Main",
                         "Closing",
+                        "Datum en tijd",
+                        "Diensten",
                         false,
                         ["clientName", "salonName"]),
                 };
@@ -167,6 +169,8 @@ public class EmailTemplateAuthorizationPolicyTests
                     "Subject",
                     "Main",
                     "Closing",
+                    "Datum en tijd",
+                    "Diensten",
                     true,
                     ["clientName", "salonName"]);
 
