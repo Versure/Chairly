@@ -235,7 +235,7 @@ internal sealed partial class NotificationDispatcher(
 
         var subject = ApplyReplacements(customTemplate.Subject, replacements);
         var body = ApplyReplacements(customTemplate.Body, replacements);
-        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, clientName, body);
+        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, body);
 
         return (subject, htmlBody);
     }

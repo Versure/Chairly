@@ -579,7 +579,7 @@ public class EmailTemplateHandlerTests
     [Fact]
     public void BuildTemplateFromBody_ReturnsValidHtmlWithContent()
     {
-        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "Jan Smit", "<p>Uw afspraak is bevestigd.</p>");
+        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "<h2>Beste Jan Smit,</h2><p>Uw afspraak is bevestigd.</p><p>Met vriendelijke groet,<br>Mijn Salon</p>");
 
         Assert.Contains("<!DOCTYPE html>", html, StringComparison.Ordinal);
         Assert.Contains("Mijn Salon", html, StringComparison.Ordinal);
@@ -589,14 +589,11 @@ public class EmailTemplateHandlerTests
     }
 
     [Fact]
-    public void BuildTemplateFromBody_ContainsSalonNameInHeaderAndFooter()
+    public void BuildTemplateFromBody_ContainsSalonNameInHeader()
     {
-        var html = EmailTemplates.BuildTemplateFromBody("Kapsalon De Knip", "Jan", "<p>Body</p>");
+        var html = EmailTemplates.BuildTemplateFromBody("Kapsalon De Knip", "<p>Body</p>");
 
-        // Salon name should appear in header h1 and footer
-        var headerIndex = html.IndexOf("Kapsalon De Knip", StringComparison.Ordinal);
-        Assert.True(headerIndex >= 0);
-        var footerIndex = html.IndexOf("Kapsalon De Knip", headerIndex + 1, StringComparison.Ordinal);
-        Assert.True(footerIndex > headerIndex);
+        // Salon name should appear in header h1
+        Assert.Contains("Kapsalon De Knip", html, StringComparison.Ordinal);
     }
 }

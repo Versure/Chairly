@@ -482,9 +482,7 @@ public class NotificationDispatcherTests
 
         Assert.Single(emailSender.SentEmails);
         var sentEmail = emailSender.SentEmails[0];
-        // BuildTemplateFromBody wraps content with greeting and footer
-        Assert.Contains("Beste Test Client", sentEmail.HtmlBody, StringComparison.Ordinal);
+        // BuildTemplateFromBody wraps content in email layout; greeting and signature are part of body
         Assert.Contains("Custom body content", sentEmail.HtmlBody, StringComparison.Ordinal);
-        Assert.Contains("Met vriendelijke groet", sentEmail.HtmlBody, StringComparison.Ordinal);
     }
 }

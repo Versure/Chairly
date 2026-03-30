@@ -200,7 +200,7 @@ public class EmailTemplateTests
     [Fact]
     public void BuildTemplateFromBody_ReturnsHtmlWithBodyContent()
     {
-        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "Jan Smit", "<p>Uw afspraak is bevestigd.</p>");
+        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "<h2>Beste Jan Smit,</h2><p>Uw afspraak is bevestigd.</p><p>Met vriendelijke groet,<br>Mijn Salon</p>");
 
         Assert.Contains("<!DOCTYPE html>", html, StringComparison.Ordinal);
         Assert.Contains("Mijn Salon", html, StringComparison.Ordinal);
@@ -212,7 +212,7 @@ public class EmailTemplateTests
     [Fact]
     public void BuildTemplateFromBody_DoesNotIncludeDateOrServiceSections()
     {
-        var html = EmailTemplates.BuildTemplateFromBody("Salon", "Jan", "<p>Simple body</p>");
+        var html = EmailTemplates.BuildTemplateFromBody("Salon", "<p>Simple body</p>");
 
         // BuildTemplateFromBody should NOT contain the structured date/services table
         Assert.DoesNotContain("Datum en tijd", html, StringComparison.Ordinal);

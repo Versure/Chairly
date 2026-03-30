@@ -99,7 +99,7 @@ internal static class EmailTemplates
         return (subject, htmlBody);
     }
 
-    internal static string BuildTemplateFromBody(string salonName, string clientName, string bodyHtml)
+    internal static string BuildTemplateFromBody(string salonName, string bodyHtml)
     {
         return $"""
             <!DOCTYPE html>
@@ -112,12 +112,8 @@ internal static class EmailTemplates
                     <tr><td style="background-color: #4F46E5; padding: 24px 32px; border-radius: 8px 8px 0 0;">
                       <h1 style="margin: 0; color: #ffffff; font-size: 20px;">{salonName}</h1>
                     </td></tr>
-                    <tr><td style="background-color: #ffffff; padding: 32px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb;">
-                      <h2 style="margin: 0 0 16px; color: #111827; font-size: 18px;">Beste {clientName},</h2>
+                    <tr><td style="background-color: #ffffff; padding: 32px; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;">
                       <div style="color: #374151; line-height: 1.6;">{bodyHtml}</div>
-                    </td></tr>
-                    <tr><td style="background-color: #f9fafb; padding: 24px 32px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;">
-                      <p style="margin: 0; color: #9ca3af; font-size: 13px;">Met vriendelijke groet,<br />{salonName}</p>
                     </td></tr>
                   </table>
                 </td></tr>
