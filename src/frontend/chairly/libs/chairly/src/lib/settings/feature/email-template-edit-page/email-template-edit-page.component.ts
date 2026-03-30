@@ -23,12 +23,6 @@ import { EmailTemplateApiService, EmailTemplateStore } from '../../data-access';
 import { EmailTemplateResponse } from '../../models';
 import { EmailPreviewModalComponent } from '../../ui';
 
-const TEMPLATE_TYPES_WITH_SERVICES = new Set([
-  'BookingConfirmation',
-  'BookingReminder',
-  'BookingReceived',
-]);
-
 @Component({
   selector: 'chairly-email-template-edit-page',
   standalone: true,
@@ -51,6 +45,7 @@ export class EmailTemplateEditPageComponent implements OnInit {
 
   private readonly previewModalRef = viewChild.required<EmailPreviewModalComponent>('previewModal');
   private readonly resetDialogRef = viewChild.required<ConfirmationDialogComponent>('resetDialog');
+  private readonly bodyEditor = viewChild<QuillEditorComponent>('bodyEditor');
 
   protected readonly templateType = signal<string>('');
   protected readonly template = computed<EmailTemplateResponse | undefined>(() => {
@@ -63,10 +58,6 @@ export class EmailTemplateEditPageComponent implements OnInit {
   protected readonly saveError = computed<string | null>(() => this.store.saveError());
   protected readonly preview = computed(() => this.store.preview());
   protected readonly isLoadingPreview = computed<boolean>(() => this.store.isLoadingPreview());
-
-  protected readonly showServicesLabel = computed<boolean>(() =>
-    TEMPLATE_TYPES_WITH_SERVICES.has(this.templateType()),
-  );
 
   private readonly templateTypeLabelPipe = new TemplateTypeLabelPipe();
   protected readonly pageTitle = computed<string>(() => {
@@ -89,21 +80,9 @@ export class EmailTemplateEditPageComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.maxLength(500)],
     }),
-    mainMessage: new FormControl<string>('', {
+    body: new FormControl<string>('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(2000)],
-    }),
-    closingMessage: new FormControl<string>('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(1000)],
-    }),
-    dateLabel: new FormControl<string>('', {
-      nonNullable: true,
-      validators: [Validators.maxLength(200)],
-    }),
-    servicesLabel: new FormControl<string>('', {
-      nonNullable: true,
-      validators: [Validators.maxLength(200)],
+      validators: [Validators.required],
     }),
   });
 
@@ -114,10 +93,7 @@ export class EmailTemplateEditPageComponent implements OnInit {
       if (tmpl) {
         this.form.patchValue({
           subject: tmpl.subject,
-          mainMessage: tmpl.mainMessage,
-          closingMessage: tmpl.closingMessage,
-          dateLabel: tmpl.dateLabel ?? '',
-          servicesLabel: tmpl.servicesLabel ?? '',
+          body: tmpl.body,
         });
       }
     });
@@ -143,10 +119,7 @@ export class EmailTemplateEditPageComponent implements OnInit {
     }
     this.store.updateTemplate(this.templateType(), {
       subject: this.form.value.subject ?? '',
-      mainMessage: this.form.value.mainMessage ?? '',
-      closingMessage: this.form.value.closingMessage ?? '',
-      dateLabel: this.form.value.dateLabel || null,
-      servicesLabel: this.showServicesLabel() ? this.form.value.servicesLabel || null : null,
+      body: this.form.value.body ?? '',
     });
   }
 
@@ -154,10 +127,7 @@ export class EmailTemplateEditPageComponent implements OnInit {
     this.store.previewTemplate({
       templateType: this.templateType(),
       subject: this.form.value.subject ?? '',
-      mainMessage: this.form.value.mainMessage ?? '',
-      closingMessage: this.form.value.closingMessage ?? '',
-      dateLabel: this.form.value.dateLabel || null,
-      servicesLabel: this.showServicesLabel() ? this.form.value.servicesLabel || null : null,
+      body: this.form.value.body ?? '',
     });
   }
 
@@ -172,5 +142,16 @@ export class EmailTemplateEditPageComponent implements OnInit {
   protected onConfirmReset(): void {
     this.store.resetTemplate(this.templateType());
     void this.router.navigate(['/instellingen']);
+  }
+
+  protected insertPlaceholder(placeholder: string): void {
+    const editorComponent = this.bodyEditor();
+    if (!editorComponent) {
+      return;
+    }
+    const editor = editorComponent.quillEditor;
+    const range = editor.getSelection(true);
+    editor.insertText(range.index, `{${placeholder}}`, 'user');
+    editor.setSelection(range.index + placeholder.length + 2, 0);
   }
 }

@@ -1,29 +1,20 @@
 export interface EmailTemplateResponse {
   templateType: string;
   subject: string;
-  mainMessage: string;
-  closingMessage: string;
-  dateLabel: string | null;
-  servicesLabel: string | null;
+  body: string;
   isCustomized: boolean;
   availablePlaceholders: string[];
 }
 
 export interface UpdateEmailTemplateRequest {
   subject: string;
-  mainMessage: string;
-  closingMessage: string;
-  dateLabel: string | null;
-  servicesLabel: string | null;
+  body: string;
 }
 
 export interface PreviewEmailTemplateRequest {
   templateType: string;
   subject: string;
-  mainMessage: string;
-  closingMessage: string;
-  dateLabel: string | null;
-  servicesLabel: string | null;
+  body: string;
 }
 
 export interface PreviewEmailTemplateResponse {
