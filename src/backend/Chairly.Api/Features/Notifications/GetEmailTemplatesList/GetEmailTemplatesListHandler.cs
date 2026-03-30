@@ -48,10 +48,7 @@ internal sealed class GetEmailTemplatesListHandler(ChairlyDbContext db, ITenantC
                 results.Add(new EmailTemplateResponse(
                     type.ToString(),
                     custom.Subject,
-                    custom.MainMessage,
-                    custom.ClosingMessage,
-                    custom.DateLabel ?? defaults.DateLabel,
-                    custom.ServicesLabel ?? defaults.ServicesLabel,
+                    custom.Body,
                     IsCustomized: true,
                     defaults.AvailablePlaceholders));
             }
@@ -60,10 +57,7 @@ internal sealed class GetEmailTemplatesListHandler(ChairlyDbContext db, ITenantC
                 results.Add(new EmailTemplateResponse(
                     type.ToString(),
                     defaults.Subject,
-                    defaults.MainMessage,
-                    defaults.ClosingMessage,
-                    defaults.DateLabel,
-                    defaults.ServicesLabel,
+                    defaults.Body,
                     IsCustomized: false,
                     defaults.AvailablePlaceholders));
             }

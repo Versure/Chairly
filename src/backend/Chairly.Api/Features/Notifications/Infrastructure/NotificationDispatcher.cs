@@ -175,7 +175,13 @@ internal sealed partial class NotificationDispatcher(
 
         if (customTemplate is not null)
         {
-            return RenderCustomBookingTemplate(customTemplate, notification.Type, clientName, salonName, startTime, serviceSummary);
+            return RenderCustomTemplate(customTemplate, clientName, salonName, replacements =>
+            {
+                var dutchTime = TimeZoneInfo.ConvertTime(startTime, TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam"));
+                var formattedDate = dutchTime.ToString("dddd d MMMM yyyy 'om' HH:mm", new CultureInfo("nl-NL"));
+                replacements["{date}"] = formattedDate;
+                replacements["{services}"] = notification.Type == NotificationType.BookingCancellation ? string.Empty : serviceSummary;
+            });
         }
 
         return notification.Type switch
@@ -186,38 +192,6 @@ internal sealed partial class NotificationDispatcher(
             NotificationType.BookingReceived => EmailTemplates.BookingReceived(clientName, startTime, serviceSummary, salonName),
             _ => (string.Empty, string.Empty),
         };
-    }
-
-    private static (string Subject, string HtmlBody) RenderCustomBookingTemplate(
-        EmailTemplate customTemplate, NotificationType type, string clientName, string salonName,
-        DateTimeOffset startTime, string serviceSummary)
-    {
-        var dutchTime = TimeZoneInfo.ConvertTime(startTime, TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam"));
-        var formattedDate = dutchTime.ToString("dddd d MMMM yyyy 'om' HH:mm", new CultureInfo("nl-NL"));
-
-        var subject = ReplaceBookingPlaceholders(customTemplate.Subject, clientName, salonName, formattedDate, serviceSummary);
-        var mainMessage = ReplaceBookingPlaceholders(customTemplate.MainMessage, clientName, salonName, formattedDate, serviceSummary);
-        var closingMessage = ReplaceBookingPlaceholders(customTemplate.ClosingMessage, clientName, salonName, formattedDate, serviceSummary);
-
-        var defaults = DefaultEmailTemplateValues.GetDefaults(type, salonName);
-        var dateLabel = customTemplate.DateLabel ?? defaults.DateLabel ?? "Datum en tijd";
-        var servicesLabel = customTemplate.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
-        var htmlBody = EmailTemplates.BuildTemplate(
-            salonName, clientName, mainMessage, formattedDate,
-            type == NotificationType.BookingCancellation ? null : serviceSummary,
-            closingMessage, dateLabel, servicesLabel);
-
-        return (subject, htmlBody);
-    }
-
-    private static string ReplaceBookingPlaceholders(
-        string text, string clientName, string salonName, string formattedDate, string serviceSummary)
-    {
-        return text
-            .Replace("{clientName}", clientName, StringComparison.Ordinal)
-            .Replace("{salonName}", salonName, StringComparison.Ordinal)
-            .Replace("{date}", formattedDate, StringComparison.Ordinal)
-            .Replace("{services}", serviceSummary, StringComparison.Ordinal);
     }
 
     private static async Task<(string Subject, string HtmlBody, EmailAttachment? Attachment)> RenderInvoiceTemplateAsync(
@@ -249,40 +223,46 @@ internal sealed partial class NotificationDispatcher(
         return (subject, htmlBody, attachment);
     }
 
+    private static (string Subject, string HtmlBody) RenderCustomTemplate(
+        EmailTemplate customTemplate, string clientName, string salonName, Action<Dictionary<string, string>> addReplacements)
+    {
+        var replacements = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["{clientName}"] = clientName,
+            ["{salonName}"] = salonName,
+        };
+        addReplacements(replacements);
+
+        var subject = ApplyReplacements(customTemplate.Subject, replacements);
+        var body = ApplyReplacements(customTemplate.Body, replacements);
+        var htmlBody = EmailTemplates.BuildTemplateFromBody(salonName, clientName, body);
+
+        return (subject, htmlBody);
+    }
+
     private static (string Subject, string HtmlBody) RenderCustomInvoiceTemplate(
         EmailTemplate customTemplate, string clientName, string salonName, Invoice invoice, bool isPaid)
     {
         var formattedInvoiceDate = invoice.InvoiceDate.ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
         var formattedTotalAmount = invoice.TotalAmount.ToString("C", new CultureInfo("nl-NL"));
 
-        var subject = ReplaceInvoicePlaceholders(customTemplate.Subject, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
-        var mainMessage = ReplaceInvoicePlaceholders(customTemplate.MainMessage, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
-        var closingMessage = ReplaceInvoicePlaceholders(customTemplate.ClosingMessage, clientName, salonName, invoice.InvoiceNumber, formattedInvoiceDate, formattedTotalAmount);
-
-        var paidBadge = isPaid
-            ? """<p style="margin: 12px 0; padding: 8px 16px; background-color: #DEF7EC; color: #03543F; border-radius: 4px; font-weight: 600; display: inline-block;">&#10003; Deze factuur is reeds betaald.</p>"""
-            : string.Empty;
-
-        var serviceSummary = $"Factuurnummer: {invoice.InvoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}{(isPaid ? "<br />" + paidBadge : string.Empty)}";
-
-        var defaults = DefaultEmailTemplateValues.GetDefaults(NotificationType.InvoiceSent, salonName);
-        var dateLabel = customTemplate.DateLabel ?? defaults.DateLabel ?? "Factuurdatum";
-        var servicesLabel = customTemplate.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
-        var htmlBody = EmailTemplates.BuildTemplate(
-            salonName, clientName, mainMessage, formattedInvoiceDate, serviceSummary, closingMessage, dateLabel, servicesLabel);
-
-        return (subject, htmlBody);
+        return RenderCustomTemplate(customTemplate, clientName, salonName, replacements =>
+        {
+            replacements["{invoiceNumber}"] = invoice.InvoiceNumber;
+            replacements["{invoiceDate}"] = formattedInvoiceDate;
+            replacements["{totalAmount}"] = formattedTotalAmount;
+        });
     }
 
-    private static string ReplaceInvoicePlaceholders(
-        string text, string clientName, string salonName, string invoiceNumber, string invoiceDate, string totalAmount)
+    private static string ApplyReplacements(string text, Dictionary<string, string> replacements)
     {
-        return text
-            .Replace("{clientName}", clientName, StringComparison.Ordinal)
-            .Replace("{salonName}", salonName, StringComparison.Ordinal)
-            .Replace("{invoiceNumber}", invoiceNumber, StringComparison.Ordinal)
-            .Replace("{invoiceDate}", invoiceDate, StringComparison.Ordinal)
-            .Replace("{totalAmount}", totalAmount, StringComparison.Ordinal);
+        var result = text;
+        foreach (var (placeholder, value) in replacements)
+        {
+            result = result.Replace(placeholder, value, StringComparison.Ordinal);
+        }
+
+        return result;
     }
 
     private static EmailAttachment GenerateInvoiceAttachment(Invoice invoice, string clientName, string salonName, bool isPaid)
