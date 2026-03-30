@@ -32,21 +32,19 @@ internal sealed class PreviewEmailTemplateHandler(ChairlyDbContext db, ITenantCo
         var mainMessage = ReplacePlaceholders(command.MainMessage, notificationType, salonName);
         var closingMessage = ReplacePlaceholders(command.ClosingMessage, notificationType, salonName);
 
+        var defaults = DefaultEmailTemplateValues.GetDefaults(notificationType, salonName);
+
         var sampleDate = DateTimeOffset.Now.ToString("dddd d MMMM yyyy 'om' HH:mm", new CultureInfo("nl-NL"));
         string? serviceSummary = null;
-        var dateLabel = "Datum en tijd";
+        var dateLabel = command.DateLabel ?? defaults.DateLabel ?? "Datum en tijd";
+        var servicesLabel = command.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
 
         if (notificationType == NotificationType.InvoiceSent)
         {
-            dateLabel = "Factuurdatum";
             sampleDate = DateOnly.FromDateTime(DateTime.Today).ToString("d MMMM yyyy", new CultureInfo("nl-NL"));
             serviceSummary = "Factuurnummer: F-2026-001<br />Totaalbedrag: " + 75.00m.ToString("C", new CultureInfo("nl-NL"));
         }
-        else if (notificationType == NotificationType.BookingCancellation)
-        {
-            dateLabel = "Oorspronkelijke datum en tijd";
-        }
-        else
+        else if (notificationType != NotificationType.BookingCancellation)
         {
             serviceSummary = "Heren knippen, Baard trimmen";
         }
@@ -58,7 +56,8 @@ internal sealed class PreviewEmailTemplateHandler(ChairlyDbContext db, ITenantCo
             sampleDate,
             serviceSummary,
             closingMessage,
-            dateLabel);
+            dateLabel,
+            servicesLabel);
 
         return new PreviewEmailTemplateResponse(subject, htmlBody);
     }

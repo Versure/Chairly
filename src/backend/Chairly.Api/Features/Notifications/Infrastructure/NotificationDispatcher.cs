@@ -199,11 +199,13 @@ internal sealed partial class NotificationDispatcher(
         var mainMessage = ReplaceBookingPlaceholders(customTemplate.MainMessage, clientName, salonName, formattedDate, serviceSummary);
         var closingMessage = ReplaceBookingPlaceholders(customTemplate.ClosingMessage, clientName, salonName, formattedDate, serviceSummary);
 
-        var dateLabel = type == NotificationType.BookingCancellation ? "Oorspronkelijke datum en tijd" : "Datum en tijd";
+        var defaults = DefaultEmailTemplateValues.GetDefaults(type, salonName);
+        var dateLabel = customTemplate.DateLabel ?? defaults.DateLabel ?? "Datum en tijd";
+        var servicesLabel = customTemplate.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
         var htmlBody = EmailTemplates.BuildTemplate(
             salonName, clientName, mainMessage, formattedDate,
             type == NotificationType.BookingCancellation ? null : serviceSummary,
-            closingMessage, dateLabel);
+            closingMessage, dateLabel, servicesLabel);
 
         return (subject, htmlBody);
     }
@@ -263,8 +265,11 @@ internal sealed partial class NotificationDispatcher(
 
         var serviceSummary = $"Factuurnummer: {invoice.InvoiceNumber}<br />Totaalbedrag: {formattedTotalAmount}{(isPaid ? "<br />" + paidBadge : string.Empty)}";
 
+        var defaults = DefaultEmailTemplateValues.GetDefaults(NotificationType.InvoiceSent, salonName);
+        var dateLabel = customTemplate.DateLabel ?? defaults.DateLabel ?? "Factuurdatum";
+        var servicesLabel = customTemplate.ServicesLabel ?? defaults.ServicesLabel ?? "Diensten";
         var htmlBody = EmailTemplates.BuildTemplate(
-            salonName, clientName, mainMessage, formattedInvoiceDate, serviceSummary, closingMessage, "Factuurdatum");
+            salonName, clientName, mainMessage, formattedInvoiceDate, serviceSummary, closingMessage, dateLabel, servicesLabel);
 
         return (subject, htmlBody);
     }

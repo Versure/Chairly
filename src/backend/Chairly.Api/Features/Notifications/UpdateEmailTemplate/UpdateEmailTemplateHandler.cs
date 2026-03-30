@@ -33,6 +33,8 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
             existing.Subject = command.Subject;
             existing.MainMessage = command.MainMessage;
             existing.ClosingMessage = command.ClosingMessage;
+            existing.DateLabel = command.DateLabel;
+            existing.ServicesLabel = command.ServicesLabel;
             existing.UpdatedAtUtc = DateTimeOffset.UtcNow;
             existing.UpdatedBy = tenantContext.UserId;
         }
@@ -46,6 +48,8 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
                 Subject = command.Subject,
                 MainMessage = command.MainMessage,
                 ClosingMessage = command.ClosingMessage,
+                DateLabel = command.DateLabel,
+                ServicesLabel = command.ServicesLabel,
                 CreatedAtUtc = DateTimeOffset.UtcNow,
                 CreatedBy = tenantContext.UserId,
             };
@@ -61,6 +65,8 @@ internal sealed class UpdateEmailTemplateHandler(ChairlyDbContext db, ITenantCon
             existing.Subject,
             existing.MainMessage,
             existing.ClosingMessage,
+            existing.DateLabel ?? defaults.DateLabel,
+            existing.ServicesLabel ?? defaults.ServicesLabel,
             IsCustomized: true,
             defaults.AvailablePlaceholders);
     }

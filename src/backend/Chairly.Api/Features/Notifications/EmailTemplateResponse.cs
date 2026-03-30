@@ -5,5 +5,7 @@ internal sealed record EmailTemplateResponse(
     string Subject,
     string MainMessage,
     string ClosingMessage,
+    string? DateLabel,
+    string? ServicesLabel,
     bool IsCustomized,
     string[] AvailablePlaceholders);

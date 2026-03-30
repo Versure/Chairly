@@ -106,12 +106,13 @@ internal static class EmailTemplates
         string formattedDate,
         string? serviceSummary,
         string closingMessage,
-        string dateLabel = "Datum en tijd")
+        string dateLabel = "Datum en tijd",
+        string servicesLabel = "Diensten")
     {
         var serviceSection = string.IsNullOrEmpty(serviceSummary)
             ? string.Empty
             : $"""
-                              <p style="margin: 16px 0 8px; color: #6b7280; font-size: 14px;">Diensten</p>
+                              <p style="margin: 16px 0 8px; color: #6b7280; font-size: 14px;">{servicesLabel}</p>
                               <p style="margin: 0; color: #111827; font-weight: 600;">{serviceSummary}</p>
               """;
 

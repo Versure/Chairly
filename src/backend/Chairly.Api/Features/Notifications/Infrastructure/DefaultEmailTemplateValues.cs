@@ -8,6 +8,8 @@ internal static class DefaultEmailTemplateValues
         string Subject,
         string MainMessage,
         string ClosingMessage,
+        string? DateLabel,
+        string? ServicesLabel,
         string[] AvailablePlaceholders);
 
     internal static TemplateDefaults GetDefaults(NotificationType type, string salonName)
@@ -18,28 +20,38 @@ internal static class DefaultEmailTemplateValues
                 $"Bevestiging van uw afspraak bij {salonName}",
                 "Uw afspraak is bevestigd.",
                 "Wij kijken ernaar uit u te verwelkomen!",
+                "Datum en tijd",
+                "Diensten",
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.BookingReminder => new(
                 $"Herinnering: uw afspraak morgen bij {salonName}",
                 "Dit is een herinnering dat u morgen een afspraak heeft.",
                 "Wij zien u graag!",
+                "Datum en tijd",
+                "Diensten",
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.BookingCancellation => new(
                 "Uw afspraak is geannuleerd",
                 "Uw afspraak is helaas geannuleerd.",
                 "Neem gerust contact met ons op als u een nieuwe afspraak wilt maken.",
+                "Oorspronkelijke datum en tijd",
+                null,
                 ["clientName", "salonName", "date"]),
             NotificationType.BookingReceived => new(
                 $"Nieuwe boeking bij {salonName}",
                 "Wij hebben uw boeking ontvangen. Uw boeking wacht op bevestiging.",
                 "Wij nemen zo snel mogelijk contact met u op.",
+                "Datum en tijd",
+                "Diensten",
                 ["clientName", "salonName", "date", "services"]),
             NotificationType.InvoiceSent => new(
                 $"Factuur {{invoiceNumber}} van {salonName}",
                 "Bedankt voor uw bezoek! Bijgaand vindt u uw factuur.",
                 "Wij zien u graag terug!",
+                "Factuurdatum",
+                null,
                 ["clientName", "salonName", "invoiceNumber", "invoiceDate", "totalAmount"]),
-            _ => new(string.Empty, string.Empty, string.Empty, []),
+            _ => new(string.Empty, string.Empty, string.Empty, null, null, []),
         };
     }
 }

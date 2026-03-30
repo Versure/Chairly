@@ -168,4 +168,32 @@ public class EmailTemplateTests
 
         Assert.DoesNotContain("reeds betaald", body, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void BuildTemplate_CustomServicesLabel_AppearsInHtml()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing", servicesLabel: "Mijn diensten");
+
+        Assert.Contains("Mijn diensten", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Diensten<", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplate_DefaultServicesLabel_IsDiensten()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing");
+
+        Assert.Contains("Diensten", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplate_CustomDateLabel_AppearsInHtml()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing", dateLabel: "Aangepast label");
+
+        Assert.Contains("Aangepast label", html, StringComparison.Ordinal);
+    }
 }
