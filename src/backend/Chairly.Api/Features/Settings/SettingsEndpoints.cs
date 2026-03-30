@@ -15,7 +15,7 @@ internal static class SettingsEndpoints
         settingsReadGroup.MapGetVatSettings();
 
         var settingsWriteGroup = app.MapGroup("/api/settings")
-            .RequireAuthorization("RequireOwner");
+            .RequireAuthorization("RequireManager");
 
         settingsWriteGroup.MapUpdateVatSettings();
 
@@ -25,7 +25,7 @@ internal static class SettingsEndpoints
         companyReadGroup.MapGetCompanyInfo();
 
         var companyWriteGroup = app.MapGroup("/api/settings/company")
-            .RequireAuthorization("RequireOwner");
+            .RequireAuthorization("RequireManager");
 
         companyWriteGroup.MapUpdateCompanyInfo();
 
