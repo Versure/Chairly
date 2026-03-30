@@ -42,7 +42,7 @@ const mockTemplates: EmailTemplateResponse[] = [
   {
     templateType: 'BookingConfirmation',
     subject: 'Bevestiging',
-    body: '<p>Uw afspraak is bevestigd.</p>',
+    body: '<p>Beste {clientName},</p><p>Uw afspraak is bevestigd.</p><p>Met vriendelijke groet,</p><p>{salonName}</p>',
     isCustomized: false,
     availablePlaceholders: ['clientName', 'salonName', 'date', 'services'],
   },
