@@ -12,6 +12,8 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { QuillEditorComponent } from 'ngx-quill';
+import { ClassAttributor } from 'parchment';
+import Quill from 'quill';
 
 import {
   ConfirmationDialogComponent,
@@ -22,6 +24,23 @@ import {
 import { EmailTemplateApiService, EmailTemplateStore } from '../../data-access';
 import { EmailTemplateResponse } from '../../models';
 import { EmailPreviewModalComponent } from '../../ui';
+
+const FontAttributor = Quill.import('attributors/class/font') as ClassAttributor;
+FontAttributor.whitelist = [
+  'sans-serif',
+  'serif',
+  'monospace',
+  'arial',
+  'courier-new',
+  'georgia',
+  'times-new-roman',
+  'trebuchet-ms',
+  'verdana',
+  'roboto',
+  'open-sans',
+  'lato',
+];
+Quill.register(FontAttributor, true);
 
 @Component({
   selector: 'chairly-email-template-edit-page',
@@ -37,6 +56,7 @@ import { EmailPreviewModalComponent } from '../../ui';
   ],
   providers: [EmailTemplateStore, EmailTemplateApiService],
   templateUrl: './email-template-edit-page.component.html',
+  styleUrl: './email-template-edit-page.component.scss',
 })
 export class EmailTemplateEditPageComponent implements OnInit {
   private readonly store = inject(EmailTemplateStore);
@@ -68,7 +88,25 @@ export class EmailTemplateEditPageComponent implements OnInit {
 
   protected readonly quillModules = {
     toolbar: [
-      [{ font: [] }],
+      [
+        {
+          font: [
+            '',
+            'serif',
+            'monospace',
+            'arial',
+            'courier-new',
+            'georgia',
+            'times-new-roman',
+            'trebuchet-ms',
+            'verdana',
+            'roboto',
+            'open-sans',
+            'lato',
+          ],
+        },
+      ],
+      [{ size: ['small', false, 'large', 'huge'] }],
       [{ color: [] }, { background: [] }],
       ['bold', 'italic', 'underline'],
       [{ list: 'ordered' }, { list: 'bullet' }],

@@ -110,6 +110,43 @@ select {
   padding-right: 2rem;
 }
 
+/* Quill font-family classes for custom fonts */
+.ql-font-arial {
+  font-family: Arial, sans-serif;
+}
+
+.ql-font-courier-new {
+  font-family: 'Courier New', monospace;
+}
+
+.ql-font-georgia {
+  font-family: Georgia, serif;
+}
+
+.ql-font-times-new-roman {
+  font-family: 'Times New Roman', serif;
+}
+
+.ql-font-trebuchet-ms {
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+.ql-font-verdana {
+  font-family: Verdana, sans-serif;
+}
+
+.ql-font-roboto {
+  font-family: 'Roboto', sans-serif;
+}
+
+.ql-font-open-sans {
+  font-family: 'Open Sans', sans-serif;
+}
+
+.ql-font-lato {
+  font-family: 'Lato', sans-serif;
+}
+
 /* Quill WYSIWYG editor dark mode overrides */
 [data-theme='dark'] .ql-toolbar.ql-snow {
   border-color: #475569; /* slate-600 */
