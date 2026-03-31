@@ -6,43 +6,55 @@
       "id": "I1",
       "layer": "infra",
       "title": "Remove hardcoded credentials from AppHost appsettings.json",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "I2",
       "layer": "infra",
       "title": "Externalize hardcoded values in AppHost Program.cs",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "I3",
       "layer": "infra",
       "title": "Remove hardcoded connection strings from API appsettings.Development.json",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "I4",
       "layer": "infra",
       "title": "Seed user-secrets with default development values",
-      "status": "pending",
-      "dependsOn": ["I1", "I2", "I3"]
+      "status": "completed",
+      "dependsOn": [
+        "I1",
+        "I2",
+        "I3"
+      ]
     },
     {
       "id": "I5",
       "layer": "infra",
       "title": "Document GitHub variables and secrets for CI/CD",
-      "status": "pending",
-      "dependsOn": ["I1", "I2"]
+      "status": "completed",
+      "dependsOn": [
+        "I1",
+        "I2"
+      ]
     },
     {
       "id": "I6",
       "layer": "infra",
       "title": "Verify no secrets remain and add production warning",
-      "status": "pending",
-      "dependsOn": ["I1", "I2", "I3", "I4"]
+      "status": "completed",
+      "dependsOn": [
+        "I1",
+        "I2",
+        "I3",
+        "I4"
+      ]
     }
   ]
 }

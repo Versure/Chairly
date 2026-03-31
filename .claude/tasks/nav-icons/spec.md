@@ -1,5 +1,7 @@
 # Navigation Icons
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The main sidebar navigation currently only has icons on the "Instellingen" item and the light/dark mode toggle. All other nav items (Boekingen, Diensten, Facturen, Klanten, Medewerkers) lack icons, making the menu look inconsistent and unfinished. This feature adds matching Heroicons (outline style) to every nav item for a polished, consistent sidebar. Fixes GitHub issue #48.

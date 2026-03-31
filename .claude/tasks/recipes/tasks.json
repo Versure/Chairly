@@ -6,57 +6,75 @@
       "id": "B1",
       "layer": "backend",
       "title": "Recipe entity, EF configuration, and migration",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Create recipe endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Get recipe by booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "Update recipe endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "Get client recipe history endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Recipe models and API service",
-      "status": "pending",
-      "dependsOn": ["B2", "B3", "B4", "B5"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3",
+        "B4",
+        "B5"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Recipe form dialog (add/edit recipe on a booking)",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Client recipe history panel (within client detail page)",
-      "status": "pending",
-      "dependsOn": ["F1", "F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "F2"
+      ]
     }
   ]
 }

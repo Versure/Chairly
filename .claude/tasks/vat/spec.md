@@ -1,5 +1,7 @@
 # VAT (BTW)
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 VAT (BTW) must be tracked per service and per invoice line item. A default VAT rate is configured on a settings page; each individual service can override this default. When an invoice is generated, the VAT rate is captured at that moment and frozen on the invoice line item -- it is never updated when service or default VAT rates change later. Prices are entered inclusive of VAT (bijv. EUR 39,99 incl. 21% BTW). Fixes GitHub issue #37.

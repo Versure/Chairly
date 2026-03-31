@@ -1,5 +1,7 @@
 # Authentication & Authorization
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 This feature wires up end-to-end authentication and authorization for Chairly using Keycloak as

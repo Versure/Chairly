@@ -1,5 +1,7 @@
 # Company Information
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Owners need a central place to manage company information that is displayed on invoices. This includes company name, email, address, phone number, IBAN, VAT number, and payment period. A new `TenantSettings` entity in the Settings bounded context stores this data per tenant. A settings page in the frontend allows owners to view and update this information. Fixes GitHub issue #39.

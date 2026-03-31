@@ -6,57 +6,71 @@
       "id": "B1",
       "layer": "backend",
       "title": "Notification entity, EF configuration, and migration",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Booking domain events published to RabbitMQ",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "RabbitMQ consumer and Notification record creation",
-      "status": "pending",
-      "dependsOn": ["B1", "B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B1",
+        "B2"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "Email dispatch service and templates",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "Notification dispatcher background service",
-      "status": "pending",
-      "dependsOn": ["B3", "B4"]
+      "status": "completed",
+      "dependsOn": [
+        "B3",
+        "B4"
+      ]
     },
     {
       "id": "B6",
       "layer": "backend",
       "title": "Get notification list endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Notification models and API service",
-      "status": "pending",
-      "dependsOn": ["B6"]
+      "status": "completed",
+      "dependsOn": [
+        "B6"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Notification log page",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     }
   ]
 }

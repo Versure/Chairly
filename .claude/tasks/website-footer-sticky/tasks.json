@@ -6,22 +6,26 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Create WebsiteLayoutComponent",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Wire layout component into routes and remove duplicate header/footer",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Playwright e2e tests for footer positioning",
-      "status": "pending",
-      "dependsOn": ["F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F2"
+      ]
     }
   ]
 }

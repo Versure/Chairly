@@ -1,5 +1,7 @@
 # Forgot Password
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 This feature enables password reset for staff members through two flows:

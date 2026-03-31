@@ -1,5 +1,7 @@
 # Bookings Loading Indicator
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The bookings domain renders a plain `<p class="text-gray-500 dark:text-gray-400">Laden...</p>` while data is loading. All other domains (services, staff, clients) already use the shared `<chairly-loading-indicator>` component from `@org/shared-lib`. This spec brings bookings in line with the rest. Fixes GitHub issue #38.

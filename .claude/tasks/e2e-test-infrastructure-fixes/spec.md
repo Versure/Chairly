@@ -1,5 +1,7 @@
 # E2E Test Infrastructure Fixes
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The Playwright e2e test infrastructure has two issues that block developer productivity and cause flaky test runs: (1) there is no UI mode configured for interactive debugging (issue #11), and (2) tests that navigate without complete API mocking produce ECONNREFUSED errors because the Vite dev server has no proxy for `/api` routes (issue #12). Both issues are frontend-only. This spec defines the fixes for both issues plus a cleanup pass on `service-catalog.spec.ts` which lacks API mocks entirely.

@@ -1,5 +1,7 @@
 # Scoped Worktrees
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The `feature-team` skill and `rework.sh` use fixed worktree paths (`.worktrees/backend/` and `.worktrees/frontend/`). When two `/feature-team` instances run concurrently for different specs, they collide on the same worktree directories. The fix scopes each worktree to its feature name: `.worktrees/{feature-name}/backend/` and `.worktrees/{feature-name}/frontend/`. Fixes GitHub issue #36.

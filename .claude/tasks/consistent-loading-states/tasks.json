@@ -6,22 +6,27 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Create shared loading indicator component",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Replace loading indicators in all domains",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Update unit tests",
-      "status": "pending",
-      "dependsOn": ["F1", "F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "F2"
+      ]
     }
   ]
 }

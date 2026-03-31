@@ -1,5 +1,7 @@
 # Revenue Report
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Revenue report feature for accountants. Salon Owners and Managers can generate weekly or monthly revenue reports showing all paid invoices with daily subtotals, payment methods, and VAT breakdown. Reports can be previewed in-browser and downloaded as PDF. No personal client data is included (privacy-safe). This feature also adds a `PaymentMethod` field to the Invoice entity, requiring an update to the "mark as paid" flow.

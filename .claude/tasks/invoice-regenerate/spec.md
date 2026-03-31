@@ -1,5 +1,7 @@
 # Invoice Regenerate
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Once an invoice is generated from a booking, there is no way to regenerate it if the user made a mistake (e.g. forgot to add a service to the booking before generating the invoice). This feature adds a "Factuur opnieuw genereren" action on the invoice detail page, available for invoices in **Concept** status only. Regenerating replaces the existing invoice's line items and total with the current state of the booking's services. Fixes GitHub issue #50.

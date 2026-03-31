@@ -1,5 +1,7 @@
 # Consistent Header Height
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The page header on pages without an add button (Facturen, Instellingen, Dashboard, Notificaties) renders shorter than pages with an add button (Boekingen, Diensten, Klanten, Medewerkers). The current `min-h-[4rem]` on the shared `<chairly-page-header>` component is not tall enough to match the natural height when a button is present. Increasing the `min-h` value to `min-h-[4.25rem]` ensures all page headers have the same height regardless of whether an action button is projected. This is a frontend-only fix to the existing shared component.

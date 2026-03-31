@@ -6,29 +6,36 @@
       "id": "B1",
       "layer": "backend",
       "title": "Versterk authenticatie- en tenantdiagnostiek voor 401-fouten",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Voeg autorisatie-regressietests toe voor manager op clients endpoints",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Verbeter frontend-afhandeling van 401 en 403 bij clients mutaties",
-      "status": "pending",
-      "dependsOn": ["B1", "B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B1",
+        "B2"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Voeg role-based guard en e2e regressietests toe",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     }
   ]
 }

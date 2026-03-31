@@ -1,5 +1,7 @@
 # Consistent Page Header
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The page header (title + optional action button) is inconsistent across domains. Pages with an "add" button (Boekingen, Diensten, Klanten, Medewerkers) have a taller header because the button adds vertical height. Pages without an "add" button (Facturen list, Instellingen) render a shorter header because there is nothing beside the title. All domain page headers should have the same height regardless of whether an action button is present. This is a frontend-only feature that creates a shared component and replaces inline header markup across all domain pages. Fixes GitHub issues #41 and related visual inconsistencies.

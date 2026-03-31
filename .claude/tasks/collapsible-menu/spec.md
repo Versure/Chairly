@@ -1,5 +1,7 @@
 # Collapsible Menu
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The shell sidebar navigation is a fixed 240px (`w-60`) column that cannot be collapsed. This makes the app unusable on mobile devices and wastes screen space on small viewports. The sidebar needs a hamburger toggle button and responsive behavior: collapsed by default on mobile, expanded on desktop. Fixes GitHub issue #7.

@@ -1,5 +1,7 @@
 # Date and DateTime Picker
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Replace all native browser `<input type="date">`, `<input type="datetime-local">`, and `<input type="time">` elements with a custom Flatpickr-based `<chairly-date-picker>` component. The native browser pickers lack a confirm button, forcing users to click outside to dismiss them. This feature introduces a proper date/time picker with a "Bevestigen" button, Dutch locale formatting (`dd-MM-yyyy HH:mm`, 24h), the ability to disable specific dates, and full reactive forms integration. This is a frontend-only feature (no backend changes).

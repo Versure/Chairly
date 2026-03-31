@@ -6,120 +6,163 @@
       "id": "I1",
       "layer": "infra",
       "title": "Keycloak admin realm dev seeder",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "I2",
       "layer": "infra",
       "title": "Admin portal Angular application scaffolding",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B1",
       "layer": "backend",
       "title": "Admin endpoints infrastructure and GetAdminConfig",
-      "status": "pending",
-      "dependsOn": ["I1"]
+      "status": "completed",
+      "dependsOn": [
+        "I1"
+      ]
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "GetAdminSubscriptionsList query, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "GetAdminSubscription query, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "ProvisionSubscription command, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "CancelSubscription command, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B6",
       "layer": "backend",
       "title": "UpdateSubscriptionPlan command, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Admin domain library: subscription models and API service",
-      "status": "pending",
-      "dependsOn": ["I2", "B2", "B3", "B4", "B5", "B6"]
+      "status": "completed",
+      "dependsOn": [
+        "I2",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Subscription status badge pipe",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Admin shell component",
-      "status": "pending",
-      "dependsOn": ["I2"]
+      "status": "completed",
+      "dependsOn": [
+        "I2"
+      ]
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Subscription list page",
-      "status": "pending",
-      "dependsOn": ["F1", "F2", "F3"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "F2",
+        "F3"
+      ]
     },
     {
       "id": "F5",
       "layer": "frontend",
       "title": "Subscription detail page",
-      "status": "pending",
-      "dependsOn": ["F1", "F2", "F3", "F6", "F7", "F8"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "F2",
+        "F3",
+        "F6",
+        "F7",
+        "F8"
+      ]
     },
     {
       "id": "F6",
       "layer": "frontend",
       "title": "Provision subscription dialog component",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F7",
       "layer": "frontend",
       "title": "Cancel subscription dialog component",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F8",
       "layer": "frontend",
       "title": "Update plan dialog component",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F9",
       "layer": "frontend",
       "title": "E2E tests for admin portal",
-      "status": "pending",
-      "dependsOn": ["F4", "F5"]
+      "status": "completed",
+      "dependsOn": [
+        "F4",
+        "F5"
+      ]
     }
   ]
 }

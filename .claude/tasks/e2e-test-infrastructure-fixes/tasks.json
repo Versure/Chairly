@@ -6,22 +6,24 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Add Playwright UI mode script",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Add a global API fallback route to prevent ECONNREFUSED",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Ensure service-catalog.spec.ts has complete API mocks",
-      "status": "pending",
-      "dependsOn": ["F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F2"
+      ]
     }
   ]
 }

@@ -1,5 +1,7 @@
 # Subscription Management Portal
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 An internal platform administration portal for the Chairly SaaS owner to manage all subscriptions across all tenants. This is a brand-new Angular application (`chairly-admin`) within the existing Nx monorepo, backed by new admin API endpoints in the existing `Chairly.Api` project. The portal is protected by a dedicated Keycloak realm (`chairly-admin`) that is completely separate from tenant realms. The MVP scope covers subscription listing with search/filter, subscription detail view, and subscription lifecycle actions (provision, cancel, update plan/billing cycle).

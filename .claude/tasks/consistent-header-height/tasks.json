@@ -6,15 +6,17 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Increase min-height on shared page header component",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Update unit test for new min-height class",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     }
   ]
 }

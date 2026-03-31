@@ -1,5 +1,7 @@
 # Booking Searchable Dropdown
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 When creating or editing a booking, the client and staff member fields currently use native `<select>` dropdowns. As the number of clients and staff members grows, these lists become unwieldy to scroll through. This feature replaces the native selects with searchable combobox/autocomplete inputs so users can quickly find the right person by typing part of their name. This is a **frontend-only** feature -- no new backend endpoints are needed. Fixes GitHub issue #49.

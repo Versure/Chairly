@@ -1,5 +1,7 @@
 # Website App
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Chairly needs a public-facing marketing website where prospective salon owners can learn about the platform, request a demo, or sign up for a new account. This is a **separate Angular application** (`chairly-website`) in the Nx workspace, distinct from the backoffice app. It connects to a **dedicated database container** (not the per-tenant databases used by the backoffice). A new **Onboarding** bounded context in the backend handles demo requests and sign-up requests. Automatic environment provisioning is out of scope for this iteration -- sign-up requests are stored and handled manually by an admin.

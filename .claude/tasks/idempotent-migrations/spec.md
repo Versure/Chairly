@@ -1,5 +1,7 @@
 # Idempotent Migrations
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 EF Core migrations crash on startup when a database table already exists but is not recorded in `__EFMigrationsHistory`. This happens during local development when a migration was applied outside EF Core (e.g., a previous `dotnet ef database update` that was partially undone, or the database was created manually). The fix makes all existing migrations idempotent by replacing `CreateTable` and `CreateIndex` calls with raw SQL using `IF NOT EXISTS` guards, wraps `AddColumn` calls with column-existence checks, and documents the convention so future migrations follow the same pattern. Fixes GitHub issue #35.

@@ -6,7 +6,7 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Replace loading indicator in bookings list page",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     }
   ]
