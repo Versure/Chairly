@@ -21,14 +21,21 @@ export class EmailPreviewModalComponent {
 
   private readonly document = inject(DOCUMENT);
   private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogEl');
+  private readonly iframeRef = viewChild.required<ElementRef<HTMLIFrameElement>>('previewIframe');
 
   open(): void {
     this.document.body.style.overflow = 'hidden';
     this.dialogRef().nativeElement.showModal();
+    this.writeIframeContent();
   }
 
   close(): void {
     this.document.body.style.overflow = '';
     this.dialogRef().nativeElement.close();
+  }
+
+  private writeIframeContent(): void {
+    const iframe = this.iframeRef().nativeElement;
+    iframe.srcdoc = this.htmlBody();
   }
 }
