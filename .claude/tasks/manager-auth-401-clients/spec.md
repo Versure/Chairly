@@ -1,5 +1,7 @@
 # Manager krijgt 401 bij client toevoegen
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Wanneer een gebruiker met de rol **manager** een client probeert toe te voegen, ontvangt de applicatie een 401-respons. Dit hoort niet: managers moeten toegang hebben tot clients-functionaliteit (RequireStaff). Deze feature adresseert het structureel door backend-auth/tenantvalidatie te verharden, duidelijke foutdiagnostiek toe te voegen, regressietests in te bouwen en frontend-afhandeling voor 401/403 te verduidelijken.

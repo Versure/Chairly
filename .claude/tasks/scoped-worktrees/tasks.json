@@ -6,21 +6,21 @@
       "id": "B1",
       "layer": "backend",
       "title": "Update feature-team SKILL.md to use scoped worktree paths",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Update rework.sh to use scoped worktree paths",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Update task-completed.sh hook to use scoped worktree paths",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     }
   ]

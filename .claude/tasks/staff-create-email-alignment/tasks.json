@@ -6,29 +6,36 @@
       "id": "B1",
       "layer": "backend",
       "title": "Bevestig en documenteer create-staff validatiecontract met verplicht e-mailadres",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Voeg backend regressietests toe voor e-mailvalidatie en autorisatieroute",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Voeg verplicht e-mailadres toe aan medewerker-toevoegen dialoog en requestmodel",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Implementeer inline validatie plus API-foutmapping voor create-staff flow",
-      "status": "pending",
-      "dependsOn": ["F1", "B2"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "B2"
+      ]
     }
   ]
 }

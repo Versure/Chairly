@@ -1,5 +1,7 @@
 # Bookings Backend
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Bookings are the core of Chairly. A booking represents a scheduled visit by a client with a staff member, containing one or more services. This spec covers the full backend API for the Bookings bounded context: CRUD operations, state transitions (confirm, start, complete, cancel, no-show), overlap detection, and service snapshotting. The frontend will be a separate feature.

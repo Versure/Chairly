@@ -6,71 +6,91 @@
       "id": "B1",
       "layer": "backend",
       "title": "Dashboard response records",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "GetDashboard query and handler",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Dashboard endpoint registration",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "Unit tests for dashboard handler",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Dashboard models",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Dashboard API service and store",
-      "status": "pending",
-      "dependsOn": ["F1", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "B3"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Dashboard page component",
-      "status": "pending",
-      "dependsOn": ["F2", "F4"]
+      "status": "completed",
+      "dependsOn": [
+        "F2",
+        "F4"
+      ]
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Dashboard presentational components",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F5",
       "layer": "frontend",
       "title": "Dashboard routing and app integration",
-      "status": "pending",
-      "dependsOn": ["F3"]
+      "status": "completed",
+      "dependsOn": [
+        "F3"
+      ]
     },
     {
       "id": "F6",
       "layer": "frontend",
       "title": "Playwright e2e tests for dashboard",
-      "status": "pending",
-      "dependsOn": ["F5"]
+      "status": "completed",
+      "dependsOn": [
+        "F5"
+      ]
     }
   ]
 }

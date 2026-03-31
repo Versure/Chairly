@@ -1,5 +1,7 @@
 # Dashboard
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The dashboard provides salon staff with a real-time overview of daily operations: today's bookings, upcoming appointments, revenue metrics, and new client counts. It serves as the landing page after login, replacing the current redirect to "diensten". The data is aggregated from the Bookings, Clients, and Billing bounded contexts into a single read-only endpoint, with role-based visibility: Owners see all stats including revenue, Managers see bookings and new clients, and Staff Members see only their own bookings.

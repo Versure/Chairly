@@ -6,64 +6,83 @@
       "id": "B1",
       "layer": "backend",
       "title": "Invoice entity, EF configuration, and migration",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Generate invoice endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Get invoice list endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "Get invoice by ID endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "Invoice status transition endpoints",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Invoice models and API service",
-      "status": "pending",
-      "dependsOn": ["B2", "B3", "B4", "B5"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3",
+        "B4",
+        "B5"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Invoice list page",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Invoice detail page",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Generate invoice button on booking detail",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     }
   ]
 }

@@ -6,36 +6,41 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Move services UI components into subfolders",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Move staff UI components into subfolders",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Move clients UI components into subfolders",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Move shared UI components into subfolders (if flat)",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F5",
       "layer": "frontend",
       "title": "Update CLAUDE.md and frontend domain skill with subfolder convention",
-      "status": "pending",
-      "dependsOn": ["F1", "F2", "F3", "F4"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ]
     }
   ]
 }

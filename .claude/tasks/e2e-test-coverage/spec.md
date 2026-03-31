@@ -1,5 +1,7 @@
 # E2E Test Coverage
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Not every domain has e2e tests covering all user interactions. Currently, services, staff, and clients have tests, but bookings has none. Additionally, some existing tests do not cover all interaction paths (e.g. empty states, error states, toggle flows). This spec adds comprehensive e2e test coverage for all domains. Fixes GitHub issue #10.

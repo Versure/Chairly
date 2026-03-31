@@ -6,43 +6,54 @@
       "id": "B1",
       "layer": "backend",
       "title": "TenantSettings entity, EF configuration, and migration",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Get company information endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Update company information endpoint",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Settings domain setup, models, and API service",
-      "status": "pending",
-      "dependsOn": ["B2", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Company info settings page",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Playwright e2e tests for settings page",
-      "status": "pending",
-      "dependsOn": ["F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F2"
+      ]
     }
   ]
 }

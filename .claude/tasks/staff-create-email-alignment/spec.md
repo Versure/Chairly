@@ -1,5 +1,7 @@
 # Staff create email alignment
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Issue #73 meldt dat bij **Medewerker toevoegen** een fout ontstaat omdat `Email` verplicht is in de backend, terwijl het veld ontbreekt in de frontend dialoog. Deze feature herstelt contract-alignement in de **Staff** bounded context door het bestaande create-staff endpoint te hergebruiken, e-mail expliciet verplicht te maken in de UI, en validatiegedrag consistent te maken tussen inline formulierfeedback en API-foutmapping.

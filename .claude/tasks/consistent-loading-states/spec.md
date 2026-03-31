@@ -1,5 +1,7 @@
 # Consistent Loading States
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Loading indicators are inconsistent across domains. The services domain passes `isLoading` to a child `ServiceTableComponent` which renders a centered "Diensten laden..." `<div>`. The staff and clients domains render a simple left-aligned `<p>Laden...</p>` inline in their list page templates. The `CategoryPanelComponent` renders a minimal centered `<div>` with no spinner. All domains should use a uniform, centered loading indicator with a spinner animation, provided by a shared reusable component in the shared library. Fixes GitHub issue #6.

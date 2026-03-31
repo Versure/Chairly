@@ -1,5 +1,7 @@
 # Invoice Layout
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The invoice detail page currently shows invoice data in a plain table/list format without a proper invoice document layout. This feature transforms the invoice detail page into a structured document layout with a company header, client information, invoice metadata, line items table with VAT breakdown, and a footer showing IBAN, VAT number, and payment terms. The backend `GET /api/invoices/{id}` response is extended with a `ClientSnapshot` object and a `StaffMemberName` field so the frontend has all the data it needs without cross-domain imports. Fixes GitHub issue #51.

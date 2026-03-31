@@ -6,99 +6,145 @@
       "id": "B1",
       "layer": "backend",
       "title": "Booking and BookingService domain entities",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "EF Core configuration and DbContext registration",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "BookingResponse and BookingServiceResponse records",
-      "status": "pending",
-      "dependsOn": ["B1"]
+      "status": "completed",
+      "dependsOn": [
+        "B1"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "Create Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "Get Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
     },
     {
       "id": "B6",
       "layer": "backend",
       "title": "Get Bookings List endpoint",
-      "status": "pending",
-      "dependsOn": ["B2", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
     },
     {
       "id": "B7",
       "layer": "backend",
       "title": "Update Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2", "B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B2",
+        "B3"
+      ]
     },
     {
       "id": "B8",
       "layer": "backend",
       "title": "Cancel Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B9",
       "layer": "backend",
       "title": "Confirm Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B10",
       "layer": "backend",
       "title": "Start Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B11",
       "layer": "backend",
       "title": "Complete Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B12",
       "layer": "backend",
       "title": "No-Show Booking endpoint",
-      "status": "pending",
-      "dependsOn": ["B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B2"
+      ]
     },
     {
       "id": "B13",
       "layer": "backend",
       "title": "Booking endpoint registration and wiring",
-      "status": "pending",
-      "dependsOn": ["B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
+      "status": "completed",
+      "dependsOn": [
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10",
+        "B11",
+        "B12"
+      ]
     },
     {
       "id": "B14",
       "layer": "backend",
       "title": "Unit tests for booking handlers",
-      "status": "pending",
-      "dependsOn": ["B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12"]
+      "status": "completed",
+      "dependsOn": [
+        "B4",
+        "B5",
+        "B6",
+        "B7",
+        "B8",
+        "B9",
+        "B10",
+        "B11",
+        "B12"
+      ]
     }
   ]
 }

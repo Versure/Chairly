@@ -1,5 +1,7 @@
 # Manage Email Templates
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Allow tenants to customize the email templates used for notifications (booking confirmations, reminders, cancellations, booking received, invoice sent). Tenants can edit structured fields (subject, main message, closing message) with placeholder support, preview the rendered result using sample data from a backend endpoint, and reset individual templates to hardcoded defaults. Owner and Manager roles can manage templates. The system falls back to hardcoded defaults when no custom template row exists for a given template type.

@@ -1,5 +1,7 @@
 # Subscriptions
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Chairly transitions from a manual sign-up / demo-request onboarding model to a subscription-based SaaS model. The existing `DemoRequest` and `SignUpRequest` entities and flows are removed entirely. In their place, a new `Subscription` entity is introduced in the Onboarding bounded context. Subscription plans are tiered by staff count (Starter, Team, Salon) with monthly and annual billing cycles (10% annual discount). A free 30-day trial is modelled as a Subscription on the Starter plan with a trial period. The public website is updated: the "Demo aanvragen" page is deleted, the "Aanmelden" page is replaced by a unified subscribe/trial flow (plan selection cards followed by a user-info form), a dedicated pricing page is added at `/prijzen`, and a pricing summary section is added to the landing page. Payment integration (Stripe) is out of scope but the data model and form flow are designed to accommodate it later.

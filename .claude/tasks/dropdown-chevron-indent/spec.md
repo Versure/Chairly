@@ -1,5 +1,7 @@
 # Dropdown Chevron Indent
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Native `<select>` dropdown elements in the app have their browser-rendered chevron/arrow flush against the right border, with no padding between the arrow and the border. This looks cramped and inconsistent. The fix adds adequate right padding so the chevron has breathing room. Fixes GitHub issue #40.

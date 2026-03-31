@@ -1,5 +1,7 @@
 # UI Component Subfolders
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Presentational (dumb) components in `ui/` folders are placed as flat files (e.g. `ui/service-table.component.ts`) instead of being grouped in subfolders (e.g. `ui/service-table/service-table.component.ts`). This violates Angular best practices for component organization and makes it harder to add co-located files (specs, styles). All UI components must be moved into their own subfolders. Fixes GitHub issue #22.

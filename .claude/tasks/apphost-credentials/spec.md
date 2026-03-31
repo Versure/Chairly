@@ -1,5 +1,7 @@
 # AppHost Credentials Externalization
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The Chairly repository is **public**. Credentials and environment-specific configuration values are currently hardcoded in `src/backend/Chairly.AppHost/appsettings.json` and `Program.cs`. These must be removed from version control entirely. For local development, values are provided via `dotnet user-secrets` (the `UserSecretsId` already exists in the `.csproj`). For CI, non-secret values use GitHub variables and secrets use GitHub repository secrets. An `.env.example` file documents all required variables for developer onboarding.

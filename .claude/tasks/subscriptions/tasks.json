@@ -6,85 +6,111 @@
       "id": "B1",
       "layer": "backend",
       "title": "Remove DemoRequest entity and flow",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B2",
       "layer": "backend",
       "title": "Remove SignUpRequest entity and flow",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "B3",
       "layer": "backend",
       "title": "Subscription entity, enums, EF configuration, and migration",
-      "status": "pending",
-      "dependsOn": ["B1", "B2"]
+      "status": "completed",
+      "dependsOn": [
+        "B1",
+        "B2"
+      ]
     },
     {
       "id": "B4",
       "layer": "backend",
       "title": "CreateSubscription command, handler, and endpoint",
-      "status": "pending",
-      "dependsOn": ["B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B3"
+      ]
     },
     {
       "id": "B5",
       "layer": "backend",
       "title": "GetSubscriptionPlans endpoint (static plan metadata)",
-      "status": "pending",
-      "dependsOn": ["B3"]
+      "status": "completed",
+      "dependsOn": [
+        "B3"
+      ]
     },
     {
       "id": "F1",
       "layer": "frontend",
       "title": "Remove demo-request and sign-up pages, update models",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Subscription models and API service",
-      "status": "pending",
-      "dependsOn": ["F1", "B4", "B5"]
+      "status": "completed",
+      "dependsOn": [
+        "F1",
+        "B4",
+        "B5"
+      ]
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Pricing page at /prijzen",
-      "status": "pending",
-      "dependsOn": ["F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F2"
+      ]
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Subscribe page at /abonneren (plan selection + user info form)",
-      "status": "pending",
-      "dependsOn": ["F2"]
+      "status": "completed",
+      "dependsOn": [
+        "F2"
+      ]
     },
     {
       "id": "F5",
       "layer": "frontend",
       "title": "Update landing page with pricing section and new CTAs",
-      "status": "pending",
-      "dependsOn": ["F3", "F4"]
+      "status": "completed",
+      "dependsOn": [
+        "F3",
+        "F4"
+      ]
     },
     {
       "id": "F6",
       "layer": "frontend",
       "title": "Update header, footer, and confirmation page",
-      "status": "pending",
-      "dependsOn": ["F3", "F4"]
+      "status": "completed",
+      "dependsOn": [
+        "F3",
+        "F4"
+      ]
     },
     {
       "id": "F7",
       "layer": "frontend",
       "title": "E2E tests for subscription flows",
-      "status": "pending",
-      "dependsOn": ["F3", "F4", "F5", "F6"]
+      "status": "completed",
+      "dependsOn": [
+        "F3",
+        "F4",
+        "F5",
+        "F6"
+      ]
     }
   ]
 }

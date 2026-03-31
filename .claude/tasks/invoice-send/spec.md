@@ -1,5 +1,7 @@
 # Invoice Send
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 Replaces the current "Markeer als verzonden" behavior with a real send flow that emails the invoice to the client. The feature remains in the **Billing** context, reuses the existing notifications/email infrastructure, and keeps invoice status derived from timestamps (`SentAtUtc`, `PaidAtUtc`, `VoidedAtUtc`) without introducing status columns.

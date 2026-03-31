@@ -6,29 +6,33 @@
       "id": "F1",
       "layer": "frontend",
       "title": "Add SVG icons to all nav items in the sidebar",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F2",
       "layer": "frontend",
       "title": "Normalize the Instellingen icon stroke-width for consistency",
-      "status": "pending",
+      "status": "completed",
       "dependsOn": []
     },
     {
       "id": "F3",
       "layer": "frontend",
       "title": "Add unit test for nav icon rendering",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     },
     {
       "id": "F4",
       "layer": "frontend",
       "title": "Add e2e test verifying nav icons are visible",
-      "status": "pending",
-      "dependsOn": ["F1"]
+      "status": "completed",
+      "dependsOn": [
+        "F1"
+      ]
     }
   ]
 }

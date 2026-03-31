@@ -1,5 +1,7 @@
 # Website Footer Sticky
 
+> **Status: Implemented** — Merged to main.
+
 ## Overview
 
 The footer on the Chairly public website (`chairly-website` app) does not stick to the bottom of the viewport on pages with little content, such as the confirmation page (`/bevestiging`). Currently, each page component individually includes `<chairly-web-header />` and `<chairly-web-footer />` in its own template, and there is no shared layout enforcing a full-height flex column. This feature introduces a dedicated `WebsiteLayoutComponent` that wraps all routed pages with a sticky-footer layout (flex column, min-height 100vh), and removes the duplicated header/footer from individual page components.
