@@ -32,7 +32,7 @@
 
     <div class="flex-1 overflow-hidden px-6 pb-4">
       <iframe
-        [attr.srcdoc]="htmlBody()"
+        #previewIframe
         class="w-full h-96 border border-gray-200 dark:border-gray-700 rounded-md"
         sandbox="allow-same-origin"
         title="E-mail voorbeeld"></iframe>
