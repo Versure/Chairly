@@ -351,4 +351,138 @@ public class NotificationDispatcherTests
         Assert.Single(emailSender.SentEmails);
         Assert.False(string.IsNullOrWhiteSpace(emailSender.SentEmails[0].Subject));
     }
+
+    // ==================== B7: Custom template usage in dispatcher ====================
+
+    [Fact]
+    public async Task Dispatcher_UsesCustomTemplate_WhenDbRowExists()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        using (var db = CreateDbContext(dbName))
+        {
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TestTenantContext.DefaultTenantId,
+                TemplateType = NotificationType.BookingConfirmation,
+                Subject = "Aangepast onderwerp voor {clientName}",
+                Body = "<p>Aangepast bericht voor {clientName} bij {salonName}.</p><p>Aangepaste afsluiting.</p>",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        Assert.Contains("Aangepast onderwerp voor Test Client", sentEmail.Subject, StringComparison.Ordinal);
+        Assert.Contains("Aangepast bericht voor Test Client", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Aangepaste afsluiting", sentEmail.HtmlBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Dispatcher_FallsBackToDefaults_WhenNoCustomTemplate()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        Assert.Contains("Bevestiging", sentEmail.Subject, StringComparison.Ordinal);
+        Assert.Contains("Uw afspraak is bevestigd", sentEmail.HtmlBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Dispatcher_CustomTemplate_ReplacesPlaceholdersCorrectly()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        using (var db = CreateDbContext(dbName))
+        {
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TestTenantContext.DefaultTenantId,
+                TemplateType = NotificationType.BookingConfirmation,
+                Subject = "{salonName} - afspraak {date}",
+                Body = "<p>Hallo {clientName}, diensten: {services}.</p><p>Tot ziens bij {salonName}!</p>",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+
+        Assert.Contains("Testsalon", sentEmail.Subject, StringComparison.Ordinal);
+        Assert.DoesNotContain("{salonName}", sentEmail.Subject, StringComparison.Ordinal);
+        Assert.DoesNotContain("{date}", sentEmail.Subject, StringComparison.Ordinal);
+
+        Assert.Contains("Test Client", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.Contains("Herenknippen", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("{clientName}", sentEmail.HtmlBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("{services}", sentEmail.HtmlBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Dispatcher_CustomTemplate_UsesCustomSubjectForEmail()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        using (var db = CreateDbContext(dbName))
+        {
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TestTenantContext.DefaultTenantId,
+                TemplateType = NotificationType.BookingConfirmation,
+                Subject = "Mijn eigen onderwerp",
+                Body = "<p>Mijn bericht.</p><p>Mijn afsluiting.</p>",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        Assert.Equal("Mijn eigen onderwerp", emailSender.SentEmails[0].Subject);
+    }
+
+    [Fact]
+    public async Task Dispatcher_CustomTemplate_UsesBuildTemplateFromBody()
+    {
+        var (dispatcher, dbName, emailSender) = CreateDispatcher();
+        SeedPendingNotification(dbName);
+
+        using (var db = CreateDbContext(dbName))
+        {
+            db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TenantId = TestTenantContext.DefaultTenantId,
+                TemplateType = NotificationType.BookingConfirmation,
+                Subject = "Test",
+                Body = "<p>Custom body content</p>",
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await dispatcher.DispatchPendingNotificationsAsync(CancellationToken.None);
+
+        Assert.Single(emailSender.SentEmails);
+        var sentEmail = emailSender.SentEmails[0];
+        // BuildTemplateFromBody wraps content in email layout; greeting and signature are part of body
+        Assert.Contains("Custom body content", sentEmail.HtmlBody, StringComparison.Ordinal);
+    }
 }

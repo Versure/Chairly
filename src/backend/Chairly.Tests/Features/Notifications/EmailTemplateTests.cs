@@ -168,4 +168,54 @@ public class EmailTemplateTests
 
         Assert.DoesNotContain("reeds betaald", body, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void BuildTemplate_CustomServicesLabel_AppearsInHtml()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing", servicesLabel: "Mijn diensten");
+
+        Assert.Contains("Mijn diensten", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Diensten<", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplate_DefaultServicesLabel_IsDiensten()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing");
+
+        Assert.Contains("Diensten", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplate_CustomDateLabel_AppearsInHtml()
+    {
+        var html = EmailTemplates.BuildTemplate(
+            "Salon", "Jan", "Message", "1 januari 2026", "Herenknippen", "Closing", dateLabel: "Aangepast label");
+
+        Assert.Contains("Aangepast label", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplateFromBody_ReturnsHtmlWithBodyContent()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Mijn Salon", "<h2>Beste Jan Smit,</h2><p>Uw afspraak is bevestigd.</p><p>Met vriendelijke groet,<br>Mijn Salon</p>");
+
+        Assert.Contains("<!DOCTYPE html>", html, StringComparison.Ordinal);
+        Assert.Contains("Mijn Salon", html, StringComparison.Ordinal);
+        Assert.Contains("Beste Jan Smit", html, StringComparison.Ordinal);
+        Assert.Contains("Uw afspraak is bevestigd.", html, StringComparison.Ordinal);
+        Assert.Contains("Met vriendelijke groet", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildTemplateFromBody_DoesNotIncludeDateOrServiceSections()
+    {
+        var html = EmailTemplates.BuildTemplateFromBody("Salon", "<p>Simple body</p>");
+
+        // BuildTemplateFromBody should NOT contain the structured date/services table
+        Assert.DoesNotContain("Datum en tijd", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Diensten", html, StringComparison.Ordinal);
+    }
 }

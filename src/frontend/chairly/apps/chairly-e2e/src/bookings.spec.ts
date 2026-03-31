@@ -169,7 +169,7 @@ test('creating a new booking calls the API and refreshes the list', async ({ pag
   await staffInput.fill('Kees');
   await dialog.locator('ul li').filter({ hasText: 'Kees Bakker' }).click();
 
-  await selectFlatpickrDateTime(page, dialog.getByLabel('Datum & tijd'), 28, '11', '00');
+  await selectFlatpickrDateTime(page, dialog.getByLabel('Datum & tijd'), 28, '11', '00', true);
   await dialog.getByLabel('Damesknippen').check();
 
   await dialog.getByRole('button', { name: 'Opslaan' }).click();

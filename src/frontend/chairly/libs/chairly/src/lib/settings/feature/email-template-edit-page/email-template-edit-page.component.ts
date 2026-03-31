@@ -1,0 +1,197 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+
+import { QuillEditorComponent } from 'ngx-quill';
+import { ClassAttributor } from 'parchment';
+import Quill from 'quill';
+
+import {
+  ConfirmationDialogComponent,
+  LoadingIndicatorComponent,
+  TemplateTypeLabelPipe,
+} from '@org/shared-lib';
+
+import { EmailTemplateApiService, EmailTemplateStore } from '../../data-access';
+import { EmailTemplateResponse } from '../../models';
+import { EmailPreviewModalComponent } from '../../ui';
+
+const FontAttributor = Quill.import('attributors/class/font') as ClassAttributor;
+FontAttributor.whitelist = [
+  'sans-serif',
+  'serif',
+  'monospace',
+  'arial',
+  'courier-new',
+  'georgia',
+  'times-new-roman',
+  'trebuchet-ms',
+  'verdana',
+  'roboto',
+  'open-sans',
+  'lato',
+];
+Quill.register(FontAttributor, true);
+
+@Component({
+  selector: 'chairly-email-template-edit-page',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    QuillEditorComponent,
+    ConfirmationDialogComponent,
+    EmailPreviewModalComponent,
+    LoadingIndicatorComponent,
+  ],
+  providers: [EmailTemplateStore, EmailTemplateApiService],
+  templateUrl: './email-template-edit-page.component.html',
+  styleUrl: './email-template-edit-page.component.scss',
+})
+export class EmailTemplateEditPageComponent implements OnInit {
+  private readonly store = inject(EmailTemplateStore);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  private readonly previewModalRef = viewChild.required<EmailPreviewModalComponent>('previewModal');
+  private readonly resetDialogRef = viewChild.required<ConfirmationDialogComponent>('resetDialog');
+  private readonly bodyEditor = viewChild<QuillEditorComponent>('bodyEditor');
+
+  protected readonly templateType = signal<string>('');
+  protected readonly template = computed<EmailTemplateResponse | undefined>(() => {
+    const type = this.templateType();
+    return this.store.templatesByType()[type];
+  });
+  protected readonly isLoading = computed<boolean>(() => this.store.isLoading());
+  protected readonly isSaving = computed<boolean>(() => this.store.isSaving());
+  protected readonly saveSuccess = computed<boolean>(() => this.store.saveSuccess());
+  protected readonly saveError = computed<string | null>(() => this.store.saveError());
+  protected readonly preview = computed(() => this.store.preview());
+  protected readonly isLoadingPreview = computed<boolean>(() => this.store.isLoadingPreview());
+
+  private readonly templateTypeLabelPipe = new TemplateTypeLabelPipe();
+  protected readonly pageTitle = computed<string>(() => {
+    const type = this.templateType();
+    if (!type) return 'Template bewerken';
+    return `${this.templateTypeLabelPipe.transform(type)} bewerken`;
+  });
+
+  protected readonly quillModules = {
+    toolbar: [
+      [
+        {
+          font: [
+            '',
+            'serif',
+            'monospace',
+            'arial',
+            'courier-new',
+            'georgia',
+            'times-new-roman',
+            'trebuchet-ms',
+            'verdana',
+            'roboto',
+            'open-sans',
+            'lato',
+          ],
+        },
+      ],
+      [{ size: ['small', false, 'large', 'huge'] }],
+      [{ color: [] }, { background: [] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      ['clean'],
+    ],
+  };
+
+  protected readonly form = new FormGroup({
+    subject: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(500)],
+    }),
+    body: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+  });
+
+  constructor() {
+    // When the template is loaded, populate the form
+    effect(() => {
+      const tmpl = this.template();
+      if (tmpl) {
+        this.form.patchValue({
+          subject: tmpl.subject,
+          body: tmpl.body,
+        });
+      }
+    });
+
+    // When preview result arrives, open the modal
+    effect(() => {
+      const p = this.preview();
+      if (p) {
+        this.previewModalRef().open();
+      }
+    });
+  }
+
+  ngOnInit(): void {
+    const type = this.route.snapshot.paramMap.get('templateType') ?? '';
+    this.templateType.set(type);
+    this.store.loadTemplates();
+  }
+
+  protected onSave(): void {
+    if (this.form.invalid || this.isSaving()) {
+      return;
+    }
+    this.store.updateTemplate(this.templateType(), {
+      subject: this.form.value.subject ?? '',
+      body: this.form.value.body ?? '',
+    });
+  }
+
+  protected onPreview(): void {
+    this.store.previewTemplate({
+      templateType: this.templateType(),
+      subject: this.form.value.subject ?? '',
+      body: this.form.value.body ?? '',
+    });
+  }
+
+  protected onClosePreview(): void {
+    this.store.clearPreview();
+  }
+
+  protected onResetRequest(): void {
+    this.resetDialogRef().open();
+  }
+
+  protected onConfirmReset(): void {
+    this.store.resetTemplate(this.templateType());
+    void this.router.navigate(['/instellingen']);
+  }
+
+  protected insertPlaceholder(placeholder: string): void {
+    const editorComponent = this.bodyEditor();
+    if (!editorComponent) {
+      return;
+    }
+    const editor = editorComponent.quillEditor;
+    const range = editor.getSelection(true);
+    editor.insertText(range.index, `{${placeholder}}`, 'user');
+    editor.setSelection(range.index + placeholder.length + 2, 0);
+  }
+}
