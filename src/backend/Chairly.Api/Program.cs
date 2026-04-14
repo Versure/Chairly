@@ -189,7 +189,8 @@ if (runMigrations)
     //    EF Core to correctly bootstrap __EFMigrationsHistory on a fresh database.
     // 3. If the process crashes, the non-pooled connection is closed by the OS,
     //    releasing the lock immediately — no stale locks in the connection pool.
-    var connString = app.Configuration.GetConnectionString("ChairlyDb")!;
+    var connString = app.Configuration.GetConnectionString("ChairlyDb")
+        ?? throw new InvalidOperationException("Connection string 'ChairlyDb' is not configured.");
 
     // Append Pooling=false so this connection is truly closed on dispose, not
     // returned to Npgsql's pool where a session-level advisory lock would persist.
@@ -265,7 +266,8 @@ if (runMigrations)
     var websiteMigrationLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Chairly.WebsiteMigrations");
     var websiteStoppingToken = app.Lifetime.ApplicationStopping;
 
-    var websiteConnString = app.Configuration.GetConnectionString("WebsiteDb")!;
+    var websiteConnString = app.Configuration.GetConnectionString("WebsiteDb")
+        ?? throw new InvalidOperationException("Connection string 'WebsiteDb' is not configured.");
 
     var websiteLockConnString = websiteConnString.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)
         ? websiteConnString
