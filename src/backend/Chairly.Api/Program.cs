@@ -4,6 +4,8 @@ using Chairly.Api.Features.Bookings;
 using Chairly.Api.Features.Clients;
 using Chairly.Api.Features.Config;
 using Chairly.Api.Features.Dashboard;
+using Chairly.Api.Features.Newsletters;
+using Chairly.Api.Features.Newsletters.Infrastructure;
 using Chairly.Api.Features.Notifications;
 using Chairly.Api.Features.Onboarding;
 using Chairly.Api.Features.Reports;
@@ -47,6 +49,10 @@ builder.Services.AddDbContext<WebsiteDbContext>(options =>
 
 builder.AddRabbitMQClient("messaging");
 builder.Services.AddScoped<IBookingEventPublisher, BookingEventPublisher>();
+builder.Services.AddScoped<INewsletterEventPublisher, NewsletterEventPublisher>();
+builder.Services.AddSingleton<INewsletterHtmlSanitizer, NewsletterHtmlSanitizer>();
+builder.Services.AddHostedService<NewsletterSchedulerHostedService>();
+builder.Services.AddHostedService<NewsletterSendWorker>();
 builder.Services.AddHostedService<Chairly.Api.Features.Notifications.Infrastructure.BookingEventConsumer>();
 builder.Services.Configure<Chairly.Api.Features.Notifications.Infrastructure.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<Chairly.Api.Features.Notifications.Infrastructure.IEmailSender, Chairly.Api.Features.Notifications.Infrastructure.SmtpEmailSender>();
@@ -163,6 +169,7 @@ app.MapClientEndpoints();
 app.MapRecipeEndpoints();
 app.MapSettingsEndpoints();
 app.MapNotificationEndpoints();
+app.MapNewsletterEndpoints();
 app.MapConfigEndpoints();
 app.MapTenantEndpoints();
 app.MapOnboardingEndpoints();
