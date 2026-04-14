@@ -1,0 +1,46 @@
+<dialog
+  #dialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none hidden open:flex items-center justify-center border-0 bg-black/50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto">
+    <form [formGroup]="form" (ngSubmit)="onConfirm()" class="p-6 flex flex-col gap-4">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">Nieuwsbrief inplannen</h2>
+      <div>
+        <label
+          for="scheduledAtUtc"
+          class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          Verzenddatum en -tijd
+        </label>
+        <chairly-date-picker
+          formControlName="scheduledAtUtc"
+          inputId="scheduledAtUtc"
+          mode="datetime" />
+        @if (
+          form.controls.scheduledAtUtc.touched && form.controls.scheduledAtUtc.hasError('notFuture')
+        ) {
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">
+            Kies een tijdstip in de toekomst.
+          </p>
+        }
+        @if (
+          form.controls.scheduledAtUtc.touched && form.controls.scheduledAtUtc.hasError('required')
+        ) {
+          <p class="mt-1 text-sm text-red-600 dark:text-red-400">Verplicht veld.</p>
+        }
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          (click)="onCancel()"
+          class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600">
+          Annuleren
+        </button>
+        <button
+          type="submit"
+          class="rounded-md bg-primary-600 dark:bg-primary-500 text-white px-4 py-2 text-sm font-medium hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+          [disabled]="form.invalid">
+          Bevestigen
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

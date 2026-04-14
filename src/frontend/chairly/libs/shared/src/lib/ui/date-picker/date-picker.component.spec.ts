@@ -175,7 +175,13 @@ describe('DatePickerComponent', () => {
 
   it('should respect minDate', () => {
     createComponent('date');
-    fixture.componentRef.setInput('minDate', '2026-03-15');
+    // Use a mid-month date in the current month so earlier days in the same month are disabled
+    const now = new Date();
+    const midMonth = new Date(now.getFullYear(), now.getMonth(), 15);
+    const yyyy = midMonth.getFullYear();
+    const mm = String(midMonth.getMonth() + 1).padStart(2, '0');
+    const minDateStr = `${yyyy}-${mm}-15`;
+    fixture.componentRef.setInput('minDate', minDateStr);
     fixture.detectChanges();
 
     const visibleInput = getVisibleInput();
@@ -205,7 +211,13 @@ describe('DatePickerComponent', () => {
 
   it('should respect disabledDates', () => {
     createComponent('date');
-    fixture.componentRef.setInput('disabledDates', ['2026-03-12', '2026-03-13']);
+    // Use dates in the current month so they are visible when Flatpickr opens
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const date1 = `${yyyy}-${mm}-05`;
+    const date2 = `${yyyy}-${mm}-06`;
+    fixture.componentRef.setInput('disabledDates', [date1, date2]);
     fixture.detectChanges();
 
     const visibleInput = getVisibleInput();

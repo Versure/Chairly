@@ -2,6 +2,7 @@ export { billingRoutes } from './lib/billing/billing.routes';
 export { bookingsRoutes } from './lib/bookings/bookings.routes';
 export { clientsRoutes } from './lib/clients/clients.routes';
 export { dashboardRoutes } from './lib/dashboard/dashboard.routes';
+export { newslettersRoutes } from './lib/newsletters/newsletters.routes';
 export { notificationsRoutes } from './lib/notifications/notifications.routes';
 export { reportsRoutes } from './lib/reports/reports.routes';
 export { servicesRoutes } from './lib/services/services.routes';
