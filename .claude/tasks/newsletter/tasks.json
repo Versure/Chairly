@@ -1,0 +1,230 @@
+{
+  "feature": "newsletter",
+  "specPath": ".claude/tasks/newsletter/spec.md",
+  "tasks": [
+    {
+      "id": "B1",
+      "layer": "backend",
+      "title": "Add `IsSubscribedToNewsletter` to Client, migration, and domain-model diagram update",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B2",
+      "layer": "backend",
+      "title": "`NewsletterCampaign` and `NewsletterDelivery` entities (with `CreatedBy` on delivery), EF config, migration, domain-model diagram update",
+      "status": "pending",
+      "dependsOn": ["B1"]
+    },
+    {
+      "id": "B3",
+      "layer": "backend",
+      "title": "HTML sanitisation helper",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "B4",
+      "layer": "backend",
+      "title": "`INewsletterEventPublisher` contract (queued/delivery-requested/test-requested) and RabbitMQ implementation",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B5",
+      "layer": "backend",
+      "title": "Create newsletter campaign endpoint",
+      "status": "pending",
+      "dependsOn": ["B2", "B3"]
+    },
+    {
+      "id": "B6",
+      "layer": "backend",
+      "title": "Update newsletter campaign endpoint",
+      "status": "pending",
+      "dependsOn": ["B5"]
+    },
+    {
+      "id": "B7",
+      "layer": "backend",
+      "title": "List newsletter campaigns endpoint",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B8",
+      "layer": "backend",
+      "title": "Get newsletter campaign detail endpoint",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B9",
+      "layer": "backend",
+      "title": "Delete newsletter campaign endpoint (Draft and Scheduled only; 409 for Sending/Sent/Cancelled)",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B10",
+      "layer": "backend",
+      "title": "Schedule newsletter campaign endpoint",
+      "status": "pending",
+      "dependsOn": ["B2", "B3"]
+    },
+    {
+      "id": "B11",
+      "layer": "backend",
+      "title": "Cancel newsletter campaign endpoint",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B12",
+      "layer": "backend",
+      "title": "Send newsletter campaign now endpoint",
+      "status": "pending",
+      "dependsOn": ["B2", "B3", "B4"]
+    },
+    {
+      "id": "B13",
+      "layer": "backend",
+      "title": "Newsletter scheduler hosted service",
+      "status": "pending",
+      "dependsOn": ["B12"]
+    },
+    {
+      "id": "B14",
+      "layer": "backend",
+      "title": "Newsletter send worker (RabbitMQ consumer: campaign-queued, delivery-requested, test-requested)",
+      "status": "pending",
+      "dependsOn": ["B4", "B12"]
+    },
+    {
+      "id": "B15",
+      "layer": "backend",
+      "title": "Preview newsletter endpoint",
+      "status": "pending",
+      "dependsOn": ["B3"]
+    },
+    {
+      "id": "B16",
+      "layer": "backend",
+      "title": "Test-send newsletter endpoint (publishes `NewsletterTestRequestedEvent`, no direct `IEmailSender`)",
+      "status": "pending",
+      "dependsOn": ["B3", "B14"]
+    },
+    {
+      "id": "B17",
+      "layer": "backend",
+      "title": "Public unsubscribe endpoint",
+      "status": "pending",
+      "dependsOn": ["B2"]
+    },
+    {
+      "id": "B18",
+      "layer": "backend",
+      "title": "Endpoint registration and module wiring",
+      "status": "pending",
+      "dependsOn": ["B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16", "B17"]
+    },
+    {
+      "id": "F1",
+      "layer": "frontend",
+      "title": "Newsletter domain library scaffold (layer folders, Sheriff tag, empty routes file; no app-router or sidebar wiring)",
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "F2",
+      "layer": "frontend",
+      "title": "Newsletter models",
+      "status": "pending",
+      "dependsOn": ["F1", "B5", "B7", "B8"]
+    },
+    {
+      "id": "F3",
+      "layer": "frontend",
+      "title": "Newsletter API service",
+      "status": "pending",
+      "dependsOn": ["F2", "B18"]
+    },
+    {
+      "id": "F4",
+      "layer": "frontend",
+      "title": "Newsletter SignalStore",
+      "status": "pending",
+      "dependsOn": ["F3"]
+    },
+    {
+      "id": "F5",
+      "layer": "frontend",
+      "title": "Newsletter status label pipe",
+      "status": "pending",
+      "dependsOn": ["F2"]
+    },
+    {
+      "id": "F6",
+      "layer": "frontend",
+      "title": "Add `ngx-quill` and configure rich text editor",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F7",
+      "layer": "frontend",
+      "title": "Newsletter list page (smart component)",
+      "status": "pending",
+      "dependsOn": ["F4", "F5"]
+    },
+    {
+      "id": "F8",
+      "layer": "frontend",
+      "title": "Newsletter compose/edit page (smart component) with native `<dialog>` send-confirmation",
+      "status": "pending",
+      "dependsOn": ["F4", "F6", "F10", "F11"]
+    },
+    {
+      "id": "F9",
+      "layer": "frontend",
+      "title": "Newsletter detail page (smart component)",
+      "status": "pending",
+      "dependsOn": ["F4", "F5", "F10"]
+    },
+    {
+      "id": "F10",
+      "layer": "frontend",
+      "title": "Newsletter preview modal (presentational component)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F11",
+      "layer": "frontend",
+      "title": "Schedule newsletter dialog (presentational component)",
+      "status": "pending",
+      "dependsOn": ["F1"]
+    },
+    {
+      "id": "F12",
+      "layer": "frontend",
+      "title": "Routes registration (populate `newsletters.routes.ts` and wire `nieuwsbrief` into the app router)",
+      "status": "pending",
+      "dependsOn": ["F7", "F8", "F9"]
+    },
+    {
+      "id": "F13",
+      "layer": "frontend",
+      "title": "Sidebar nav entry",
+      "status": "pending",
+      "dependsOn": ["F12"]
+    },
+    {
+      "id": "F14",
+      "layer": "frontend",
+      "title": "Playwright e2e tests",
+      "status": "pending",
+      "dependsOn": ["F12", "F13", "B18"]
+    }
+  ]
+}
