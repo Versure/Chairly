@@ -17,6 +17,8 @@ public class ChairlyDbContext(DbContextOptions<ChairlyDbContext> options) : DbCo
     public DbSet<VatSettings> VatSettings => Set<VatSettings>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
+    public DbSet<NewsletterCampaign> NewsletterCampaigns => Set<NewsletterCampaign>();
+    public DbSet<NewsletterDelivery> NewsletterDeliveries => Set<NewsletterDelivery>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

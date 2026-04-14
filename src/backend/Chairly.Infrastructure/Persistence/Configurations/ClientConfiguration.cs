@@ -38,6 +38,10 @@ internal sealed class ClientConfiguration : IEntityTypeConfiguration<Client>
             .IsRequired(false)
             .HasMaxLength(1000);
 
+        builder.Property(c => c.IsSubscribedToNewsletter)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         builder.Property(c => c.CreatedBy)
             .IsRequired();
 

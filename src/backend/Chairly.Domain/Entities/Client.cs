@@ -9,6 +9,7 @@ public class Client
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
     public string? Notes { get; set; }
+    public bool IsSubscribedToNewsletter { get; set; } = true;
     public DateTimeOffset CreatedAtUtc { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTimeOffset? UpdatedAtUtc { get; set; }
