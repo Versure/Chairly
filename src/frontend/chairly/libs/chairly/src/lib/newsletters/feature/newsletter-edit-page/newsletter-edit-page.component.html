@@ -1,0 +1,148 @@
+<div class="p-6 flex flex-col gap-4 max-w-4xl mx-auto">
+  <a
+    routerLink="/nieuwsbrief"
+    class="text-sm text-primary-700 dark:text-primary-300 hover:underline">
+    &larr; Terug naar overzicht
+  </a>
+
+  <h1 class="text-2xl font-semibold text-gray-900 dark:text-slate-100">
+    {{ headerTitle() }}
+  </h1>
+
+  @if (isReadOnly() && status()) {
+    <div
+      class="rounded-md bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-900 dark:text-amber-100">
+      Deze nieuwsbrief is
+      {{
+        status() === 'Sent'
+          ? 'verzonden'
+          : status() === 'Sending'
+            ? 'wordt verzonden'
+            : 'geannuleerd'
+      }}
+      en kan niet meer bewerkt worden.
+    </div>
+  }
+
+  @if (error()) {
+    <div
+      class="rounded-md bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-800 p-3 text-sm text-red-800 dark:text-red-200">
+      {{ error() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div
+      role="status"
+      class="rounded-md bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 p-3 text-sm text-green-800 dark:text-green-200">
+      {{ successMessage() }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSaveDraft()" class="flex flex-col gap-4">
+    <div>
+      <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+        Onderwerp
+      </label>
+      <input
+        id="subject"
+        type="text"
+        formControlName="subject"
+        maxlength="500"
+        class="w-full rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-gray-900 dark:text-slate-100" />
+      @if (form.controls.subject.touched && form.controls.subject.invalid) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Onderwerp is verplicht.</p>
+      }
+    </div>
+
+    <div>
+      <p
+        id="newsletter-body-label"
+        class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+        Bericht
+      </p>
+      <chairly-newsletter-editor
+        [value]="form.controls.bodyHtml.value"
+        (valueChange)="onBodyChanged($event)" />
+      <p class="mt-1 text-xs text-gray-700 dark:text-slate-400">
+        Voeg geen tracking-pixels of scripts toe &mdash; deze worden automatisch verwijderd.
+      </p>
+      @if (form.controls.bodyHtml.touched && form.controls.bodyHtml.hasError('emptyBody')) {
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Bericht mag niet leeg zijn.</p>
+      }
+    </div>
+
+    @if (!isReadOnly()) {
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          [disabled]="isSaving()"
+          class="rounded-md bg-primary-600 dark:bg-primary-500 text-white px-4 py-2 text-sm font-medium hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50">
+          Opslaan als concept
+        </button>
+        <button
+          type="button"
+          (click)="onPreview()"
+          class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600">
+          Voorbeeld bekijken
+        </button>
+        <button
+          type="button"
+          (click)="onTestSend()"
+          [disabled]="!isEditMode()"
+          class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50">
+          Test-e-mail naar mijzelf
+        </button>
+        <button
+          type="button"
+          (click)="onOpenSchedule()"
+          [disabled]="!isEditMode()"
+          class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50">
+          Inplannen...
+        </button>
+        <button
+          type="button"
+          (click)="onOpenSendConfirm()"
+          [disabled]="!isEditMode() || isSending()"
+          class="rounded-md bg-red-600 dark:bg-red-500 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50">
+          Nu verzenden
+        </button>
+      </div>
+    }
+  </form>
+</div>
+
+<chairly-newsletter-preview-modal
+  #previewModal
+  [subject]="preview()?.subject ?? ''"
+  [htmlBody]="preview()?.htmlBody ?? ''" />
+
+<chairly-schedule-newsletter-dialog #scheduleDialog (confirmed)="onScheduleConfirmed($event)" />
+
+<dialog
+  #sendDialog
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none hidden open:flex items-center justify-center border-0 bg-black/50 p-4">
+  <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md mx-auto p-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">
+      Nieuwsbrief verzenden
+    </h2>
+    <p class="text-sm text-gray-700 dark:text-slate-300 mb-4">
+      Weet u zeker dat u deze nieuwsbrief naar
+      {{ selectedCampaign()?.eligibleSubscribers ?? 0 }} klanten wilt versturen?
+    </p>
+    <div class="flex justify-end gap-2">
+      <button
+        type="button"
+        (click)="onCloseSendConfirm()"
+        class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600">
+        Annuleren
+      </button>
+      <button
+        type="button"
+        (click)="onConfirmSend()"
+        class="rounded-md bg-red-600 dark:bg-red-500 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 dark:hover:bg-red-600">
+        Bevestigen
+      </button>
+    </div>
+  </div>
+</dialog>
