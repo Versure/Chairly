@@ -72,11 +72,12 @@ Manages client information and history.
   - `Notes` (string, optional)
   - `CreatedAtUtc` (DateTimeOffset)
   - `UpdatedAtUtc` (DateTimeOffset, optional)
+  - `DeletedAtUtc` (DateTimeOffset, optional), `DeletedBy` (Guid, optional)
 
 **Business Rules:**
 - A client belongs to exactly one tenant
 - At least one contact method (email or phone) should be provided
-- Client can be soft-deleted (not removed, to preserve booking history)
+- Client can be soft-deleted (not removed, to preserve booking history) — soft-deletion is recorded via the `DeletedAtUtc` / `DeletedBy` timestamp pair (ADR-009). Reads must filter on `DeletedAtUtc IS NULL` to hide soft-deleted clients.
 
 - **Recipe** (Entity)
   - `Id` (Guid)
@@ -101,6 +102,9 @@ Manages client information and history.
 - A recipe is linked to a specific completed booking
 - Records what products and techniques were used during a visit
 - Staff can review a client's recipe history before their next booking
+
+**Business Rules (Client Timeline Visibility):**
+- Staff Members may view the complete booking history of any client via the client timeline, in order to provide informed service. This is an intentional exception to the general booking visibility rule (see User Roles & Permissions table — "View all bookings" is `Yes (client timeline only)` for Staff Members). Outside of the client timeline context, Staff Members only see their own bookings.
 
 ---
 
@@ -419,7 +423,7 @@ Subscription (separate database — not tenant-scoped)
 | Manage service catalog | Yes | Yes | No |
 | Manage clients | Yes | Yes | Yes |
 | Create/edit bookings | Yes | Yes | Own only |
-| View all bookings | Yes | Yes | No |
+| View all bookings | Yes | Yes | Yes (client timeline only) |
 | View own bookings | Yes | Yes | Yes |
 | Manage billing/invoices | Yes | No | No |
 | Manage recipes | Yes | Yes | Yes |
