@@ -297,11 +297,11 @@ test('profile stats show Bezoeken count and Totale omzet with Euro currency', as
   await setupApiMocks(page);
   await page.goto(`/klanten/${CLIENT_ID}`);
 
-  await expect(page.getByText('Bezoeken')).toBeVisible();
-  await expect(page.getByText('5')).toBeVisible();
-  await expect(page.getByText('Totale omzet')).toBeVisible();
+  await expect(page.getByText('Bezoeken', { exact: true })).toBeVisible();
+  await expect(page.getByText('5', { exact: true })).toBeVisible();
+  await expect(page.getByText('Totale omzet', { exact: true })).toBeVisible();
   // Euro value present
-  await expect(page.getByText(/€/)).toBeVisible();
+  await expect(page.getByText(/€/).first()).toBeVisible();
 });
 
 // Scenario 3: Status filter chips with Dutch labels
@@ -337,6 +337,9 @@ test('status filter chips render with Dutch labels and filtering works', async (
 test('timeline entries are grouped by month with Dutch month labels', async ({ page }) => {
   await setupApiMocks(page);
   await page.goto(`/klanten/${CLIENT_ID}`);
+
+  // Wait for timeline content to load before counting month headers
+  await expect(page.locator('chairly-booking-timeline-card').first()).toBeVisible();
 
   // Check for at least one h2 with a Dutch month label
   const monthHeaders = page.locator('h2');
@@ -376,7 +379,7 @@ test('booking card shows date, time range, status badge, staff name, services, t
   await expect(card.getByText('Herenknippen')).toBeVisible();
 
   // Euro price
-  await expect(card.getByText(/€/)).toBeVisible();
+  await expect(card.getByText(/€/).first()).toBeVisible();
 });
 
 // Scenario 6: "Recept toevoegen" opens recipe form
