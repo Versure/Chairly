@@ -1,4 +1,3 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,21 +11,26 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import {
-  ClientInvoiceSummary,
-  InvoiceGenerationService,
-  LoadingIndicatorComponent,
-} from '@org/shared-lib';
+import { LoadingIndicatorComponent } from '@org/shared-lib';
 
 import { ClientApiService, RecipesApiService } from '../../data-access';
 import {
-  ClientBookingSummary,
+  BookingStatus,
+  BookingTimelineCard,
   ClientRecipeSummary,
-  ClientResponse,
+  ClientTimeline,
+  ClientTimelineEntry,
+  ClientTimelineStats,
   CreateClientRequest,
   Recipe,
 } from '../../models';
-import { ClientFormDialogComponent, ClientRecipeHistoryComponent } from '../../ui';
+import {
+  BookingTimelineCardComponent,
+  ClientFormDialogComponent,
+  ClientProfileHeaderComponent,
+  TimelineStatusFilterComponent,
+} from '../../ui';
+import { filterByStatus, groupByMonth, MonthGroup } from '../../util';
 import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
 
 @Component({
@@ -34,12 +38,12 @@ import { RecipeFormComponent } from '../recipe-form/recipe-form.component';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CurrencyPipe,
-    DatePipe,
     RouterLink,
     LoadingIndicatorComponent,
     ClientFormDialogComponent,
-    ClientRecipeHistoryComponent,
+    ClientProfileHeaderComponent,
+    TimelineStatusFilterComponent,
+    BookingTimelineCardComponent,
     RecipeFormComponent,
   ],
   templateUrl: './client-detail-page.component.html',
@@ -49,121 +53,87 @@ export class ClientDetailPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly clientApi = inject(ClientApiService);
   private readonly recipesApi = inject(RecipesApiService);
-  private readonly invoiceService = inject(InvoiceGenerationService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly recipeFormRef = viewChild<RecipeFormComponent>('recipeFormRef');
   private readonly clientFormDialogRef = viewChild<ClientFormDialogComponent>('clientFormDialog');
 
-  protected readonly client = signal<ClientResponse | null>(null);
-  protected readonly clientRecipes = signal<ClientRecipeSummary[]>([]);
-  protected readonly clientBookings = signal<ClientBookingSummary[]>([]);
-  protected readonly clientInvoices = signal<ClientInvoiceSummary[]>([]);
-  protected readonly isLoadingClient = signal<boolean>(true);
-  protected readonly isLoadingRecipes = signal<boolean>(true);
-  protected readonly isLoadingBookings = signal<boolean>(true);
-  protected readonly isLoadingInvoices = signal<boolean>(true);
+  protected readonly timeline = signal<ClientTimeline | null>(null);
+  protected readonly isLoadingTimeline = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
-
-  protected readonly clientId = computed<string>(() => {
-    const client = this.client();
-    return client?.id ?? '';
-  });
+  protected readonly statusFilter = signal<BookingStatus | 'All'>('All');
 
   protected readonly selectedRecipeForEdit = signal<Recipe | null>(null);
   protected readonly activeBookingId = signal<string>('');
 
-  /** Completed bookings that do not yet have a recipe */
-  protected readonly completedBookingsWithoutRecipe = computed<ClientBookingSummary[]>(() => {
-    const bookings = this.clientBookings();
-    const recipes = this.clientRecipes();
-    const recipeBookingIds = new Set(recipes.map((r) => r.bookingId));
-    return bookings
-      .filter((b) => b.completedAtUtc !== null && !recipeBookingIds.has(b.id))
-      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+  protected readonly client = computed(() => this.timeline()?.profile ?? null);
+  protected readonly stats = computed<ClientTimelineStats | null>(
+    () => this.timeline()?.stats ?? null,
+  );
+  protected readonly entries = computed<ClientTimelineEntry[]>(
+    () => this.timeline()?.timeline ?? [],
+  );
+
+  protected readonly filteredEntries = computed<ClientTimelineEntry[]>(() =>
+    filterByStatus(this.entries(), this.statusFilter()),
+  );
+
+  protected readonly entriesByMonth = computed<MonthGroup<ClientTimelineEntry>[]>(() =>
+    groupByMonth(this.filteredEntries()),
+  );
+
+  /** Derived from unfiltered entries so auto-open works regardless of active chip. */
+  protected readonly completedBookingsWithoutRecipe = computed<ClientTimelineEntry[]>(() =>
+    this.entries().filter((e) => e.booking.completedAtUtc !== null && e.recipe === null),
+  );
+
+  protected readonly statusCounts = computed<Record<BookingStatus | 'All', number>>(() => {
+    const all = this.entries();
+    const counts: Record<BookingStatus | 'All', number> = {
+      All: all.length,
+      Scheduled: 0,
+      Confirmed: 0,
+      InProgress: 0,
+      Completed: 0,
+      Cancelled: 0,
+      NoShow: 0,
+    };
+    for (const entry of all) {
+      const s = entry.booking.status;
+      if (s in counts) {
+        counts[s]++;
+      }
+    }
+    return counts;
   });
 
   private readonly pendingBookingId = signal<string | null>(null);
+  private clientId = '';
 
   ngOnInit(): void {
-    const clientId = this.route.snapshot.paramMap.get('clientId') ?? '';
+    this.clientId = this.route.snapshot.paramMap.get('clientId') ?? '';
     const bookingIdParam = this.route.snapshot.queryParamMap.get('bookingId');
     if (bookingIdParam) {
       this.pendingBookingId.set(bookingIdParam);
     }
-    this.loadClient(clientId);
-    this.loadRecipes(clientId);
-    this.loadBookings(clientId);
-    this.loadInvoices(clientId);
+    this.loadTimeline();
   }
 
-  private loadClient(clientId: string): void {
-    this.isLoadingClient.set(true);
+  private loadTimeline(): void {
+    this.isLoadingTimeline.set(true);
+    this.error.set(null);
     this.clientApi
-      .getAll()
+      .getClientTimeline(this.clientId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (clients) => {
-          const found = clients.find((c) => c.id === clientId) ?? null;
-          this.client.set(found);
-          this.isLoadingClient.set(false);
-          if (!found) {
-            this.error.set('Klant niet gevonden.');
-          }
+        next: (data) => {
+          this.timeline.set(data);
+          this.isLoadingTimeline.set(false);
+          this.tryAutoOpenRecipeForm();
         },
         error: () => {
-          this.isLoadingClient.set(false);
+          this.isLoadingTimeline.set(false);
           this.error.set('Er is een fout opgetreden bij het laden van de klant.');
-        },
-      });
-  }
-
-  private loadRecipes(clientId: string): void {
-    this.isLoadingRecipes.set(true);
-    this.recipesApi
-      .getClientRecipes(clientId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (recipes) => {
-          this.clientRecipes.set(recipes);
-          this.isLoadingRecipes.set(false);
-          this.tryAutoOpenRecipeForm();
-        },
-        error: () => {
-          this.isLoadingRecipes.set(false);
-        },
-      });
-  }
-
-  private loadBookings(clientId: string): void {
-    this.isLoadingBookings.set(true);
-    this.clientApi
-      .getClientBookings(clientId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (bookings) => {
-          this.clientBookings.set(bookings);
-          this.isLoadingBookings.set(false);
-          this.tryAutoOpenRecipeForm();
-        },
-        error: () => {
-          this.isLoadingBookings.set(false);
-        },
-      });
-  }
-
-  private loadInvoices(clientId: string): void {
-    this.isLoadingInvoices.set(true);
-    this.invoiceService
-      .getClientInvoices(clientId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (invoices) => {
-          this.clientInvoices.set(invoices);
-          this.isLoadingInvoices.set(false);
-        },
-        error: () => {
-          this.isLoadingInvoices.set(false);
         },
       });
   }
@@ -173,13 +143,12 @@ export class ClientDetailPageComponent implements OnInit {
     if (!bookingId) {
       return;
     }
-    if (this.isLoadingBookings() || this.isLoadingRecipes()) {
-      return;
-    }
-    const eligibleBooking = this.completedBookingsWithoutRecipe().find((b) => b.id === bookingId);
-    if (eligibleBooking) {
+    const eligibleEntry = this.completedBookingsWithoutRecipe().find(
+      (e) => e.booking.id === bookingId,
+    );
+    if (eligibleEntry) {
       this.pendingBookingId.set(null);
-      this.onAddRecipe(eligibleBooking);
+      this.onAddRecipe(eligibleEntry.booking);
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: {},
@@ -188,7 +157,7 @@ export class ClientDetailPageComponent implements OnInit {
     }
   }
 
-  protected onAddRecipe(booking: ClientBookingSummary): void {
+  protected onAddRecipe(booking: BookingTimelineCard): void {
     this.selectedRecipeForEdit.set(null);
     this.activeBookingId.set(booking.id);
     this.recipeFormRef()?.open();
@@ -211,13 +180,9 @@ export class ClientDetailPageComponent implements OnInit {
   }
 
   protected onRecipeSaved(): void {
-    const clientId = this.client()?.id;
-    if (clientId) {
-      this.loadRecipes(clientId);
-      this.loadBookings(clientId);
-    }
     this.selectedRecipeForEdit.set(null);
     this.activeBookingId.set('');
+    this.loadTimeline();
   }
 
   protected onRecipeCancelled(): void {
@@ -242,7 +207,10 @@ export class ClientDetailPageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (updated) => {
-          this.client.set(updated);
+          const current = this.timeline();
+          if (current) {
+            this.timeline.set({ ...current, profile: updated });
+          }
         },
         error: () => {
           this.error.set('Er is een fout opgetreden bij het bijwerken van de klant.');
