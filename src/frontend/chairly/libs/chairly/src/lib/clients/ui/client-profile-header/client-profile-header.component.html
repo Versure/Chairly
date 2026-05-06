@@ -64,7 +64,7 @@
         Vaste medewerker
       </p>
       <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-        {{ stats().mostVisitedStaffMember?.fullName ?? '&mdash;' }}
+        {{ stats().mostVisitedStaffMember?.fullName ?? '—' }}
       </p>
       @if (stats().mostVisitedStaffMember) {
         <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -77,7 +77,7 @@
         Favoriete dienst
       </p>
       <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-        {{ stats().mostBookedService?.name ?? '&mdash;' }}
+        {{ stats().mostBookedService?.name ?? '—' }}
       </p>
       @if (stats().mostBookedService) {
         <p class="text-xs text-gray-500 dark:text-gray-400">
