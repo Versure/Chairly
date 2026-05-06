@@ -5,8 +5,8 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '@org/shared-lib';
 
 import {
-  ClientBookingSummary,
   ClientResponse,
+  ClientTimeline,
   CreateClientRequest,
   UpdateClientRequest,
 } from '../models';
@@ -123,33 +123,36 @@ describe('ClientApiService', () => {
     });
   });
 
-  describe('getClientBookings()', () => {
-    it('should GET /api/bookings and filter by clientId', () => {
-      const allBookings: (ClientBookingSummary & { clientId: string })[] = [
-        {
-          id: 'booking-1',
-          clientId: 'client-1',
-          startTime: '2026-02-15T10:00:00Z',
-          completedAtUtc: '2026-02-15T11:00:00Z',
-          services: [{ serviceName: 'Knippen' }],
+  describe('getClientTimeline()', () => {
+    it('should GET /api/clients/{id}/timeline and return the timeline payload', () => {
+      const mockTimeline: ClientTimeline = {
+        profile: mockClient,
+        stats: {
+          totalVisits: 3,
+          lastVisitAtUtc: '2026-04-15T10:00:00Z',
+          totalSpentAmount: 125.0,
+          mostVisitedStaffMember: {
+            id: 'staff-1',
+            fullName: 'Jan de Vries',
+            visitCount: 2,
+          },
+          mostBookedService: {
+            id: 'svc-1',
+            name: 'Herenknippen',
+            bookingCount: 3,
+          },
+          noShowCount: 0,
         },
-        {
-          id: 'booking-2',
-          clientId: 'client-2',
-          startTime: '2026-02-16T10:00:00Z',
-          completedAtUtc: null,
-          services: [],
-        },
-      ];
+        timeline: [],
+      };
 
-      service.getClientBookings('client-1').subscribe((bookings) => {
-        expect(bookings).toHaveLength(1);
-        expect(bookings[0].id).toBe('booking-1');
+      service.getClientTimeline('client-1').subscribe((result) => {
+        expect(result).toEqual(mockTimeline);
       });
 
-      const req = httpTesting.expectOne('/api/bookings');
+      const req = httpTesting.expectOne('/api/clients/client-1/timeline');
       expect(req.request.method).toBe('GET');
-      req.flush(allBookings);
+      req.flush(mockTimeline);
     });
   });
 });

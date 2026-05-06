@@ -14,173 +14,58 @@
         </h1>
       }
     </div>
-    @if (client()) {
-      <button
-        type="button"
-        class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
-        (click)="onEditClient()">
-        Bewerken
-      </button>
-    }
   </div>
 
   <!-- Content -->
   <div class="flex-1 overflow-auto p-6">
-    @if (isLoadingClient()) {
+    @if (isLoadingTimeline()) {
       <chairly-loading-indicator message="Klant laden..." />
     } @else if (error()) {
       <p class="text-sm text-red-600 dark:text-red-400">{{ error() }}</p>
-    } @else if (client()) {
-      <!-- Client info -->
-      <div
-        class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
-        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Klantgegevens</h2>
-        <div class="grid grid-cols-2 gap-4 text-sm">
+    } @else if (client() && stats()) {
+      <!-- Profile header -->
+      <chairly-client-profile-header
+        [client]="client()!"
+        [stats]="stats()!"
+        (editClient)="onEditClient()" />
+
+      <!-- Status filter chips -->
+      <div class="mt-6">
+        <chairly-timeline-status-filter [(value)]="statusFilter" [counts]="statusCounts()" />
+      </div>
+
+      <!-- Timeline by month -->
+      <div class="mt-6 space-y-8">
+        @for (group of entriesByMonth(); track group.monthKey) {
           <div>
-            <span class="font-medium text-gray-500 dark:text-gray-400">Voornaam:</span>
-            <span class="ml-2 text-gray-900 dark:text-white">{{ client()!.firstName }}</span>
+            <h2
+              class="mb-3 border-b border-gray-200 pb-2 text-lg font-semibold text-gray-900 dark:border-slate-700 dark:text-white">
+              {{ group.label }}
+            </h2>
+            <div class="space-y-4">
+              @for (entry of group.entries; track entry.booking.id) {
+                <chairly-booking-timeline-card
+                  [entry]="entry"
+                  (addRecipe)="onAddRecipe($event)"
+                  (editRecipe)="onEditRecipe($event)" />
+              }
+            </div>
           </div>
-          <div>
-            <span class="font-medium text-gray-500 dark:text-gray-400">Achternaam:</span>
-            <span class="ml-2 text-gray-900 dark:text-white">{{ client()!.lastName }}</span>
-          </div>
-          <div>
-            <span class="font-medium text-gray-500 dark:text-gray-400">E-mailadres:</span>
-            <span class="ml-2 text-gray-900 dark:text-white">{{
-              client()!.email ?? '&mdash;'
-            }}</span>
-          </div>
-          <div>
-            <span class="font-medium text-gray-500 dark:text-gray-400">Telefoonnummer:</span>
-            <span class="ml-2 text-gray-900 dark:text-white">{{
-              client()!.phoneNumber ?? '&mdash;'
-            }}</span>
-          </div>
+        }
+      </div>
+
+      <!-- Empty states -->
+      @if (filteredEntries().length === 0) {
+        <div class="mt-6">
+          @if (entries().length === 0) {
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Deze klant heeft nog geen boekingen.
+            </p>
+          } @else {
+            <p class="text-sm text-gray-500 dark:text-gray-400">Geen boekingen voor dit filter.</p>
+          }
         </div>
-      </div>
-
-      <!-- Completed bookings without a recipe -->
-      <div
-        class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
-        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
-          Afgeronde boekingen
-        </h2>
-        @if (isLoadingBookings()) {
-          <chairly-loading-indicator message="Boekingen laden..." />
-        } @else if (completedBookingsWithoutRecipe().length === 0) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">
-            Geen afgeronde boekingen zonder recept.
-          </p>
-        } @else {
-          <div class="space-y-3">
-            @for (booking of completedBookingsWithoutRecipe(); track booking.id) {
-              <div
-                class="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 p-3 dark:border-slate-600 dark:bg-slate-700/50">
-                <div>
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ booking.startTime | date: 'd MMMM yyyy' }}
-                  </p>
-                  @if (booking.services.length > 0) {
-                    <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                      @for (
-                        service of booking.services;
-                        track service.serviceName;
-                        let last = $last
-                      ) {
-                        {{ service.serviceName }}
-                        @if (!last) {
-                          ,
-                        }
-                      }
-                    </p>
-                  }
-                </div>
-                <button
-                  type="button"
-                  class="rounded-md bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
-                  (click)="onAddRecipe(booking)">
-                  Recept toevoegen
-                </button>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Recipe history -->
-      <!-- TODO: [canEdit] is hardcoded to true as a placeholder. This will be connected to auth
-           context so that StaffMember role can only edit their own recipes (per spec business rules). -->
-      <chairly-client-recipe-history
-        [recipes]="clientRecipes()"
-        [isLoading]="isLoadingRecipes()"
-        [canEdit]="true"
-        (editRecipe)="onEditRecipe($event)" />
-
-      <!-- Client invoices -->
-      <div
-        class="mt-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-600 dark:bg-slate-800">
-        <h2 class="mb-3 text-lg font-semibold text-gray-900 dark:text-white">Facturen</h2>
-        @if (isLoadingInvoices()) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">Laden...</p>
-        } @else if (clientInvoices().length === 0) {
-          <p class="text-sm text-gray-500 dark:text-gray-400">Nog geen facturen voor deze klant.</p>
-        } @else {
-          <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-              <thead class="bg-gray-50 dark:bg-slate-700">
-                <tr>
-                  <th
-                    scope="col"
-                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                    Factuurnummer
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                    Datum
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                    Totaal
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                class="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-800">
-                @for (invoice of clientInvoices(); track invoice.id) {
-                  <tr>
-                    <td class="whitespace-nowrap px-4 py-3 text-sm">
-                      <a
-                        [routerLink]="['/facturen', invoice.id]"
-                        class="font-medium text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300">
-                        {{ invoice.invoiceNumber }}
-                      </a>
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                      {{ invoice.invoiceDate | date: 'd MMM yyyy' }}
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-500 dark:text-gray-300">
-                      {{ invoice.totalAmount | currency }}
-                    </td>
-                    <td
-                      class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-300">
-                      {{ invoice.status }}
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-      </div>
+      }
     }
   </div>
 </div>

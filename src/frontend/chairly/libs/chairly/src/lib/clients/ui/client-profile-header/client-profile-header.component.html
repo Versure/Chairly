@@ -1,0 +1,97 @@
+<div
+  class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+  <!-- Header row with name and edit button -->
+  <div class="mb-4 flex items-start justify-between">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+        {{ client().firstName }} {{ client().lastName }}
+      </h2>
+      <div class="mt-1 space-y-0.5 text-sm text-gray-700 dark:text-gray-300">
+        @if (client().email) {
+          <p>{{ client().email }}</p>
+        }
+        @if (client().phoneNumber) {
+          <p>{{ client().phoneNumber }}</p>
+        }
+        @if (client().notes) {
+          <p class="mt-1 italic text-gray-700 dark:text-gray-400">{{ client().notes }}</p>
+        }
+      </div>
+    </div>
+    <button
+      type="button"
+      class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:bg-primary-500 dark:hover:bg-primary-600"
+      (click)="onEdit()">
+      Bewerken
+    </button>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <!-- Row 1 -->
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Bezoeken
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {{ stats().totalVisits }}
+      </p>
+    </div>
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Laatste bezoek
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        @if (stats().lastVisitAtUtc) {
+          {{ stats().lastVisitAtUtc | date: 'd MMM yyyy' : undefined : 'nl-NL' }}
+        } @else {
+          &mdash;
+        }
+      </p>
+    </div>
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Totale omzet
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {{ stats().totalSpentAmount | currency: 'EUR' : 'symbol' : '1.2-2' : 'nl-NL' }}
+      </p>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Vaste medewerker
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {{ stats().mostVisitedStaffMember?.fullName ?? '&mdash;' }}
+      </p>
+      @if (stats().mostVisitedStaffMember) {
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          ({{ stats().mostVisitedStaffMember!.visitCount }} bezoeken)
+        </p>
+      }
+    </div>
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Favoriete dienst
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {{ stats().mostBookedService?.name ?? '&mdash;' }}
+      </p>
+      @if (stats().mostBookedService) {
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          ({{ stats().mostBookedService!.bookingCount }} keer geboekt)
+        </p>
+      }
+    </div>
+    <div class="rounded-md bg-gray-50 p-3 dark:bg-slate-700">
+      <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        No-shows
+      </p>
+      <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+        {{ stats().noShowCount }}
+      </p>
+    </div>
+  </div>
+</div>
