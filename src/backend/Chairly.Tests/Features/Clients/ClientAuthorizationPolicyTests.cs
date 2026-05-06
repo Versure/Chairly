@@ -67,7 +67,7 @@ public class ClientAuthorizationPolicyTests
             }
         }
 
-        Assert.True(authorizedClientEndpointCount >= 5, "Expected all mapped /api/clients endpoints to require RequireStaff.");
+        Assert.True(authorizedClientEndpointCount >= 6, "Expected all mapped /api/clients endpoints to require RequireStaff.");
     }
 
     [Theory]
