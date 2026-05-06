@@ -1,4 +1,3 @@
-using Chairly.Api.Features.Billing;
 using Chairly.Api.Features.Bookings;
 using Chairly.Api.Shared.Mediator;
 using Chairly.Api.Shared.Tenancy;
@@ -109,8 +108,17 @@ internal sealed class GetClientTimelineHandler(ChairlyDbContext db, ITenantConte
             i => i.BookingId,
             i => new ClientTimelineInvoiceResponse(
                 i.Id, i.InvoiceNumber, i.InvoiceDate, i.TotalAmount,
-                InvoiceMapper.DeriveStatus(i), i.SentAtUtc, i.PaidAtUtc, i.VoidedAtUtc));
+                DeriveInvoiceStatus(i), i.SentAtUtc, i.PaidAtUtc, i.VoidedAtUtc));
     }
+
+    internal static string DeriveInvoiceStatus(Invoice invoice) =>
+        invoice switch
+        {
+            { VoidedAtUtc: not null } => "Void",
+            { PaidAtUtc: not null } => "Paid",
+            { SentAtUtc: not null } => "Sent",
+            _ => "Draft",
+        };
 
     private static List<TimelineEntryResponse> BuildTimeline(
         List<Booking> bookings, Dictionary<Guid, string> staffLookup,

@@ -130,7 +130,7 @@ public class GetClientTimelineHandlerTests
         return recipe;
     }
 
-    private static Invoice CreateTestInvoice(ChairlyDbContext db, Guid bookingId, Guid clientId, decimal totalAmount = 35.00m, bool voided = false, bool paid = false)
+    private static Invoice CreateTestInvoice(ChairlyDbContext db, Guid bookingId, Guid clientId, decimal totalAmount = 35.00m, bool voided = false, bool paid = false, bool sent = false)
     {
         var invoice = new Invoice
         {
@@ -145,6 +145,8 @@ public class GetClientTimelineHandlerTests
             TotalAmount = totalAmount,
             CreatedAtUtc = DateTimeOffset.UtcNow,
             CreatedBy = Guid.Empty,
+            SentAtUtc = sent ? DateTimeOffset.UtcNow : null,
+            SentBy = sent ? Guid.Empty : null,
             VoidedAtUtc = voided ? DateTimeOffset.UtcNow : null,
             VoidedBy = voided ? Guid.Empty : null,
             PaidAtUtc = paid ? DateTimeOffset.UtcNow : null,
@@ -510,5 +512,130 @@ public class GetClientTimelineHandlerTests
         var result = await handler.Handle(new GetClientTimelineQuery(client.Id));
 
         Assert.Equal(75.00m, result.AsT0.Stats.TotalSpentAmount);
+    }
+
+    [Fact]
+    public void DeriveInvoiceStatus_VoidedAtUtcSet_ReturnsVoid()
+    {
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = Guid.NewGuid(),
+            InvoiceNumber = "INV-001",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 50m,
+            TotalVatAmount = 0m,
+            TotalAmount = 50m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = Guid.Empty,
+            SentAtUtc = DateTimeOffset.UtcNow.AddDays(-3),
+            PaidAtUtc = DateTimeOffset.UtcNow.AddDays(-2),
+            VoidedAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+
+        Assert.Equal("Void", GetClientTimelineHandler.DeriveInvoiceStatus(invoice));
+    }
+
+    [Fact]
+    public void DeriveInvoiceStatus_PaidAtUtcSet_ReturnsPaid()
+    {
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = Guid.NewGuid(),
+            InvoiceNumber = "INV-002",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 50m,
+            TotalVatAmount = 0m,
+            TotalAmount = 50m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = Guid.Empty,
+            SentAtUtc = DateTimeOffset.UtcNow.AddDays(-3),
+            PaidAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+
+        Assert.Equal("Paid", GetClientTimelineHandler.DeriveInvoiceStatus(invoice));
+    }
+
+    [Fact]
+    public void DeriveInvoiceStatus_SentAtUtcSet_ReturnsSent()
+    {
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = Guid.NewGuid(),
+            InvoiceNumber = "INV-003",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 50m,
+            TotalVatAmount = 0m,
+            TotalAmount = 50m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = Guid.Empty,
+            SentAtUtc = DateTimeOffset.UtcNow.AddDays(-1),
+        };
+
+        Assert.Equal("Sent", GetClientTimelineHandler.DeriveInvoiceStatus(invoice));
+    }
+
+    [Fact]
+    public void DeriveInvoiceStatus_NoTimestamps_ReturnsDraft()
+    {
+        var invoice = new Invoice
+        {
+            Id = Guid.NewGuid(),
+            TenantId = TestTenantContext.DefaultTenantId,
+            BookingId = Guid.NewGuid(),
+            ClientId = Guid.NewGuid(),
+            InvoiceNumber = "INV-004",
+            InvoiceDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            SubTotalAmount = 50m,
+            TotalVatAmount = 0m,
+            TotalAmount = 50m,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            CreatedBy = Guid.Empty,
+        };
+
+        Assert.Equal("Draft", GetClientTimelineHandler.DeriveInvoiceStatus(invoice));
+    }
+
+    [Fact]
+    public async Task Handle_InvoiceStatusesReturnedInEnglish()
+    {
+        await using var db = CreateDbContext();
+        var client = CreateTestClient(db);
+        var staff = CreateTestStaffMember(db);
+
+        var bDraft = CreateTestBooking(db, client.Id, staff.Id, DateTimeOffset.UtcNow.AddDays(-10), completed: true);
+        var bSent = CreateTestBooking(db, client.Id, staff.Id, DateTimeOffset.UtcNow.AddDays(-8), completed: true);
+        var bPaid = CreateTestBooking(db, client.Id, staff.Id, DateTimeOffset.UtcNow.AddDays(-6), completed: true);
+        var bVoided = CreateTestBooking(db, client.Id, staff.Id, DateTimeOffset.UtcNow.AddDays(-4), completed: true);
+
+        CreateTestInvoice(db, bDraft.Id, client.Id, 10m);
+        CreateTestInvoice(db, bSent.Id, client.Id, 20m, sent: true);
+        CreateTestInvoice(db, bPaid.Id, client.Id, 30m, sent: true, paid: true);
+        CreateTestInvoice(db, bVoided.Id, client.Id, 40m, voided: true);
+
+        var handler = new GetClientTimelineHandler(db, TestTenantContext.Create());
+        var result = await handler.Handle(new GetClientTimelineQuery(client.Id));
+
+        var invoiceStatuses = result.AsT0.Timeline
+            .Where(e => e.Invoice != null)
+            .Select(e => e.Invoice!.Status)
+            .ToList();
+
+        Assert.Contains("Draft", invoiceStatuses);
+        Assert.Contains("Sent", invoiceStatuses);
+        Assert.Contains("Paid", invoiceStatuses);
+        Assert.Contains("Void", invoiceStatuses);
+        Assert.DoesNotContain("Concept", invoiceStatuses);
+        Assert.DoesNotContain("Verzonden", invoiceStatuses);
+        Assert.DoesNotContain("Betaald", invoiceStatuses);
+        Assert.DoesNotContain("Vervallen", invoiceStatuses);
     }
 }
