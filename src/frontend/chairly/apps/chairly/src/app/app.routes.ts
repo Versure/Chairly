@@ -48,6 +48,11 @@ export const appRoutes: Route[] = [
         loadChildren: () => import('@org/chairly-lib').then((m) => m.notificationsRoutes),
       },
       {
+        path: 'nieuwsbrief',
+        canActivate: [roleGuard('manager')],
+        loadChildren: () => import('@org/chairly-lib').then((m) => m.newslettersRoutes),
+      },
+      {
         path: 'instellingen',
         canActivate: [roleGuard('manager')],
         loadChildren: () => import('@org/chairly-lib').then((m) => m.settingsRoutes),

@@ -1,0 +1,35 @@
+<dialog
+  #dialog
+  (close)="close()"
+  class="fixed inset-0 m-0 w-screen h-screen max-w-none max-h-none hidden open:flex items-center justify-center border-0 bg-black/50 p-4">
+  <div
+    class="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl mx-auto flex flex-col max-h-[90vh]">
+    <div
+      class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-slate-100">
+        Voorbeeld: {{ subject() }}
+      </h2>
+      <button
+        type="button"
+        (click)="close()"
+        class="text-gray-700 hover:text-gray-900 dark:text-slate-300 dark:hover:text-white"
+        aria-label="Sluiten">
+        &times;
+      </button>
+    </div>
+    <div class="flex-1 overflow-hidden p-4">
+      <iframe
+        title="Nieuwsbrief voorbeeld"
+        [attr.srcdoc]="htmlBody()"
+        class="w-full h-[60vh] border border-gray-200 dark:border-slate-700 rounded"></iframe>
+    </div>
+    <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-slate-700">
+      <button
+        type="button"
+        (click)="close()"
+        class="rounded-md bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-slate-100 px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600">
+        Sluiten
+      </button>
+    </div>
+  </div>
+</dialog>

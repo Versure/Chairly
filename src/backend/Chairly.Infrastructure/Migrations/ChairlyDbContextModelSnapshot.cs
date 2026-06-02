@@ -165,6 +165,11 @@ namespace Chairly.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("IsSubscribedToNewsletter")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -314,6 +319,130 @@ namespace Chairly.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Invoices", (string)null);
+                });
+
+            modelBuilder.Entity("Chairly.Domain.Entities.NewsletterCampaign", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BodyHtml")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("CancelledAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("QueuedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("QueuedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("RecipientFilter")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ScheduledAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ScheduledBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SentBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAtUtc");
+
+                    b.HasIndex("TenantId", "ScheduledAtUtc");
+
+                    b.ToTable("NewsletterCampaigns", (string)null);
+                });
+
+            modelBuilder.Entity("Chairly.Domain.Entities.NewsletterDelivery", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<DateTimeOffset?>("FailedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTimeOffset?>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UnsubscribeToken")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("UnsubscribedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId");
+
+                    b.HasIndex("ClientId");
+
+                    b.HasIndex("UnsubscribeToken")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "CampaignId");
+
+                    b.ToTable("NewsletterDeliveries", (string)null);
                 });
 
             modelBuilder.Entity("Chairly.Domain.Entities.Notification", b =>
@@ -777,6 +906,21 @@ namespace Chairly.Infrastructure.Migrations
                     b.Navigation("LineItems");
                 });
 
+            modelBuilder.Entity("Chairly.Domain.Entities.NewsletterDelivery", b =>
+                {
+                    b.HasOne("Chairly.Domain.Entities.NewsletterCampaign", null)
+                        .WithMany("Deliveries")
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Chairly.Domain.Entities.Client", null)
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Chairly.Domain.Entities.Recipe", b =>
                 {
                     b.OwnsMany("Chairly.Domain.Entities.RecipeProduct", "Products", b1 =>
@@ -830,6 +974,11 @@ namespace Chairly.Infrastructure.Migrations
             modelBuilder.Entity("Chairly.Domain.Entities.Booking", b =>
                 {
                     b.Navigation("BookingServices");
+                });
+
+            modelBuilder.Entity("Chairly.Domain.Entities.NewsletterCampaign", b =>
+                {
+                    b.Navigation("Deliveries");
                 });
 #pragma warning restore 612, 618
         }
